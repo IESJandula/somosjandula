@@ -1,0 +1,549 @@
+<template>
+  <div class="container">
+    <!-- Fila superior: Formulario de Envío de PDF y Tabla de Resultados -->
+    <div class="top-section">
+      <!-- Columna derecha: Formulario de Envío de PDF -->
+      <div class="form-container">
+        <h1 class="title">Enviar PDF a Imprimir</h1>
+        <form @submit.prevent="submitForm" enctype="multipart/form-data">
+          <div class="form-section">
+            <!-- Usa el componente de carga de archivos -->
+            <FileUpload @file-selected="handleFileSelected" />
+            <!-- Configuración de impresión -->
+            <ion-card class="printer-settings-card">
+              <ion-grid>
+                <!-- Primera Fila: Selector de impresora -->
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item>
+                      <ion-label position="stacked">Destino:</ion-label>
+                      <ion-select v-model="formData.printerSelected">
+                        <ion-select-option v-for="printer in printers" :key="printer.name" :value="printer.name">
+                          {{ printer.name }}
+                        </ion-select-option>
+                      </ion-select>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
+                <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
+                <ion-row>
+                  <ion-col size="12" size-md="3">
+                    <ion-item>
+                      <ion-label position="stacked">Copias:</ion-label>
+                      <ion-input type="number"
+                                  v-model="formData.copiesSelected"
+                                  min="1"
+                                  max="50"
+                                  step="1"
+                                  @input="validateCopiesInput"></ion-input>
+                    </ion-item>
+                  </ion-col>
+
+                  <ion-col size="12" size-md="3">
+                    <ion-item>
+                      <ion-label position="stacked">Color:</ion-label>
+                      <ion-select v-model="formData.colorSelected">
+                        <ion-select-option v-for="color in colors" :key="color" :value="color">
+                          {{ color }}
+                        </ion-select-option>
+                      </ion-select>
+                    </ion-item>
+                  </ion-col>
+
+                  <ion-col size="12" size-md="3">
+                    <ion-item>
+                      <ion-label position="stacked">Orientación:</ion-label>
+                      <ion-select v-model="formData.orientationSelected">
+                        <ion-select-option v-for="orientation in orientations" :key="orientation" :value="orientation">
+                          {{ orientation }}
+                        </ion-select-option>
+                      </ion-select>
+                    </ion-item>
+                  </ion-col>
+
+                  <ion-col size="12" size-md="3">
+                    <ion-item>
+                      <ion-label position="stacked">Caras:</ion-label>
+                      <ion-select v-model="formData.sidesSelected">
+                        <ion-select-option v-for="side in sides" :key="side" :value="side">
+                          {{ side }}
+                        </ion-select-option>
+                      </ion-select>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <!-- Tercera Fila: Mensaje de error -->
+                <ion-row v-if="mensajeError">
+                  <ion-col size="12">
+                    <ion-text color="warning" class="status-text">
+                      {{ mensajeError }}
+                    </ion-text>
+                  </ion-col>
+                </ion-row>
+
+                <!-- Cuarta Fila: Información de la impresión -->
+                <ion-row v-if="formData.file">
+                  <ion-col size="12">
+                    <ion-text color="primary" class="folio-text">
+                      {{ mensajeImpresion }}
+                    </ion-text>
+                  </ion-col>
+                </ion-row>
+
+                <!-- Botón de Imprimir -->
+                <ion-row class="ion-justify-content-center ion-padding-top">
+                  <ion-col size="auto">
+                    <ion-button type="submit" color="primary" expand="block" :disabled="isButtonDisabled">
+                      {{ buttonText }}
+                    </ion-button>
+                  </ion-col>
+                </ion-row>
+
+              </ion-grid>
+            </ion-card>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabla de resultados -->
+      <div class="table-container">
+        <h2 class="title">Mis impresiones</h2>
+        <div class="table-content">
+          <PrintInfoTable :info="historialImpresiones" :adminRole="false" />
+        </div>
+        <!-- Botón de Actualizar centrado -->
+        <ion-row class="ion-justify-content-center">
+          <ion-col size="auto">
+            <ion-button color="primary" expand="block" @click="actualizarTabla">Actualizar</ion-button>
+          </ion-col>
+        </ion-row>
+      </div>
+    </div>
+  </div>
+</template>
+<script setup>
+import { ref, onMounted, watch, nextTick } from 'vue';
+import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
+import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
+import { IonSelect, IonSelectOption, IonInput, IonButton, IonContent, IonText } from '@ionic/vue';
+import { obtenerUserInfoEnSesion } from '@/services/session';
+import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
+import FileUpload from '@/components/printers/FileUpload.vue';
+
+// Configuramos la URL del Worker
+GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
+const formData = ref({
+  printerSelected: '',
+  copiesSelected: 1,
+  colorSelected: 'Color',
+  orientationSelected: 'Vertical',
+  sidesSelected: 'Doble cara',
+  file: null,
+});
+
+const printers = ref([]);
+const colors = ref([]);
+const orientations = ref([]);
+const sides = ref([]);
+
+const buttonLabel = ref('Arrastra o selecciona un archivo PDF');
+
+const mensajeError = ref('');
+const mensajeImpresion = ref('');
+const globalError = ref('');
+
+const historialImpresiones = ref([]);
+
+const pagesToPrint = ref(0);
+
+const isButtonDisabled = ref(false);
+const buttonText = ref('¡IMPRIMIR!');
+
+// Variables para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
+
+// Maneja el archivo cuando se selecciona
+const handleFileSelected = (selectedFile) => {
+  formData.value.file = selectedFile;
+  if (selectedFile) {
+    // Actualiza el botón y mensajes relacionados con el archivo
+    buttonLabel.value = selectedFile.name;
+
+    // Actualizamos el número de folios a imprimir
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const arrayBuffer = e.target.result;
+      pagesToPrint.value = await countPages(arrayBuffer);
+      updatePrintMessage(); // Actualiza el mensaje de impresión después de contar las páginas
+    };
+    reader.readAsArrayBuffer(selectedFile);
+  }
+};
+
+// Función para contar las páginas del PDF
+const countPages = async (file) => {
+  try {
+    const pdf = await getDocument({ data: file }).promise;
+    const numPages = pdf.numPages;
+    console.log(`Número de páginas: ${numPages}`);
+    return numPages;
+  } catch (error) {
+    console.error('Error al procesar el PDF:', error);
+    handleError('Error al procesar el PDF'); // Maneja el error si falla el conteo de páginas
+    return 0;
+  }
+};
+
+// Actualiza el mensaje de impresión basado en el cálculo de hojas y opciones de impresión
+const updatePrintMessage = () => {
+  const totalSheets = calculateTotalSheets();
+  const colorMode = formData.value.colorSelected === 'Color' ? 'en color' : 'en blanco y negro';
+
+  if (formData.value.file) {
+    mensajeImpresion.value = `Vas a imprimir ${totalSheets} folios ${colorMode}`;
+  } else {
+    mensajeImpresion.value = ''; // Si no hay archivo, limpia el mensaje
+  }
+};
+
+// Calcula el número total de hojas a imprimir
+const calculateTotalSheets = () => {
+  const pages = pagesToPrint.value;
+  const copies = formData.value.copiesSelected;
+  const isDoubleSided = formData.value.sidesSelected === 'Doble cara';
+
+  const sheetsPerCopy = isDoubleSided ? Math.ceil(pages / 2) : pages;
+  const totalSheets = sheetsPerCopy * copies;
+
+  return totalSheets;
+};
+
+// Watch para observar cambios en la selección de la impresora y otros campos relevantes
+watch(
+  [
+    () => formData.value.printerSelected,
+    () => formData.value.copiesSelected,
+    () => formData.value.sidesSelected,
+    () => formData.value.colorSelected,
+    () => formData.value.file
+  ],
+  () => {
+    if (!globalError.value) {
+      checkPrinterStatus();
+    }
+    updatePrintMessage(); // Actualiza el mensaje cada vez que cambien los valores relevantes
+  }
+);
+
+// Función para verificar el estado de la impresora seleccionada
+const checkPrinterStatus = () => {
+  const currentPrinter = printers.value.find(p => p.name === formData.value.printerSelected);
+  if (currentPrinter) {
+    if (currentPrinter.statusId === 0) {
+      clearError(); // Limpia cualquier error si la impresora está en buen estado
+    } else {
+      handleError(`Error: ${currentPrinter.status}`); // Maneja el error si la impresora tiene problemas
+    }
+  }
+};
+
+// Función para manejar errores y actualizar el botón
+const handleError = (message) => {
+  console.log('Handling error:', message);
+  mensajeError.value = message;
+  isButtonDisabled.value = true;
+  buttonText.value = '¡No puedes imprimir!';
+};
+
+// Función para limpiar errores y restaurar el botón
+const clearError = () => {
+  console.log('Clearing error');
+  mensajeError.value = '';
+  isButtonDisabled.value = false;
+  buttonText.value = '¡IMPRIMIR!';
+};
+
+const submitForm = async () => {
+  // Bloquea el botón al enviar el formulario
+  isButtonDisabled.value = true;
+  buttonText.value = 'Habilitando en 5 segundos'; // Cambia el texto del botón al iniciar el temporizador
+
+  const formDataPayload = new FormData();
+  formDataPayload.append('printer', formData.value.printerSelected);
+  formDataPayload.append('numCopies', formData.value.copiesSelected);
+  formDataPayload.append('orientation', formData.value.orientationSelected);
+  formDataPayload.append('color', formData.value.colorSelected);
+  formDataPayload.append('sides', formData.value.sidesSelected);
+  const userInfo = await obtenerUserInfoEnSesion();
+  formDataPayload.append('user', `${userInfo.nombre} ${userInfo.apellidos}`);
+
+  // Asegúrate de que el archivo está seleccionado
+  if (formData.value.file) {
+    formDataPayload.append('file', formData.value.file);
+  } else {
+    handleError('No se ha seleccionado ningún archivo');
+    return;
+  }
+
+  try {
+    const response = await imprimir(toastMessage, toastColor, isToastOpen, formDataPayload);
+
+    if (response.ok) {
+      mensajeError.value = 'PDF enviado con éxito';
+      await actualizarTabla();
+      startCountdown();  // Inicia la cuenta regresiva solo si la respuesta es exitosa
+    } else {
+      handleError('Error al enviar el PDF');
+    }
+  } catch (error) {
+    console.error('Error al enviar el formulario:', error);
+    handleError('Error al enviar el PDF');
+  }
+};
+
+// Función para iniciar el temporizador de cuenta regresiva
+const startCountdown = () => {
+  let countdown = 5;
+  const interval = setInterval(() => {
+    if (countdown > 0) {
+      buttonText.value = `Habilitando en ${countdown} segundos`; // Actualiza el texto del botón con el temporizador
+      countdown--;
+    } else {
+      clearInterval(interval);
+      clearError(); // Limpia el error y habilita el botón después de la cuenta regresiva
+    }
+  }, 1000);
+};
+
+// Función para validar la entrada de copias
+const validateCopiesInput = () => {
+  if (formData.value.copiesSelected < 1) {
+    formData.value.copiesSelected = 1; // Reemplaza cualquier valor negativo o cero por 1
+  }
+
+  if (formData.value.copiesSelected > 50) {
+    formData.value.copiesSelected = 50; // Reemplaza cualquier valor superior a 50 por 50
+  }
+};
+
+onMounted(async () => {
+  await actualizarTabla();
+  await obtenerDatos();
+  await prevalidarImpresion(); // Llama a la validación del servidor al montar el componente
+  await nextTick(); // Asegura que Vue haya procesado los cambios antes de verificar el estado de la impresora
+  checkPrinterStatus(); // Verifica el estado de la impresora inicial
+});
+
+const obtenerDatos = async () => {
+  try {
+    colors.value = await obtenerColores(toastMessage, toastColor, isToastOpen);
+    orientations.value = await obtenerOrientaciones(toastMessage, toastColor, isToastOpen);
+    sides.value = await obtenerCaras(toastMessage, toastColor, isToastOpen);
+  } catch (error) {
+    console.error('Error al obtener datos:', error);
+    handleError('Error al obtener datos de impresoras');
+  }
+};
+
+const actualizarTabla = async () => {
+  try {
+    const userInfo = await obtenerUserInfoEnSesion();
+    const usuario = userInfo.nombre + " " + userInfo.apellidos ;
+    const filtroBusquedaRequest = { user:  usuario };
+    const response = await filtrarDatos(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest);
+
+    if (response.ok) {
+      historialImpresiones.value = await response.json();
+    } else {
+      handleError('Error al obtener los datos de la tabla');
+    }
+  } catch (error) {
+    console.error('Error al obtener datos de la tabla:', error);
+    handleError('Error al obtener datos de la tabla');
+  }
+};
+
+// Ajuste de prevalidación para asegurar la consistencia del estado
+const prevalidarImpresion = async () => {
+  try {
+    const response = await prevalidacionesImpresion(toastMessage, toastColor, isToastOpen);
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.globalError) {
+        // Si hay un error global, manejarlo y deshabilitar la impresión
+        globalError.value = data.globalError;
+        handleError(globalError.value);
+      } else {
+        // No hay error global, establecer impresoras y verificar el estado de la impresora seleccionada
+        globalError.value = ''; // Limpia el error global
+        printers.value = data.dtoPrinters;
+        if (printers.value.length > 0) {
+          formData.value.printerSelected = printers.value[0].name; // Selecciona la primera impresora
+          checkPrinterStatus(); // Verifica el estado de la impresora seleccionada
+        } else {
+          handleError('No hay impresoras disponibles');
+        }
+      }
+    } else {
+      handleError('Error en la prevalidación de impresión');
+    }
+  } catch (error) {
+    console.error('Error en la prevalidación:', error);
+    handleError('Error en la prevalidación de impresión');
+  }
+};
+</script>
+
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.top-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.form-container {
+  flex: 1 1 45%;
+  min-width: 300px;
+  max-width: 600px;
+  background-color: #ffffff;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 20px 30px;
+  font-family: 'Roboto', sans-serif;
+  position: relative;
+}
+
+ion-item {
+  display: flex; /* Utiliza flexbox para permitir el ajuste flexible */
+  align-items: center; /* Alinea verticalmente los elementos del ion-item */
+  --inner-padding-end: 0; /* Elimina el padding derecho para aprovechar más espacio */
+  padding-left: 0; /* Elimina el padding izquierdo para maximizar el espacio */
+}
+
+ion-label {
+  flex: 1; /* Permite que el ion-label ocupe todo el espacio disponible */
+  white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+  overflow: visible; /* Permite que el texto se muestre completo */
+  text-align: left; /* Alinea el texto a la izquierda */
+}
+
+ion-select,
+ion-input {
+  font-size: 12px;
+  flex: 1; /* Permite que los ion-select e ion-input ocupen el espacio restante */
+}
+
+.table-container {
+  flex: 1 1 55%;
+  min-width: 300px;
+  max-width: 90%;
+  background-color: #f9f9f9;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.table-content {
+  flex-grow: 1;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #3a7ca5;
+}
+
+.pdf-selector-container {
+  position: relative;
+  text-align: center;
+  border: 2px dashed #d3d3d3;
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  background-color: #f5f5f5;
+}
+
+.pdf-selector-container:hover {
+  border-color: #3a7ca5;
+}
+
+.pdf-button {
+  width: 100%;
+  height: 100%;
+  display: block;
+  line-height: 40px;
+  font-weight: bold;
+  color: #3a7ca5;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.printer-settings-card {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f1f1f1;
+  border-radius: 12px;
+}
+
+.status-text {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #f8d7da; /* Fondo de error */
+  color: #721c24;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.folio-text {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #cce5ff; /* Fondo azul */
+  color: #004085; /* Texto azul oscuro */
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* Media query para dispositivos móviles */
+@media (max-width: 768px) {
+  .top-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .form-container,
+  .table-container {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: unset;
+  }
+}
+</style>
