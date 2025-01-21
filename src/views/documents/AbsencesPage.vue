@@ -23,18 +23,18 @@ const googleSheetUrl = ref(
 
 <style scoped>
 .fullscreen-container {
-  position: fixed; /* Fija el contenedor a la ventana */
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100vw; /* Ocupa el 100% del ancho de la ventana */
-  height: 100vh; /* Ocupa el 100% de la altura de la ventana */
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #ffffff; /* Fondo blanco para toda la pantalla */
+  background-color: var(--form-bg-light); /* Fondo claro para modo claro */
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Oculta cualquier desbordamiento */
+  overflow: hidden;
 }
 
 .spreadsheet-container {
@@ -51,4 +51,12 @@ const googleSheetUrl = ref(
   height: 100%;
   border: none;
 }
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .fullscreen-container {
+    background-color: var(--form-bg-dark); /* Fondo oscuro para modo oscuro */
+  }
+}
 </style>
+

@@ -32,6 +32,7 @@ import { validarUsuario } from '@/services/firebaseService.js';
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { firebaseConfig } from '@/environment/firebaseConfig';
+import { setLoggingInStatus } from '@/main'; // Importa la función del estado
 
 // Inicializa Firebase
 const app = initializeApp(firebaseConfig) ;
@@ -53,49 +54,48 @@ const loginWithGoogle = async () =>
 {
   try
   {
+    // Indicamos que el usuario está iniciando sesión
+    setLoggingInStatus(true);
+
+    // Login a través de Google
     const result = await signInWithPopup(auth, googleProvider);
 
-    const user = result.user;
-    const email = user.email;
+    // Obtenemos el token JWT
+    const user     = result.user ;
 
-    // Verificar si el email pertenece al dominio permitido
-    if (!email.endsWith("@g.educaand.es") && email != "paco.benitez.chico@gmail.com")
-    {
-      // Acceso denegado
-      signOut(auth) ; // Cierra la sesión del usuario
-
-      // Crear toast
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "Solo tienen acceso los usuarios con un correo @g.educaand.es") ;
-    }
-    else
-    {
-      // Email pertenece al dominio. Validar si está dado de alta
-      await validarUsuario(router, auth, toastMessage, toastColor, isToastOpen, user.uid) ;
-    }
+    // Validamos el usuario en el sistema
+    await validarUsuario(router, auth, toastMessage, toastColor, isToastOpen) ;
   }
   catch (error)
   {
     // Crear toast
     crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message) ;
   }
+  finally
+  {
+    // Restablecemos el estado después del login
+    setLoggingInStatus(false); 
+  }
 };
 
 </script>
 
 <style scoped>
+/* Estilos generales */
 body {
-  background-color: #610851;
+  background-color: var(--background-light);
   font-family: 'Roboto', sans-serif;
 }
 
 .ion-padding {
-  --background: linear-gradient(90deg, #3a7ca5 0%, #66a6d1 40%, #66a6d1 60%, #a2cffe 100%);
+  --background: var(--ion-padding-bg-light);
 }
 
+/* Modo claro */
 .form-container {
   width: 100%;
   max-width: 350px;
-  background-color: #ffffff;
+  background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
   box-sizing: border-box;
@@ -111,15 +111,15 @@ body {
   margin: 10px 0 30px 0;
   font-size: 28px;
   font-weight: 800;
-  color: #3a7ca5;
+  color: var(--text-color-light);
   z-index: 1;
 }
 
 .somos-container {
   position: absolute;
-  top: -0.25em; /* Ajusta según necesites para colocarlo encima del título */
+  top: -0.25em;
   width: 100%;
-  height: 40px; /* Ajusta según necesites */
+  height: 40px;
   overflow: hidden;
   z-index: 2;
 }
@@ -128,11 +128,11 @@ body {
   position: absolute;
   left: -100%;
   top: 0;
-  font-size: 24px; /* Ajusta el tamaño según lo necesites */
+  font-size: 24px;
   font-weight: bold;
-  color: #3a7ca5;
+  color: var(--text-color-light);
   animation: moveToCenter 5s ease-in-out forwards;
-  white-space: nowrap; /* Para evitar que ocupe espacio extra */
+  white-space: nowrap;
 }
 
 @keyframes moveToCenter {
@@ -170,6 +170,7 @@ body {
   border-radius: 20px;
   box-sizing: border-box;
   padding: 10px 15px;
+  background-color: var(--button-bg-light);
   box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px,
     rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
   cursor: pointer;
@@ -181,11 +182,46 @@ body {
 }
 
 .google-login-button {
-  border: 2px solid #747474;
+  border: 2px solid var(--button-border-light);
 }
 
 .google-icon {
   font-size: 18px;
   margin-bottom: 1px;
+  color: var(--google-icon-light);
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--background-dark);
+  }
+
+  .ion-padding {
+    --background: var(--ion-padding-bg-dark);
+  }
+
+  .form-container {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+
+  .title {
+    color: var(--text-color-dark);
+  }
+
+  .somos-text {
+    color: var(--text-color-dark);
+  }
+
+  .google-login-button {
+    background-color: var(--button-bg-dark);
+    border: 2px solid var(--button-border-dark);
+  }
+
+  .google-icon {
+    color: var(--google-icon-dark);
+  }
 }
 </style>

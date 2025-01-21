@@ -31,3 +31,8 @@ export declare function imprimir(toastMessage: Ref<string>,
                                  toastColor: Ref<string>,
                                  isToastOpen: Ref<boolean>,
                                  payload: string): Promise<Void>;
+
+export declare function cancelarImpresion(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>,
+                                          id: number): Promise<Void>;

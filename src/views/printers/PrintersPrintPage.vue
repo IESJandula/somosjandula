@@ -99,6 +99,10 @@
                     <ion-button type="submit" color="primary" expand="block" :disabled="isButtonDisabled">
                       {{ buttonText }}
                     </ion-button>
+                    <!-- Mensaje de incidencias -->
+                    <div class="incidence-message">
+                      ¿Crees que sucede algún problema? Crea una incidencia <a @click.prevent="navigateToIssues">aquí</a>
+                    </div>
                   </ion-col>
                 </ion-row>
 
@@ -112,7 +116,7 @@
       <div class="table-container">
         <h2 class="title">Mis impresiones</h2>
         <div class="table-content">
-          <PrintInfoTable :info="historialImpresiones" :adminRole="false" />
+          <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="actualizarTabla" />
         </div>
         <!-- Botón de Actualizar centrado -->
         <ion-row class="ion-justify-content-center">
@@ -126,13 +130,15 @@
 </template>
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
-import { IonSelect, IonSelectOption, IonInput, IonButton, IonContent, IonText } from '@ionic/vue';
-import { obtenerUserInfoEnSesion } from '@/services/session';
+import { IonSelect, IonSelectOption, IonInput, IonButton, IonText } from '@ionic/vue';
+import { obtenerConstantes } from '@/services/constantes';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import FileUpload from '@/components/printers/FileUpload.vue';
+import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 
 // Configuramos la URL del Worker
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -169,6 +175,15 @@ const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 
+// Almacenamos el valor máximo de hojas permitidas aquí
+const maximoHojasImpresion = ref(null); 
+
+const router = useRouter();
+
+const navigateToIssues = () => {
+  router.push({ path: '/documents/itIssues' });
+};
+
 // Maneja el archivo cuando se selecciona
 const handleFileSelected = (selectedFile) => {
   formData.value.file = selectedFile;
@@ -181,7 +196,12 @@ const handleFileSelected = (selectedFile) => {
     reader.onload = async (e) => {
       const arrayBuffer = e.target.result;
       pagesToPrint.value = await countPages(arrayBuffer);
-      updatePrintMessage(); // Actualiza el mensaje de impresión después de contar las páginas
+      
+      // Actualizamos el mensaje de impresión después de contar las páginas
+      updatePrintMessage();
+
+      // Validamos el número de copias
+      validatePrint();
     };
     reader.readAsArrayBuffer(selectedFile);
   }
@@ -192,9 +212,9 @@ const countPages = async (file) => {
   try {
     const pdf = await getDocument({ data: file }).promise;
     const numPages = pdf.numPages;
-    console.log(`Número de páginas: ${numPages}`);
     return numPages;
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error al procesar el PDF:', error);
     handleError('Error al procesar el PDF'); // Maneja el error si falla el conteo de páginas
     return 0;
@@ -235,10 +255,12 @@ watch(
     () => formData.value.file
   ],
   () => {
-    if (!globalError.value) {
+    if (!globalError.value)
+    {
       checkPrinterStatus();
     }
     updatePrintMessage(); // Actualiza el mensaje cada vez que cambien los valores relevantes
+    validatePrint();
   }
 );
 
@@ -254,9 +276,31 @@ const checkPrinterStatus = () => {
   }
 };
 
+// Valida si se puede imprimir basándose en las páginas y el valor máximo
+const validatePrint = () =>
+{
+  // Verifica que haya un archivo seleccionado antes de hacer la validación
+  if (!formData.value.file)
+  {
+    return ;  // No hacer nada si no hay archivo
+  }
+
+  const totalSheets = calculateTotalSheets() ;
+
+  if (!formData.value.file || totalSheets > maximoHojasImpresion.value)
+  {
+    handleError(`El número máximo de hojas permitidas es ${maximoHojasImpresion.value}`);
+    isButtonDisabled.value = true;  // Deshabilita el botón si supera el máximo
+  }
+  else
+  {
+    clearError();  // Si es válido, habilita el botón
+    isButtonDisabled.value = false;
+  }
+};
+
 // Función para manejar errores y actualizar el botón
 const handleError = (message) => {
-  console.log('Handling error:', message);
   mensajeError.value = message;
   isButtonDisabled.value = true;
   buttonText.value = '¡No puedes imprimir!';
@@ -264,13 +308,13 @@ const handleError = (message) => {
 
 // Función para limpiar errores y restaurar el botón
 const clearError = () => {
-  console.log('Clearing error');
   mensajeError.value = '';
   isButtonDisabled.value = false;
   buttonText.value = '¡IMPRIMIR!';
 };
 
-const submitForm = async () => {
+const submitForm = async () =>
+{
   // Bloquea el botón al enviar el formulario
   isButtonDisabled.value = true;
   buttonText.value = 'Habilitando en 5 segundos'; // Cambia el texto del botón al iniciar el temporizador
@@ -281,30 +325,38 @@ const submitForm = async () => {
   formDataPayload.append('orientation', formData.value.orientationSelected);
   formDataPayload.append('color', formData.value.colorSelected);
   formDataPayload.append('sides', formData.value.sidesSelected);
-  const userInfo = await obtenerUserInfoEnSesion();
+  const userInfo = await obtenerNombreYApellidosUsuario();
   formDataPayload.append('user', `${userInfo.nombre} ${userInfo.apellidos}`);
 
   // Asegúrate de que el archivo está seleccionado
-  if (formData.value.file) {
-    formDataPayload.append('file', formData.value.file);
-  } else {
+  if (!formData.value.file)
+  {
     handleError('No se ha seleccionado ningún archivo');
-    return;
-  }
+  } 
+  else 
+  {
+    formDataPayload.append('file', formData.value.file);
 
-  try {
-    const response = await imprimir(toastMessage, toastColor, isToastOpen, formDataPayload);
+    try
+    {
+      const response = await imprimir(toastMessage, toastColor, isToastOpen, formDataPayload);
 
-    if (response.ok) {
-      mensajeError.value = 'PDF enviado con éxito';
-      await actualizarTabla();
-      startCountdown();  // Inicia la cuenta regresiva solo si la respuesta es exitosa
-    } else {
+      if (response.ok)
+      {
+        mensajeError.value = 'PDF enviado con éxito';
+        await actualizarTabla();
+        startCountdown();  // Inicia la cuenta regresiva solo si la respuesta es exitosa
+      }
+      else
+      {
+        handleError('Error al enviar el PDF');
+      }
+    } 
+    catch (error)
+    {
+      console.error('Error al enviar el formulario:', error);
       handleError('Error al enviar el PDF');
     }
-  } catch (error) {
-    console.error('Error al enviar el formulario:', error);
-    handleError('Error al enviar el PDF');
   }
 };
 
@@ -337,6 +389,7 @@ onMounted(async () => {
   await actualizarTabla();
   await obtenerDatos();
   await prevalidarImpresion(); // Llama a la validación del servidor al montar el componente
+  await obtenerConstantesInit(); // Llama a la función que obtendrá las constantes
   await nextTick(); // Asegura que Vue haya procesado los cambios antes de verificar el estado de la impresora
   checkPrinterStatus(); // Verifica el estado de la impresora inicial
 });
@@ -354,7 +407,7 @@ const obtenerDatos = async () => {
 
 const actualizarTabla = async () => {
   try {
-    const userInfo = await obtenerUserInfoEnSesion();
+    const userInfo = await obtenerNombreYApellidosUsuario();
     const usuario = userInfo.nombre + " " + userInfo.apellidos ;
     const filtroBusquedaRequest = { user:  usuario };
     const response = await filtrarDatos(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest);
@@ -400,8 +453,33 @@ const prevalidarImpresion = async () => {
     handleError('Error en la prevalidación de impresión');
   }
 };
-</script>
 
+// Función para obtener constantes desde el backend
+const obtenerConstantesInit = async () =>
+{
+  try
+  {
+    const constantes = await obtenerConstantes(toastMessage, toastColor, isToastOpen) ;
+
+    // Busca la constante con clave 'Maximo hojas impresion'
+    const maxHojasConstante = constantes.find(constante => constante.clave === 'Maximo hojas impresion') ;
+    
+    if (!maxHojasConstante)
+    {
+      handleError('No se encontró la constante "Maximo hojas impresion".');
+    }
+    else
+    {
+      maximoHojasImpresion.value = parseInt(maxHojasConstante.valor, 10) ;
+    }
+  }
+  catch (error)
+  {
+    console.error('Error al obtener las constantes:', error);
+    handleError('Error al obtener constantes');
+  }
+};
+</script>
 <style scoped>
 .container {
   display: flex;
@@ -420,7 +498,7 @@ const prevalidarImpresion = async () => {
   flex: 1 1 45%;
   min-width: 300px;
   max-width: 600px;
-  background-color: #ffffff;
+  background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
   padding: 20px 30px;
@@ -429,30 +507,30 @@ const prevalidarImpresion = async () => {
 }
 
 ion-item {
-  display: flex; /* Utiliza flexbox para permitir el ajuste flexible */
-  align-items: center; /* Alinea verticalmente los elementos del ion-item */
-  --inner-padding-end: 0; /* Elimina el padding derecho para aprovechar más espacio */
-  padding-left: 0; /* Elimina el padding izquierdo para maximizar el espacio */
+  display: flex;
+  align-items: center;
+  --inner-padding-end: 0;
+  padding-left: 0;
 }
 
 ion-label {
-  flex: 1; /* Permite que el ion-label ocupe todo el espacio disponible */
-  white-space: nowrap; /* Evita que el texto se divida en varias líneas */
-  overflow: visible; /* Permite que el texto se muestre completo */
-  text-align: left; /* Alinea el texto a la izquierda */
+  flex: 1;
+  white-space: nowrap;
+  overflow: visible;
+  text-align: left;
 }
 
 ion-select,
 ion-input {
   font-size: 12px;
-  flex: 1; /* Permite que los ion-select e ion-input ocupen el espacio restante */
+  flex: 1;
 }
 
 .table-container {
   flex: 1 1 55%;
   min-width: 300px;
   max-width: 90%;
-  background-color: #f9f9f9;
+  background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
   border-radius: 10px;
   padding: 20px;
@@ -473,21 +551,21 @@ ion-input {
   margin-bottom: 20px;
   font-size: 24px;
   font-weight: bold;
-  color: #3a7ca5;
+  color: var(--text-color-light);
 }
 
 .pdf-selector-container {
   position: relative;
   text-align: center;
-  border: 2px dashed #d3d3d3;
+  border: 2px dashed var(--button-border-light);
   border-radius: 10px;
   padding: 20px;
   cursor: pointer;
-  background-color: #f5f5f5;
+  background-color: var(--form-bg-light);
 }
 
 .pdf-selector-container:hover {
-  border-color: #3a7ca5;
+  border-color: var(--text-color-light);
 }
 
 .pdf-button {
@@ -496,7 +574,7 @@ ion-input {
   display: block;
   line-height: 40px;
   font-weight: bold;
-  color: #3a7ca5;
+  color: var(--text-color-light);
 }
 
 .file-input-hidden {
@@ -506,7 +584,7 @@ ion-input {
 .printer-settings-card {
   margin-top: 20px;
   padding: 16px;
-  background-color: #f1f1f1;
+  background-color: var(--form-bg-light);
   border-radius: 12px;
 }
 
@@ -515,7 +593,7 @@ ion-input {
   margin-top: 8px;
   padding: 8px;
   border-radius: 4px;
-  background-color: #f8d7da; /* Fondo de error */
+  background-color: #f8d7da;
   color: #721c24;
   font-size: 1rem;
   text-align: center;
@@ -526,11 +604,66 @@ ion-input {
   margin-top: 8px;
   padding: 8px;
   border-radius: 4px;
-  background-color: #cce5ff; /* Fondo azul */
-  color: #004085; /* Texto azul oscuro */
+  background-color: #cce5ff;
+  color: #004085;
   font-size: 1rem;
   text-align: center;
 }
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .form-container,
+  .table-container,
+  .printer-settings-card {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+  }
+
+  .title {
+    color: var(--text-color-dark);
+  }
+
+  .pdf-selector-container {
+    border-color: var(--button-border-dark);
+    background-color: var(--form-bg-dark);
+  }
+
+  .pdf-selector-container:hover {
+    border-color: var(--text-color-dark);
+  }
+
+  .pdf-button {
+    color: var(--text-color-dark);
+  }
+
+  .status-text {
+    background-color: #2c2c2c;
+    color: #e57373;
+  }
+
+  .folio-text {
+    background-color: #3e3e3e;
+    color: #a2cffe;
+  }
+}
+
+.incidence-message {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-color-light);
+}
+
+.incidence-message a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.incidence-message a:hover {
+  color: var(--primary-color-hover);
+  cursor: pointer ;
+}
+
 
 /* Media query para dispositivos móviles */
 @media (max-width: 768px) {

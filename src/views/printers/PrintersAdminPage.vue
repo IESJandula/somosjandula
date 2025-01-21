@@ -35,7 +35,7 @@
                 <ion-col size="4">
                   <ion-item>
                     <ion-label position="stacked">Estado:</ion-label>
-                    <ion-select v-model="filtroBusqueda.status" placeholder="Todos">                      
+                    <ion-select v-model="filtroBusqueda.status" placeholder="Todos">
                       <ion-select-option value="Todos">Todos</ion-select-option>
                       <ion-select-option v-for="state in states" :key="state" :value="state">{{ state }}</ion-select-option>
                     </ion-select>
@@ -65,14 +65,20 @@
 
       <!-- Tabla de resultados -->
       <div class="table-container">
-        <PrintInfoTable :info="filteredInfo" :adminRole="true" />
+        <PrintInfoTable :info="filteredInfo" :adminRole="true" @actualizar-tabla="submitForm" />
       </div>
     </div>
 
     <!-- Segunda Fila: Tabla de Estado de las Impresoras -->
     <div class="bottom-section">
+      <!-- Estado de las impresoras -->
       <div class="printer-status-table">
-        <h1 class="title">Estado de las Impresoras</h1>
+        <div class="title-container">
+          <h1 class="title">Estado de las Impresoras</h1>
+          <ion-button class="refresh-button" fill="solid" color="primary" @click="refrescarImpresoras" shape="round">
+            <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
         <ion-grid>
           <ion-row>
             <ion-col>
@@ -98,18 +104,58 @@
           </ion-row>
         </ion-grid>
       </div>
+
+      <!-- Nueva tarjeta: Actualizar constantes -->
+      <div class="update-constants-card">
+        <div class="title-container">
+          <h1 class="title">Actualizar constantes</h1>
+        </div>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="12">
+              <ion-item>
+                <ion-label position="stacked">Clave de la constante:</ion-label>
+                <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
+                  <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">{{ constante.clave }}</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="12">
+              <ion-item v-if="selectedConstante">
+                <ion-label position="stacked">Valor:</ion-label>
+                <ion-input v-model="selectedConstante.valor"></ion-input>
+              </ion-item>
+            </ion-col>
+          </ion-row>
+          <ion-row>
+            <ion-col size="12">
+              <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">Actualizar</ion-button>
+            </ion-col>
+          </ion-row>
+          <!-- Mensaje de resultado de la actualización -->
+          <ion-row v-if="mensajeActualizacion">
+            <ion-col size="12">
+              <ion-text :color="mensajeColor">{{ mensajeActualizacion }}</ion-text>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
     </div>
   </div>
 </template>
 
+
 <script setup>
-import { IonGrid, IonRow, IonCol, IonItem, IonLabel } from '@ionic/vue';
+import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonText } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonIcon } from '@ionic/vue';
 import { ref, onMounted } from 'vue';
 import { obtenerUsuariosConRoles } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { obtenerImpresoras, obtenerEstados, filtrarDatos } from '@/services/printers';
+import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
 
 const filtroBusqueda = ref({
   user: '',
@@ -129,8 +175,63 @@ const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 
+// Nueva variable reactiva para el mensaje de actualización
+const mensajeActualizacion = ref('');
+const mensajeColor = ref('');
+
+// Selección de constante
+const selectedConstante = ref(null);
+const constantes = ref([]);
+
+// Función para obtener las constantes al cargar el componente
+const cargarConstantes = async () => {
+  try {
+    constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen);
+
+    // Seleccionar la constante "Impresión Deshabilitada" por defecto
+    const impresionDeshabilitada = constantes.value.find(c => c.clave === 'Impresion Deshabilitada');
+    
+    if (impresionDeshabilitada) {
+      selectedConstante.value = impresionDeshabilitada;
+    }
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al obtener constantes');
+    mensajeActualizacion.value = 'Error al obtener constantes';
+    mensajeColor.value = 'danger';
+    throw new Error(error.message);
+  }
+};
+
+// Función que se llama cuando el usuario selecciona una constante
+const onConstanteChange = () => {
+  if (selectedConstante.value && selectedConstante.value.valor !== undefined) {
+    selectedConstante.value.valor = selectedConstante.value.valor;
+  } else {
+    selectedConstante.value = { valor: '' };
+  }
+};
+
+// Función para actualizar la constante seleccionada
+const actualizarConstanteSeleccionada = async () => {
+  try {
+    const constantesActualizadas = constantes.value.map(c =>
+      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
+    );
+
+    await actualizarConstantes(toastMessage, toastColor, isToastOpen, constantesActualizadas);
+    crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Constante actualizada con éxito');
+    mensajeActualizacion.value = 'Constantes actualizadas con éxito';
+    mensajeColor.value = 'success';
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar la constante');
+    mensajeActualizacion.value = 'Error al actualizar la constante';
+    mensajeColor.value = 'danger';
+    throw new Error(error.message);
+  }
+};
+
 function formatDate(timestamp) {
-  const date = new Date(timestamp); // Convertir timestamp a objeto Date
+  const date = new Date(timestamp);
   return date.toLocaleString('es-ES', {
     hour: '2-digit',
     minute: '2-digit',
@@ -143,7 +244,6 @@ function formatDate(timestamp) {
 
 const submitForm = async () => {
   try {
-    // Formatear las fechas a DD/MM/YYYY si están presentes
     const formatDate = (date) => {
       if (!date) return null;
       const d = new Date(date);
@@ -153,7 +253,6 @@ const submitForm = async () => {
       return `${day}/${month}/${year}`;
     };
 
-    // Construir los parámetros de la consulta basados en filtroBusqueda
     const filtroBusquedaRequest = {
       user: filtroBusqueda.value.user !== 'Todos' ? filtroBusqueda.value.user : null,
       printer: filtroBusqueda.value.printer !== 'Todos' ? filtroBusqueda.value.printer : null,
@@ -162,25 +261,17 @@ const submitForm = async () => {
       endDate: formatDate(filtroBusqueda.value.endDate),
     };
 
-    // Hacer la solicitud a la API para obtener los datos filtrados, enviando los datos como JSON en el cuerpo
     const response = await filtrarDatos(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest);
 
-    // Verificar si la respuesta fue exitosa
     if (!response.ok) {
       let errorString = 'Error al obtener los datos filtrados';
-
-      // Creamos toast y lanzamos excepción
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', errorString);
       throw new Error(errorString);
     }
 
-    // Asignar los datos filtrados a la tabla
     filteredInfo.value = await response.json();
-
-    // Mostrar un mensaje de éxito
     crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Datos filtrados con éxito');
   } catch (error) {
-    // Crear toast y lanzar excepción
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
     throw new Error(error.message);
   }
@@ -202,12 +293,24 @@ const cargarDatos = async () => {
   states.value = await obtenerEstados(toastMessage, toastColor, isToastOpen);
 };
 
+const refrescarImpresoras = async () => {
+  try {
+    printers.value = await obtenerImpresoras();
+    crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Impresoras actualizadas');
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar impresoras');
+    throw new Error(error.message);
+  }
+};
+
 onMounted(() => {
   cargarDatos();
   resetForm();
   submitForm();
+  cargarConstantes();
 });
 </script>
+
 <style scoped>
 .container {
   display: flex;
@@ -224,14 +327,15 @@ onMounted(() => {
 
 .bottom-section {
   display: flex;
-  justify-content: center; /* Centra la tabla horizontalmente */
-  align-items: center;     /* Centra la tabla verticalmente */
+  justify-content: space-between;
+  gap: 20px;
 }
 
+/* Estilos para la tarjeta del formulario */
 .form-container {
   flex: 1 1 45%;
   min-width: 300px;
-  background-color: #ffffff;
+  background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
   padding: 20px 30px;
@@ -254,20 +358,32 @@ onMounted(() => {
   flex: 1 1 25%;
   min-width: 300px;
   max-width: 600px;
-  background-color: #ffffff;
+  background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
   padding: 20px;
   overflow: auto;
   max-height: 400px;
-  margin: 0 auto; /* Centra el contenedor de la tabla */
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centra los elementos dentro del contenedor */
+  align-items: center;
+}
+
+.title-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.title-container ion-button {
+  margin-left: auto;
+  margin-top: 0;
 }
 
 .printer-status-table .title {
-  margin-bottom: 10px;
+  margin: 0;
+  text-align: center;
 }
 
 .printer-status-table table {
@@ -301,14 +417,67 @@ onMounted(() => {
 
 .title {
   text-align: center;
-  margin-bottom: 20px;
   font-size: 24px;
   font-weight: 700;
-  color: #3a7ca5;
+  color: var(--text-color-light);
 }
 
-ion-button {
-  margin-top: 15px;
+.update-constants-card {
+  flex: 1 1 30%;
+  min-width: 300px;
+  max-width: 600px;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* Media queries para hacer que la tarjeta sea más responsive */
+@media (max-width: 768px) {
+  .bottom-section {
+    flex-direction: column;
+  }
+
+  .update-constants-card,
+  .printer-status-table {
+    flex: 1 1 100%;
+    margin-bottom: 20px;
+  }
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .form-container,
+  .printer-status-table,
+  .update-constants-card {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+
+  .title {
+    color: var(--text-color-dark);
+  }
+
+  .printer-status-table th {
+    background-color: #3a3a3a;
+    color: var(--text-color-dark);
+  }
+
+  .printer-status-table tr:nth-child(even) {
+    background-color: #2c2c2c;
+  }
+
+  .printer-status-table tr:hover {
+    background-color: #3e3e3e;
+  }
+
+  .table-container {
+    background-color: #2c2c2c;
+  }
+}
 </style>
+

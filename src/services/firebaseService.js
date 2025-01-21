@@ -2,74 +2,181 @@ import { getFirestore, doc, getDoc, getDocs, collection } from "firebase/firesto
 import { signOut } from "firebase/auth";
 import { crearToast } from '@/utils/toast.js';
 import { firebaseColeccionUsuarios } from '@/environment/firebaseConfig';
-import { guardarUserInfoEnSesion, guardarUserUidEnSesion } from '@/services/session' ;
 import { getAuth } from "firebase/auth";
 import { SESSION_JWT_TOKEN } from '@/utils/constants.js' ;
 import { firebaseApiUrl } from '@/environment/apiUrls';
 import { jwtDecode } from 'jwt-decode';
 
-export async function validarUsuario(router, auth, toastMessage, toastColor, isToastOpen, userUid)
+export async function importarUsuarios(toastMessage, toastColor, isToastOpen, file)
 {
-    const db      = getFirestore() ;
-    const docRef  = doc(db, firebaseColeccionUsuarios, userUid) ;
-    const docSnap = await getDoc(docRef) ;
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    if (!docSnap.exists())
+  // Creamos un formData
+  const formData = new FormData() ;
+
+  // Agregamos el archivo al FormData
+  formData.append("file", file) ; 
+
+  try
+  {
+    // Hacemos la llamada al microservicio para importar usuarios
+    const response = await fetch(firebaseApiUrl + '/firebase/imports/users',
     {
-        // Acceso denegado
-        signOut(auth) ; // Cierra la sesión del usuario
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`, // Agregamos el token JWT en el encabezado
+      },
+      body: formData // Enviamos el FormData que contiene el archivo
+    }) ;
 
-        // Crear toast
-        crearToast(toastMessage, toastColor, isToastOpen, "danger", "Contacta con el TDE para darte de alta") ;
+    // Verificamos si la respuesta del servidor fue correcta
+    if (!response.ok)
+    {
+      const errorMessage = await response.text() ;
+
+      // Creamos un toast con el mensaje de error
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage) ;
+
+      // Lanzamos la excepción
+      throw new Error(errorMessage || 'Error al importar usuarios') ;
+    }
+
+    // Creamos un toast con el mensaje de que todo ha ido bien
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Inserción realizada correctamente") ;
+  }
+  catch (error)
+  {
+    // Creamos un toast con el mensaje de error
+    crearToast(toastMessage, toastColor, isToastOpen, "success", error.message) ;
+    
+    // Lanzamos el error
+    throw error;
+  }
+}
+
+export async function importarAplicaciones(toastMessage, toastColor, isToastOpen, file)
+{
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  // Creamos un formData
+  const formData = new FormData() ;
+
+  // Agregamos el archivo al FormData
+  formData.append("file", file) ; 
+
+  try
+  {
+    // Hacemos la llamada al microservicio para importar usuarios
+    const response = await fetch(firebaseApiUrl + '/firebase/imports/apps',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`, // Agregamos el token JWT en el encabezado
+      },
+      body: formData // Enviamos el FormData que contiene el archivo
+    }) ;
+
+    // Verificamos si la respuesta del servidor fue correcta
+    if (!response.ok)
+    {
+      const errorMessage = await response.text() ;
+
+      // Creamos un toast con el mensaje de error
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage) ;
+
+      // Lanzamos la excepción
+      throw new Error(errorMessage || 'Error al importar aplicaciones') ;
+    }
+
+    // Creamos un toast con el mensaje de que todo ha ido bien
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Inserción realizada correctamente") ;
+  }
+  catch (error)
+  {
+    // Creamos un toast con el mensaje de error
+    crearToast(toastMessage, toastColor, isToastOpen, "success", error.message) ;
+    
+    // Lanzamos el error
+    throw error;
+  }
+}
+
+export async function validarUsuario(router, auth, toastMessage, toastColor, isToastOpen)
+{
+  try
+  {
+    const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+
+    // Redirigir dependiendo de los roles
+    if (userRoles.includes('ADMINISTRADOR'))
+    {
+        router.push({ name: 'AdminFirebase' });
     }
     else
     {
-        // Obtenemos el usuario
-        const usuario = docSnap.data() ;
-
-        // Almacenamos en local el usuario
-        guardarUserInfoEnSesion(usuario) ;
-
-        // Almacenamos el UID en localStorage
-        guardarUserUidEnSesion(userUid) ;
-
-        // Obtenemos los roles
-        const roles = usuario.roles ;
-
-        // Validamos si contiene el de administrador
-        if (roles.includes('ADMINISTRADOR'))
-        {
-            router.push({ name: 'AdminFirebase' }) ;
-        }
-        else
-        {
-            router.push({ name: 'PrintersPrint' }) ;
-        }
+        router.push({ name: 'PrintersPrint' });
     }
+  }
+  catch (error)
+  {
+      // Cerramos la sesión si algo falla
+      signOut(auth);
+  }
 }
 
-export async function validarRolesMenu(toastMessage, toastColor, isToastOpen, userUid)
+export async function validarRolesMenu(toastMessage, toastColor, isToastOpen)
 {
-  const db = getFirestore();
-  const docRef = doc(db, firebaseColeccionUsuarios, userUid);
-  const docSnap = await getDoc(docRef);
+  const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
 
-  if (!docSnap.exists())
+  return {
+    mostrarAdmin: userRoles.includes('ADMINISTRADOR'),
+    mostrarDireccion: userRoles.includes('DIRECCION'),
+  };
+}
+
+export async function obtenerRolesUsuario(toastMessage, toastColor, isToastOpen)
+{
+  let jwtDecodificado = await obtenerJwtDecodificado(toastMessage, toastColor, isToastOpen) ;
+
+  // Obtenemos el array de roles
+  return jwtDecodificado.roles || [] ;
+}
+
+export async function obtenerNombreYApellidosUsuario(toastMessage, toastColor, isToastOpen)
+{
+  let jwtDecodificado = await obtenerJwtDecodificado(toastMessage, toastColor, isToastOpen) ;
+
+  // Retornamos un objeto con las propiedades 'nombre' y 'apellidos'
+  return {
+    nombre: jwtDecodificado.nombre,
+    apellidos: jwtDecodificado.apellidos
+  };
+}
+
+export async function obtenerJwtDecodificado(toastMessage, toastColor, isToastOpen)
+{
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+  // Extraemos y decodificamos el payload (segunda parte del JWT)
+  // El JWT tiene la forma: header.payload.signature
+  // Queremos la parte del 'payload' (index 1)
+    
+  const base64Url = tokenPropio.split('.')[1];
+  if (!base64Url)
   {
-    let errorString = "El usuario no tiene roles asignados o no existe" ;
+    let errorString = "JWT inválido: no se encontró el payload" ;
 
     // Crear toast y lanzar excepción
     crearToast(toastMessage, toastColor, isToastOpen, "danger", errorString) ;
     throw new Error(errorString) ;
   }
 
-  const usuario = docSnap.data() ;
-  const roles = usuario.roles || [] ;
+  // Decodificamos correctamente usando TextDecoder para manejar UTF-8
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const binaryData = atob(base64);
+  const utf8Data = new TextDecoder('utf-8').decode(new Uint8Array([...binaryData].map(char => char.charCodeAt(0))));
 
-  return {
-    mostrarAdmin: roles.includes('ADMINISTRADOR'),
-    mostrarDireccion: roles.includes('DIRECCION'),
-  };
+  return JSON.parse(utf8Data);
 }
 
 export async function obtenerUsuariosConRoles(toastMessage, toastColor, isToastOpen)
@@ -106,22 +213,20 @@ export async function obtenerUsuariosConRoles(toastMessage, toastColor, isToastO
 export async function obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen)
 {
   // Recupera el JWT del almacenamiento de sesión
-  let token = sessionStorage.getItem(SESSION_JWT_TOKEN) ; 
+  let tokenPropio = sessionStorage.getItem(SESSION_JWT_TOKEN) ; 
 
   // Verifica si el token está presente o ha expirado
-  if (!token || tokenExpirado(token))
+  if (!tokenPropio || tokenExpirado(tokenPropio))
   {
-    console.log('Token expirado o no encontrado, solicitando uno nuevo...') ;
-    
     // Obtiene un nuevo token si es necesario
     await obtenerTokenJwt(toastMessage, toastColor, isToastOpen) ;
     
     // Recupera el nuevo token
-    token = sessionStorage.getItem(SESSION_JWT_TOKEN) ;
+    tokenPropio = sessionStorage.getItem(SESSION_JWT_TOKEN) ;
   }
 
   // Devuelve el token válido
-  return token ;
+  return tokenPropio ;
 }
 
 /**
@@ -134,38 +239,41 @@ async function obtenerTokenJwt(toastMessage, toastColor, isToastOpen)
 {
   const auth = getAuth() ;
 
-  try
+  // Obtenemos el ID Token (JWT) del usuario autenticado (Google)
+  const tokenGoogle = await auth.currentUser.getIdToken(true);
+
+  // Realizamos una solicitud POST al servidor Spring Boot para obtener el JWT
+  const response = await fetch(firebaseApiUrl + '/firebase/token/user', 
   {
-    const uid = auth.currentUser.uid ; // Obtiene el UID del usuario autenticado
-
-    // Realizamos una solicitud POST al servidor Spring Boot para obtener el JWT
-    const response = await fetch(firebaseApiUrl + '/firebase/getCustomToken', 
-    {
       method: 'POST',
-      headers: { 'uid': uid }    
-    }) ;
+      headers:
+      {
+        'Authorization': `Bearer ${tokenGoogle}`,
+        'Content-Type': 'application/json'
+      }
+  }) ;
 
-    const token = await response.text() ;
+  // Verificamos si la respuesta del servidor fue correcta
+  if (!response.ok)
+  {
+    // Intentamos extraer el mensaje de error del servidor
+    let errorMessage = 'El usuario no está dado de alta. ¿Estás seguro que lo hiciste con el dominio g.educaand.es?' ;
 
-    if (!token)
-    {
-      let errorString = "No has sido autenticado correctamente" ;
+    // Intentamos obtener el cuerpo de la respuesta (suponiendo que es JSON)
+    const errorData = await response.json();
+    errorMessage = errorData.message || 'El usuario no está dado de alta. ¿Estás seguro que lo hiciste con el dominio g.educaand.es?';
 
-      // Crear toast y lanzar excepción
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorString) ;
-      throw new Error(errorString) ;
-    }
-
-    console.log('JWT personalizado recibido:', token) ;
+    // Crear toast y lanzar excepción
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage) ;
+    throw new Error(errorMessage) ;
+  }
+  else
+  {
+    // Obtenemos de la respuesta el token propio
+    const tokenPropio = await response.text() ;
 
     // Almacena el JWT en el almacenamiento de sesión
-    sessionStorage.setItem(SESSION_JWT_TOKEN, token) ;
-  }
-  catch (error)
-  {
-    // Crear toast y lanzar excepción
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message) ;
-    throw new Error(error.message) ;
+    sessionStorage.setItem(SESSION_JWT_TOKEN, tokenPropio) ;
   }
 }
 

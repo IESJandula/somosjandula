@@ -49,23 +49,40 @@ const handleFileChange = (event) => {
 .file-drop-area {
   position: relative;
   text-align: center;
-  border: 2px dashed #d3d3d3;
+  border: 2px dashed var(--button-border-light);
   border-radius: 10px;
   padding: 20px;
   cursor: pointer;
-  background-color: #f5f5f5;
+  background-color: var(--form-bg-light);
 }
 
 .file-drop-area:hover {
-  border-color: #3a7ca5;
+  border-color: var(--text-color-light);
 }
 
 .file-drop-area.dragging {
-  border-color: #3a7ca5;
+  border-color: var(--text-color-light);
   background-color: #f9f9f9;
 }
 
 .hidden {
   display: none;
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .file-drop-area {
+    border-color: var(--button-border-dark);
+    background-color: var(--form-bg-dark);
+  }
+
+  .file-drop-area:hover {
+    border-color: var(--text-color-dark);
+  }
+
+  .file-drop-area.dragging {
+    border-color: var(--text-color-dark);
+    background-color: #2c2c2c;
+  }
 }
 </style>

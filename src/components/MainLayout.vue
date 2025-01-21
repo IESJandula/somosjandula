@@ -10,7 +10,6 @@
           </ion-item>
           <ion-list v-if="adminSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/admin/settings')">Personas</ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
@@ -85,11 +84,7 @@ import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { menuController } from '@ionic/vue'; // Importa el controlador del menú
 import { getAuth, signOut } from 'firebase/auth';
-import {
-  obtenerUserInfoEnSesion,
-  obtenerUserUidEnSesion,
-} from '@/services/session';
-import { validarRolesMenu } from '@/services/firebaseService';
+import { validarRolesMenu, obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast';
 
 export default defineComponent({
@@ -160,27 +155,16 @@ export default defineComponent({
 
     onMounted(async () => {
       try {
-        const userUid = await obtenerUserUidEnSesion(
-          toastMessage,
-          toastColor,
-          isToastOpen
-        );
-        const userInfo = await obtenerUserInfoEnSesion(
-          toastMessage,
-          toastColor,
-          isToastOpen
-        );
+        const userInfo = await obtenerNombreYApellidosUsuario(toastMessage, toastColor, isToastOpen);
         userName.value = userInfo.nombre;
 
-        const rolesMenu = await validarRolesMenu(
-          isToastOpen,
-          toastMessage,
-          toastColor,
-          userUid
-        );
+        const rolesMenu = await validarRolesMenu(isToastOpen, toastMessage, toastColor);
+
         mostrarAdmin.value = rolesMenu.mostrarAdmin;
         mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
-      } catch (error) {
+      } 
+      catch (error)
+      {
         crearToast(
           toastMessage,
           toastColor,
@@ -254,7 +238,6 @@ ion-menu {
 }
 
 .top-bar {
-  background-color: #f4f4f4; /* Color de fondo, cámbialo según tu diseño */
   display: flex;
   justify-content: flex-end; /* Alinea los botones a la derecha */
   align-items: center; /* Centrar los botones verticalmente */
