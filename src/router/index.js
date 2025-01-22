@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
+import { ref } from 'vue';
 import LoginPage from '@/views/LoginPage.vue';
 import MainLayout from '@/components/MainLayout.vue';
 import AdminFirebasePage from '@/views/admin/AdminFirebasePage.vue';
@@ -8,8 +9,7 @@ import AbsencesPage from '@/views/documents/AbsencesPage.vue';
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
-import { firebaseColeccionUsuarios } from '@/environment/firebaseConfig';
+import { obtenerRolesUsuario } from '@/services/firebaseService';
 
 const routes = [
   {
@@ -104,32 +104,25 @@ router.beforeEach(async (to, from, next) =>
 
     try 
     {
-      const firestore = getFirestore();
-      const docRef = doc(firestore, firebaseColeccionUsuarios, user.uid);
-      const docSnap = await getDoc(docRef);
+      const isToastOpen = ref(false);
+      const toastMessage = ref('');
+      const toastColor = ref('success');
 
-      if (docSnap.exists()) 
+      // Obtengo los roles del usuario
+      const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+
+      // Obtengo el role que necesito para ejecutarme aquí
+      const requiredRole = to.meta.role;
+
+      if (requiredRole && !userRoles.includes(requiredRole)) 
       {
-        const userData = docSnap.data();
-        const roles = userData.roles;
-        const requiredRole = to.meta.role;
-
-        if (requiredRole && !roles.includes(requiredRole)) 
-        {
-          return next({ 
-            name: 'PrintersPrint' 
-          });
-        } 
-        else 
-        {
-          return next();
-        }
+        return next({ 
+          name: 'PrintersPrint' 
+        });
       } 
       else 
       {
-        return next({ 
-          name: 'Login' 
-        });
+        return next();
       }
     } 
     catch (error) 

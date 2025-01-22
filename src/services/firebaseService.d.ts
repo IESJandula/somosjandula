@@ -43,7 +43,12 @@ export async function obtenerNombreYApellidosUsuario(toastMessage: Ref<string>,
 export async function obtenerJwtDecodificado(toastMessage: Ref<string>,
                                              toastColor: Ref<string>,
                                              isToastOpen:Ref<boolean>): Promise<[]>;
-
+/**
+ * DEPRECATED
+ * @param toastMessage 
+ * @param toastColor 
+ * @param isToastOpen 
+ */
 export async function obtenerUsuariosConRoles(toastMessage: Ref<string>,
                                               toastColor: Ref<string>,
                                               isToastOpen: Ref<boolean>): Promise<[]>;

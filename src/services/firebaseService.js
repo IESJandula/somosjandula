@@ -179,6 +179,13 @@ export async function obtenerJwtDecodificado(toastMessage, toastColor, isToastOp
   return JSON.parse(utf8Data);
 }
 
+/**
+ * DEPRECATED
+ * @param {*} toastMessage 
+ * @param {*} toastColor 
+ * @param {*} isToastOpen 
+ * @returns 
+ */
 export async function obtenerUsuariosConRoles(toastMessage, toastColor, isToastOpen)
 {
   const usuarios = [] ;
@@ -186,7 +193,7 @@ export async function obtenerUsuariosConRoles(toastMessage, toastColor, isToastO
   try
   {
     const db            = getFirestore() ;
-    const querySnapshot = await getDocs(collection(db, firebaseColeccionUsuarios)) ;
+    const querySnapshot = await getDocs(collection(db, firebaseColeccionUsuarios)) ; // TODO
     
     querySnapshot.forEach((doc) =>
     {
