@@ -5,6 +5,8 @@ import MainLayout from '@/components/MainLayout.vue';
 import AdminFirebasePage from '@/views/admin/AdminFirebasePage.vue';
 import PrintersAdminPage from '@/views/printers/PrintersAdminPage.vue';
 import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
+import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
+import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
 import AbsencesPage from '@/views/documents/AbsencesPage.vue';
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
@@ -51,6 +53,22 @@ const routes = [
         path: 'printers/print',
         component: PrintersPrintPage,
         name: 'PrintersPrint',
+        meta: { 
+          role: 'PROFESOR' 
+        },
+      },
+      {
+        path: 'bookings/admin',
+        component: BookingsAdminPage,
+        name: 'PrintersAdmin',
+        meta: { 
+          role: 'DIRECCION' 
+        },
+      },
+      {
+        path: 'bookings/fixed',
+        component: BookingsFixedPage,
+        name: 'BookingsFixed',
         meta: { 
           role: 'PROFESOR' 
         },

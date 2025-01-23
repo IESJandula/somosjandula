@@ -23,6 +23,18 @@
           </ion-list>
         </ion-list>
         <ion-list>
+          <ion-item button @click="toggleSubMenuBookings">
+            Reservas
+            <ion-icon slot="end"
+              :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="bookingsSubmenuVisible" class="submenu">
+            <ion-item v-if="mostrarBookingsAdmin" button
+              @click="navigateAndCloseMenu('/bookings/admin')">Administrar</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">Fijas</ion-item>
+          </ion-list>
+        </ion-list>
+        <ion-list>
           <ion-item button @click="toggleSubMenuDocuments">
             Documentos
             <ion-icon slot="end" :icon="documentsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
@@ -110,14 +122,13 @@ export default defineComponent({
     const mostrarPrintersAdmin = ref(false);
     const adminSubmenuVisible = ref(false);
     const printersSubmenuVisible = ref(false);
+    const bookingsSubmenuVisible = ref(false);
     const documentsSubmenuVisible = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
     const toastMessage = ref('');
     const toastColor = ref('success');
-
-    const auth = getAuth();
 
     const desconectar = async () => {
       try {
@@ -138,18 +149,28 @@ export default defineComponent({
     const toggleSubMenuAdmin = () => {
       adminSubmenuVisible.value = !adminSubmenuVisible.value;
       printersSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuPrinters = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = !printersSubmenuVisible.value;
+      bookingsSubmenuVisible.value = false;
+      documentsSubmenuVisible.value = false;
+    };
+
+    const toggleSubMenuBookings = () => {
+      adminSubmenuVisible.value = false;
+      printersSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       documentsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuDocuments = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
     };
 
@@ -162,6 +183,7 @@ export default defineComponent({
 
         mostrarAdmin.value = rolesMenu.mostrarAdmin;
         mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
+        mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
       } 
       catch (error)
       {
@@ -183,9 +205,11 @@ export default defineComponent({
       mostrarPrintersAdmin,
       adminSubmenuVisible,
       printersSubmenuVisible,
+      bookingsSubmenuVisible,
       documentsSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuPrinters,
+      toggleSubMenuBookings,
       toggleSubMenuDocuments,
     };
   },
