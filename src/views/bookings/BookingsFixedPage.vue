@@ -54,6 +54,7 @@
   </ion-page>
 </template>
 <script setup>
+
 import { ref, onMounted, watch } from 'vue'
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
 
@@ -187,8 +188,6 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
   try {
     event.stopPropagation()
     console.log('Reserva a cancelar:', tramo, dia, recursoSeleccionado, email);
-
-
 
     // Llamar a la API para cancelar la reserva
     await deleteReserva(isToastOpen,toastMessage,toastColor,email, recursoSeleccionado, dia.id, tramo.id)
