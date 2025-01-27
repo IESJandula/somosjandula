@@ -60,7 +60,7 @@ const routes = [
       {
         path: 'bookings/admin',
         component: BookingsAdminPage,
-        name: 'PrintersAdmin',
+        name: 'BookingsAdmin',
         meta: { 
           role: 'DIRECCION' 
         },

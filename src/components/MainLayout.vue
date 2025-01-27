@@ -119,6 +119,7 @@ export default defineComponent({
     const router = useRouter();
     const userName = ref('');
     const mostrarAdmin = ref(false);
+    const mostrarBookingsAdmin = ref(false);
     const mostrarPrintersAdmin = ref(false);
     const adminSubmenuVisible = ref(false);
     const printersSubmenuVisible = ref(false);
@@ -203,6 +204,7 @@ export default defineComponent({
       navigateAndCloseMenu,
       mostrarAdmin,
       mostrarPrintersAdmin,
+      mostrarBookingsAdmin,
       adminSubmenuVisible,
       printersSubmenuVisible,
       bookingsSubmenuVisible,
