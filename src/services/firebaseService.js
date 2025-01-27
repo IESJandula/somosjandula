@@ -1,10 +1,9 @@
-import { getFirestore, doc, getDoc, getDocs, collection } from "firebase/firestore";
+import { firebaseApiUrl } from '@/environment/apiUrls';
 import { signOut } from "firebase/auth";
 import { crearToast } from '@/utils/toast.js';
 import { firebaseColeccionUsuarios } from '@/environment/firebaseConfig';
 import { getAuth } from "firebase/auth";
 import { SESSION_JWT_TOKEN } from '@/utils/constants.js' ;
-import { firebaseApiUrl } from '@/environment/apiUrls';
 import { jwtDecode } from 'jwt-decode';
 
 export async function importarUsuarios(toastMessage, toastColor, isToastOpen, file)
@@ -179,44 +178,6 @@ export async function obtenerJwtDecodificado(toastMessage, toastColor, isToastOp
   return JSON.parse(utf8Data);
 }
 
-/**
- * DEPRECATED
- * @param {*} toastMessage 
- * @param {*} toastColor 
- * @param {*} isToastOpen 
- * @returns 
- */
-export async function obtenerUsuariosConRoles(toastMessage, toastColor, isToastOpen)
-{
-  const usuarios = [] ;
-  
-  try
-  {
-    const db            = getFirestore() ;
-    const querySnapshot = await getDocs(collection(db, firebaseColeccionUsuarios)) ; // TODO
-    
-    querySnapshot.forEach((doc) =>
-    {
-      const data = doc.data() ;
-      usuarios.push(
-                    { 
-                      uid: doc.id,
-                      email: data.email,
-                      roles: data.roles || [],  // Aseguramos que sea un array
-                      nombreCompleto: data.nombre + " " + data.apellidos
-                    }) ;
-    }) ;
-  }
-  catch (error)
-  {
-      // Crear toast y lanzar excepción
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message) ;
-      throw new Error(error.message) ;
-  }
-
-  return usuarios ;
-}
-
 export async function obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen)
 {
   // Recupera el JWT del almacenamiento de sesión
@@ -294,4 +255,18 @@ function tokenExpirado(token)
     
     // Devolvemos true si expiró
     return decoded.exp < now ;
+}
+
+export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
+{
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+  return await fetch(firebaseApiUrl + '/firebase/queries/users',
+  {
+      method: 'GET',
+      headers:
+      {
+          'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
+      }
+  }).then(res => res.json());
 }

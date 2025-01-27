@@ -15,7 +15,11 @@
                     <ion-label position="stacked">Usuario:</ion-label>
                     <ion-select v-model="filtroBusqueda.user" placeholder="Todos">
                       <ion-select-option value="Todos">Todos</ion-select-option>
-                      <ion-select-option v-for="user in users" :key="user.nombreCompleto" :value="user.nombreCompleto">{{ user.nombreCompleto }}</ion-select-option>
+                      <ion-select-option v-for="user in users" 
+                                         :key="`${user.nombre} ${user.apellidos}`" 
+                                         :value="`${user.nombre} ${user.apellidos}`">
+                        {{ `${user.nombre} ${user.apellidos}` }}
+                      </ion-select-option>
                     </ion-select>
                   </ion-item>
                 </ion-col>
@@ -151,7 +155,7 @@
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonText } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonIcon } from '@ionic/vue';
 import { ref, onMounted } from 'vue';
-import { obtenerUsuariosConRoles } from '@/services/firebaseService';
+import { obtenerInfoUsuarios } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { obtenerImpresoras, obtenerEstados, filtrarDatos } from '@/services/printers';
@@ -288,7 +292,7 @@ const resetForm = () => {
 };
 
 const cargarDatos = async () => {
-  users.value = await obtenerUsuariosConRoles(isToastOpen, toastMessage, toastColor);
+  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
   printers.value = await obtenerImpresoras(toastMessage, toastColor, isToastOpen);
   states.value = await obtenerEstados(toastMessage, toastColor, isToastOpen);
 };
