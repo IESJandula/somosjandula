@@ -190,7 +190,7 @@ const constantes = ref([]);
 // Función para obtener las constantes al cargar el componente
 const cargarConstantes = async () => {
   try {
-    constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen);
+    constantes.value = await obtenerConstantes('/printers/web/constantes', toastMessage, toastColor, isToastOpen);
 
     // Seleccionar la constante "Impresión Deshabilitada" por defecto
     const impresionDeshabilitada = constantes.value.find(c => c.clave === 'Impresion Deshabilitada');
@@ -222,7 +222,7 @@ const actualizarConstanteSeleccionada = async () => {
       c.clave === selectedConstante.value.clave ? selectedConstante.value : c
     );
 
-    await actualizarConstantes(toastMessage, toastColor, isToastOpen, constantesActualizadas);
+    await actualizarConstantes('/printers/web/constantes', toastMessage, toastColor, isToastOpen, constantesActualizadas);
     crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Constante actualizada con éxito');
     mensajeActualizacion.value = 'Constantes actualizadas con éxito';
     mensajeColor.value = 'success';

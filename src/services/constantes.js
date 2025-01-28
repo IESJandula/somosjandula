@@ -1,11 +1,11 @@
 import { printersApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-export const obtenerConstantes = async (toastMessage, toastColor, isToastOpen) =>
+export const obtenerConstantes = async (endpointConstantes, toastMessage, toastColor, isToastOpen) =>
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    return await fetch(printersApiUrl + '/printers/web/constantes',
+    return await fetch(printersApiUrl + endpointConstantes,
     {
         method: 'GET',
         headers:
@@ -15,11 +15,11 @@ export const obtenerConstantes = async (toastMessage, toastColor, isToastOpen) =
     }).then(res => res.json()) ;
 };
 
-export const actualizarConstantes = async (toastMessage, toastColor, isToastOpen, payload) =>
+export const actualizarConstantes = async (endpointConstantes, toastMessage, toastColor, isToastOpen, payload) =>
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    return await fetch(printersApiUrl + '/printers/web/constantes',
+    return await fetch(printersApiUrl + endpointConstantes,
     {
         method: 'POST',
         headers:

@@ -459,7 +459,7 @@ const obtenerConstantesInit = async () =>
 {
   try
   {
-    const constantes = await obtenerConstantes(toastMessage, toastColor, isToastOpen) ;
+    const constantes = await obtenerConstantes('/printers/web/constantes', toastMessage, toastColor, isToastOpen) ;
 
     // Busca la constante con clave 'Maximo hojas impresion'
     const maxHojasConstante = constantes.find(constante => constante.clave === 'Maximo hojas impresion') ;

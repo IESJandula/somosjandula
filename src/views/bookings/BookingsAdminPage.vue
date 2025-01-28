@@ -55,6 +55,7 @@
 </template>
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { IonContent, IonPage } from '@ionic/vue';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
 
 // Variables reactivas
