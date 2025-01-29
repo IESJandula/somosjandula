@@ -1,10 +1,11 @@
+import { bookingsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
 export const deleteReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario) => {
   try {
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;  
 
-      const response = await fetch('http://localhost:8084/bookings/fixed/bookings', {
+      const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${tokenPropio}`,
@@ -28,7 +29,7 @@ export const getDiasSemana = async (toastMessage, toastColor, isToastOpen) => {
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch('http://localhost:8084/bookings/fixed/days_week',
+    const response = await fetch(bookingsApiUrl + '/bookings/fixed/days_week',
       {
         method: 'GET',
         headers: {
@@ -49,7 +50,7 @@ export const getTramosHorarios = async (toastMessage, toastColor, isToastOpen) =
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
     
-    const response = await fetch('http://localhost:8084/bookings/fixed/timeslots',
+    const response = await fetch(bookingsApiUrl + '/bookings/fixed/timeslots',
       {
         method: 'GET',
         headers: {
@@ -70,7 +71,7 @@ export const getRecursos = async (toastMessage, toastColor, isToastOpen) => {
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch('http://localhost:8084/bookings/fixed/resources',
+    const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
     {
       method: 'GET',
       headers: {
@@ -90,7 +91,7 @@ export const getReservas = async (toastMessage, toastColor, isToastOpen, recurso
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
     
-    const response = await fetch('http://localhost:8084/bookings/fixed/bookings', {
+    const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -113,7 +114,7 @@ export const postReserva = async (toastMessage, toastColor, isToastOpen, email, 
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch('http://localhost:8084/bookings/fixed/bookings', {
+    const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -134,3 +135,26 @@ export const postReserva = async (toastMessage, toastColor, isToastOpen, email, 
     throw error
   }
 }
+
+export const getProfesores = async (toastMessage, toastColor, isToastOpen) => {
+  try {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(firebaseApiUrl + '/firebase/queries/users', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+    return await response.json()
+  } catch (error) {
+    console.error('Error al devolver los profesores:', error)
+    throw error
+  }
+}
+
+

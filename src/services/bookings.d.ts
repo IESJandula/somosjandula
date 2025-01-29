@@ -21,3 +21,7 @@ export declare function getReservas(toastMessage: Ref<string>,
 export declare function postReserva(toastMessage: Ref<string>,
                                                  toastColor: Ref<string>,
                                                  isToastOpen: Ref<boolean>): Promise<string[]>;
+
+export declare function getProfesores(toastMessage: Ref<string>,
+                                      toastColor: Ref<string>,
+                                      isToastOpen: Ref<boolean>): Promise<string[]>;

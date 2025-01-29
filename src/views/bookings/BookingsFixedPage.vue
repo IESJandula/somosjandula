@@ -5,7 +5,7 @@
       <div class="container">
         <!-- Dropdown para seleccionar recurso -->
         <select class="custom-select" v-model="recursoSeleccionado">
-          <option value="">Seleccione un recurso</option>
+          <option value="" disabled hidden>Seleccione un recurso</option>
           <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
             {{ recurso.recursos }}
           </option>
@@ -38,11 +38,17 @@
         <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos)" class="modal-overlay">
           <div class="modal-content">
             <h2>Editar Reserva</h2>
-            <label for="profesorCorreo">Correo del Profesor:</label>
-            <input v-model="correoProfesor" type="email" id="profesorCorreo" placeholder="Correo del profesor" />
+            
+            <label for="profesorCorreo">Profesor:</label>
+            <select class="custom-select-modal" v-model="profesorSeleccionado">
+              <option value="" disabled hidden>Seleccione un Profesor</option>
+              <option v-for="user in users" :key="`${user.email}`" :value="`${user.nombre} ${user.apellidos}`">
+                {{ `${user.nombre} ${user.apellidos}` }}
+              </option>
+        </select>
 
-            <label for="numAlumnos">Número de Alumnos:</label>
-            <input v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
+            <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
+            <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
 
             <button @click="saveChanges">Guardar Cambios</button>
             <button @click="closeModal">Cerrar</button>
@@ -58,13 +64,16 @@
 import { ref, onMounted, watch } from 'vue'
 import { IonContent, IonPage } from '@ionic/vue';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
+import { obtenerInfoUsuarios } from '@/services/firebaseService';
 
 // Variables reactivas
 const diasSemanas = ref([])
 const tramosHorarios = ref([])
 const recursos = ref([])
 const reservas = ref({})
+const users = ref([]);
 const recursoSeleccionado = ref('')
+const profesorSeleccionado = ref('')
 const isModalOpen = ref(false)
 const correoProfesor = ref('')
 const numAlumnos = ref('')
@@ -99,7 +108,7 @@ const saveChanges = async () => {
         isToastOpen,
         toastMessage,
         toastColor,
-        correoProfesor.value,
+        profesorSeleccionado.value,
         recursoSeleccionado.value,
         currentDia.value.id,
         currentTramo.value.id,
@@ -152,7 +161,7 @@ const getTramosHorario = async () => {
 // Función para obtener los recursos
 const getRecurso = async () => {
   try {
-    const data = await getRecursos(isToastOpen,toastMessage,toastColor)
+    const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
     recursos.value = data.map((item) => ({ recursos: item.aulaYCarritos }))
   } catch (error) {
     console.error('Error obteniendo los recursos:', error)
@@ -203,9 +212,15 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
 
 // Watcher para observar cambios en recursoSeleccionado
 watch(recursoSeleccionado, async () => {
-  console.log('Recurso seleccionado:', recursoSeleccionado.value)
   await getReserva(isToastOpen,toastMessage,toastColor)
-})
+});
+
+const cargarDatos = async () => {
+  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
+
+  console.log('Usuarios cargados:', users.value);
+  
+};
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
@@ -213,6 +228,7 @@ onMounted(async () => {
   await getTramosHorario()
   await getRecurso()
   await deleteReservas()
+  await cargarDatos()
 })
 </script>
 
@@ -222,6 +238,7 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   padding: 20px;
+  margin-top: 70px;
   background-color: white;
   color: #1a1a1a;
   font-family: Arial, sans-serif;
@@ -243,6 +260,26 @@ onMounted(async () => {
   transition:
     border-color 0.3s,
     box-shadow 0.3s;
+}
+
+.custom-select-modal {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid #007bff;
+  border-radius: 5px;
+  background-color: white;
+  color: #007bff;
+  outline: none;
+  cursor: pointer;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+
+.custom-numAlumnos
+{
+  margin-top: 10px;
 }
 
 .custom-select:hover {
