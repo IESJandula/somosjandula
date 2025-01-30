@@ -38,13 +38,13 @@
           <div class="modal-content">
             <h2>Editar Reserva</h2>
             
-            <label for="profesorCorreo">Profesor:</label>
-            <select class="custom-select-modal" v-model="profesorSeleccionado">
+            <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
+            <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado">
               <option value="" disabled hidden>Seleccione un Profesor</option>
-              <option v-for="user in users" :key="`${user.email}`" :value="`${user.email}`">
+              <option v-for="user in users" :key="user.email" :value="user.email">
                 {{ `${user.nombre} ${user.apellidos}` }}
               </option>
-        </select>
+            </select>
 
             <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
             <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
@@ -63,7 +63,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { IonContent, IonPage } from '@ionic/vue';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
-import { obtenerInfoUsuarios } from '@/services/firebaseService';
+import { obtenerInfoUsuarios, obtenerRolesUsuario } from '@/services/firebaseService';
 
 // Variables reactivas
 const diasSemanas = ref([])
@@ -71,6 +71,7 @@ const tramosHorarios = ref([])
 const recursos = ref([])
 const reservas = ref({})
 const users = ref([]);
+const rolesUsuario = ref([]);
 const recursoSeleccionado = ref('')
 const profesorSeleccionado = ref('')
 const isModalOpen = ref(false)
@@ -102,6 +103,7 @@ const closeModal = () => {
 const saveChanges = async () => {
   if (currentDia.value && currentTramo.value && recursoSeleccionado.value) {
     try {
+
       // Llamar a la API para guardar la reserva
       await postReserva(
         isToastOpen,
@@ -112,7 +114,7 @@ const saveChanges = async () => {
         currentDia.value.id,
         currentTramo.value.id,
         numAlumnos.value
-      )
+      )      
 
       // Actualizar localmente las reservas después de guardar
       if (!reservas.value[currentDia.value.id]) {
@@ -222,19 +224,25 @@ watch(recursoSeleccionado, async () => {
 });
 
 const cargarDatos = async () => {
-  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
-
-  console.log('Usuarios cargados:', users.value);
-  
+  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);  
 };
+
+async function verificarRoles() {
+  try {
+    const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+    rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
+  } catch (error) {
+    console.error('Error al verificar roles:', error);
+  }
+}
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await getDiasSemanas()
   await getTramosHorario()
   await getRecurso()
-  await deleteReservas()
   await cargarDatos()
+  await verificarRoles();
 })
 </script>
 
