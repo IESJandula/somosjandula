@@ -42,7 +42,7 @@
             <label for="profesorCorreo">Profesor:</label>
             <select class="custom-select-modal" v-model="profesorSeleccionado">
               <option value="" disabled hidden>Seleccione un Profesor</option>
-              <option v-for="user in users" :key="`${user.email}`" :value="`${user.nombre} ${user.apellidos}`">
+              <option v-for="user in users" :key="`${user.email}`" :value="`${user.email}`">
                 {{ `${user.nombre} ${user.apellidos}` }}
               </option>
         </select>
