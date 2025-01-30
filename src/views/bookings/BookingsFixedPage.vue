@@ -5,7 +5,6 @@
       <div class="container">
         <!-- Dropdown para seleccionar recurso -->
         <select class="custom-select" v-model="recursoSeleccionado">
-          <option value="" disabled hidden>Seleccione un recurso</option>
           <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
             {{ recurso.recursos }}
           </option>
@@ -21,7 +20,7 @@
           </thead>
           <tbody>
             <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-              <td>{{ tramo.tramosHorarios }}</td>
+              <td>{{ tramo.tramoHorario }}</td>
               <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
                 <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
                   {{ reservas[tramo.id][dia.id].nombreYapellidos }} (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
@@ -139,7 +138,7 @@ const saveChanges = async () => {
 const getDiasSemanas = async () => {
   try {
     const data = await getDiasSemana(isToastOpen,toastMessage,toastColor)
-    diasSemanas.value = data.map((item) => ({ diaSemana: item.diasDeLaSemana, id: item.id }))
+    diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
   } catch (error) {
     console.error('Error obteniendo los días de la semana:', error)
   }
@@ -150,7 +149,7 @@ const getTramosHorario = async () => {
   try {
     const data = await getTramosHorarios(isToastOpen,toastMessage,toastColor)
     tramosHorarios.value = data.map((item) => ({
-      tramosHorarios: item.tramosHorarios,
+      tramoHorario: item.tramoHorario,
       id: item.id,
     }))
   } catch (error) {
@@ -162,7 +161,14 @@ const getTramosHorario = async () => {
 const getRecurso = async () => {
   try {
     const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
-    recursos.value = data.map((item) => ({ recursos: item.aulaYCarritos }))
+    recursos.value = data.map((item) => ({ recursos: item.id }))
+    
+    // Nos aseguraramos que recursos no está vacío antes de asignar
+    if (recursos.value.length > 0)
+    {
+      recursoSeleccionado.value = recursos.value[0].recursos;
+    }
+
   } catch (error) {
     console.error('Error obteniendo los recursos:', error)
   }
