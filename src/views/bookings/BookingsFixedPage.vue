@@ -23,7 +23,7 @@
               <td>{{ tramo.tramoHorario }}</td>
               <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
                 <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
-                  {{ reservas[tramo.id][dia.id].nombreYapellidos }} (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
+                  {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
                   }})
                   <button
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
