@@ -1,51 +1,48 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <ion-page>
-    <ion-content class="ion-padding" fullscreen>
-      <!-- Nueva tarjeta: Actualizar constantes -->
-      <div class="update-constants-card">
-          <div class="title-container">
-            <h1 class="title">Actualizar constantes</h1>
-          </div>
-          <ion-grid>
-            <ion-row>
-              <ion-col size="12">
-                <ion-item>
-                  <ion-label position="stacked">Clave de la constante:</ion-label>
-                  <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-                    <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">{{ constante.clave }}</ion-select-option>
-                  </ion-select>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col size="12">
-                <ion-item v-if="selectedConstante">
-                  <ion-label position="stacked">Valor:</ion-label>
-                  <ion-input v-model="selectedConstante.valor"></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col size="12">
-                <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">Actualizar</ion-button>
-              </ion-col>
-            </ion-row>
-            <!-- Mensaje de resultado de la actualización -->
-            <ion-row v-if="mensajeActualizacion">
-              <ion-col size="12">
-                <ion-text :color="mensajeColor">{{ mensajeActualizacion }}</ion-text>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-        </div>
-    </ion-content>
-  </ion-page>
+  <!-- Nueva tarjeta: Actualizar constantes -->
+  <div class="update-constants-card">
+    <div class="title-container">
+      <h1 class="title">Actualizar constantes</h1>
+    </div>
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Clave de la constante:</ion-label>
+            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
+              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">{{ constante.clave }}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item v-if="selectedConstante">
+            <ion-label position="stacked">Valor:</ion-label>
+            <ion-input v-model="selectedConstante.valor"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">Actualizar</ion-button>
+        </ion-col>
+      </ion-row>
+      <!-- Mensaje de resultado de la actualización -->
+      <ion-row v-if="mensajeActualizacion">
+        <ion-col size="12">
+          <ion-text :color="mensajeColor">{{ mensajeActualizacion }}</ion-text>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+  </div>
 </template>
 <script setup>
 import { bookingsApiUrl } from "@/environment/apiUrls.ts";
-import { ref, onMounted, watch } from 'vue'
-import { IonContent, IonPage } from '@ionic/vue';
+import { ref, onMounted } from 'vue'
+import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonText } from '@ionic/vue';
+import { IonSelect, IonSelectOption, IonInput, IonButton } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
 
@@ -73,16 +70,17 @@ const onConstanteChange = () => {
 
 // Función para actualizar la constante seleccionada
 const actualizarConstanteSeleccionada = async () => {
-  try {
-    const constantesActualizadas = constantes.value.map(c =>
-      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
-    );
+  try
+  {
+    const constantesActualizadas = constantes.value.map(c => c.clave === selectedConstante.value.clave ? selectedConstante.value : c);
 
-    await actualizarConstantes(bookingsApiUrl + '/bookings/fixed/constantes', toastMessage, toastColor, isToastOpen, constantesActualizadas);
+    await actualizarConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen, constantesActualizadas);
     crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Constante actualizada con éxito');
     mensajeActualizacion.value = 'Constantes actualizadas con éxito';
     mensajeColor.value = 'success';
-  } catch (error) {
+  }
+  catch (error)
+  {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar la constante');
     mensajeActualizacion.value = 'Error al actualizar la constante';
     mensajeColor.value = 'danger';
@@ -91,17 +89,22 @@ const actualizarConstanteSeleccionada = async () => {
 };
 
 // Función para obtener las constantes al cargar el componente
-const cargarConstantes = async () => {
-  try {
-    constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/fixed/constantes', toastMessage, toastColor, isToastOpen);
+const cargarConstantes = async () =>
+{
+  try
+  {
+    constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
-    // Seleccionar la constante "Impresión Deshabilitada" por defecto
+    // Seleccionar la constante "Reserva Deshabilitada" por defecto
     const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reserva Deshabilitada');
     
-    if (reservaDeshabilitada) {
+    if (reservaDeshabilitada)
+    {
       selectedConstante.value = reservaDeshabilitada;
     }
-  } catch (error) {
+  }
+  catch (error)
+  {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al obtener constantes');
     mensajeActualizacion.value = 'Error al obtener constantes';
     mensajeColor.value = 'danger';
