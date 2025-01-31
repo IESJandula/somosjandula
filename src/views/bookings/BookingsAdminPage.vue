@@ -75,15 +75,16 @@ const actualizarConstanteSeleccionada = async () => {
     const constantesActualizadas = constantes.value.map(c => c.clave === selectedConstante.value.clave ? selectedConstante.value : c);
 
     await actualizarConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen, constantesActualizadas);
-    crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Constante actualizada con éxito');
     mensajeActualizacion.value = 'Constantes actualizadas con éxito';
     mensajeColor.value = 'success';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
   }
   catch (error)
   {
-    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar la constante');
     mensajeActualizacion.value = 'Error al actualizar la constante';
     mensajeColor.value = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     throw new Error(error.message);
   }
 };
@@ -105,9 +106,9 @@ const cargarConstantes = async () =>
   }
   catch (error)
   {
-    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al obtener constantes');
     mensajeActualizacion.value = 'Error al obtener constantes';
     mensajeColor.value = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     throw new Error(error.message);
   }
 };

@@ -1,69 +1,63 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <ion-page>
-    <ion-content class="ion-padding" fullscreen>
-      <div class="container">
-        <!-- Dropdown para seleccionar recurso -->
-        <select class="custom-select" v-model="recursoSeleccionado">
-          <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
-            {{ recurso.recursos }}
+  <div class="container">
+    <!-- Dropdown para seleccionar recurso -->
+    <select class="custom-select" v-model="recursoSeleccionado">
+      <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
+        {{ recurso.recursos }}
+      </option>
+    </select>
+
+    <!-- Tabla con horarios y reservas -->
+    <table>
+      <thead>
+        <tr>
+          <th>Horarios</th>
+          <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+          <td>{{ tramo.tramoHorario }}</td>
+          <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+            <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
+              {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
+              }})
+              <button v-if="evaluarBoton" @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Modal de edición -->
+    <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos)" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Editar Reserva</h2>
+        
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado">
+          <option value="" disabled hidden>Seleccione un Profesor</option>
+          <option v-for="user in users" :key="user.email" :value="user.email">
+            {{ `${user.nombre} ${user.apellidos}` }}
           </option>
         </select>
 
-        <!-- Tabla con horarios y reservas -->
-        <table>
-          <thead>
-            <tr>
-              <th>Horarios</th>
-              <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-              <td>{{ tramo.tramoHorario }}</td>
-              <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
-                <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
-                  {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
-                  }})
-                  <button
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
+        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
 
-        <!-- Modal de edición -->
-        <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos)" class="modal-overlay">
-          <div class="modal-content">
-            <h2>Editar Reserva</h2>
-            
-            <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-            <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado">
-              <option value="" disabled hidden>Seleccione un Profesor</option>
-              <option v-for="user in users" :key="user.email" :value="user.email">
-                {{ `${user.nombre} ${user.apellidos}` }}
-              </option>
-            </select>
-
-            <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
-            <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
-
-            <button @click="saveChanges">Guardar Cambios</button>
-            <button @click="closeModal">Cerrar</button>
-          </div>
-        </div>
-
+        <button v-if="numAlumnos" @click="saveChanges">Reservar</button>
+        <button @click="closeModal">Cerrar</button>
       </div>
-    </ion-content>
-  </ion-page>
+    </div>
+  </div>
 </template>
 <script setup>
 
 import { ref, onMounted, watch } from 'vue'
-import { IonContent, IonPage } from '@ionic/vue';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario } from '@/services/firebaseService';
+import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas
 const diasSemanas = ref([])
@@ -79,7 +73,8 @@ const correoProfesor = ref('')
 const numAlumnos = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
-
+const mensajeActualizacion = ref('')
+const mensajeColor = ref('')
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -114,7 +109,7 @@ const saveChanges = async () => {
         currentDia.value.id,
         currentTramo.value.id,
         numAlumnos.value
-      )      
+      )
 
       // Actualizar localmente las reservas después de guardar
       if (!reservas.value[currentDia.value.id]) {
@@ -124,13 +119,18 @@ const saveChanges = async () => {
         nombreYapellidos: correoProfesor.value,
         nalumnos: numAlumnos.value,
       }
-
-      console.log('Reserva guardada exitosamente')
+      mensajeActualizacion.value = 'Reserva guardada exitosamente'
+      mensajeColor.value = 'success'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
     } catch (error) {
-      console.error('Error al guardar la reserva:', error)
+      mensajeActualizacion.value = 'Error al guardar la reserva:'
+      mensajeColor.value = 'danger'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
     }
   } else {
-    console.warn('Faltan datos para guardar la reserva')
+    mensajeActualizacion.value = 'Faltan datos para guardar la reserva'
+    mensajeColor.value = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen,mensajeColor, mensajeActualizacion)
   }
   closeModal()
   getReserva(recursoSeleccionado) // Actualizar reservas después de guardar
@@ -142,7 +142,9 @@ const getDiasSemanas = async () => {
     const data = await getDiasSemana(isToastOpen,toastMessage,toastColor)
     diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
   } catch (error) {
-    console.error('Error obteniendo los días de la semana:', error)
+    mensajeActualizacion.value = 'Error obteniendo los días de la semana'
+    mensajeColor.value = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
 
@@ -155,7 +157,9 @@ const getTramosHorario = async () => {
       id: item.id,
     }))
   } catch (error) {
-    console.error('Error obteniendo los tramos horarios:', error)
+    mensajeActualizacion.value = 'Error obteniendo los tramos horarios'
+    mensajeColor.value = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
 
@@ -172,7 +176,9 @@ const getRecurso = async () => {
     }
 
   } catch (error) {
-    console.error('Error obteniendo los recursos:', error)
+    mensajeActualizacion.value = 'Error obteniendo los recursos'
+    mensajeColor.value = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
 
@@ -213,7 +219,9 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
 
     console.log('Reserva cancelada exitosamente');
   } catch (error) {
-    console.error('Error al cancelar la reserva:', error);
+    mensajeActualizacion.value = 'Error al cancelar la reserva'
+    mensajeColor.value = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
   getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
 }
@@ -232,8 +240,22 @@ async function verificarRoles() {
     const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
     rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
   } catch (error) {
-    console.error('Error al verificar roles:', error);
+    mensajeActualizacion.value = 'Error al verificar roles'
+    mensajeColor.value = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
+}
+
+async function evaluarBoton() {
+  if (rolesUsuario.value.includes('ADMINISTRADOR'))
+  {
+    return true;
+  }
+  else if (user.email === reservas[tramo?.id]?.[dia?.id]?.email)
+  {
+    return true;
+  }
+  return false;
 }
 
 // Ejecutar las funciones iniciales al montar el componente
