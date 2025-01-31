@@ -152,6 +152,14 @@ export async function obtenerNombreYApellidosUsuario(toastMessage, toastColor, i
   };
 }
 
+export async function obtenerEmailUsuario(toastMessage, toastColor, isToastOpen)
+{
+  let jwtDecodificado = await obtenerJwtDecodificado(toastMessage, toastColor, isToastOpen) ;
+
+  // Retornamos un objeto con las propiedades 'nombre' y 'apellidos'
+  return jwtDecodificado.email;
+}
+
 export async function obtenerJwtDecodificado(toastMessage, toastColor, isToastOpen)
 {
   let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;

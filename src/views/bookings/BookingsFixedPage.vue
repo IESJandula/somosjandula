@@ -23,7 +23,7 @@
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
               {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
               }})
-              <button v-if="evaluarBoton" @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
+              <button v-if="isButtonVisible" @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
             </span>
           </td>
         </tr>
@@ -54,9 +54,9 @@
 </template>
 <script setup>
 
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
-import { obtenerInfoUsuarios, obtenerRolesUsuario } from '@/services/firebaseService';
+import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas
@@ -75,6 +75,7 @@ const currentTramo = ref(null)
 const currentDia = ref(null)
 const mensajeActualizacion = ref('')
 const mensajeColor = ref('')
+let emailUserActual = '';
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -217,7 +218,9 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     await deleteReserva(isToastOpen,toastMessage,toastColor,email, recursoSeleccionado, dia.id, tramo.id)
 
 
-    console.log('Reserva cancelada exitosamente');
+    mensajeActualizacion.value = 'Reserva cancelada exitosamente'
+      mensajeColor.value = 'success'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   } catch (error) {
     mensajeActualizacion.value = 'Error al cancelar la reserva'
     mensajeColor.value = 'danger'
@@ -246,12 +249,9 @@ async function verificarRoles() {
   }
 }
 
-const evaluarBoton = computed(() => {
-  if (rolesUsuario.value.includes('ADMINISTRADOR')) {
-    return true;
-  }
-  return false;
-});
+const isButtonVisible = () => {
+  return rolesUsuario.value.includes("ADMINISTRADOR");
+};
 
 
 // Ejecutar las funciones iniciales al montar el componente
@@ -261,7 +261,11 @@ onMounted(async () => {
   await getRecurso()
   await cargarDatos()
   await verificarRoles();
+  emailUserActual = await obtenerEmailUsuario(toastMessage,toastColor,isToastOpen);
+
+  console.log(emailUserActual);
 })
+
 </script>
 
 <style scoped>
