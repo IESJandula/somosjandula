@@ -44,7 +44,7 @@
         </select>
 
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
-        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
+        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" min="0" />
 
         <button v-if="numAlumnos" @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
@@ -54,7 +54,7 @@
 </template>
 <script setup>
 
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -84,7 +84,7 @@ const toastColor = ref('success');
 const openModal = (tramo, dia) => {
   currentTramo.value = tramo
   currentDia.value = dia
-  correoProfesor.value = reservas[dia.id]?.[tramo.id]?.nombreYapellidos || '' // Cargar correo si existe
+  correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
   numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
   isModalOpen.value = true
 }
@@ -246,17 +246,13 @@ async function verificarRoles() {
   }
 }
 
-async function evaluarBoton() {
-  if (rolesUsuario.value.includes('ADMINISTRADOR'))
-  {
-    return true;
-  }
-  else if (user.email === reservas[tramo?.id]?.[dia?.id]?.email)
-  {
+const evaluarBoton = computed(() => {
+  if (rolesUsuario.value.includes('ADMINISTRADOR')) {
     return true;
   }
   return false;
-}
+});
+
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
