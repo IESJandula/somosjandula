@@ -5,7 +5,7 @@ export const obtenerConstantes = async (endpointConstantes, toastMessage, toastC
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    return await fetch(printersApiUrl + endpointConstantes,
+    return await fetch(endpointConstantes,
     {
         method: 'GET',
         headers:
@@ -19,7 +19,7 @@ export const actualizarConstantes = async (endpointConstantes, toastMessage, toa
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    return await fetch(printersApiUrl + endpointConstantes,
+    return await fetch(endpointConstantes,
     {
         method: 'POST',
         headers:

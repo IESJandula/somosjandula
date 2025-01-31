@@ -2,210 +2,116 @@
 <template>
   <ion-page>
     <ion-content class="ion-padding" fullscreen>
-      <div class="container">
-        <!-- Dropdown para seleccionar recurso -->
-        <select class="custom-select" v-model="recursoSeleccionado">
-          <option value="">Seleccione un recurso</option>
-          <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
-            {{ recurso.recursos }}
-          </option>
-        </select>
-
-        <!-- Tabla con horarios y reservas -->
-        <table>
-          <thead>
-            <tr>
-              <th>Horarios</th>
-              <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-              <td>{{ tramo.tramosHorarios }}</td>
-              <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
-                <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
-                  {{ reservas[tramo.id][dia.id].nombreYapellidos }} (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
-                  }})
-                  <button
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <!-- Modal de edición -->
-        <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos)" class="modal-overlay">
-          <div class="modal-content">
-            <h2>Editar Reserva</h2>
-            <label for="profesorCorreo">Correo del Profesor:</label>
-            <input v-model="correoProfesor" type="email" id="profesorCorreo" placeholder="Correo del profesor" />
-
-            <label for="numAlumnos">Número de Alumnos:</label>
-            <input v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
-
-            <button @click="saveChanges">Guardar Cambios</button>
-            <button @click="closeModal">Cerrar</button>
+      <!-- Nueva tarjeta: Actualizar constantes -->
+      <div class="update-constants-card">
+          <div class="title-container">
+            <h1 class="title">Actualizar constantes</h1>
           </div>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="12">
+                <ion-item>
+                  <ion-label position="stacked">Clave de la constante:</ion-label>
+                  <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
+                    <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">{{ constante.clave }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="12">
+                <ion-item v-if="selectedConstante">
+                  <ion-label position="stacked">Valor:</ion-label>
+                  <ion-input v-model="selectedConstante.valor"></ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col size="12">
+                <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">Actualizar</ion-button>
+              </ion-col>
+            </ion-row>
+            <!-- Mensaje de resultado de la actualización -->
+            <ion-row v-if="mensajeActualizacion">
+              <ion-col size="12">
+                <ion-text :color="mensajeColor">{{ mensajeActualizacion }}</ion-text>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
         </div>
-
-      </div>
     </ion-content>
   </ion-page>
 </template>
 <script setup>
+import { bookingsApiUrl } from "@/environment/apiUrls.ts";
 import { ref, onMounted, watch } from 'vue'
 import { IonContent, IonPage } from '@ionic/vue';
-import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
+import { crearToast } from '@/utils/toast.js';
+import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
 
-// Variables reactivas
-const diasSemanas = ref([])
-const tramosHorarios = ref([])
-const recursos = ref([])
-const reservas = ref({})
-const recursoSeleccionado = ref('')
-const isModalOpen = ref(false)
-const correoProfesor = ref('')
-const numAlumnos = ref('')
-const currentTramo = ref(null)
-const currentDia = ref(null)
+// Selección de constante
+const selectedConstante = ref(null);
+const constantes = ref([]);
 
-// Función para abrir el modal
-const openModal = (tramo, dia) => {
-  currentTramo.value = tramo
-  currentDia.value = dia
-  correoProfesor.value = reservas[dia.id]?.[tramo.id]?.nombreYapellidos || '' // Cargar correo si existe
-  numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
-  isModalOpen.value = true
-}
+// Variables para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
 
-// Función para cerrar el modal
-const closeModal = () => {
-  isModalOpen.value = false
-}
+// Nueva variable reactiva para el mensaje de actualización
+const mensajeActualizacion = ref('');
+const mensajeColor = ref('');
 
-// Función para guardar los cambios (ahora usando `postReserva`)
-const saveChanges = async () => {
-  if (currentDia.value && currentTramo.value && recursoSeleccionado.value) {
-    try {
-      // Llamar a la API para guardar la reserva
-      await postReserva(
-        correoProfesor.value,
-        recursoSeleccionado.value,
-        currentDia.value.id,
-        currentTramo.value.id,
-        numAlumnos.value
-      )
-
-      // Actualizar localmente las reservas después de guardar
-      if (!reservas.value[currentDia.value.id]) {
-        reservas.value[currentDia.value.id] = {}
-      }
-      reservas.value[currentDia.value.id][currentTramo.value.id] = {
-        nombreYapellidos: correoProfesor.value,
-        nalumnos: numAlumnos.value,
-      }
-
-      console.log('Reserva guardada exitosamente')
-    } catch (error) {
-      console.error('Error al guardar la reserva:', error)
-    }
+// Función que se llama cuando el usuario selecciona una constante
+const onConstanteChange = () => {
+  if (selectedConstante.value && selectedConstante.value.valor !== undefined) {
+    selectedConstante.value.valor = selectedConstante.value.valor;
   } else {
-    console.warn('Faltan datos para guardar la reserva')
+    selectedConstante.value = { valor: '' };
   }
-  closeModal()
-  getReserva(recursoSeleccionado) // Actualizar reservas después de guardar
-}
+};
 
-// Función para obtener los días de la semana
-const getDiasSemanas = async () => {
+// Función para actualizar la constante seleccionada
+const actualizarConstanteSeleccionada = async () => {
   try {
-    const data = await getDiasSemana()
-    diasSemanas.value = data.map((item) => ({ diaSemana: item.diasDeLaSemana, id: item.id }))
-  } catch (error) {
-    console.error('Error obteniendo los días de la semana:', error)
-  }
-}
+    const constantesActualizadas = constantes.value.map(c =>
+      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
+    );
 
-// Función para obtener los tramos horarios
-const getTramosHorario = async () => {
+    await actualizarConstantes(bookingsApiUrl + '/bookings/fixed/constantes', toastMessage, toastColor, isToastOpen, constantesActualizadas);
+    crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Constante actualizada con éxito');
+    mensajeActualizacion.value = 'Constantes actualizadas con éxito';
+    mensajeColor.value = 'success';
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar la constante');
+    mensajeActualizacion.value = 'Error al actualizar la constante';
+    mensajeColor.value = 'danger';
+    throw new Error(error.message);
+  }
+};
+
+// Función para obtener las constantes al cargar el componente
+const cargarConstantes = async () => {
   try {
-    const data = await getTramosHorarios()
-    tramosHorarios.value = data.map((item) => ({
-      tramosHorarios: item.tramosHorarios,
-      id: item.id,
-    }))
-  } catch (error) {
-    console.error('Error obteniendo los tramos horarios:', error)
-  }
-}
+    constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/fixed/constantes', toastMessage, toastColor, isToastOpen);
 
-// Función para obtener los recursos
-const getRecurso = async () => {
-  try {
-    const data = await getRecursos()
-    recursos.value = data.map((item) => ({ recursos: item.aulaYCarritos }))
-  } catch (error) {
-    console.error('Error obteniendo los recursos:', error)
-  }
-}
-
-// Función para obtener las reservas estructuradas
-const getReserva = async () => {
-  const recurso = recursoSeleccionado.value;
-  const data = await getReservas(recurso)
-
-  // Reestructurar reservas en un objeto organizado por tramos y días
-  const estructuraReservas = {}
-
-  for (let i = 0; i < data.length; i++) {
-    const reserva = data[i]
-    const tramo = reserva.tramoHorario
-    const dia = reserva.diaSemana
-
-    if (!estructuraReservas[tramo]) {
-      estructuraReservas[tramo] = {}
+    // Seleccionar la constante "Impresión Deshabilitada" por defecto
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reserva Deshabilitada');
+    
+    if (reservaDeshabilitada) {
+      selectedConstante.value = reservaDeshabilitada;
     }
-
-    estructuraReservas[tramo][dia] = {
-      nalumnos: reserva.nalumnos,
-      nombreYapellidos: reserva.nombreYapellidos,
-      email: reserva.email,
-    }
-  }
-  reservas.value = estructuraReservas
-}
-
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
-  try {
-    event.stopPropagation()
-    console.log('Reserva a cancelar:', tramo, dia, recursoSeleccionado, email);
-
-
-
-    // Llamar a la API para cancelar la reserva
-    await deleteReserva(email, recursoSeleccionado, dia.id, tramo.id)
-
-
-    console.log('Reserva cancelada exitosamente');
   } catch (error) {
-    console.error('Error al cancelar la reserva:', error);
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al obtener constantes');
+    mensajeActualizacion.value = 'Error al obtener constantes';
+    mensajeColor.value = 'danger';
+    throw new Error(error.message);
   }
-  getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
-}
-
-// Watcher para observar cambios en recursoSeleccionado
-watch(recursoSeleccionado, async () => {
-  console.log('Recurso seleccionado:', recursoSeleccionado.value)
-  await getReserva()
-})
+};
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
-  await getDiasSemanas()
-  await getTramosHorario()
-  await getRecurso()
-  await deleteReservas()
+  await cargarConstantes()
 })
 </script>
 
