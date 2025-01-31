@@ -96,7 +96,7 @@ import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { menuController } from '@ionic/vue'; // Importa el controlador del menú
 import { getAuth, signOut } from 'firebase/auth';
-import { validarRolesMenu, obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
+import { validarRolesMenu, obtenerNombreYApellidosUsuario} from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast';
 
 export default defineComponent({

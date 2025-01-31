@@ -5,7 +5,6 @@
       <div class="container">
         <!-- Dropdown para seleccionar recurso -->
         <select class="custom-select" v-model="recursoSeleccionado">
-          <option value="" disabled hidden>Seleccione un recurso</option>
           <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
             {{ recurso.recursos }}
           </option>
@@ -21,7 +20,7 @@
           </thead>
           <tbody>
             <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-              <td>{{ tramo.tramosHorarios }}</td>
+              <td>{{ tramo.tramoHorario }}</td>
               <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
                 <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
                   {{ reservas[tramo.id][dia.id].nombreYapellidos }} (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
@@ -39,13 +38,13 @@
           <div class="modal-content">
             <h2>Editar Reserva</h2>
             
-            <label for="profesorCorreo">Profesor:</label>
-            <select class="custom-select-modal" v-model="profesorSeleccionado">
+            <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
+            <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado">
               <option value="" disabled hidden>Seleccione un Profesor</option>
-              <option v-for="user in users" :key="`${user.email}`" :value="`${user.nombre} ${user.apellidos}`">
+              <option v-for="user in users" :key="user.email" :value="user.email">
                 {{ `${user.nombre} ${user.apellidos}` }}
               </option>
-        </select>
+            </select>
 
             <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
             <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" />
@@ -64,7 +63,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { IonContent, IonPage } from '@ionic/vue';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
-import { obtenerInfoUsuarios } from '@/services/firebaseService';
+import { obtenerInfoUsuarios, obtenerRolesUsuario } from '@/services/firebaseService';
 
 // Variables reactivas
 const diasSemanas = ref([])
@@ -72,6 +71,7 @@ const tramosHorarios = ref([])
 const recursos = ref([])
 const reservas = ref({})
 const users = ref([]);
+const rolesUsuario = ref([]);
 const recursoSeleccionado = ref('')
 const profesorSeleccionado = ref('')
 const isModalOpen = ref(false)
@@ -103,6 +103,7 @@ const closeModal = () => {
 const saveChanges = async () => {
   if (currentDia.value && currentTramo.value && recursoSeleccionado.value) {
     try {
+
       // Llamar a la API para guardar la reserva
       await postReserva(
         isToastOpen,
@@ -113,7 +114,7 @@ const saveChanges = async () => {
         currentDia.value.id,
         currentTramo.value.id,
         numAlumnos.value
-      )
+      )      
 
       // Actualizar localmente las reservas después de guardar
       if (!reservas.value[currentDia.value.id]) {
@@ -139,7 +140,7 @@ const saveChanges = async () => {
 const getDiasSemanas = async () => {
   try {
     const data = await getDiasSemana(isToastOpen,toastMessage,toastColor)
-    diasSemanas.value = data.map((item) => ({ diaSemana: item.diasDeLaSemana, id: item.id }))
+    diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
   } catch (error) {
     console.error('Error obteniendo los días de la semana:', error)
   }
@@ -150,7 +151,7 @@ const getTramosHorario = async () => {
   try {
     const data = await getTramosHorarios(isToastOpen,toastMessage,toastColor)
     tramosHorarios.value = data.map((item) => ({
-      tramosHorarios: item.tramosHorarios,
+      tramoHorario: item.tramoHorario,
       id: item.id,
     }))
   } catch (error) {
@@ -162,7 +163,14 @@ const getTramosHorario = async () => {
 const getRecurso = async () => {
   try {
     const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
-    recursos.value = data.map((item) => ({ recursos: item.aulaYCarritos }))
+    recursos.value = data.map((item) => ({ recursos: item.id }))
+    
+    // Nos aseguraramos que recursos no está vacío antes de asignar
+    if (recursos.value.length > 0)
+    {
+      recursoSeleccionado.value = recursos.value[0].recursos;
+    }
+
   } catch (error) {
     console.error('Error obteniendo los recursos:', error)
   }
@@ -216,19 +224,25 @@ watch(recursoSeleccionado, async () => {
 });
 
 const cargarDatos = async () => {
-  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
-
-  console.log('Usuarios cargados:', users.value);
-  
+  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);  
 };
+
+async function verificarRoles() {
+  try {
+    const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+    rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
+  } catch (error) {
+    console.error('Error al verificar roles:', error);
+  }
+}
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await getDiasSemanas()
   await getTramosHorario()
   await getRecurso()
-  await deleteReservas()
   await cargarDatos()
+  await verificarRoles();
 })
 </script>
 
