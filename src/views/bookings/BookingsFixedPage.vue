@@ -23,7 +23,7 @@
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
               {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
               }})
-              <button v-if="isButtonVisible" @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
+              <button v-if="rolesUsuario.includes('ADMINISTRADOR') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email === emailUsuarioActual)" @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
             </span>
           </td>
         </tr>
@@ -76,10 +76,18 @@ const currentDia = ref(null)
 const mensajeActualizacion = ref('')
 const mensajeColor = ref('')
 let emailUserActual = '';
+const emailLogged = ref('');
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
+
+
+const emailUsuarioActual = ref(null);
+
+const obtenerEmailUsuarioActual = async () => {
+  emailUsuarioActual.value = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
+};
 
 // Función para abrir el modal
 const openModal = (tramo, dia) => {
@@ -249,11 +257,6 @@ async function verificarRoles() {
   }
 }
 
-const isButtonVisible = () => {
-  return rolesUsuario.value.includes("ADMINISTRADOR");
-};
-
-
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await getDiasSemanas()
@@ -261,9 +264,10 @@ onMounted(async () => {
   await getRecurso()
   await cargarDatos()
   await verificarRoles();
+  await obtenerEmailUsuarioActual();
   emailUserActual = await obtenerEmailUsuario(toastMessage,toastColor,isToastOpen);
 
-  console.log(emailUserActual);
+  emailLogged.value = emailUserActual;
 })
 
 </script>
