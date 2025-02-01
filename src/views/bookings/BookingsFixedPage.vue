@@ -9,7 +9,7 @@
     </select>
 
     <!-- Tabla con horarios y reservas -->
-    <table>
+    <table v-if="mostrarTabla">
       <thead>
         <tr>
           <th>Horarios</th>
@@ -51,10 +51,13 @@
       </div>
     </div>
   </div>
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+      @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 <script setup>
 
 import { ref, onMounted, watch } from 'vue'
+import { IonToast } from '@ionic/vue';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -73,16 +76,15 @@ const correoProfesor = ref('')
 const numAlumnos = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
-const mensajeActualizacion = ref('')
-const mensajeColor = ref('')
+let mensajeActualizacion = ''
+let mensajeColor = ''
 let emailUserActual = '';
+const mostrarTabla = ref(true);
 const emailLogged = ref('');
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
-
-
 const emailUsuarioActual = ref(null);
 
 const obtenerEmailUsuarioActual = async () => {
@@ -128,18 +130,18 @@ const saveChanges = async () => {
         nombreYapellidos: correoProfesor.value,
         nalumnos: numAlumnos.value,
       }
-      mensajeActualizacion.value = 'Reserva guardada exitosamente'
-      mensajeColor.value = 'success'
+      mensajeActualizacion = 'Reserva guardada exitosamente'
+      mensajeColor = 'success'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
     } catch (error) {
-      mensajeActualizacion.value = 'Error al guardar la reserva:'
-      mensajeColor.value = 'danger'
+      mensajeActualizacion = 'Reserva creada correctamente'
+      mensajeColor = 'warning'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
     }
   } else {
-    mensajeActualizacion.value = 'Faltan datos para guardar la reserva'
-    mensajeColor.value = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen,mensajeColor, mensajeActualizacion)
+    mensajeActualizacion = 'Faltan datos para guardar la reserva'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
   closeModal()
   getReserva(recursoSeleccionado) // Actualizar reservas después de guardar
@@ -151,8 +153,8 @@ const getDiasSemanas = async () => {
     const data = await getDiasSemana(isToastOpen,toastMessage,toastColor)
     diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
   } catch (error) {
-    mensajeActualizacion.value = 'Error obteniendo los días de la semana'
-    mensajeColor.value = 'danger'
+    mensajeActualizacion = 'Error obteniendo los días de la semana'
+    mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
@@ -166,8 +168,8 @@ const getTramosHorario = async () => {
       id: item.id,
     }))
   } catch (error) {
-    mensajeActualizacion.value = 'Error obteniendo los tramos horarios'
-    mensajeColor.value = 'danger'
+    mensajeActualizacion = 'Error obteniendo los tramos horarios'
+    mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
@@ -185,8 +187,8 @@ const getRecurso = async () => {
     }
 
   } catch (error) {
-    mensajeActualizacion.value = 'Error obteniendo los recursos'
-    mensajeColor.value = 'danger'
+    mensajeActualizacion = 'Error obteniendo los recursos'
+    mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
@@ -220,18 +222,17 @@ const getReserva = async () => {
 const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
   try {
     event.stopPropagation()
-    console.log('Reserva a cancelar:', tramo, dia, recursoSeleccionado, email);
 
     // Llamar a la API para cancelar la reserva
     await deleteReserva(isToastOpen,toastMessage,toastColor,email, recursoSeleccionado, dia.id, tramo.id)
 
 
-    mensajeActualizacion.value = 'Reserva cancelada exitosamente'
-      mensajeColor.value = 'success'
+    mensajeActualizacion = 'Reserva cancelada exitosamente'
+      mensajeColor = 'success'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   } catch (error) {
-    mensajeActualizacion.value = 'Error al cancelar la reserva'
-    mensajeColor.value = 'danger'
+    mensajeActualizacion = 'Error al cancelar la reserva'
+    mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
   getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
@@ -251,8 +252,8 @@ async function verificarRoles() {
     const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
     rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
   } catch (error) {
-    mensajeActualizacion.value = 'Error al verificar roles'
-    mensajeColor.value = 'danger'
+    mensajeActualizacion = 'Error al verificar roles'
+    mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
@@ -261,7 +262,7 @@ async function verificarRoles() {
 onMounted(async () => {
   await getDiasSemanas()
   await getTramosHorario()
-  await getRecurso()
+  await getRecurso();
   await cargarDatos()
   await verificarRoles();
   await obtenerEmailUsuarioActual();
