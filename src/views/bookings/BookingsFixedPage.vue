@@ -87,6 +87,13 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
 
+const verificarRecursos = () => {
+  if (recursos.value.length === 0) {
+    mostrarTabla.value = false;
+    crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay recursos')
+  }
+};
+
 const obtenerEmailUsuarioActual = async () => {
   emailUsuarioActual.value = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
 };
@@ -263,6 +270,7 @@ onMounted(async () => {
   await getDiasSemanas()
   await getTramosHorario()
   await getRecurso();
+  verificarRecursos();
   await cargarDatos()
   await verificarRoles();
   await obtenerEmailUsuarioActual();
