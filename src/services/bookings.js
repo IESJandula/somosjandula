@@ -111,6 +111,7 @@ export const getReservas = async (toastMessage, toastColor, isToastOpen, recurso
 }
 
 export const postReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos) => {
+  try{
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
     const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings', {
@@ -129,6 +130,11 @@ export const postReserva = async (toastMessage, toastColor, isToastOpen, email, 
       throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
     }
     return await response.json()
+  }
+    catch (error)
+    {
+      console.log();
+    }
 }
 
 export const getProfesores = async (toastMessage, toastColor, isToastOpen) => {
