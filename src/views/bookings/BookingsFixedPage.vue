@@ -4,7 +4,7 @@
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
-        {{ recurso.recursos }}
+        {{ recurso.recursos }} ({{ recurso.cantidad }})
       </option>
     </select>
 
@@ -44,7 +44,7 @@
         </select>
 
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
-        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" min="0" />
+        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" min="0" :max="cantidadSeleccionada" />
 
         <button v-if="numAlumnos" @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
@@ -70,6 +70,7 @@ const reservas = ref({})
 const users = ref([]);
 const rolesUsuario = ref([]);
 const recursoSeleccionado = ref('')
+const cantidadSeleccionada = ref('')
 const profesorSeleccionado = ref('')
 const isModalOpen = ref(false)
 const correoProfesor = ref('')
@@ -185,13 +186,14 @@ const getTramosHorario = async () => {
 const getRecurso = async () => {
   try {
     const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
-    recursos.value = data.map((item) => ({ recursos: item.id }))
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
     
     // Nos aseguraramos que recursos no está vacío antes de asignar
     if (recursos.value.length > 0)
     {
       recursoSeleccionado.value = recursos.value[0].recursos;
-    }
+      cantidadSeleccionada.value = recursos.value[0].cantidad;
+    }    
 
   } catch (error) {
     mensajeActualizacion = 'Error obteniendo los recursos'
@@ -245,9 +247,13 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
   getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
 }
 
-// Watcher para observar cambios en recursoSeleccionado
-watch(recursoSeleccionado, async () => {
-  await getReserva(isToastOpen,toastMessage,toastColor)
+// Watcher para actualizar cantidadSeleccionada cuando recursoSeleccionado cambie
+watch(recursoSeleccionado, () => {
+  const recursoEncontrado = recursos.value.find(
+    (recurso) => recurso.recursos === recursoSeleccionado.value
+  );
+  cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
+  getReserva()
 });
 
 const cargarDatos = async () => {
