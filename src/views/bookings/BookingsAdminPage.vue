@@ -125,16 +125,21 @@ let mensajeActualizacion = '';
 let mensajeColor = '';
 
 // Función que se llama cuando el usuario selecciona una constante
-const onConstanteChange = () => {
-  if (selectedConstante.value && selectedConstante.value.valor !== undefined) {
+const onConstanteChange = () =>
+{
+  if (selectedConstante.value && selectedConstante.value.valor !== undefined)
+  {
     selectedConstante.value.valor = selectedConstante.value.valor;
-  } else {
+  }
+  else
+  {
     selectedConstante.value = { valor: '' };
   }
 };
 
 // Función para actualizar la constante seleccionada
-const actualizarConstanteSeleccionada = async () => {
+const actualizarConstanteSeleccionada = async () =>
+{
   try
   {
     const constantesActualizadas = constantes.value.map(c => c.clave === selectedConstante.value.clave ? selectedConstante.value : c);
@@ -194,7 +199,7 @@ const crearRecurso = async () =>
       mensajeActualizacion = 'Recurso creado con éxito';
       mensajeColor = 'success';
     }
-  else if(status.status == 409)
+    else if(status.status == 409)
     {
       mensajeActualizacion = 'Recurso ya existe';
       mensajeColor = 'warning';
@@ -220,14 +225,17 @@ const cargarRecursos = async () =>
     const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
     recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))  
 
-  } catch (error) {
+  }
+  catch (error)
+  {
     mensajeActualizacion = 'Todavía no existen recursos'
     mensajeColor = 'warning'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
 
-const eliminarRecurso = async (recurso, event) => {
+const eliminarRecurso = async (recurso, event) =>
+{
   try
   {
     event.stopPropagation()
@@ -236,7 +244,9 @@ const eliminarRecurso = async (recurso, event) => {
     mensajeColor = 'success'
     mensajeActualizacion = 'Recurso eliminado correctamente'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-  } catch (error) {
+  }
+  catch (error)
+  {
     mensajeActualizacion = 'Error eliminando el recurso'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -245,7 +255,8 @@ const eliminarRecurso = async (recurso, event) => {
 };
 
 // Ejecutar las funciones iniciales al montar el componente
-onMounted(async () => {
+onMounted(async () =>
+{
   await cargarConstantes()
   await cargarRecursos()
 })

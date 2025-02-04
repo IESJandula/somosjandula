@@ -96,8 +96,10 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
 
-const verificarRecursos = () => {
-  if (recursos.value.length === 0) {
+const verificarRecursos = () =>
+{
+  if (recursos.value.length === 0)
+  {
     mostrarTabla.value = false;
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay recursos')
   }
@@ -123,12 +125,14 @@ const verificarConstantes = async () =>
 
 verificarConstantes
 
-const obtenerEmailUsuarioActual = async () => {
+const obtenerEmailUsuarioActual = async () =>
+{
   emailUsuarioActual.value = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
 };
 
 // Función para abrir el modal
-const openModal = (tramo, dia) => {
+const openModal = (tramo, dia) =>
+{
   currentTramo.value = tramo
   currentDia.value = dia
   correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
@@ -137,23 +141,26 @@ const openModal = (tramo, dia) => {
 }
 
 // Función para cerrar el modal
-const closeModal = () => {
+const closeModal = () =>
+{
   isModalOpen.value = false
 }
 
 // Función para guardar los cambios (ahora usando `postReserva`)
-const saveChanges = async () => {
+const saveChanges = async () =>
+{
   if (currentDia.value && currentTramo.value && recursoSeleccionado.value) {
-    try {
-      if(parseInt(numAlumnos.value) < 0)
+    try
     {
-      numAlumnos.value = numAlumnos.value * -1
-    }
+      if(parseInt(numAlumnos.value) < 0)
+      {
+        numAlumnos.value = numAlumnos.value * -1
+      }
 
       if(parseInt(numAlumnos.value) > parseInt(cantidadSeleccionada.value))
-    {
-      numAlumnos.value = cantidadSeleccionada.value
-    }
+      {
+        numAlumnos.value = cantidadSeleccionada.value
+      }
       // Llamar a la API para guardar la reserva
       await postReserva(
         isToastOpen,
@@ -167,22 +174,28 @@ const saveChanges = async () => {
       )
 
       // Actualizar localmente las reservas después de guardar
-      if (!reservas.value[currentDia.value.id]) {
+      if (!reservas.value[currentDia.value.id])
+      {
         reservas.value[currentDia.value.id] = {}
       }
-      reservas.value[currentDia.value.id][currentTramo.value.id] = {
+      reservas.value[currentDia.value.id][currentTramo.value.id] =
+      {
         nombreYapellidos: correoProfesor.value,
         nalumnos: numAlumnos.value,
       }
       mensajeActualizacion = 'Reserva guardada exitosamente'
       mensajeColor = 'success'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-    } catch (error) {
+    }
+    catch (error)
+    {
       mensajeActualizacion = 'Reserva creada correctamente'
       mensajeColor = 'warning'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
     }
-  } else {
+  }
+  else
+  {
     mensajeActualizacion = 'Faltan datos para guardar la reserva'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -192,11 +205,15 @@ const saveChanges = async () => {
 }
 
 // Función para obtener los días de la semana
-const getDiasSemanas = async () => {
-  try {
+const getDiasSemanas = async () =>
+{
+  try
+  {
     const data = await getDiasSemana(isToastOpen,toastMessage,toastColor)
     diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
-  } catch (error) {
+  }
+  catch (error)
+  {
     mensajeActualizacion = 'Error obteniendo los días de la semana'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -204,14 +221,18 @@ const getDiasSemanas = async () => {
 }
 
 // Función para obtener los tramos horarios
-const getTramosHorario = async () => {
-  try {
+const getTramosHorario = async () =>
+{
+  try
+  {
     const data = await getTramosHorarios(isToastOpen,toastMessage,toastColor)
     tramosHorarios.value = data.map((item) => ({
       tramoHorario: item.tramoHorario,
       id: item.id,
     }))
-  } catch (error) {
+  }
+  catch (error)
+  {
     mensajeActualizacion = 'Error obteniendo los tramos horarios'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -219,8 +240,10 @@ const getTramosHorario = async () => {
 }
 
 // Función para obtener los recursos
-const getRecurso = async () => {
-  try {
+const getRecurso = async () =>
+{
+  try
+  {
     const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
     recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
     
@@ -231,7 +254,9 @@ const getRecurso = async () => {
       cantidadSeleccionada.value = recursos.value[0].cantidad;
     }    
 
-  } catch (error) {
+  }
+  catch (error)
+  {
     mensajeActualizacion = 'Error obteniendo los recursos'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -239,23 +264,27 @@ const getRecurso = async () => {
 }
 
 // Función para obtener las reservas estructuradas
-const getReserva = async () => {
+const getReserva = async () =>
+{
   const recurso = recursoSeleccionado.value;
   const data = await getReservas(isToastOpen,toastMessage,toastColor,recurso)
 
   // Reestructurar reservas en un objeto organizado por tramos y días
   const estructuraReservas = {}
 
-  for (let i = 0; i < data.length; i++) {
+  for (let i = 0; i < data.length; i++)
+  {
     const reserva = data[i]
     const tramo = reserva.tramoHorario
     const dia = reserva.diaSemana
 
-    if (!estructuraReservas[tramo]) {
+    if (!estructuraReservas[tramo])
+    {
       estructuraReservas[tramo] = {}
     }
 
-    estructuraReservas[tramo][dia] = {
+    estructuraReservas[tramo][dia] =
+    {
       nalumnos: reserva.nalumnos,
       nombreYapellidos: reserva.nombreYapellidos,
       email: reserva.email,
@@ -264,8 +293,10 @@ const getReserva = async () => {
   reservas.value = estructuraReservas
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
-  try {
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) =>
+{
+  try
+  {
     event.stopPropagation()
 
     // Llamar a la API para cancelar la reserva
@@ -275,7 +306,9 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     mensajeActualizacion = 'Reserva cancelada exitosamente'
       mensajeColor = 'success'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-  } catch (error) {
+  }
+  catch (error)
+  {
     mensajeActualizacion = 'Error al cancelar la reserva'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -284,7 +317,8 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
 }
 
 // Watcher para actualizar cantidadSeleccionada cuando recursoSeleccionado cambie
-watch(recursoSeleccionado, () => {
+watch(recursoSeleccionado, () =>
+{
   const recursoEncontrado = recursos.value.find(
     (recurso) => recurso.recursos === recursoSeleccionado.value
   );
@@ -292,15 +326,20 @@ watch(recursoSeleccionado, () => {
   getReserva()
 });
 
-const cargarDatos = async () => {
+const cargarDatos = async () =>
+{
   users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);  
 };
 
-async function verificarRoles() {
-  try {
+async function verificarRoles()
+{
+  try
+  {
     const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
     rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
-  } catch (error) {
+  }
+  catch (error)
+  {
     mensajeActualizacion = 'Error al verificar roles'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -308,7 +347,8 @@ async function verificarRoles() {
 }
 
 // Ejecutar las funciones iniciales al montar el componente
-onMounted(async () => {
+onMounted(async () =>
+{
   await getDiasSemanas()
   await getTramosHorario()
   await getRecurso();
