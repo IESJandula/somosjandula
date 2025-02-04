@@ -1,6 +1,5 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <!-- Nueva tarjeta: Actualizar constantes -->
   <div class="update-constants-card">
     <div class="title-container">
       <h1 class="title">Actualizar constantes</h1>
@@ -11,7 +10,9 @@
           <ion-item>
             <ion-label position="stacked">Clave de la constante:</ion-label>
             <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">{{ constante.clave }}</ion-select-option>
+              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
+                {{ constante.clave }}
+              </ion-select-option>
             </ion-select>
           </ion-item>
         </ion-col>
@@ -26,25 +27,54 @@
       </ion-row>
       <ion-row>
         <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">Actualizar</ion-button>
+          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
+            Actualizar
+          </ion-button>
         </ion-col>
       </ion-row>
-      <!-- Mensaje de resultado de la actualización -->
       <ion-row v-if="mensajeActualizacion">
         <ion-col size="12">
           <ion-text :color="mensajeColor">{{ mensajeActualizacion }}</ion-text>
         </ion-col>
       </ion-row>
+
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Recurso:</ion-label>
+            <ion-input v-model="recurso"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Cantidad:</ion-label>
+            <ion-input type="number" v-model="cantidad" min = "0" max ="100"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" color="secondary" @click="crearRecurso">
+            Crear Recurso
+          </ion-button>
+        </ion-col>
+      </ion-row>
     </ion-grid>
   </div>
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+  @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
+
 <script setup>
 import { bookingsApiUrl } from "@/environment/apiUrls.ts";
 import { ref, onMounted } from 'vue'
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonText } from '@ionic/vue';
-import { IonSelect, IonSelectOption, IonInput, IonButton } from '@ionic/vue';
+import { IonSelect, IonSelectOption, IonInput, IonButton, IonToast } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
+import { postRecurso } from '@/services/bookings';
 
 // Selección de constante
 const selectedConstante = ref(null);
@@ -55,9 +85,12 @@ const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 
+const recurso = ref('');
+const cantidad = ref('');
+
 // Nueva variable reactiva para el mensaje de actualización
-const mensajeActualizacion = ref('');
-const mensajeColor = ref('');
+let mensajeActualizacion = '';
+let mensajeColor = '';
 
 // Función que se llama cuando el usuario selecciona una constante
 const onConstanteChange = () => {
@@ -75,15 +108,15 @@ const actualizarConstanteSeleccionada = async () => {
     const constantesActualizadas = constantes.value.map(c => c.clave === selectedConstante.value.clave ? selectedConstante.value : c);
 
     await actualizarConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen, constantesActualizadas);
-    mensajeActualizacion.value = 'Constantes actualizadas con éxito';
-    mensajeColor.value = 'success';
+    mensajeActualizacion = 'Constantes actualizadas con éxito';
+    mensajeColor = 'success';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
 
   }
   catch (error)
   {
-    mensajeActualizacion.value = 'Error al actualizar la constante';
-    mensajeColor.value = 'danger';
+    mensajeActualizacion = 'Error al actualizar la constante';
+    mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     throw new Error(error.message);
   }
@@ -106,12 +139,47 @@ const cargarConstantes = async () =>
   }
   catch (error)
   {
-    mensajeActualizacion.value = 'Error al obtener constantes';
-    mensajeColor.value = 'danger';
+    mensajeActualizacion = 'Error al obtener constantes';
+    mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     throw new Error(error.message);
   }
 };
+
+const crearRecurso = async () => 
+{
+  try
+  {
+    if(parseInt(cantidad.value) > 100)
+  {
+    cantidad.value = "100"
+  }
+
+    const status = await postRecurso(toastMessage, toastColor, isToastOpen, recurso.value, parseInt(cantidad.value))
+    
+    if(status.status == 200)
+    {
+      mensajeActualizacion = 'Recurso creado con éxito';
+      mensajeColor = 'success';
+    }
+  else if(status.status == 409)
+    {
+      mensajeActualizacion = 'Recurso ya existe';
+      mensajeColor = 'warning';
+    }
+  crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    // Limpiar el formulario después de crear el recurso
+    recurso.value = '';
+    cantidad.value = '';
+  }
+  catch (error)
+  {
+    mensajeActualizacion = 'Error al crear el recurso'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
+  
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {

@@ -117,7 +117,15 @@ const closeModal = () => {
 const saveChanges = async () => {
   if (currentDia.value && currentTramo.value && recursoSeleccionado.value) {
     try {
+      if(parseInt(numAlumnos.value) < 0)
+    {
+      numAlumnos.value = numAlumnos.value * -1
+    }
 
+      if(parseInt(numAlumnos.value) > parseInt(cantidadSeleccionada.value))
+    {
+      numAlumnos.value = cantidadSeleccionada.value
+    }
       // Llamar a la API para guardar la reserva
       await postReserva(
         isToastOpen,
