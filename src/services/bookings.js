@@ -89,6 +89,30 @@ export const getRecursos = async (toastMessage, toastColor, isToastOpen) => {
   }
 }
 
+export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurso) =>
+{
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+        recurso: recurso
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error('No se ha cargado previamente ningun recurso')
+    }
+
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 export const postReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos) => {
   try{
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;

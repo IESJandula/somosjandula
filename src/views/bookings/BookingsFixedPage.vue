@@ -16,7 +16,7 @@
           <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td>{{ tramo.tramoHorario }}</td>
           <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
@@ -26,6 +26,11 @@
               <button v-if="rolesUsuario.includes('ADMINISTRADOR') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email === emailUsuarioActual)" @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
             </span>
           </td>
+        </tr>
+      </tbody>
+      <tbody v-else>
+        <tr>
+          <td colspan="6">Reservas deshabilitadas</td> 
         </tr>
       </tbody>
     </table>
@@ -61,11 +66,13 @@ import { IonToast } from '@ionic/vue';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
+import { obtenerConstantes } from '@/services/constantes';
 
 // Variables reactivas
 const diasSemanas = ref([])
 const tramosHorarios = ref([])
 const recursos = ref([])
+const constantes = ref([]);
 const reservas = ref({})
 const users = ref([]);
 const rolesUsuario = ref([]);
@@ -78,6 +85,7 @@ const numAlumnos = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
 let mensajeActualizacion = ''
+const valorConstante = ref('')
 let mensajeColor = ''
 let emailUserActual = '';
 const mostrarTabla = ref(true);
@@ -94,6 +102,26 @@ const verificarRecursos = () => {
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay recursos')
   }
 };
+
+const verificarConstantes = async () =>
+{
+  try
+  {
+    constantes.value = await obtenerConstantes('http://localhost:8084/bookings/constants', toastMessage, toastColor, isToastOpen);
+
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas fijas');
+    valorConstante.value = reservaDeshabilitada.valor
+  }
+  catch (error)
+  {
+    mensajeActualizacion = 'Error al obtener constantes';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    throw new Error(error.message);
+  }
+}
+
+verificarConstantes
 
 const obtenerEmailUsuarioActual = async () => {
   emailUsuarioActual.value = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
@@ -288,6 +316,7 @@ onMounted(async () => {
   await cargarDatos()
   await verificarRoles();
   await obtenerEmailUsuarioActual();
+  await verificarConstantes();
   emailUserActual = await obtenerEmailUsuario(toastMessage,toastColor,isToastOpen);
 
   emailLogged.value = emailUserActual;

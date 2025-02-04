@@ -68,26 +68,25 @@
     </div>
     <ion-row>
       <ion-col size="12">
-        <ion-table v-if="recursos.length > 0">
-          <ion-thead>
-            <ion-tr>
-              <ion-th>Recurso</ion-th>
-              <ion-th>Cantidad</ion-th>
-              <ion-th>Acciones</ion-th>
-            </ion-tr>
-          </ion-thead>
-          <ion-tbody>
-            <ion-tr v-for="r in recursos" :key="r.id">
-              <ion-td>{{ r.recurso }}</ion-td>
-              <ion-td>{{ r.cantidad }}</ion-td>
-              <ion-td>
-                <ion-button color="danger" @click="eliminarRecurso(r.recurso)">
-                  <ion-icon name="close"></ion-icon>
-                </ion-button>
-              </ion-td>
-            </ion-tr>
-          </ion-tbody>
-        </ion-table>
+        <table v-if="recursos.length > 0">
+          <thead>
+            <tr>
+              <th>Recurso</th>
+              <th>Cantidad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in recursos" :key="r.id">
+              <td>{{ r.recursos }}</td>
+              <td>{{ r.cantidad }}</td>
+              <td>
+                <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)"> X 
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         <ion-col v-else size="12">
           <ion-label>No hay recursos disponibles.</ion-label>
         </ion-col>
@@ -106,7 +105,7 @@ import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonText } from '@ionic/vue'
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonToast } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
-import { postRecurso, getRecursos } from '@/services/bookings';
+import { postRecurso, getRecursos, deleteRecurso } from '@/services/bookings';
 
 // Selección de constante
 const selectedConstante = ref(null);
@@ -222,14 +221,28 @@ const cargarRecursos = async () =>
     recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))  
 
   } catch (error) {
-    mensajeActualizacion = 'Error obteniendo los recursos'
-    mensajeColor = 'danger'
+    mensajeActualizacion = 'Todavía no existen recursos'
+    mensajeColor = 'warning'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
 
+const eliminarRecurso = async (recurso, event) => {
+  try
+  {
+    event.stopPropagation()
 
-  
+    await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso);
+    mensajeColor = 'success'
+    mensajeActualizacion = 'Recurso eliminado correctamente'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  } catch (error) {
+    mensajeActualizacion = 'Error eliminando el recurso'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+  cargarRecursos();
+};
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
