@@ -2,7 +2,7 @@
 <template>
   <div class="update-constants-card">
     <div class="title-container">
-      <h1 class="title">Actualizar constantes</h1>
+      <h1 class="title">Actualizar Constantes</h1>
     </div>
     <ion-grid>
       <ion-row>
@@ -37,7 +37,9 @@
           <ion-text :color="mensajeColor">{{ mensajeActualizacion }}</ion-text>
         </ion-col>
       </ion-row>
-
+      <div class="title-container">
+      <h1 class="title">Crear Recurso</h1>
+    </div>
       <ion-row>
         <ion-col size="12">
           <ion-item>
@@ -61,6 +63,36 @@
           </ion-button>
         </ion-col>
       </ion-row>
+      <div class="title-container">
+      <h1 class="title">Lista de Recursos</h1>
+    </div>
+    <ion-row>
+      <ion-col size="12">
+        <ion-table v-if="recursos.length > 0">
+          <ion-thead>
+            <ion-tr>
+              <ion-th>Recurso</ion-th>
+              <ion-th>Cantidad</ion-th>
+              <ion-th>Acciones</ion-th>
+            </ion-tr>
+          </ion-thead>
+          <ion-tbody>
+            <ion-tr v-for="r in recursos" :key="r.id">
+              <ion-td>{{ r.recurso }}</ion-td>
+              <ion-td>{{ r.cantidad }}</ion-td>
+              <ion-td>
+                <ion-button color="danger" @click="eliminarRecurso(r.recurso)">
+                  <ion-icon name="close"></ion-icon>
+                </ion-button>
+              </ion-td>
+            </ion-tr>
+          </ion-tbody>
+        </ion-table>
+        <ion-col v-else size="12">
+          <ion-label>No hay recursos disponibles.</ion-label>
+        </ion-col>
+      </ion-col>
+    </ion-row>
     </ion-grid>
   </div>
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
@@ -74,11 +106,12 @@ import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonText } from '@ionic/vue'
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonToast } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
-import { postRecurso } from '@/services/bookings';
+import { postRecurso, getRecursos } from '@/services/bookings';
 
 // Selección de constante
 const selectedConstante = ref(null);
 const constantes = ref([]);
+const recursos = ref([])
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -171,6 +204,7 @@ const crearRecurso = async () =>
     // Limpiar el formulario después de crear el recurso
     recurso.value = '';
     cantidad.value = '';
+    cargarRecursos()
   }
   catch (error)
   {
@@ -179,11 +213,28 @@ const crearRecurso = async () =>
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
+
+const cargarRecursos = async () =>
+{
+  try
+  {
+    const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))  
+
+  } catch (error) {
+    mensajeActualizacion = 'Error obteniendo los recursos'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
+
+
   
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await cargarConstantes()
+  await cargarRecursos()
 })
 </script>
 
