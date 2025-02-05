@@ -42,7 +42,7 @@
         <div class="switch-container">
             <span>Previos</span>
             <label class="switch">
-                <input type="checkbox" v-model="switchStatus">
+                <input type="checkbox" v-model="switchStatus" @change="switchRecurso" >
                 <span class="slider"></span>
             </label>
             <span>Finales</span>
@@ -200,7 +200,11 @@ const crearRecurso = async () =>
     if(parseInt(cantidad.value) > 100)
   {
     cantidad.value = "100"
-  }
+    }
+    if (parseInt(cantidad.value) < 0)
+    {
+      cantidad.value = cantidad.value * -1
+    }
 
     const status = await postRecurso(toastMessage, toastColor, isToastOpen, recurso.value, parseInt(cantidad.value))
     
@@ -264,11 +268,21 @@ const eliminarRecurso = async (recurso, event) =>
   cargarRecursos();
 };
 
+const switchRecurso = async() =>
+{
+  if (switchStatus.value)
+  {
+    
+  }
+  
+}
+
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () =>
 {
   await cargarConstantes()
   await cargarRecursos()
+  await switchRecurso()
 })
 </script>
 
