@@ -61,7 +61,7 @@ export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso,
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
+    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
     {
       method: 'POST',
       headers:
@@ -113,7 +113,7 @@ export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurs
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
+    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
     {
       method: 'DELETE',
       headers:
