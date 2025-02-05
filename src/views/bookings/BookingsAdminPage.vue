@@ -195,9 +195,6 @@ const cargarConstantes = async () =>
 
 const crearRecurso = async () => 
 {
-  console.log(switchStatus.value);
-  
-
   try
   {
     if(parseInt(cantidad.value) > 100)
@@ -236,7 +233,7 @@ const cargarRecursos = async () =>
   try
   {
     const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
-    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))  
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
 
   }
   catch (error)
