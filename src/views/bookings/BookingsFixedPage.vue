@@ -95,6 +95,7 @@ const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
+const switchStatus = ref(false)
 
 const verificarRecursos = () =>
 {
@@ -244,7 +245,7 @@ const getRecurso = async () =>
 {
   try
   {
-    const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
+    const data = await getRecursos(isToastOpen, toastMessage, toastColor, switchStatus.value)   
     recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
     
     // Nos aseguraramos que recursos no está vacío antes de asignar

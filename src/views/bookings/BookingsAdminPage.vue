@@ -33,22 +33,19 @@
         </ion-col>
       </ion-row>
       <ion-row v-if="mensajeActualizacion">
-        <ion-col size="12">
-          <ion-text :color="mensajeColor">{{ mensajeActualizacion }}</ion-text>
-        </ion-col>
       </ion-row>
       <div class="title-container">
         <h1 class="title">Crear Recurso</h1>
         <div class="switch-container">
-            <span>Previos</span>
-            <label class="switch">
-                <input type="checkbox" v-model="switchStatus" @change="switchRecurso" >
-                <span class="slider"></span>
-            </label>
-            <span>Finales</span>
+          <span>Previos</span>
+          <label class="switch">
+            <input type="checkbox" v-model="switchStatus" @change="switchRecurso">
+            <span class="slider"></span>
+          </label>
+          <span>Finales</span>
         </div>
-    </div>
-      
+      </div>
+
       <ion-row>
         <ion-col size="12">
           <ion-item>
@@ -61,7 +58,7 @@
         <ion-col size="12">
           <ion-item>
             <ion-label position="stacked">Cantidad:</ion-label>
-            <ion-input type="number" v-model="cantidad" min = "0" max ="100"></ion-input>
+            <ion-input type="number" v-model="cantidad" min="0"></ion-input>
           </ion-item>
         </ion-col>
       </ion-row>
@@ -73,44 +70,54 @@
         </ion-col>
       </ion-row>
       <div class="title-container">
-      <h1 class="title">Lista de Recursos</h1>
-    </div>
-    <ion-row>
-      <ion-col size="12">
-        <table v-if="recursos.length > 0">
-          <thead>
-            <tr>
-              <th>Recurso</th>
-              <th>Cantidad</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="r in recursos" :key="r.id">
-              <td>{{ r.recursos }}</td>
-              <td>{{ r.cantidad }}</td>
-              <td>
-                <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)"> X 
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <ion-col v-else size="12">
-          <ion-label>No hay recursos disponibles.</ion-label>
+        <h1 class="title">Lista de Recursos</h1>
+      </div>
+      <ion-row>
+        <ion-col size="12">
+          <table v-if="recursosPrevios.length > 0 || recursosFinales.length > 0">
+            <thead>
+              <tr>
+                <th>Recurso</th>
+                <th>Cantidad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody v-if="!switchStatus">
+              <tr v-for="r in recursosPrevios" :key="r.id">
+                <td>{{ r.recursos }}</td>
+                <td>{{ r.cantidad }}</td>
+                <td>
+                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)"> X
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <tr v-for="r in recursosFinales" :key="r.id">
+                <td>{{ r.recursos }}</td>
+                <td>{{ r.cantidad }}</td>
+                <td>
+                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)"> X
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <ion-col v-else size="12">
+            <ion-label>No hay recursos disponibles.</ion-label>
+          </ion-col>
         </ion-col>
-      </ion-col>
-    </ion-row>
+      </ion-row>
     </ion-grid>
   </div>
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-  @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup>
 import { bookingsApiUrl } from "@/environment/apiUrls.ts";
 import { ref, onMounted } from 'vue'
-import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonText } from '@ionic/vue';
+import { IonGrid, IonRow, IonCol, IonItem, IonLabel } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonToast } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
@@ -119,7 +126,8 @@ import { postRecurso, getRecursos, deleteRecurso } from '@/services/bookings';
 // Selección de constante
 const selectedConstante = ref(null);
 const constantes = ref([]);
-const recursos = ref([])
+const recursosPrevios = ref([])
+const recursosFinales = ref([])
 const switchStatus = ref(false)
 
 // Variables para el toast
@@ -197,16 +205,12 @@ const crearRecurso = async () =>
 {
   try
   {
-    if(parseInt(cantidad.value) > 100)
-  {
-    cantidad.value = "100"
-    }
     if (parseInt(cantidad.value) < 0)
     {
       cantidad.value = cantidad.value * -1
     }
 
-    const status = await postRecurso(toastMessage, toastColor, isToastOpen, recurso.value, parseInt(cantidad.value))
+    const status = await postRecurso(toastMessage, toastColor, isToastOpen, recurso.value, parseInt(cantidad.value), switchStatus.value)
     
     if(status.status == 200)
     {
@@ -236,8 +240,16 @@ const cargarRecursos = async () =>
 {
   try
   {
-    const data = await getRecursos(isToastOpen,toastMessage,toastColor)   
-    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
+    const data = await getRecursos(isToastOpen, toastMessage, toastColor, switchStatus.value)
+
+    if (switchStatus.value)
+    {
+      recursosFinales.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
+    }
+    else
+    {
+      recursosPrevios.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
+    }
 
   }
   catch (error)
@@ -254,7 +266,7 @@ const eliminarRecurso = async (recurso, event) =>
   {
     event.stopPropagation()
 
-    await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso);
+    await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso, switchStatus.value);
     mensajeColor = 'success'
     mensajeActualizacion = 'Recurso eliminado correctamente'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -268,13 +280,9 @@ const eliminarRecurso = async (recurso, event) =>
   cargarRecursos();
 };
 
-const switchRecurso = async() =>
+const switchRecurso = async () =>
 {
-  if (switchStatus.value)
-  {
-    
-  }
-  
+  cargarRecursos()
 }
 
 // Ejecutar las funciones iniciales al montar el componente

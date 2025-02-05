@@ -26,7 +26,7 @@ export declare function getProfesores(toastMessage: Ref<string>,
                                       toastColor: Ref<string>,
                                       isToastOpen: Ref<boolean>): Promise<string[]>;
 
-export declare function postRecurso(toastMessage: Ref<string>,
+export declare function postRecursoFinal(toastMessage: Ref<string>,
                                     toastColor: Ref<string>,
                                     isToastOpen: Ref<boolean>): Promise<string[]>;
 
