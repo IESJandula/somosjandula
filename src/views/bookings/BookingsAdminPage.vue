@@ -42,7 +42,7 @@
         <div class="switch-container">
             <span>Previos</span>
             <label class="switch">
-                <input type="checkbox">
+                <input type="checkbox" v-model="switchStatus">
                 <span class="slider"></span>
             </label>
             <span>Finales</span>
@@ -120,6 +120,7 @@ import { postRecurso, getRecursos, deleteRecurso } from '@/services/bookings';
 const selectedConstante = ref(null);
 const constantes = ref([]);
 const recursos = ref([])
+const switchStatus = ref(false)
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -194,6 +195,9 @@ const cargarConstantes = async () =>
 
 const crearRecurso = async () => 
 {
+  console.log(switchStatus.value);
+  
+
   try
   {
     if(parseInt(cantidad.value) > 100)
