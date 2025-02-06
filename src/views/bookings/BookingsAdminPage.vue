@@ -121,7 +121,7 @@ import { IonGrid, IonRow, IonCol, IonItem, IonLabel } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonToast } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
-import { postRecurso, getRecursos, deleteRecurso } from '@/services/bookings';
+import { postRecurso, getRecursos, deleteRecurso, getReservas } from '@/services/bookings';
 
 // Selección de constante
 const selectedConstante = ref(null);
@@ -145,13 +145,13 @@ let mensajeColor = '';
 // Función que se llama cuando el usuario selecciona una constante
 const onConstanteChange = () =>
 {
-  if (selectedConstante.value && selectedConstante.value.valor !== undefined)
-  {
-    selectedConstante.value.valor = selectedConstante.value.valor;
-  }
-  else
+  if (!selectedConstante.value)
   {
     selectedConstante.value = { valor: '' };
+  }
+  else if (selectedConstante.value.valor === undefined)
+  {
+    selectedConstante.value.valor = '';
   }
 };
 
@@ -254,7 +254,7 @@ const cargarRecursos = async () =>
   }
   catch (error)
   {
-    mensajeActualizacion = 'Todavía no existen recursos'
+    mensajeActualizacion = 'No existen recursos todavía'
     mensajeColor = 'warning'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
@@ -264,21 +264,56 @@ const eliminarRecurso = async (recurso, event) =>
 {
   try
   {
-    event.stopPropagation()
+    event.stopPropagation();
 
+    const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)
+
+    // Obtener un array de recursos asignados
+    const recursoEliminar = data.map((item) => item.recurso);
+
+    // Verificar si el recurso está asignado a alguna reserva
+    if (recursoEliminar.includes(recurso))
+    {
+      mensajeColor = 'danger';
+      mensajeActualizacion = 'No es posible eliminar un recurso asignado a una reserva';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+    
+
+    // Eliminar el recurso del array local (basado en el switchStatus)
+    if (switchStatus.value)
+    {
+      // Eliminar de recursosFinales
+      recursosFinales.value = recursosFinales.value.filter(r => r.recursos !== recurso);
+    }
+    else
+    {
+      // Eliminar de recursosPrevios
+      recursosPrevios.value = recursosPrevios.value.filter(r => r.recursos !== recurso);
+    }
+
+    // Llamar a la API para eliminar el recurso en el backend
     await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso, switchStatus.value);
-    mensajeColor = 'success'
-    mensajeActualizacion = 'Recurso eliminado correctamente'
+    
+    // Mostrar mensaje de éxito
+    mensajeColor = 'success';
+    mensajeActualizacion = 'Recurso eliminado correctamente';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    
+    // Recargar los recursos desde el backend para asegurarse de que todo esté sincronizado
+    cargarRecursos();
+
   }
   catch (error)
   {
-    mensajeActualizacion = 'Error eliminando el recurso'
-    mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    // Si ocurre un error, mostrar mensaje de error
+    mensajeActualizacion = 'Error eliminando el recurso';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   }
-  cargarRecursos();
 };
+
 
 const switchRecurso = async () =>
 {

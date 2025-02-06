@@ -190,7 +190,7 @@ export const getReservas = async (toastMessage, toastColor, isToastOpen, recurso
     {
       throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
     }
-    const data = await response.json()
+    const data = await response.json()    
     return data
   }
   catch (error)

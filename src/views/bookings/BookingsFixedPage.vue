@@ -268,7 +268,7 @@ const getRecurso = async () =>
 const getReserva = async () =>
 {
   const recurso = recursoSeleccionado.value;
-  const data = await getReservas(isToastOpen,toastMessage,toastColor,recurso)
+  const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)  
 
   // Reestructurar reservas en un objeto organizado por tramos y días
   const estructuraReservas = {}
