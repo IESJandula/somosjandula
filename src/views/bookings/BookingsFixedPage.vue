@@ -4,7 +4,7 @@
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
-        {{ recurso.recursos }} ({{ recurso.cantidad }})
+        {{ recurso.recursos }} (Máximo permitido: {{ recurso.cantidad }})
       </option>
     </select>
 
@@ -38,7 +38,7 @@
     <!-- Modal de edición -->
     <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos)" class="modal-overlay">
       <div class="modal-content">
-        <h2>Editar Reserva</h2>
+        <h2>Reservar</h2>
         
         <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
         <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado">
@@ -51,11 +51,12 @@
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" min="0" :max="cantidadSeleccionada" />
 
-        <button v-if="numAlumnos" @click="saveChanges">Reservar</button>
+        <button v-if="numAlumnos && profesorSeleccionado && !(numAlumnos < 0) && !(numAlumnos > cantidadSeleccionada)" @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
     </div>
   </div>
+
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
       @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
