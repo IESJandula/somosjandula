@@ -51,13 +51,14 @@
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" min="0" :max="cantidadSeleccionada" />
 
-        <button v-if="numAlumnos && profesorSeleccionado && !(numAlumnos < 0) && !(numAlumnos > cantidadSeleccionada)" @click="saveChanges">Reservar</button>
+        <button v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && profesorSeleccionado" @click="saveChanges">Reservar</button>
+        <button v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && rolesUsuario[0].includes('PROFESOR') " @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
     </div>
   </div>
 
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
       @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 <script setup>
@@ -163,6 +164,7 @@ const saveChanges = async () =>
       {
         numAlumnos.value = cantidadSeleccionada.value
       }
+
       // Llamar a la API para guardar la reserva
       await postReserva(
         isToastOpen,
@@ -191,8 +193,8 @@ const saveChanges = async () =>
     }
     catch (error)
     {
-      mensajeActualizacion = 'Reserva creada correctamente'
-      mensajeColor = 'warning'
+      mensajeActualizacion = 'Error al crear la reserva'
+      mensajeColor = 'danger'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
     }
   }
@@ -472,6 +474,7 @@ td {
 
 .reservaHover:hover
 {
+  /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
   cursor: pointer;
 }
 
