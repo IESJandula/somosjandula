@@ -1,6 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="container">
+    <span class="valorConstante">{{ valorConstante }}</span>
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
@@ -29,8 +30,14 @@
         </tr>
       </tbody>
       <tbody v-else>
-        <tr>
-          <td colspan="6">{{valorConstante}}</td> 
+        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
+          <td class="reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
+            <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
+              {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
+              }})
+            </span>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -383,6 +390,15 @@ onMounted(async () =>
 </script>
 
 <style scoped>
+
+.valorConstante
+{
+  color:#dc3545;
+  padding:10px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -490,6 +506,11 @@ td {
 {
   /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
   cursor: pointer;
+}
+.reservaBloqueadaHover:hover
+{
+  /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
+  cursor: auto;
 }
 
 
