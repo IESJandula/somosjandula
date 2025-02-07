@@ -19,7 +19,7 @@
       <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td>{{ tramo.tramoHorario }}</td>
-          <td v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
               {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
               }})
@@ -30,7 +30,7 @@
       </tbody>
       <tbody v-else>
         <tr>
-          <td colspan="6">Reservas deshabilitadas</td> 
+          <td colspan="6">{{valorConstante}}</td> 
         </tr>
       </tbody>
     </table>
@@ -469,6 +469,12 @@ td {
   height: 50px;
   background-color: #e9f5ff;
 }
+
+.reservaHover:hover
+{
+  cursor: pointer;
+}
+
 
 th:first-child {
   background-color: #0056b3;
