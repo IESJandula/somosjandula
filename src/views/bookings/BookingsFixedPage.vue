@@ -9,16 +9,16 @@
     </select>
 
     <!-- Tabla con horarios y reservas -->
-    <table v-if="mostrarTabla">
+    <table class="tabla-container" v-if="mostrarTabla">
       <thead>
         <tr>
-          <th>Horarios</th>
+          <th class="sticky-column">Horarios</th>
           <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
         </tr>
       </thead>
       <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-          <td>{{ tramo.tramoHorario }}</td>
+          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
               {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
@@ -126,8 +126,6 @@ const verificarConstantes = async () =>
   }
 }
 
-verificarConstantes
-
 const obtenerEmailUsuarioActual = async () =>
 {
   emailUsuarioActual.value = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
@@ -141,6 +139,9 @@ const openModal = (tramo, dia) =>
   correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
   numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
   isModalOpen.value = true
+
+  getReserva()
+  verificarConstantes()
 }
 
 // Función para cerrar el modal
@@ -150,63 +151,75 @@ const closeModal = () =>
 }
 
 // Función para guardar los cambios (ahora usando `postReserva`)
-const saveChanges = async () =>
-{
-  if (currentDia.value && currentTramo.value && recursoSeleccionado.value) {
-    try
-    {
-      if(parseInt(numAlumnos.value) < 0)
-      {
-        numAlumnos.value = numAlumnos.value * -1
-      }
-
-      if(parseInt(numAlumnos.value) > parseInt(cantidadSeleccionada.value))
-      {
-        numAlumnos.value = cantidadSeleccionada.value
-      }
-
-      // Llamar a la API para guardar la reserva
-      await postReserva(
-        isToastOpen,
-        toastMessage,
-        toastColor,
-        profesorSeleccionado.value,
-        recursoSeleccionado.value,
-        currentDia.value.id,
-        currentTramo.value.id,
-        numAlumnos.value
-      )
-
-      // Actualizar localmente las reservas después de guardar
-      if (!reservas.value[currentDia.value.id])
-      {
-        reservas.value[currentDia.value.id] = {}
-      }
-      reservas.value[currentDia.value.id][currentTramo.value.id] =
-      {
-        nombreYapellidos: correoProfesor.value,
-        nalumnos: numAlumnos.value,
-      }
-      mensajeActualizacion = 'Reserva guardada exitosamente'
-      mensajeColor = 'success'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-    }
-    catch (error)
-    {
-      mensajeActualizacion = 'Error al crear la reserva'
-      mensajeColor = 'danger'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-    }
+const saveChanges = async () => {
+  if (!currentDia.value || !currentTramo.value || !recursoSeleccionado.value) {
+    mensajeActualizacion = 'Faltan datos para guardar la reserva';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
   }
-  else
-  {
-    mensajeActualizacion = 'Faltan datos para guardar la reserva'
-    mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+
+  // Validar si ya existe un email en la reserva del mismo día y tramo
+  const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
+  if (reservaExistente && reservaExistente.email) {
+    mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
   }
-  closeModal()
-  getReserva(recursoSeleccionado) // Actualizar reservas después de guardar
-}
+
+  try {
+    mensajeActualizacion = 'Reserva guardada exitosamente';
+    mensajeColor = 'success';
+
+    // Normalizar número de alumnos
+    let alumnos = Math.abs(parseInt(numAlumnos.value) || 0);
+    const maxAlumnos = parseInt(cantidadSeleccionada.value) || 0;
+
+    if (alumnos > maxAlumnos) {
+      alumnos = maxAlumnos;
+    }
+
+    // Llamar a la API para guardar la reserva
+    await postReserva(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+      profesorSeleccionado.value,
+      recursoSeleccionado.value,
+      currentDia.value.id,
+      currentTramo.value.id,
+      alumnos
+    );
+
+    // Actualizar reservas localmente
+    if (!reservas.value[currentDia.value.id]) {
+      reservas.value[currentDia.value.id] = {};
+    }
+
+    reservas.value[currentDia.value.id][currentTramo.value.id] = {
+      email: correoProfesor.value, // Guardamos el email del profesor
+      nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
+      nalumnos: alumnos,
+    };
+
+    if (valorConstante.value != '')
+    {
+      mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
+      mensajeColor = 'danger';
+    }
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  } catch (error) {
+    mensajeActualizacion = 'Error al crear la reserva';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  }
+
+  closeModal();
+  getReserva(recursoSeleccionado); // Actualizar reservas después de guardar
+};
+
 
 // Función para obtener los días de la semana
 const getDiasSemanas = async () =>
@@ -355,13 +368,14 @@ onMounted(async () =>
 {
   await getDiasSemanas()
   await getTramosHorario()
-  await getRecurso();
-  verificarRecursos();
+  await getRecurso()
+  verificarRecursos()
+  await getReserva()
   await cargarDatos()
-  await verificarRoles();
-  await obtenerEmailUsuarioActual();
-  await verificarConstantes();
-  emailUserActual = await obtenerEmailUsuario(toastMessage,toastColor,isToastOpen);
+  await verificarRoles()
+  await obtenerEmailUsuarioActual()
+  await verificarConstantes()
+  emailUserActual = await obtenerEmailUsuario(toastMessage,toastColor,isToastOpen)
 
   emailLogged.value = emailUserActual;
 })
@@ -551,10 +565,20 @@ tr:hover td {
   background-color: #0056b3;
 }
 
+  /* Contenedor que permite el scroll horizontal solo en móviles */
 @media (max-width: 768px) {
-  table {
-    font-size: 14px;
-    width: 100%;
+  .tabla-container {
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  /* Hacer que los tramos se mantengan visibles (bloqueados) */
+  .sticky-column {
+    position: sticky;
+    left: 0;
+    background: white; /* Para que no se mezcle con otras celdas */
+    z-index: 2;
   }
 
   .custom-select {
