@@ -1,10 +1,10 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div class="update-constants-card">
-    <div class="title-container">
-      <h1 class="title">Actualizar Constantes</h1>
-    </div>
-    <ion-grid>
+  <div class="form-wrapper">
+    <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Actualizar Constantes</h1>
+      </div>
       <ion-row>
         <ion-col size="12">
           <ion-item>
@@ -32,20 +32,12 @@
           </ion-button>
         </ion-col>
       </ion-row>
-      <ion-row v-if="mensajeActualizacion">
-      </ion-row>
+    </div>
+    <div class="form-container">
+      <ion-row v-if="mensajeActualizacion"> </ion-row>
       <div class="title-container">
-        <h1 class="title">Crear Recurso</h1>
-        <div class="switch-container">
-          <span>Previos</span>
-          <label class="switch">
-            <input type="checkbox" v-model="switchStatus" @change="switchRecurso">
-            <span class="slider"></span>
-          </label>
-          <span>Finales</span>
-        </div>
+        <h1 class="title">Gestión de Recursos</h1>
       </div>
-
       <ion-row>
         <ion-col size="12">
           <ion-item>
@@ -64,272 +56,395 @@
       </ion-row>
       <ion-row>
         <ion-col size="12">
-          <ion-button expand="block" color="secondary" @click="crearRecurso">
+          <div class="switch-container">
+            <span>Previos</span>
+            <label class="switch">
+              <input type="checkbox" v-model="esCompartible" @change="switchRecurso" />
+              <span class="slider"></span>
+            </label>
+            <span>Finales</span>
+          </div>
+          <ion-button expand="block" v-if="cantidad > 0 && recurso" color="secondary" @click="crearRecurso">
             Crear Recurso
           </ion-button>
         </ion-col>
       </ion-row>
-      <div class="title-container">
-        <h1 class="title">Lista de Recursos</h1>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <table v-if="recursosPrevios.length > 0 || recursosFinales.length > 0">
-            <thead>
-              <tr>
-                <th>Recurso</th>
-                <th>Cantidad</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody v-if="!switchStatus">
-              <tr v-for="r in recursosPrevios" :key="r.id">
-                <td>{{ r.recursos }}</td>
-                <td>{{ r.cantidad }}</td>
-                <td>
-                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)"> X
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <tbody v-else>
-              <tr v-for="r in recursosFinales" :key="r.id">
-                <td>{{ r.recursos }}</td>
-                <td>{{ r.cantidad }}</td>
-                <td>
-                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)"> X
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <ion-col v-else size="12">
-            <ion-label>No hay recursos disponibles.</ion-label>
-          </ion-col>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+    </div>
   </div>
+  <div class="form-wrapper">
+  <div class="form-container-table">
+    <div class="title-container">
+      <h1 class="title">Lista de Recursos</h1>
+    </div>
+    <ion-row>
+      <ion-col size="12">
+        <table v-if="recursosPrevios.length > 0 || recursosFinales.length > 0">
+          <thead>
+            <tr>
+              <th>Recurso</th>
+              <th>Cantidad</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody v-if="!esCompartible">
+            <tr v-for="r in recursosPrevios" :key="r.id">
+              <td>{{ r.recursos }}</td>
+              <td>{{ r.cantidad }}</td>
+              <td>
+                <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                  X
+                </button>
+              </td>
+            </tr>
+          </tbody>
+          <tbody v-else>
+            <tr v-for="r in recursosFinales" :key="r.id">
+              <td>{{ r.recursos }}</td>
+              <td>{{ r.cantidad }}</td>
+              <td>
+                <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                  X
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <ion-col v-else size="12">
+          <ion-label>No hay recursos disponibles.</ion-label>
+        </ion-col>
+      </ion-col>
+    </ion-row>
+  </div>
+</div>
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup>
 import { bookingsApiUrl } from "@/environment/apiUrls.ts";
-import { ref, onMounted } from 'vue'
-import { IonGrid, IonRow, IonCol, IonItem, IonLabel } from '@ionic/vue';
-import { IonSelect, IonSelectOption, IonInput, IonButton, IonToast } from '@ionic/vue';
-import { crearToast } from '@/utils/toast.js';
-import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
-import { postRecurso, getRecursos, deleteRecurso, getReservas } from '@/services/bookings';
+import { ref, onMounted } from "vue";
+import { IonRow, IonCol, IonItem, IonLabel } from "@ionic/vue";
+import {
+  IonSelect,
+  IonSelectOption,
+  IonInput,
+  IonButton,
+  IonToast,
+} from "@ionic/vue";
+import { crearToast } from "@/utils/toast.js";
+import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
+import {
+  postRecurso,
+  getRecursos,
+  deleteRecurso,
+  getReservas,
+} from "@/services/bookings";
 
 // Selección de constante
 const selectedConstante = ref(null);
 const constantes = ref([]);
-const recursosPrevios = ref([])
-const recursosFinales = ref([])
-const switchStatus = ref(false)
+const recursosPrevios = ref([]);
+const recursosFinales = ref([]);
+const esCompartible = ref(false);
 
 // Variables para el toast
 const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
+const toastMessage = ref("");
+const toastColor = ref("success");
 
-const recurso = ref('');
-const cantidad = ref('');
+const recurso = ref("");
+const cantidad = ref("");
 
 // Nueva variable reactiva para el mensaje de actualización
-let mensajeActualizacion = '';
-let mensajeColor = '';
+let mensajeActualizacion = "";
+let mensajeColor = "";
 
 // Función que se llama cuando el usuario selecciona una constante
-const onConstanteChange = () =>
-{
-  if (!selectedConstante.value)
-  {
-    selectedConstante.value = { valor: '' };
-  }
-  else if (selectedConstante.value.valor === undefined)
-  {
-    selectedConstante.value.valor = '';
+const onConstanteChange = () => {
+  if (!selectedConstante.value) {
+    selectedConstante.value = { valor: "" };
+  } else if (selectedConstante.value.valor === undefined) {
+    selectedConstante.value.valor = "";
   }
 };
 
 // Función para actualizar la constante seleccionada
-const actualizarConstanteSeleccionada = async () =>
-{
-  try
-  {
-    const constantesActualizadas = constantes.value.map(c => c.clave === selectedConstante.value.clave ? selectedConstante.value : c);
+const actualizarConstanteSeleccionada = async () => {
+  try {
+    const constantesActualizadas = constantes.value.map((c) =>
+      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
+    );
 
-    await actualizarConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen, constantesActualizadas);
-    mensajeActualizacion = 'Constantes actualizadas con éxito';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-
-  }
-  catch (error)
-  {
-    mensajeActualizacion = 'Error al actualizar la constante';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    await actualizarConstantes(
+      bookingsApiUrl + "/bookings/constants",
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      constantesActualizadas
+    );
+    mensajeActualizacion = "Constantes actualizadas con éxito";
+    mensajeColor = "success";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+  } catch (error) {
+    mensajeActualizacion = "Error al actualizar la constante";
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
     throw new Error(error.message);
   }
 };
 
 // Función para obtener las constantes al cargar el componente
-const cargarConstantes = async () =>
-{
-  try
-  {
-    constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
+const cargarConstantes = async () => {
+  try {
+    constantes.value = await obtenerConstantes(
+      bookingsApiUrl + "/bookings/constants",
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
 
     // Seleccionar la constante "Reserva Deshabilitada" por defecto
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reserva Deshabilitada');
-    
-    if (reservaDeshabilitada)
-    {
+    const reservaDeshabilitada = constantes.value.find(
+      (c) => c.clave === "Reserva Deshabilitada"
+    );
+
+    if (reservaDeshabilitada) {
       selectedConstante.value = reservaDeshabilitada;
     }
-  }
-  catch (error)
-  {
-    mensajeActualizacion = 'Error al obtener constantes';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  } catch (error) {
+    mensajeActualizacion = "Error al obtener constantes";
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
     throw new Error(error.message);
   }
 };
 
-const crearRecurso = async () => 
-{
-  try
-  {
-    if (parseInt(cantidad.value) < 0)
-    {
-      cantidad.value = cantidad.value * -1
+const crearRecurso = async () => {
+  try {
+    if (parseInt(cantidad.value) < 0) {
+      cantidad.value = cantidad.value * -1;
     }
 
-    const status = await postRecurso(toastMessage, toastColor, isToastOpen, recurso.value, parseInt(cantidad.value), switchStatus.value)
-    
-    if(status.status == 200)
-    {
-      mensajeActualizacion = 'Recurso creado con éxito';
-      mensajeColor = 'success';
+    const status = await postRecurso(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      recurso.value,
+      parseInt(cantidad.value),
+      esCompartible.value
+    );
+
+    if (status.status == 200) {
+      mensajeActualizacion = "Recurso creado con éxito";
+      mensajeColor = "success";
+    } else if (status.status == 409) {
+      mensajeActualizacion = "Recurso ya existe";
+      mensajeColor = "warning";
     }
-    else if(status.status == 409)
-    {
-      mensajeActualizacion = 'Recurso ya existe';
-      mensajeColor = 'warning';
-    }
-  crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
     // Limpiar el formulario después de crear el recurso
-    recurso.value = '';
-    cantidad.value = '';
-    cargarRecursos()
+    recurso.value = "";
+    cantidad.value = "";
+    cargarRecursos();
+  } catch (error) {
+    mensajeActualizacion = "Error al crear el recurso";
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
   }
-  catch (error)
-  {
-    mensajeActualizacion = 'Error al crear el recurso'
-    mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-  }
-}
+};
 
-const cargarRecursos = async () =>
-{
-  try
-  {
-    const data = await getRecursos(isToastOpen, toastMessage, toastColor, switchStatus.value)
+const cargarRecursos = async () => {
+  try {
+    const data = await getRecursos(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+      esCompartible.value
+    );
 
-    if (switchStatus.value)
-    {
-      recursosFinales.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
+    if (esCompartible.value) {
+      recursosFinales.value = data.map((item) => ({
+        recursos: item.id,
+        cantidad: item.cantidad,
+      }));
+    } else {
+      recursosPrevios.value = data.map((item) => ({
+        recursos: item.id,
+        cantidad: item.cantidad,
+      }));
     }
-    else
-    {
-      recursosPrevios.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
-    }
-
+  } catch (error) {
+    mensajeActualizacion = "No existen recursos todavía";
+    mensajeColor = "warning";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
   }
-  catch (error)
-  {
-    mensajeActualizacion = 'No existen recursos todavía'
-    mensajeColor = 'warning'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-  }
-}
+};
 
-const eliminarRecurso = async (recurso, event) =>
-{
-  try
-  {
+const eliminarRecurso = async (recurso, event) => {
+  try {
     event.stopPropagation();
 
-    const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)
+    const data = await getReservas(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+      recurso
+    );
 
     // Obtener un array de recursos asignados
     const recursoEliminar = data.map((item) => item.recurso);
 
     // Verificar si el recurso está asignado a alguna reserva
-    if (recursoEliminar.includes(recurso))
-    {
-      mensajeColor = 'danger';
-      mensajeActualizacion = 'No es posible eliminar un recurso asignado a una reserva';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if (recursoEliminar.includes(recurso)) {
+      mensajeColor = "danger";
+      mensajeActualizacion =
+        "No es posible eliminar un recurso asignado a una reserva";
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        mensajeColor,
+        mensajeActualizacion
+      );
       return;
     }
-    
 
-    // Eliminar el recurso del array local (basado en el switchStatus)
-    if (switchStatus.value)
-    {
+    // Eliminar el recurso del array local (basado en el esCompartible)
+    if (esCompartible.value) {
       // Eliminar de recursosFinales
-      recursosFinales.value = recursosFinales.value.filter(r => r.recursos !== recurso);
-    }
-    else
-    {
+      recursosFinales.value = recursosFinales.value.filter(
+        (r) => r.recursos !== recurso
+      );
+    } else {
       // Eliminar de recursosPrevios
-      recursosPrevios.value = recursosPrevios.value.filter(r => r.recursos !== recurso);
+      recursosPrevios.value = recursosPrevios.value.filter(
+        (r) => r.recursos !== recurso
+      );
     }
 
     // Llamar a la API para eliminar el recurso en el backend
-    await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso, switchStatus.value);
-    
+    await deleteRecurso(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      recurso,
+      esCompartible.value
+    );
+
     // Mostrar mensaje de éxito
-    mensajeColor = 'success';
-    mensajeActualizacion = 'Recurso eliminado correctamente';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    
+    mensajeColor = "success";
+    mensajeActualizacion = "Recurso eliminado correctamente";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+
     // Recargar los recursos desde el backend para asegurarse de que todo esté sincronizado
     cargarRecursos();
-
-  }
-  catch (error)
-  {
+  } catch (error) {
     // Si ocurre un error, mostrar mensaje de error
-    mensajeActualizacion = 'Error eliminando el recurso';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    mensajeActualizacion = "Error eliminando el recurso";
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
   }
 };
 
-
-const switchRecurso = async () =>
-{
-  cargarRecursos()
-}
+const switchRecurso = async () => {
+  cargarRecursos();
+};
 
 // Ejecutar las funciones iniciales al montar el componente
-onMounted(async () =>
-{
-  await cargarConstantes()
-  await cargarRecursos()
-  await switchRecurso()
-})
+onMounted(async () => {
+  await cargarConstantes();
+  await cargarRecursos();
+  await switchRecurso();
+});
 </script>
 
 <style scoped>
+.form-container {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--form-bg-dark);
+  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 20px 30px;
+  margin: auto;
+  font-family: "Roboto", sans-serif;
+  margin-top: 2%;
+}
+
+.form-container-table {
+  width: 100%;
+  max-width: 700px;
+  background-color: var(--form-bg-dark);
+  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 20px 30px;
+  margin: auto;
+  font-family: "Roboto", sans-serif;
+  margin-top: 2%;
+}
+
+
+.form-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  /* Espaciado entre las tarjetas */
+  justify-content: center;
+  /* Centrar las tarjetas */
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -353,9 +468,7 @@ onMounted(async () =>
   color: #007bff;
   outline: none;
   cursor: pointer;
-  transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .custom-select:hover {
@@ -399,7 +512,6 @@ td {
   word-wrap: break-word;
   /* Permite que el texto largo se divida y se ajuste */
 }
-
 
 th {
   background-color: #007bff;
@@ -485,68 +597,88 @@ tr:hover td {
 }
 
 .title-container {
-            display: flex;
-            align-items: center;
-            position: relative;
-            width: 100%;
-            padding: 20px;
-        }
-        .title {
-            margin: 0;
-            font-size: 24px;
-        }
-        .switch-container {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .switch-container span {
-            font-size: 24px;
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #2196F3;
-        }
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  padding: 20px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+}
+
+.switch-container {
+  position: relative;
+  left: 60%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.switch-container span {
+  font-size: 24px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked+.slider {
+  background-color: #2196f3;
+}
+
+input:checked+.slider:before {
+  transform: translateX(26px);
+}
 
 @media (max-width: 768px) {
+  .form-container {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+.form-container-table table{
+  overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+}
   table {
     font-size: 14px;
     width: 100%;

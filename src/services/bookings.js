@@ -55,7 +55,7 @@ export const getTramosHorarios = async (toastMessage, toastColor, isToastOpen) =
   }
 }
 
-export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso, cantidad, switchStatus) =>
+export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso, cantidad, esCompartible) =>
 {
   try
   {
@@ -69,7 +69,7 @@ export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso,
         'Authorization': `Bearer ${tokenPropio}`,
         recurso: recurso,
         cantidad: cantidad,
-        switchStatus: switchStatus
+        esCompartible: esCompartible
       }
     })
     return response
@@ -81,7 +81,7 @@ export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso,
 }
 
 //obtener reserva a partir de un recurso
-export const getRecursos = async (toastMessage, toastColor, isToastOpen, switchStatus) =>
+export const getRecursos = async (toastMessage, toastColor, isToastOpen, esCompartible) =>
   {
   try
   {
@@ -93,7 +93,7 @@ export const getRecursos = async (toastMessage, toastColor, isToastOpen, switchS
       headers:
       {
         'Authorization': `Bearer ${tokenPropio}`,
-        switchStatus: switchStatus
+        esCompartible: esCompartible
       },
     })
     
@@ -109,7 +109,7 @@ export const getRecursos = async (toastMessage, toastColor, isToastOpen, switchS
   }
 }
 
-export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurso, switchStatus) =>
+export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurso, esCompartible) =>
 {
   try
   {
@@ -122,7 +122,7 @@ export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurs
       {
         'Authorization': `Bearer ${tokenPropio}`,
         recurso: recurso,
-        switchStatus: switchStatus
+        esCompartible: esCompartible
       },
     })
     
