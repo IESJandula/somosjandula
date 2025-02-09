@@ -267,11 +267,19 @@ watch(
 // Función para verificar el estado de la impresora seleccionada
 const checkPrinterStatus = () => {
   const currentPrinter = printers.value.find(p => p.name === formData.value.printerSelected);
-  if (currentPrinter) {
-    if (currentPrinter.statusId === 0) {
+  if (currentPrinter)
+  {
+    if (currentPrinter.statusId !== 0)
+    {
+      handleError(`${currentPrinter.status}`); // Maneja el error si la impresora tiene problemas
+    }
+    else if (currentPrinter.printingQueue > 3)
+    {
+      handleError("La impresora está ocupada imprimiendo otros documentos");
+    }
+    else
+    { // funciona correctamente esta impresora
       clearError(); // Limpia cualquier error si la impresora está en buen estado
-    } else {
-      handleError(`Error: ${currentPrinter.status}`); // Maneja el error si la impresora tiene problemas
     }
   }
 };
