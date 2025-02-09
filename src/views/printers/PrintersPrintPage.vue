@@ -139,6 +139,7 @@ import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import FileUpload from '@/components/printers/FileUpload.vue';
 import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
+import { printersApiUrl } from "@/environment/apiUrls.ts";
 
 // Configuramos la URL del Worker
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -467,7 +468,7 @@ const obtenerConstantesInit = async () =>
 {
   try
   {
-    const constantes = await obtenerConstantes('/printers/web/constantes', toastMessage, toastColor, isToastOpen) ;
+    const constantes = await obtenerConstantes(printersApiUrl + '/printers/web/constantes', toastMessage, toastColor, isToastOpen) ;
 
     // Busca la constante con clave 'Maximo hojas impresion'
     const maxHojasConstante = constantes.find(constante => constante.clave === 'Maximo hojas impresion') ;
