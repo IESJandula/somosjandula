@@ -72,7 +72,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
+import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva, getRecursosCompartible } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes } from '@/services/constantes';
@@ -86,6 +86,7 @@ const reservas = ref({})
 const users = ref([]);
 const rolesUsuario = ref([]);
 const recursoSeleccionado = ref('')
+const recursoSeleccionadoCompartible = ref(false)
 const cantidadSeleccionada = ref('')
 const profesorSeleccionado = ref('')
 const isModalOpen = ref(false)
@@ -104,7 +105,6 @@ const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
-const switchStatus = ref(false)
 
 const verificarRecursos = () =>
 {
@@ -268,16 +268,39 @@ const getRecurso = async () =>
 {
   try
   {
-    const data = await getRecursos(isToastOpen, toastMessage, toastColor, switchStatus.value)   
-    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad }))
+    const data = await getRecursos(isToastOpen, toastMessage, toastColor)   
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible}))
     
     // Nos aseguraramos que recursos no está vacío antes de asignar
     if (recursos.value.length > 0)
     {
       recursoSeleccionado.value = recursos.value[0].recursos;
       cantidadSeleccionada.value = recursos.value[0].cantidad;
-    }    
+      recursoSeleccionadoCompartible.value = recursos.value[0].esCompartible;
+    }
+  }
+  catch (error)
+  {
+    mensajeActualizacion = 'Error obteniendo los recursos'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
 
+const getRecursoCompartible = async () =>
+{
+  try
+  {
+    const data = await getRecursosCompartible(isToastOpen, toastMessage, toastColor, esCompartible.value)   
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible }))
+    
+    // Nos aseguraramos que recursos no está vacío antes de asignar
+    if (recursos.value.length > 0)
+    {
+      recursoSeleccionado.value = recursos.value[0].recursos;
+      recursoSeleccionadoCompartible.value = recursos.value[0].esCompartible;
+      cantidadSeleccionada.value = recursos.value[0].cantidad;
+    }
   }
   catch (error)
   {
@@ -340,14 +363,36 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) =>
   getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
 }
 
-// Watcher para actualizar cantidadSeleccionada cuando recursoSeleccionado cambie
-watch(recursoSeleccionado, () =>
-{
+// Función para manejar los cambios en la selección de recursos
+watch(recursoSeleccionado, () => {
+  // Aquí se podría agregar la lógica para obtener el recurso compartible si el recurso seleccionado tiene esta característica.
   const recursoEncontrado = recursos.value.find(
     (recurso) => recurso.recursos === recursoSeleccionado.value
   );
   cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
-  getReserva()
+  recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
+
+  // Si el recurso seleccionado es compartible, manejar la lógica de los recursos compartidos.
+  if (recursoSeleccionadoCompartible.value) {
+    // Llamar a la función correspondiente para cargar los recursos compartibles.
+    getRecursoCompartible();
+  } else {
+    // Si no es compartible, se carga normalmente
+    getRecurso();
+  }
+
+  getReserva(); // Actualiza las reservas al cambiar el recurso
+});
+
+// Agregar un `watcher` para `esCompartible` si este valor cambia de alguna manera
+watch(recursoSeleccionadoCompartible, () => {
+  if (recursoSeleccionadoCompartible.value) {
+    // Llamar a la función para cargar recursos compartibles
+    getRecursoCompartible();
+  } else {
+    // Si no es compartible, volver a cargar los recursos normales
+    getRecurso();
+  }
 });
 
 const cargarDatos = async () =>

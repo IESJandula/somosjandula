@@ -81,13 +81,40 @@ export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso,
 }
 
 //obtener reserva a partir de un recurso
-export const getRecursos = async (toastMessage, toastColor, isToastOpen, esCompartible) =>
+export const getRecursos = async (toastMessage, toastColor, isToastOpen) =>
   {
   try
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
     const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+      }
+    })
+    
+    if (!response.ok)
+    {
+      throw new Error('No se ha cargado previamente ningun recurso')
+    }
+    return await response.json()
+  }
+  catch (error)
+  {
+    console.log(error)
+  }
+}
+
+export const getRecursosCompartible = async (toastMessage, toastColor, isToastOpen, esCompartible) =>
+  {
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/fixed/resourcesCompartible',
     {
       method: 'GET',
       headers:

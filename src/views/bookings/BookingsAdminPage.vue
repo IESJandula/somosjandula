@@ -57,12 +57,13 @@
       <ion-row>
         <ion-col size="12">
           <div class="switch-container">
-            <span>Previos</span>
+            <span>No Compartido</span>
             <label class="switch">
               <input type="checkbox" v-model="esCompartible" @change="switchRecurso" />
               <span class="slider"></span>
             </label>
-            <span>Finales</span>
+            <span>Compartido
+            </span>
           </div>
           <ion-button expand="block" v-if="cantidad > 0 && recurso" color="secondary" @click="crearRecurso">
             Crear Recurso
@@ -78,7 +79,7 @@
     </div>
     <ion-row>
       <ion-col size="12">
-        <table v-if="recursosPrevios.length > 0 || recursosFinales.length > 0">
+        <table v-if="recursosNoCompartido.length > 0 || recursosCompartido.length > 0">
           <thead>
             <tr>
               <th>Recurso</th>
@@ -87,7 +88,7 @@
             </tr>
           </thead>
           <tbody v-if="!esCompartible">
-            <tr v-for="r in recursosPrevios" :key="r.id">
+            <tr v-for="r in recursosNoCompartido" :key="r.id">
               <td>{{ r.recursos }}</td>
               <td>{{ r.cantidad }}</td>
               <td>
@@ -98,7 +99,7 @@
             </tr>
           </tbody>
           <tbody v-else>
-            <tr v-for="r in recursosFinales" :key="r.id">
+            <tr v-for="r in recursosCompartido" :key="r.id">
               <td>{{ r.recursos }}</td>
               <td>{{ r.cantidad }}</td>
               <td>
@@ -135,7 +136,7 @@ import { crearToast } from "@/utils/toast.js";
 import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
 import {
   postRecurso,
-  getRecursos,
+  getRecursosCompartible,
   deleteRecurso,
   getReservas,
 } from "@/services/bookings";
@@ -143,8 +144,8 @@ import {
 // Selección de constante
 const selectedConstante = ref(null);
 const constantes = ref([]);
-const recursosPrevios = ref([]);
-const recursosFinales = ref([]);
+const recursosNoCompartido = ref([]);
+const recursosCompartido = ref([]);
 const esCompartible = ref(false);
 
 // Variables para el toast
@@ -285,7 +286,7 @@ const crearRecurso = async () => {
 
 const cargarRecursos = async () => {
   try {
-    const data = await getRecursos(
+    const data = await getRecursosCompartible(
       isToastOpen,
       toastMessage,
       toastColor,
@@ -293,12 +294,12 @@ const cargarRecursos = async () => {
     );
 
     if (esCompartible.value) {
-      recursosFinales.value = data.map((item) => ({
+      recursosCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
       }));
     } else {
-      recursosPrevios.value = data.map((item) => ({
+      recursosNoCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
       }));
@@ -353,7 +354,7 @@ const eliminarRecurso = async (recurso, event) => {
       );
     } else {
       // Eliminar de recursosPrevios
-      recursosPrevios.value = recursosPrevios.value.filter(
+      recursosNoCompartido.value = recursosNoCompartido.value.filter(
         (r) => r.recursos !== recurso
       );
     }
@@ -394,7 +395,8 @@ const eliminarRecurso = async (recurso, event) => {
   }
 };
 
-const switchRecurso = async () => {
+const switchRecurso = async () =>
+{
   cargarRecursos();
 };
 
@@ -611,7 +613,7 @@ tr:hover td {
 
 .switch-container {
   position: relative;
-  left: 60%;
+  left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -620,7 +622,7 @@ tr:hover td {
 }
 
 .switch-container span {
-  font-size: 24px;
+  font-size: 20px;
 }
 
 .switch {
