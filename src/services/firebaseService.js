@@ -100,29 +100,6 @@ export async function importarAplicaciones(toastMessage, toastColor, isToastOpen
   }
 }
 
-export async function validarUsuario(router, auth, toastMessage, toastColor, isToastOpen)
-{
-  try
-  {
-    const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
-
-    // Redirigir dependiendo de los roles
-    if (userRoles.includes('ADMINISTRADOR'))
-    {
-        router.push({ name: 'AdminFirebase' });
-    }
-    else
-    {
-        router.push({ name: 'PrintersPrint' });
-    }
-  }
-  catch (error)
-  {
-      // Cerramos la sesión si algo falla
-      signOut(auth);
-  }
-}
-
 export async function validarRolesMenu(toastMessage, toastColor, isToastOpen)
 {
   const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
