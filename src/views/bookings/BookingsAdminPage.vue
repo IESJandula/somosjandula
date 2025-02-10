@@ -410,7 +410,7 @@ onMounted(async () => {
 .form-container {
   width: 100%;
   max-width: 400px;
-  background-color: var(--form-bg-dark);
+  background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
   border-radius: 10px;
@@ -424,7 +424,7 @@ onMounted(async () => {
 .form-container-table {
   width: 100%;
   max-width: 700px;
-  background-color: var(--form-bg-dark);
+  background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
   border-radius: 10px;
@@ -667,6 +667,25 @@ input:checked+.slider {
 input:checked+.slider:before {
   transform: translateX(26px);
 }
+
+ /* Modo oscuro */
+  @media (prefers-color-scheme: dark) {
+    .form-container {
+      background-color: var(--form-bg-dark);
+      box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+      border: 1px solid #444;
+    }
+
+    .form-container-table {
+      background-color: var(--form-bg-dark);
+      box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+      border: 1px solid #444;
+    }
+
+    .title {
+      color: var(--text-color-dark);
+    }
+  }
 
 @media (max-width: 768px) {
   .form-container {
