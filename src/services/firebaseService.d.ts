@@ -12,12 +12,6 @@ export declare function importarUsuarios(toastMessage: Ref<string>,
                                          isToastOpen: Ref<boolean>,
                                          file: any): Promise<void>;
 
-export declare function validarUsuario(router: Router,
-                                       auth: Auth,
-                                       toastMessage: Ref<string>,
-                                       toastColor: Ref<string>,
-                                       isToastOpen: Ref<boolean>): Promise<void>;
-
 export interface RolesMenu {
     mostrarAdmin: boolean;
     mostrarHome: boolean;

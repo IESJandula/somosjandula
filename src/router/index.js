@@ -10,7 +10,8 @@ import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
 import AbsencesPage from '@/views/documents/AbsencesPage.vue';
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
-import { getAuth } from 'firebase/auth';
+import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
 
 const routes = [
@@ -25,6 +26,11 @@ const routes = [
     meta: { 
       requiresAuth: false 
     },
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    component: AccessDeniedPage,
+    name: 'AccessDenied',
   },
   {
     path: '/',
@@ -109,15 +115,18 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => 
 {
   const auth = getAuth();
-  const user = auth.currentUser;
+  let user = auth.currentUser;
+
+  if (!user) 
+  {
+    user = await waitForAuthReady(auth); // Espera a que Firebase termine de inicializar el estado de autenticación
+  }
 
   if (to.matched.some((record) => record.meta.requiresAuth)) 
   {
     if (!user) 
     {
-      return next({ 
-        name: 'Login' 
-      });
+      return next({ name: 'Login' });
     }
 
     try 
@@ -126,35 +135,43 @@ router.beforeEach(async (to, from, next) =>
       const toastMessage = ref('');
       const toastColor = ref('success');
 
-      // Obtengo los roles del usuario
-      const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
-
-      // Obtengo el role que necesito para ejecutarme aquí
+      const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen); // Obtiene los roles del usuario
       const requiredRole = to.meta.role;
 
+      // Si la ruta requiere un rol específico y el usuario no lo tiene, redirige a Login o muestra un error.
       if (requiredRole && !userRoles.includes(requiredRole)) 
       {
-        return next({ 
-          name: 'PrintersPrint' 
-        });
+        return next({ name: 'AccessDenied' });
       } 
       else 
       {
-        return next();
+        return next(); // Permite el acceso a la ruta solicitada
       }
     } 
     catch (error) 
     {
       console.error("Error during navigation guard:", error);
-      return next({ 
-        name: 'Login' 
-      });
+      return next({ name: 'Login' });
     }
   } 
   else 
   {
-    return next();
+    return next(); // Si no requiere autenticación, continúa normalmente
   }
-});
+});  
+  
+
+function waitForAuthReady(auth)
+{
+  return new Promise((resolve) =>
+  {
+    const unsubscribe = onAuthStateChanged(auth, (user) =>
+    {
+      unsubscribe() ; // Nos desuscribimos después de obtener el usuario
+      resolve(user) ;
+    });
+  });
+}
+
 
 export default router;

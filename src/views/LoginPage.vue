@@ -28,7 +28,7 @@ import { IonContent, IonIcon, IonToast, IonPage } from '@ionic/vue';
 import { logoGoogle as googleIcon } from 'ionicons/icons';
 import { signInWithPopup, signOut } from "firebase/auth";
 import { crearToast } from '@/utils/toast.js';
-import { validarUsuario } from '@/services/firebaseService.js';
+import { obtenerRolesUsuario } from '@/services/firebaseService.js';
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { firebaseConfig } from '@/environment/firebaseConfig';
@@ -58,13 +58,17 @@ const loginWithGoogle = async () =>
     setLoggingInStatus(true);
 
     // Login a través de Google
-    const result = await signInWithPopup(auth, googleProvider);
+    const result    = await signInWithPopup(auth, googleProvider);
 
     // Obtenemos el token JWT
-    const user     = result.user ;
+    const user      = result.user ;
 
     // Validamos el usuario en el sistema
-    await validarUsuario(router, auth, toastMessage, toastColor, isToastOpen) ;
+    const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen) ;
+
+    // Verificamos si hay una redirección pendiente (guardada en el router)
+    const redirectPath = router.currentRoute.value.query.redirect || '/printers/print'; // 'Dashboard' es la ruta por defecto
+    router.push({ path: redirectPath });
   }
   catch (error)
   {

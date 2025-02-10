@@ -42,7 +42,7 @@ import {
 
 import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { validarUsuario } from '@/services/firebaseService';
+import { obtenerRolesUsuario } from '@/services/firebaseService';
 import { firebaseConfig } from '@/environment/firebaseConfig';
 
 // Inicializar Firebase
@@ -81,8 +81,18 @@ onAuthStateChanged(auth, (user) =>
       
       try
       {
+        const isToastOpen = ref(false);
+        const toastMessage = ref('');
+        const toastColor = ref('success');
+
         // Solo ejecuta si no está en proceso de login
-        await validarUsuario(router, auth, toastMessage, toastColor, isToastOpen);
+        const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+
+        // Verifica si hay una redirección pendiente
+        const redirectPath = router.currentRoute.value.query.redirect || '/printers/print'; // '/dashboard' es la ruta por defecto
+        if (router.currentRoute.value.name === 'Login') {
+          router.push({ path: redirectPath });
+        }
       }
       catch (error)
       {
@@ -91,8 +101,7 @@ onAuthStateChanged(auth, (user) =>
     
         console.error("Error obteniendo el token JWT o validando usuario:", error) ;
       }
-      }
-    )();
+    })();
   }
 });
 
