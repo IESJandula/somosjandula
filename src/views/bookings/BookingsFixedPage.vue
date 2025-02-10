@@ -141,14 +141,23 @@ const obtenerEmailUsuarioActual = async () =>
 // Función para abrir el modal
 const openModal = (tramo, dia) =>
 {
-  currentTramo.value = tramo
-  currentDia.value = dia
-  correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
-  numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
-  isModalOpen.value = true
-
-  getReserva()
-  verificarConstantes()
+  if (recursoSeleccionadoCompartible.value)
+  {
+    
+    currentTramo.value = tramo
+    currentDia.value = dia
+    correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
+    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
+    isModalOpen.value = true
+    getReserva()
+    verificarConstantes()
+  }
+  else
+  {
+    // Puedes mostrar un mensaje al usuario indicando que el recurso no es compartible
+    crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'Este recurso no permite reservas compartidas.');
+  }
+  
 }
 
 // Función para cerrar el modal
