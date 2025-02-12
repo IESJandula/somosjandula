@@ -363,8 +363,7 @@ watch(recursoSeleccionado, () => {
   );
   cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
-
-  console.log(recursoSeleccionadoCompartible.value);
+  isModalOpen.value = false
   
   getReserva();
 });
