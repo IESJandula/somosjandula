@@ -346,26 +346,12 @@ const eliminarRecurso = async (recurso, event) => {
       return;
     }
 
-    // Eliminar el recurso del array local (basado en el esCompartible)
-    if (esCompartible.value) {
-      // Eliminar de recursosFinales
-      recursosFinales.value = recursosFinales.value.filter(
-        (r) => r.recursos !== recurso
-      );
-    } else {
-      // Eliminar de recursosPrevios
-      recursosNoCompartido.value = recursosNoCompartido.value.filter(
-        (r) => r.recursos !== recurso
-      );
-    }
-
     // Llamar a la API para eliminar el recurso en el backend
     await deleteRecurso(
       toastMessage,
       toastColor,
       isToastOpen,
-      recurso,
-      esCompartible.value
+      recurso
     );
 
     // Mostrar mensaje de éxito
