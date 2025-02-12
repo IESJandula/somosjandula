@@ -43,7 +43,7 @@
     </table>
 
     <!-- Modal de edición -->
-    <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos)" class="modal-overlay">
+    <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos) || (isModalOpen && recursoSeleccionadoCompartible)" class="modal-overlay">
       <div class="modal-content">
         <h2>Reservar</h2>
         
@@ -143,7 +143,6 @@ const openModal = (tramo, dia) =>
 {
   if (recursoSeleccionadoCompartible.value)
   {
-    
     currentTramo.value = tramo
     currentDia.value = dia
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
@@ -154,6 +153,13 @@ const openModal = (tramo, dia) =>
   }
   else
   {
+    currentTramo.value = tramo
+    currentDia.value = dia
+    correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
+    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
+    isModalOpen.value = true
+    getReserva()
+    verificarConstantes()
     // Puedes mostrar un mensaje al usuario indicando que el recurso no es compartible
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'Este recurso no permite reservas compartidas.');
   }
@@ -195,6 +201,7 @@ const saveChanges = async () => {
     if (alumnos > maxAlumnos) {
       alumnos = maxAlumnos;
     }
+    
 
     // Llamar a la API para guardar la reserva
     await postReserva(

@@ -136,7 +136,7 @@ export const getRecursosCompartible = async (toastMessage, toastColor, isToastOp
   }
 }
 
-export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurso, esCompartible) =>
+export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurso) =>
 {
   try
   {
@@ -148,8 +148,7 @@ export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurs
       headers:
       {
         'Authorization': `Bearer ${tokenPropio}`,
-        recurso: recurso,
-        esCompartible: esCompartible
+        recurso: recurso
       },
     })
     
