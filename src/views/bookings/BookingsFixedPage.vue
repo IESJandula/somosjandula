@@ -183,7 +183,7 @@ const saveChanges = async () => {
 
   // Validar si ya existe un email en la reserva del mismo día y tramo
   const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
-  if (reservaExistente && reservaExistente.email) {
+  if (reservaExistente && reservaExistente.email && !recursoSeleccionadoCompartible.value) {
     mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
