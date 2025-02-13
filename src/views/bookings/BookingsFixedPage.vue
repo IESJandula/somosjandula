@@ -73,10 +73,11 @@
           placeholder="Número de alumnos" min="0"
           :max="reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes" />
 
-        <button v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && profesorSeleccionado"
+        <button
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes && profesorSeleccionado"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && rolesUsuario[0].includes('PROFESOR')"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes && rolesUsuario[0].includes('PROFESOR')"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
