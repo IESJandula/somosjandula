@@ -22,9 +22,19 @@
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
-              {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
-              }})
-              <button v-if="rolesUsuario.includes('ADMINISTRADOR') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email === emailUsuarioActual)" @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email)">Borrar</button>
+              <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
+                <div class="div_profesor">
+                  {{ nombre }} <br>
+                  (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
+
+                  <button
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    Borrar
+                  </button>
+                </div>
+              </template>
             </span>
           </td>
         </tr>
@@ -43,12 +53,15 @@
     </table>
 
     <!-- Modal de edición -->
-    <div v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos) || (isModalOpen && recursoSeleccionadoCompartible)" class="modal-overlay">
+    <div
+      v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible)"
+      class="modal-overlay">
       <div class="modal-content">
         <h2>Reservar</h2>
-        
+
         <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado">
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal"
+          v-model="profesorSeleccionado">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -56,17 +69,21 @@
         </select>
 
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
-        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos" placeholder="Número de alumnos" min="0" :max="cantidadSeleccionada" />
+        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
+          placeholder="Número de alumnos" min="0" :max="cantidadSeleccionada" />
 
-        <button v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && profesorSeleccionado" @click="saveChanges">Reservar</button>
-        <button v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && rolesUsuario[0].includes('PROFESOR') " @click="saveChanges">Reservar</button>
+        <button v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && profesorSeleccionado"
+          @click="saveChanges">Reservar</button>
+        <button
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && rolesUsuario[0].includes('PROFESOR')"
+          @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
     </div>
   </div>
 
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
-      @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 <script setup>
 
@@ -106,26 +123,21 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
 
-const verificarRecursos = () =>
-{
-  if (recursos.value.length === 0)
-  {
+const verificarRecursos = () => {
+  if (recursos.value.length === 0) {
     mostrarTabla.value = false;
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay recursos')
   }
 };
 
-const verificarConstantes = async () =>
-{
-  try
-  {
+const verificarConstantes = async () => {
+  try {
     constantes.value = await obtenerConstantes('http://localhost:8084/bookings/constants', toastMessage, toastColor, isToastOpen);
 
     const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas fijas');
     valorConstante.value = reservaDeshabilitada.valor
   }
-  catch (error)
-  {
+  catch (error) {
     mensajeActualizacion = 'Error al obtener constantes';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -133,16 +145,13 @@ const verificarConstantes = async () =>
   }
 }
 
-const obtenerEmailUsuarioActual = async () =>
-{
+const obtenerEmailUsuarioActual = async () => {
   emailUsuarioActual.value = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
 };
 
 // Función para abrir el modal
-const openModal = (tramo, dia) =>
-{
-  if (recursoSeleccionadoCompartible.value)
-  {
+const openModal = (tramo, dia) => {
+  if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
     currentDia.value = dia
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
@@ -151,8 +160,7 @@ const openModal = (tramo, dia) =>
     getReserva()
     verificarConstantes()
   }
-  else
-  {
+  else {
     currentTramo.value = tramo
     currentDia.value = dia
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
@@ -163,12 +171,11 @@ const openModal = (tramo, dia) =>
     // Puedes mostrar un mensaje al usuario indicando que el recurso no es compartible
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'Este recurso no permite reservas compartidas.');
   }
-  
+
 }
 
 // Función para cerrar el modal
-const closeModal = () =>
-{
+const closeModal = () => {
   isModalOpen.value = false
 }
 
@@ -183,7 +190,7 @@ const saveChanges = async () => {
 
   // Validar si ya existe un email en la reserva del mismo día y tramo
   const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
-  if (reservaExistente && reservaExistente.email && !recursoSeleccionadoCompartible.value) {
+  if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
     mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -201,7 +208,7 @@ const saveChanges = async () => {
     if (alumnos > maxAlumnos) {
       alumnos = maxAlumnos;
     }
-    
+
 
     // Llamar a la API para guardar la reserva
     await postReserva(
@@ -226,8 +233,7 @@ const saveChanges = async () => {
       nalumnos: alumnos,
     };
 
-    if (valorConstante.value != '')
-    {
+    if (valorConstante.value != '') {
       mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
       mensajeColor = 'danger';
     }
@@ -245,15 +251,12 @@ const saveChanges = async () => {
 
 
 // Función para obtener los días de la semana
-const getDiasSemanas = async () =>
-{
-  try
-  {
-    const data = await getDiasSemana(isToastOpen,toastMessage,toastColor)
+const getDiasSemanas = async () => {
+  try {
+    const data = await getDiasSemana(isToastOpen, toastMessage, toastColor)
     diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
   }
-  catch (error)
-  {
+  catch (error) {
     mensajeActualizacion = 'Error obteniendo los días de la semana'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -261,18 +264,15 @@ const getDiasSemanas = async () =>
 }
 
 // Función para obtener los tramos horarios
-const getTramosHorario = async () =>
-{
-  try
-  {
-    const data = await getTramosHorarios(isToastOpen,toastMessage,toastColor)
+const getTramosHorario = async () => {
+  try {
+    const data = await getTramosHorarios(isToastOpen, toastMessage, toastColor)
     tramosHorarios.value = data.map((item) => ({
       tramoHorario: item.tramoHorario,
       id: item.id,
     }))
   }
-  catch (error)
-  {
+  catch (error) {
     mensajeActualizacion = 'Error obteniendo los tramos horarios'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -280,23 +280,19 @@ const getTramosHorario = async () =>
 }
 
 // Función para obtener los recursos
-const getRecurso = async () =>
-{
-  try
-  {
-    const data = await getRecursos(isToastOpen, toastMessage, toastColor)   
+const getRecurso = async () => {
+  try {
+    const data = await getRecursos(isToastOpen, toastMessage, toastColor)
     recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible }))
-    
+
     // Nos aseguraramos que recursos no está vacío antes de asignar
-    if (recursos.value.length > 0)
-    {
+    if (recursos.value.length > 0) {
       recursoSeleccionado.value = recursos.value[0].recursos;
       cantidadSeleccionada.value = recursos.value[0].cantidad;
       recursoSeleccionadoCompartible.value = recursos.value[0].esCompartible;
     }
   }
-  catch (error)
-  {
+  catch (error) {
     mensajeActualizacion = 'Error obteniendo los recursos'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -304,22 +300,19 @@ const getRecurso = async () =>
 }
 
 // Función para obtener las reservas estructuradas
-const getReserva = async () =>
-{
+const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
-  const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)  
+  const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)
 
   // Reestructurar reservas en un objeto organizado por tramos y días
   const estructuraReservas = {}
 
-  for (let i = 0; i < data.length; i++)
-  {
+  for (let i = 0; i < data.length; i++) {
     const reserva = data[i]
     const tramo = reserva.tramoHorario
     const dia = reserva.diaSemana
 
-    if (!estructuraReservas[tramo])
-    {
+    if (!estructuraReservas[tramo]) {
       estructuraReservas[tramo] = {}
     }
 
@@ -333,22 +326,19 @@ const getReserva = async () =>
   reservas.value = estructuraReservas
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) =>
-{
-  try
-  {
-    event.stopPropagation()
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
+  try {
+    event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
-    await deleteReserva(isToastOpen,toastMessage,toastColor,email, recursoSeleccionado, dia.id, tramo.id)
+    await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
 
 
     mensajeActualizacion = 'Reserva cancelada exitosamente'
-      mensajeColor = 'success'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    mensajeColor = 'success'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
-  catch (error)
-  {
+  catch (error) {
     mensajeActualizacion = 'Error al cancelar la reserva'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -364,25 +354,21 @@ watch(recursoSeleccionado, () => {
   cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
   isModalOpen.value = false
-  
+
   getReserva();
 });
 
 
-const cargarDatos = async () =>
-{
-  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);  
+const cargarDatos = async () => {
+  users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
 };
 
-async function verificarRoles()
-{
-  try
-  {
+async function verificarRoles() {
+  try {
     const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
     rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
   }
-  catch (error)
-  {
+  catch (error) {
     mensajeActualizacion = 'Error al verificar roles'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -390,8 +376,7 @@ async function verificarRoles()
 }
 
 // Ejecutar las funciones iniciales al montar el componente
-onMounted(async () =>
-{
+onMounted(async () => {
   await getDiasSemanas()
   await getTramosHorario()
   await getRecurso()
@@ -401,7 +386,7 @@ onMounted(async () =>
   await verificarRoles()
   await obtenerEmailUsuarioActual()
   await verificarConstantes()
-  emailUserActual = await obtenerEmailUsuario(toastMessage,toastColor,isToastOpen)
+  emailUserActual = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen)
 
   emailLogged.value = emailUserActual;
 })
@@ -409,11 +394,9 @@ onMounted(async () =>
 </script>
 
 <style scoped>
-
-.valorConstante
-{
-  color:#dc3545;
-  padding:10px;
+.valorConstante {
+  color: #dc3545;
+  padding: 10px;
   font-weight: bold;
   margin-bottom: 15px;
 }
@@ -462,8 +445,7 @@ onMounted(async () =>
     box-shadow 0.3s;
 }
 
-.custom-numAlumnos
-{
+.custom-numAlumnos {
   margin-top: 10px;
 }
 
@@ -488,6 +470,10 @@ span {
   cursor: pointer;
   font-weight: bold;
   font-style: oblique;
+}
+
+.div_profesor {
+  padding: 6px;
 }
 
 th,
@@ -521,13 +507,12 @@ td {
   background-color: #e9f5ff;
 }
 
-.reservaHover:hover
-{
+.reservaHover:hover {
   /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
   cursor: pointer;
 }
-.reservaBloqueadaHover:hover
-{
+
+.reservaBloqueadaHover:hover {
   /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
   cursor: auto;
 }
@@ -605,7 +590,7 @@ tr:hover td {
   background-color: #0056b3;
 }
 
-  /* Contenedor que permite el scroll horizontal solo en móviles */
+/* Contenedor que permite el scroll horizontal solo en móviles */
 @media (max-width: 768px) {
   .tabla-container {
     overflow-x: auto;
@@ -617,7 +602,8 @@ tr:hover td {
   .sticky-column {
     position: sticky;
     left: 0;
-    background: white; /* Para que no se mezcle con otras celdas */
+    background: white;
+    /* Para que no se mezcle con otras celdas */
     z-index: 2;
   }
 
