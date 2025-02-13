@@ -54,7 +54,7 @@
 
     <!-- Modal de edición -->
     <div
-      v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible)"
+      v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible && reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0)"
       class="modal-overlay">
       <div class="modal-content">
         <h2>Reservar</h2>
@@ -70,7 +70,8 @@
 
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
-          placeholder="Número de alumnos" min="0" :max="cantidadSeleccionada" />
+          placeholder="Número de alumnos" min="0"
+          :max="reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes" />
 
         <button v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= cantidadSeleccionada && profesorSeleccionado"
           @click="saveChanges">Reservar</button>
@@ -151,6 +152,7 @@ const obtenerEmailUsuarioActual = async () => {
 
 // Función para abrir el modal
 const openModal = (tramo, dia) => {
+
   if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
     currentDia.value = dia
@@ -170,6 +172,7 @@ const openModal = (tramo, dia) => {
     verificarConstantes()
     // Puedes mostrar un mensaje al usuario indicando que el recurso no es compartible
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'Este recurso no permite reservas compartidas.');
+
   }
 
 }
@@ -321,6 +324,7 @@ const getReserva = async () => {
       nalumnos: reserva.nalumnos,
       nombreYapellidos: reserva.nombreYapellidos,
       email: reserva.email,
+      plazasRestantes: reserva.plazasRestantes
     }
   }
   reservas.value = estructuraReservas
