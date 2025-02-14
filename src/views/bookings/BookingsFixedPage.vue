@@ -25,7 +25,8 @@
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
                   {{ nombre }} <br>
-                  (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
+                  (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }}) <br> Plazas Restantes{{
+                    reservas[tramo.id][dia.id].plazasRestantes }}
 
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
@@ -67,7 +68,7 @@
             {{ `${user.nombre} ${user.apellidos}` }}
           </option>
         </select>
-
+        <p> {{ reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes }}</p>
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
           placeholder="Número de alumnos" min="0"
