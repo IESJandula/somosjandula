@@ -256,7 +256,8 @@ const crearRecurso = async () => {
     if (status.status == 200) {
       mensajeActualizacion = "Recurso creado con éxito";
       mensajeColor = "success";
-    } else if (status.status == 409) {
+    }
+    else if (status.status == 409) {
       mensajeActualizacion = "Recurso ya existe";
       mensajeColor = "warning";
     }

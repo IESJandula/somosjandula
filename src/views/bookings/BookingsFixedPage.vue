@@ -3,7 +3,7 @@
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
@@ -20,6 +20,28 @@
         </tr>
       </thead>
       <tbody v-if="valorConstante === ''">
+        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+            <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
+              <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
+                <div class="div_profesor">
+                  {{ nombre }} <br>
+                  (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
+
+                  <button
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    Borrar
+                  </button>
+                </div>
+              </template>
+            </span>
+          </td>
+        </tr>
+      </tbody>
+      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR')">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
@@ -181,8 +203,6 @@ const openModal = (tramo, dia) => {
     isModalOpen.value = true
     getReserva()
     verificarConstantes()
-    // Puedes mostrar un mensaje al usuario indicando que el recurso no es compartible
-    crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'Este recurso no permite reservas compartidas.');
   }
 
 }
