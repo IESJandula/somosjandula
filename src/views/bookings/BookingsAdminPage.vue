@@ -73,50 +73,50 @@
     </div>
   </div>
   <div class="form-wrapper">
-  <div class="form-container-table">
-    <div class="title-container">
-      <h1 class="title">Lista de Recursos</h1>
-    </div>
-    <ion-row>
-      <ion-col size="12">
-        <table v-if="recursosNoCompartido.length > 0 || recursosCompartido.length > 0">
-          <thead>
-            <tr>
-              <th>Recurso</th>
-              <th>Cantidad</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody v-if="!esCompartible">
-            <tr v-for="r in recursosNoCompartido" :key="r.id">
-              <td>{{ r.recursos }}</td>
-              <td>{{ r.cantidad }}</td>
-              <td>
-                <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
-                  X
-                </button>
-              </td>
-            </tr>
-          </tbody>
-          <tbody v-else>
-            <tr v-for="r in recursosCompartido" :key="r.id">
-              <td>{{ r.recursos }}</td>
-              <td>{{ r.cantidad }}</td>
-              <td>
-                <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
-                  X
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <ion-col v-else size="12">
-          <ion-label>No hay recursos disponibles.</ion-label>
+    <div class="form-container-table">
+      <div class="title-container">
+        <h1 class="title">Lista de Recursos</h1>
+      </div>
+      <ion-row>
+        <ion-col size="12">
+          <table v-if="recursosNoCompartido.length > 0 || recursosCompartido.length > 0">
+            <thead>
+              <tr>
+                <th>Recurso</th>
+                <th>Cantidad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody v-if="!esCompartible">
+              <tr v-for="r in recursosNoCompartido" :key="r.id">
+                <td>{{ r.recursos }}</td>
+                <td>{{ r.cantidad }}</td>
+                <td>
+                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                    X
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+            <tbody v-else>
+              <tr v-for="r in recursosCompartido" :key="r.id">
+                <td>{{ r.recursos }}</td>
+                <td>{{ r.cantidad }}</td>
+                <td>
+                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                    X
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <ion-col v-else size="12">
+            <ion-label>No hay recursos disponibles.</ion-label>
+          </ion-col>
         </ion-col>
-      </ion-col>
-    </ion-row>
+      </ion-row>
+    </div>
   </div>
-</div>
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
@@ -381,8 +381,7 @@ const eliminarRecurso = async (recurso, event) => {
   }
 };
 
-const switchRecurso = async () =>
-{
+const switchRecurso = async () => {
   cargarRecursos();
 };
 
@@ -656,36 +655,38 @@ input:checked+.slider:before {
   transform: translateX(26px);
 }
 
- /* Modo oscuro */
-  @media (prefers-color-scheme: dark) {
-    .form-container {
-      background-color: var(--form-bg-dark);
-      box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-      border: 1px solid #444;
-    }
-
-    .form-container-table {
-      background-color: var(--form-bg-dark);
-      box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-      border: 1px solid #444;
-    }
-
-    .title {
-      color: var(--text-color-dark);
-    }
-  }
-
-@media (max-width: 768px) {
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
   .form-container {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
   }
-.form-container-table table{
-  overflow-x: auto;
+
+  .form-container-table {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+
+  .title {
+    color: var(--text-color-dark);
+  }
+}
+
+@media (max-width: 768px) {
+  .form-container {
+    border: 1px solid #444;
+  }
+
+  .form-container-table table {
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
     display: block;
     white-space: nowrap;
-}
+  }
+
   table {
     font-size: 14px;
     width: 100%;
