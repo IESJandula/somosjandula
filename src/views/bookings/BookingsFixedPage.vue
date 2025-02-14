@@ -25,8 +25,7 @@
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
                   {{ nombre }} <br>
-                  (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }}) <br> Plazas Restantes{{
-                    reservas[tramo.id][dia.id].plazasRestantes }}
+                  (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
@@ -68,17 +67,17 @@
             {{ `${user.nombre} ${user.apellidos}` }}
           </option>
         </select>
-        <p> {{ reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes }}</p>
+
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
           placeholder="Número de alumnos" min="0"
-          :max="reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes" />
+          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
 
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes && profesorSeleccionado"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes && rolesUsuario[0].includes('PROFESOR')"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR')"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -96,6 +95,7 @@ import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes } from '@/services/constantes';
+import { bookingsApiUrl } from '@/environment/apiUrls';
 
 // Variables reactivas
 const diasSemanas = ref([])
@@ -135,7 +135,7 @@ const verificarRecursos = () => {
 
 const verificarConstantes = async () => {
   try {
-    constantes.value = await obtenerConstantes('http://localhost:8084/bookings/constants', toastMessage, toastColor, isToastOpen);
+    constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
     const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas fijas');
     valorConstante.value = reservaDeshabilitada.valor
