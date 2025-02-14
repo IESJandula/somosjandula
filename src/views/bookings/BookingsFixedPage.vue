@@ -1,7 +1,9 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="container">
-    <span class="valorConstante">{{ valorConstante }}</span>
+    <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
+    <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
+    <span class="mensajeInformativo" v-if="mensajeInformativo">{{ mensajeInformativo }}</span>
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
@@ -43,9 +45,13 @@
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
-            <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos > 0">
-              {{ reservas[tramo.id][dia.id].nombreYapellidos }} <br> (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos
-              }})
+            <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
+              <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
+                <div class="div_profesor">
+                  {{ nombre }} <br>
+                  (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
+                </div>
+              </template>
             </span>
           </td>
         </tr>
@@ -118,6 +124,8 @@ let mensajeActualizacion = ''
 const valorConstante = ref('')
 let mensajeColor = ''
 let emailUserActual = '';
+let logRecursos = '';
+let mensajeInformativo = '';
 const mostrarTabla = ref(true);
 const emailLogged = ref('');
 // Variables para el toast
@@ -130,6 +138,7 @@ const verificarRecursos = () => {
   if (recursos.value.length === 0) {
     mostrarTabla.value = false;
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay recursos')
+    logRecursos = 'No hay recursos'
   }
 };
 
@@ -174,7 +183,6 @@ const openModal = (tramo, dia) => {
     verificarConstantes()
     // Puedes mostrar un mensaje al usuario indicando que el recurso no es compartible
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'Este recurso no permite reservas compartidas.');
-
   }
 
 }
@@ -361,6 +369,12 @@ watch(recursoSeleccionado, () => {
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
   isModalOpen.value = false
 
+  if (!recursoSeleccionadoCompartible.value) {
+    mensajeInformativo = 'Recuerda, este recurso no se puede compartir en el mismo tramo horario'
+  }
+  else {
+    mensajeInformativo = 'Recuerda, este recurso sí se puede compartir en el mismo tramo horario'
+  }
   getReserva();
 });
 
@@ -403,6 +417,15 @@ onMounted(async () => {
 .valorConstante {
   color: #dc3545;
   padding: 10px;
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.mensajeInformativo {
+  color: #ffae00;
+  padding: 10px;
+  font-size: 25px;
   font-weight: bold;
   margin-bottom: 15px;
 }
