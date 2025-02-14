@@ -56,15 +56,6 @@
       </ion-row>
       <ion-row>
         <ion-col size="12">
-          <div class="switch-container">
-            <span>No Compartido</span>
-            <label class="switch">
-              <input type="checkbox" v-model="esCompartible" @change="switchRecurso" />
-              <span class="slider"></span>
-            </label>
-            <span>Compartido
-            </span>
-          </div>
           <ion-button expand="block" v-if="cantidad > 0 && recurso" color="secondary" @click="crearRecurso">
             Crear Recurso
           </ion-button>
@@ -76,6 +67,15 @@
     <div class="form-container-table">
       <div class="title-container">
         <h1 class="title">Lista de Recursos</h1>
+      </div>
+      <div class="switch-container">
+        <span>No Compartido</span>
+        <label class="switch">
+          <input type="checkbox" v-model="esCompartible" @change="switchRecurso" />
+          <span class="slider"></span>
+        </label>
+        <span>Compartido
+        </span>
       </div>
       <ion-row>
         <ion-col size="12">
@@ -258,9 +258,18 @@ const crearRecurso = async () => {
       mensajeColor = "success";
     }
     else if (status.status == 409) {
-      mensajeActualizacion = "Recurso ya existe";
-      mensajeColor = "warning";
+
+      const compartido = recursosCompartido.value.find((item) => item.recursos === recurso.value);
+
+      if (compartido) {
+        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos compartidos`;
+      }
+      else {
+        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos no compartidos`;
+      }
+      mensajeColor = "danger";
     }
+
     crearToast(
       toastMessage,
       toastColor,
@@ -298,13 +307,17 @@ const cargarRecursos = async () => {
       recursosCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
+        esCompartible: item.esCompartible,
       }));
     } else {
       recursosNoCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
+        esCompartible: item.esCompartible,
       }));
     }
+
+
   } catch (error) {
     mensajeActualizacion = "No existen recursos todavía";
     mensajeColor = "warning";
