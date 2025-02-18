@@ -164,7 +164,7 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
 
-const fechaActual = new Date().toISOString().slice(0, 10);
+const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
@@ -191,10 +191,11 @@ fechaInicioCurso.value = new Date(inicioYear, 8, 2).toISOString().slice(0, 10); 
 fechaFinCurso.value = new Date(finYear, 5, 31).toISOString().slice(0, 10); // 30 de junio
 
 const actualizarSemana = (event) => {
-  const fechaSeleccionada = new Date(event.target.value); // Convertimos la fecha seleccionada a un objeto Date
-  fechaActual.value = fechaSeleccionada;
-  semana.value = getWeek(fechaSeleccionada); // Usamos date-fns para calcular la semana
-  getReserva(+semana.value); // Actualizar reservas al cambiar la semana
+  event.stopPropagation();
+  const fechaSeleccionada = new Date(event.target.value); // Convert the selected date to a Date object
+  fechaActual.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
+  semana.value = getWeek(fechaSeleccionada); // Calculate the week
+  getReserva(); // Update reservations when the week changes
 }
 
 
@@ -295,7 +296,7 @@ const saveChanges = async () => {
       currentDia.value.id,
       currentTramo.value.id,
       alumnos,
-      semana
+      +semana.value
     );
 
     // Actualizar reservas localmente
@@ -378,7 +379,7 @@ const getRecurso = async () => {
 // Función para obtener las reservas estructuradas
 const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
-  const data = await getReservasTemporary(isToastOpen, toastMessage, toastColor, recurso, semana)
+  const data = await getReservasTemporary(isToastOpen, toastMessage, toastColor, recurso, +semana.value)
 
   // Reestructurar reservas en un objeto organizado por tramos y días
   const estructuraReservas = {}
@@ -403,12 +404,12 @@ const getReserva = async () => {
   reservas.value = estructuraReservas
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, semana) => {
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
   try {
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
-    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, semana)
+    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
 
     mensajeActualizacion = 'Reserva cancelada exitosamente'
     mensajeColor = 'success'
