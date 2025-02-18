@@ -5,8 +5,12 @@
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
     <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
 
-    <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso" :max="fechaFinCurso" />
-
+    <div class="date-picker-container">
+      <label for="start">Selecciona una fecha</label>
+      <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso"
+        :max="fechaFinCurso" />
+    </div>
+    <br>
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
@@ -687,5 +691,53 @@ tr:hover td {
   .custom-select {
     width: 100%;
   }
+}
+
+/* Estilo para el contenedor del input */
+.date-picker-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  font-family: Arial, sans-serif;
+}
+
+/* Etiqueta asociada */
+label {
+  font-weight: bold;
+  color: #555;
+}
+
+/* Estilo para el input */
+input[type="date"] {
+  padding: 10px;
+  margin-left: 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  color: #ffffff;
+  background-color: #0078d7;
+  transition: all 0.3s ease;
+}
+
+/* Estilo al hacer hover */
+input[type="date"]:hover {
+  border-color: #0078d7;
+  background-color: #353030;
+}
+
+/* Estilo al estar en focus */
+input[type="date"]:focus {
+  outline: none;
+  border-color: #0078d7;
+  box-shadow: 0 0 5px rgba(0, 120, 215, 0.5);
+  background-color: #242222;
+}
+
+/* Estilo cuando el campo está deshabilitado */
+input[type="date"]:disabled {
+  background-color: #e9e9e9;
+  border-color: #d3d3d3;
+  color: #a9a9a9;
 }
 </style>
