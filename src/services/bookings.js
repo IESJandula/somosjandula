@@ -282,3 +282,99 @@ export const getProfesores = async (toastMessage, toastColor, isToastOpen) =>
     throw error
   }
 }
+
+
+export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana) =>
+  {
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
+      {
+      method: 'POST',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        email: email,
+        recurso: recurso,
+        diaDeLaSemana: diaDeLaSemana,
+        tramosHorarios: tramoHorario,
+        nAlumnos: nAlumnos,
+        numSemana: numSemana,
+      },
+    })
+
+    if (!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+    return await response.json()
+  }
+  catch (error)
+  {
+    console.log();
+  }
+}
+
+export const getReservasTemporary = async (toastMessage, toastColor, isToastOpen, recurso, numSemana) =>
+  {
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+    
+    const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        aulaYCarritos: recurso,
+        numSemana: numSemana,
+      },
+    })
+
+    if (!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+    const data = await response.json()    
+    return data
+  }
+  catch (error)
+  {
+    console.error('Error al obtener las reservas:', error)
+    throw error
+  }
+}
+
+export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, numSemana) =>
+  {
+  try
+  {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;  
+
+      const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings', {
+        method: 'DELETE',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          email: email,
+          recurso: recurso,
+          diaDeLaSemana: diaDeLaSemana,
+          tramoHorario: tramoHorario,
+          numSemana: numSemana,
+        },
+      })
+
+      if (!response.ok)
+      {
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+      }
+    }
+    catch (error)
+    {
+      console.error('Error al eliminar la reserva:', error)
+      throw error
+    }
+  }

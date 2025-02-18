@@ -15,10 +15,12 @@
         <ion-list>
           <ion-item button @click="toggleSubMenuPrinters">
             Cola de impresión
-            <ion-icon slot="end" :icon="printersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end"
+              :icon="printersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="printersSubmenuVisible" class="submenu">
-            <ion-item v-if="mostrarPrintersAdmin" button @click="navigateAndCloseMenu('/printers/admin')">Administrar</ion-item>
+            <ion-item v-if="mostrarPrintersAdmin" button
+              @click="navigateAndCloseMenu('/printers/admin')">Administrar</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprimir</ion-item>
           </ion-list>
         </ion-list>
@@ -32,12 +34,14 @@
             <ion-item v-if="mostrarBookingsAdmin" button
               @click="navigateAndCloseMenu('/bookings/admin')">Administrar</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">Fijas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">Temporales</ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
           <ion-item button @click="toggleSubMenuDocuments">
             Documentos
-            <ion-icon slot="end" :icon="documentsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end"
+              :icon="documentsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="documentsSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/documents/absences')">Ausencias</ion-item>
@@ -96,7 +100,7 @@ import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { menuController } from '@ionic/vue'; // Importa el controlador del menú
 import { getAuth, signOut } from 'firebase/auth';
-import { validarRolesMenu, obtenerNombreYApellidosUsuario} from '@/services/firebaseService';
+import { validarRolesMenu, obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast';
 
 export default defineComponent({
@@ -185,9 +189,8 @@ export default defineComponent({
         mostrarAdmin.value = rolesMenu.mostrarAdmin;
         mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
         mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
-      } 
-      catch (error)
-      {
+      }
+      catch (error) {
         crearToast(
           toastMessage,
           toastColor,
@@ -231,7 +234,8 @@ ion-button {
   --background: #3880ff;
   --color: white;
   border-radius: 8px;
-  opacity: 1; /* Asegúrate de que sea visible */
+  opacity: 1;
+  /* Asegúrate de que sea visible */
 }
 
 ion-icon {
@@ -239,19 +243,25 @@ ion-icon {
 }
 
 .menu-button {
-  margin-right: auto; /* Empuja el botón de menú hacia la izquierda */
+  margin-right: auto;
+  /* Empuja el botón de menú hacia la izquierda */
 }
 
 ion-toolbar {
   display: flex;
-  justify-content: space-between; /* Distribuye los elementos entre los extremos */
-  align-items: center; /* Alinea verticalmente en el centro */
+  justify-content: space-between;
+  /* Distribuye los elementos entre los extremos */
+  align-items: center;
+  /* Alinea verticalmente en el centro */
 }
 
 .end-section {
-  display: flex; /* Utiliza flexbox para alinear elementos horizontalmente */
-  align-items: center; /* Alinea los elementos verticalmente al centro */
-  gap: 10px; /* Espacio entre el nombre del usuario y el botón de Logout */
+  display: flex;
+  /* Utiliza flexbox para alinear elementos horizontalmente */
+  align-items: center;
+  /* Alinea los elementos verticalmente al centro */
+  gap: 10px;
+  /* Espacio entre el nombre del usuario y el botón de Logout */
 }
 
 .user-name {
@@ -265,20 +275,26 @@ ion-menu {
 
 .top-bar {
   display: flex;
-  justify-content: flex-end; /* Alinea los botones a la derecha */
-  align-items: center; /* Centrar los botones verticalmente */
-  padding: 0 10px; /* Espacio alrededor del contenido */
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Sombra para dar separación */
+  justify-content: flex-end;
+  /* Alinea los botones a la derecha */
+  align-items: center;
+  /* Centrar los botones verticalmente */
+  padding: 0 10px;
+  /* Espacio alrededor del contenido */
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  /* Sombra para dar separación */
 }
 
 .button-container {
   display: flex;
-  gap: 10px; /* Espacio entre los botones */
+  gap: 10px;
+  /* Espacio entre los botones */
 }
 
 /* Ajuste del contenido principal */
 ion-content {
-  padding-top: 60px; /* Ajusta este valor según la altura de tu toolbar */
+  padding-top: 60px;
+  /* Ajusta este valor según la altura de tu toolbar */
 }
 
 @media (min-width: 768px) {
@@ -292,4 +308,3 @@ ion-content {
   }
 }
 </style>
-

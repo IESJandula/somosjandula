@@ -7,6 +7,7 @@ import PrintersAdminPage from '@/views/printers/PrintersAdminPage.vue';
 import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
 import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
 import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
+import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
 import AbsencesPage from '@/views/documents/AbsencesPage.vue';
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
@@ -75,6 +76,14 @@ const routes = [
         path: 'bookings/fixed',
         component: BookingsFixedPage,
         name: 'BookingsFixed',
+        meta: { 
+          role: 'PROFESOR' 
+        },
+      },
+      {
+        path: 'bookings/temporary',
+        component: BookingsTemporaryPage,
+        name: 'BookingsTemporary',
         meta: { 
           role: 'PROFESOR' 
         },
