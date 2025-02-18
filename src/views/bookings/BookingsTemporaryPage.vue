@@ -7,12 +7,12 @@
 
     <div class="date-picker-container">
       <label for="start">Selecciona una fecha</label>
-      <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso"
-        :max="fechaFinCurso" />
+      <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso" :max="fechaFinCurso"
+        @change="actualizarSemana($event)" />
     </div>
     <br>
     <!-- Dropdown para seleccionar recurso -->
-    <select class="custom-select" v-model="recursoSeleccionado">
+    <select class=" custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
         {{ recurso.recursos }} (Máximo permitido: {{ recurso.cantidad }})
       </option>
@@ -126,7 +126,8 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
+import { getWeek } from 'date-fns';
+import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes } from '@/services/constantes';
@@ -166,6 +167,7 @@ const emailUsuarioActual = ref(null);
 const fechaActual = new Date().toISOString().slice(0, 10);
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
+const semana = ref('');
 
 // Obtener el año actual
 const currentDate = new Date();
@@ -187,6 +189,14 @@ if (currentDate.getMonth() >= 6) {
 // Establecer las fechas de inicio y fin del curso
 fechaInicioCurso.value = new Date(inicioYear, 8, 2).toISOString().slice(0, 10); // 1 de septiembre
 fechaFinCurso.value = new Date(finYear, 5, 31).toISOString().slice(0, 10); // 30 de junio
+
+const actualizarSemana = (event) => {
+  const fechaSeleccionada = new Date(event.target.value); // Convertimos la fecha seleccionada a un objeto Date
+  fechaActual.value = fechaSeleccionada;
+  semana.value = getWeek(fechaSeleccionada); // Usamos date-fns para calcular la semana
+  getReserva(+semana.value); // Actualizar reservas al cambiar la semana
+}
+
 
 const verificarRecursos = () => {
   if (recursos.value.length === 0) {
@@ -276,7 +286,7 @@ const saveChanges = async () => {
 
 
     // Llamar a la API para guardar la reserva
-    await postReserva(
+    await postReservaTemporary(
       isToastOpen,
       toastMessage,
       toastColor,
@@ -284,7 +294,8 @@ const saveChanges = async () => {
       recursoSeleccionado.value,
       currentDia.value.id,
       currentTramo.value.id,
-      alumnos
+      alumnos,
+      semana
     );
 
     // Actualizar reservas localmente
@@ -367,7 +378,7 @@ const getRecurso = async () => {
 // Función para obtener las reservas estructuradas
 const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
-  const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)
+  const data = await getReservasTemporary(isToastOpen, toastMessage, toastColor, recurso, semana)
 
   // Reestructurar reservas en un objeto organizado por tramos y días
   const estructuraReservas = {}
@@ -392,13 +403,12 @@ const getReserva = async () => {
   reservas.value = estructuraReservas
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, semana) => {
   try {
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
-    await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
-
+    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, semana)
 
     mensajeActualizacion = 'Reserva cancelada exitosamente'
     mensajeColor = 'success'
@@ -459,7 +469,7 @@ onMounted(async () => {
   await obtenerEmailUsuarioActual()
   await verificarConstantes()
   emailUserActual = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen)
-
+  semana.value = getWeek(new Date());
   emailLogged.value = emailUserActual;
 })
 
