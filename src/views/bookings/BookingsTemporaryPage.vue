@@ -108,7 +108,11 @@
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
           placeholder="Número de alumnos" min="0"
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
-
+        <span class="custom-message-numAlumno"
+          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">El
+          máximo permitido es de {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
+            cantidadSeleccionada)) }} Alumnos</span>
+        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">El mínimo permitido es de 1 Alumno</span>
         <button
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
           @click="saveChanges">Reservar</button>
@@ -758,5 +762,15 @@ input[type="date"]:disabled {
   font-size: 30px;
   font-weight: bold;
   margin-top: 20px;
+}
+
+.custom-message-numAlumno {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 </style>
