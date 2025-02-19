@@ -618,6 +618,7 @@ tr:hover td {
   align-items: center;
   gap: 10px;
   margin-bottom: 15px;
+  margin-left: 14%;
 }
 
 .switch-container span {
@@ -708,6 +709,13 @@ input:checked+.slider:before {
 
   .custom-select {
     width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+
+  .switch-container {
+    margin-left: 0;
   }
 }
 </style>
