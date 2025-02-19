@@ -68,7 +68,7 @@
       <ion-row>
         <ion-col size="12">
           <ion-button expand="block" v-if="cantidad > 0 && recurso" color="secondary" @click="crearRecurso">
-            Crear Recurso
+            Crear / Modificar Recurso
           </ion-button>
         </ion-col>
       </ion-row>
