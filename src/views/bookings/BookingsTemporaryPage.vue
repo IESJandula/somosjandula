@@ -416,7 +416,7 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
   catch (error) {
-    mensajeActualizacion = 'Error al cancelar la reserva'
+    mensajeActualizacion = 'No se pueden eliminar las reservas fijas desde las temporales'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
