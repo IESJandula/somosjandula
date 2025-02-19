@@ -1,5 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
+  <h1 class="titulo-pagina">Reservas Temporales</h1>
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
@@ -211,7 +212,7 @@ const verificarConstantes = async () => {
   try {
     constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas fijas');
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas puntuales');
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
@@ -750,5 +751,12 @@ input[type="date"]:disabled {
   background-color: #e9e9e9;
   border-color: #d3d3d3;
   color: #a9a9a9;
+}
+
+.titulo-pagina {
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 20px;
 }
 </style>

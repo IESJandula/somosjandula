@@ -1,5 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
+  <h1 class="titulo-pagina">Reservas Fijas</h1>
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
@@ -659,5 +660,12 @@ tr:hover td {
   .custom-select {
     width: 100%;
   }
+}
+
+.titulo-pagina {
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 20px;
 }
 </style>
