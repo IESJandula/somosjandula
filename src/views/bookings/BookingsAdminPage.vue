@@ -266,7 +266,7 @@ const crearRecurso = async () => {
     );
 
     if (status.status == 200) {
-      mensajeActualizacion = "Recurso creado con éxito";
+      mensajeActualizacion = "Operación realizada correctamente";
       mensajeColor = "success";
     }
     else if (status.status == 409) {
