@@ -53,6 +53,17 @@
             <ion-input type="number" v-model="cantidad" min="0"></ion-input>
           </ion-item>
         </ion-col>
+        <ion-col size="12">
+          <div class="switch-container-gestion">
+            <span>No Compartido</span>
+            <label class="switch">
+              <input type="checkbox" v-model="esCompartibleGestion" />
+              <span class="slider"></span>
+            </label>
+            <span>Compartido
+            </span>
+          </div>
+        </ion-col>
       </ion-row>
       <ion-row>
         <ion-col size="12">
@@ -71,7 +82,7 @@
       <div class="switch-container">
         <span>No Compartido</span>
         <label class="switch">
-          <input type="checkbox" v-model="esCompartible" @change="switchRecurso" />
+          <input type="checkbox" v-model="esCompartibleLista" @change="switchRecurso" />
           <span class="slider"></span>
         </label>
         <span>Compartido
@@ -87,7 +98,7 @@
                 <th>Acciones</th>
               </tr>
             </thead>
-            <tbody v-if="!esCompartible">
+            <tbody v-if="!esCompartibleLista">
               <tr v-for="r in recursosNoCompartido" :key="r.id">
                 <td>{{ r.recursos }}</td>
                 <td>{{ r.cantidad }}</td>
@@ -146,7 +157,8 @@ const selectedConstante = ref(null);
 const constantes = ref([]);
 const recursosNoCompartido = ref([]);
 const recursosCompartido = ref([]);
-const esCompartible = ref(false);
+const esCompartibleLista = ref(false);
+const esCompartibleGestion = ref(false);
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -250,7 +262,7 @@ const crearRecurso = async () => {
       isToastOpen,
       recurso.value,
       parseInt(cantidad.value),
-      esCompartible.value
+      esCompartibleGestion.value
     );
 
     if (status.status == 200) {
@@ -300,20 +312,20 @@ const cargarRecursos = async () => {
       isToastOpen,
       toastMessage,
       toastColor,
-      esCompartible.value
+      esCompartibleLista.value
     );
 
-    if (esCompartible.value) {
+    if (esCompartibleLista.value) {
       recursosCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
-        esCompartible: item.esCompartible,
+        esCompartible: item.esCompartibleLista,
       }));
     } else {
       recursosNoCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
-        esCompartible: item.esCompartible,
+        esCompartible: item.esCompartibleLista,
       }));
     }
 
@@ -619,6 +631,15 @@ tr:hover td {
   gap: 10px;
   margin-bottom: 15px;
   margin-left: 14%;
+}
+
+.switch-container-gestion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 8%;
 }
 
 .switch-container span {
