@@ -68,7 +68,8 @@
       </ion-row>
       <ion-row>
         <ion-col size="12">
-          <ion-button expand="block" v-if="cantidad > 0 && recurso && cantidad >= recursosCantidadMaxima[recurso]"
+          <ion-button expand="block"
+            v-if="cantidad && recurso && recursosCantidadMaxima[recurso] || (recursosCantidadMaxima[recurso] <= cantidad) || cantidad > 0"
             color="secondary" @click="crearRecurso">
             Crear / Modificar Recurso
           </ion-button>
