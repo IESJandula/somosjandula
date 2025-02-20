@@ -19,11 +19,17 @@ Este proyecto es una aplicación web diseñada para la gestión eficiente de res
 ## 📌 Funcionalidades Principales
 
 ✅ **Visualización de reservas**: Muestra un calendario interactivo con horarios disponibles.
+
 ✅ **Gestión de usuarios**: Diferentes roles con permisos específicos (administradores, dirección y profesores).
+
 ✅ **Creación y eliminación de reservas**: Proceso sencillo y rápido para los usuarios.
+
 ✅ **Reglas de validación**: Evita conflictos como la sobreasignación de recursos.
+
 ✅ **Notificaciones**: Avisos automáticos sobre cambios en reservas.
+
 ✅ **Autenticación con Google**: Inicio de sesión seguro con Google Authentication Service.
+
 ✅ **Autorización con Firebase**: Control de permisos y generación de tokens para una comunicación segura.
 
 ## 🎯 Objetivos del Proyecto
