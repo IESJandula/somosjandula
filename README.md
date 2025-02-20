@@ -75,5 +75,5 @@ npm run dev
 ```
 
 ## 📬 Contacto
-Para dudas o sugerencias, puedes contactar con el equipo de desarrollo a través de [correo@ejemplo.com](mailto:correo@ejemplo.com).
+Para dudas o sugerencias, puedes contactar con el equipo de desarrollo.
 
