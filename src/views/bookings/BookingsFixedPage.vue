@@ -11,6 +11,9 @@
         {{ recurso.recursos }} (Máximo permitido: {{ recurso.cantidad }})
       </option>
     </select>
+    <div class="incidence-message" v-if="recursoSeleccionadoCompartible">
+      {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">Incidencia</a>
+    </div>
 
     <!-- Tabla con horarios y reservas -->
     <table class="tabla-container" v-if="mostrarTabla">
@@ -120,6 +123,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
+import { useRouter } from 'vue-router';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -149,6 +153,7 @@ let mensajeColor = ''
 let emailUserActual = '';
 let logRecursos = '';
 let mensajeInformativo = '';
+let mensajeIncidencia = '';
 const mostrarTabla = ref(true);
 const emailLogged = ref('');
 // Variables para el toast
@@ -221,16 +226,16 @@ const saveChanges = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     return;
   }
-
-  // Validar si ya existe un email en la reserva del mismo día y tramo
-  const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
-  if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
-    mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    return;
-  }
-
+  /*
+    // Validar si ya existe un email en la reserva del mismo día y tramo
+    const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
+    if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
+      mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+  */
   try {
     mensajeActualizacion = 'Reserva guardada exitosamente';
     mensajeColor = 'success';
@@ -395,10 +400,14 @@ watch(recursoSeleccionado, () => {
   }
   else {
     mensajeInformativo = 'Recuerda, este recurso sí se puede compartir en el mismo tramo horario'
+    mensajeIncidencia = 'Si necesitas más recursos, crea una incidencia aquí: '
   }
   getReserva();
 });
-
+const router = useRouter();
+const navigateToIssues = () => {
+  router.push({ path: '/documents/itIssues' });
+};
 
 const cargarDatos = async () => {
   users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
@@ -667,5 +676,22 @@ tr:hover td {
   font-size: 30px;
   font-weight: bold;
   margin-top: 20px;
+}
+
+.incidence-message {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-color-light);
+}
+
+.incidence-message a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.incidence-message a:hover {
+  color: var(--primary-color-hover);
+  cursor: pointer;
 }
 </style>
