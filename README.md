@@ -53,6 +53,7 @@ Este proyecto es una aplicación web diseñada para la gestión eficiente de res
 ## 🔮 Trabajo Futuro
 
 🚀 **Integración con sistemas externos**: Sincronización con Google Calendar, Outlook o Slack para mejorar la gestión de reservas.
+
 📩 **Notificaciones por correo**: Implementación de un sistema automático de envío de emails con detalles de las reservas mediante SMTP, SendGrid o Amazon SES.
 
 ---
