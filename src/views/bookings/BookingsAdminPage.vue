@@ -50,7 +50,8 @@
         <ion-col size="12">
           <ion-item>
             <ion-label position="stacked">Cantidad:</ion-label>
-            <ion-input type="number" v-model="cantidad" min="0"></ion-input>
+            <ion-input type="number" v-model="cantidad"
+              :min="recursosCantidadMaxima[recurso] ? recursosCantidadMaxima[recurso] : 0"></ion-input>
           </ion-item>
         </ion-col>
         <ion-col size="12">
@@ -67,7 +68,8 @@
       </ion-row>
       <ion-row>
         <ion-col size="12">
-          <ion-button expand="block" v-if="cantidad > 0 && recurso" color="secondary" @click="crearRecurso">
+          <ion-button expand="block" v-if="cantidad > 0 && recurso && cantidad >= recursosCantidadMaxima[recurso]"
+            color="secondary" @click="crearRecurso">
             Crear / Modificar Recurso
           </ion-button>
         </ion-col>
@@ -150,6 +152,7 @@ import {
   getRecursosCompartible,
   deleteRecurso,
   getReservas,
+  getCantMaxResource
 } from "@/services/bookings";
 
 // Selección de constante
@@ -159,6 +162,7 @@ const recursosNoCompartido = ref([]);
 const recursosCompartido = ref([]);
 const esCompartibleLista = ref(false);
 const esCompartibleGestion = ref(false);
+const recursosCantidadMaxima = ref('');
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -180,6 +184,18 @@ const onConstanteChange = () => {
     selectedConstante.value.valor = "";
   }
 };
+
+const getCantMax = async () => {
+  const data = await getCantMaxResource(
+    isToastOpen,
+    toastMessage,
+    toastColor
+  );
+  recursosCantidadMaxima.value = data
+
+  console.log(recursosCantidadMaxima.value);
+
+}
 
 // Función para actualizar la constante seleccionada
 const actualizarConstanteSeleccionada = async () => {
@@ -227,6 +243,7 @@ const cargarConstantes = async () => {
       toastColor,
       isToastOpen
     );
+    getCantMax();
 
     // Seleccionar la constante "Reserva Deshabilitada" por defecto
     const reservaDeshabilitada = constantes.value.find(
@@ -416,6 +433,7 @@ onMounted(async () => {
   await cargarConstantes();
   await cargarRecursos();
   await switchRecurso();
+  await getCantMaxResource();
 });
 </script>
 

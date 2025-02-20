@@ -377,4 +377,31 @@ export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOp
       console.error('Error al eliminar la reserva:', error)
       throw error
     }
+}
+  
+export const getCantMaxResource = async (toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/cantMax',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    })
+
+    if (!response.ok)
+    {
+      throw new Error('No se ha cargado previamente ningun recurso')
+    }
+    return await response.json()
   }
+  catch (error)
+  {
+    console.log(error)
+  }
+}

@@ -37,6 +37,7 @@
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
+                  <div class="reservaFija">Fija</div>
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
@@ -772,5 +773,19 @@ input[type="date"]:disabled {
   font-weight: bold;
   margin-top: 5px;
   margin-bottom: 5px;
+}
+
+.reservaFija {
+  background-color: #28a745;
+  color: white;
+  padding: 5px;
+  border-radius: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 5px;
+  cursor: pointer;
 }
 </style>
