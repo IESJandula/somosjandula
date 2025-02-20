@@ -1,6 +1,6 @@
-# 📌 Sistema de Reservas - Frontend
+# 📌 Somos Jandula
 
-Este proyecto es una aplicación web diseñada para la gestión eficiente de reservas de recursos en un entorno educativo. Permite a profesores y administradores visualizar y gestionar reservas de manera organizada y sin complicaciones.
+Este proyecto es una aplicación web diseñada para la gestión eficiente de reservas de recursos y el sistema de impresion en un entorno educativo. Permite a profesores y administradores visualizar y gestionar reservas de manera organizada y sin complicaciones.
 
 ## 🚀 Tecnologías Utilizadas
 
