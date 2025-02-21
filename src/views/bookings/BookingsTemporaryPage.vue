@@ -45,10 +45,10 @@
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
-                  <div class="reservaFija">Fija</div>
+                  <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija">Fija</div>
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
-                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual) && !reservas[tramo.id][dia.id].esfija"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
                     Borrar
                   </button>
@@ -413,6 +413,7 @@ const getRecurso = async () => {
 // Función para obtener las reservas estructuradas
 const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
+  semana.value = getWeek(new Date());
   const data = await getReservasTemporary(isToastOpen, toastMessage, toastColor, recurso, +semana.value)
 
   // Reestructurar reservas en un objeto organizado por tramos y días
@@ -432,7 +433,8 @@ const getReserva = async () => {
       nalumnos: reserva.nalumnos,
       nombreYapellidos: reserva.nombreYapellidos,
       email: reserva.email,
-      plazasRestantes: reserva.plazasRestantes
+      plazasRestantes: reserva.plazasRestantes,
+      esfija: reserva.esfija
     }
   }
   reservas.value = estructuraReservas
