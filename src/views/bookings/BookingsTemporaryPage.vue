@@ -19,12 +19,20 @@
       </option>
     </select>
 
+    <div class="semana_button-container">
+      <button class="semanaAnterior_button" @click.stop="decrementarSemana()">Semana Anterior</button>
+      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()">Semana Siguiente</button>
+    </div>
+
+
     <!-- Tabla con horarios y reservas -->
     <table class="tabla-container" v-if="mostrarTabla">
       <thead>
         <tr>
           <th class="sticky-column">Horarios</th>
-          <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
+          <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }} {{ parseInt(day) + index }}/{{ month
+          }}
+          </th>
         </tr>
       </thead>
       <tbody v-if="valorConstante === ''">
@@ -132,7 +140,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getWeek } from 'date-fns';
+import { getWeek, format, startOfWeek, addWeeks } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -174,6 +182,8 @@ const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
+const day = ref('');
+const month = ref('');
 
 // Obtener el año actual
 const currentDate = new Date();
@@ -202,8 +212,26 @@ const actualizarSemana = (event) => {
   fechaActual.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
   semana.value = getWeek(fechaSeleccionada); // Calculate the week
   getReserva(); // Update reservations when the week changes
+  incrementarFecha();
 }
 
+const decrementarSemana = () => {
+  semana.value = parseInt(semana.value) - 1;
+  incrementarFecha();
+  getReserva();
+}
+
+const incrementarSemana = () => {
+  semana.value = parseInt(semana.value) + 1;
+  incrementarFecha();
+  getReserva();
+}
+
+const incrementarFecha = () => {
+  const primerDiaSemana = startOfWeek(addWeeks(inicioYear, semana.value - 1), { weekStartsOn: 2 });
+  day.value = format(primerDiaSemana, 'dd');
+  month.value = format(primerDiaSemana, 'MM');
+}
 
 const verificarRecursos = () => {
   if (recursos.value.length === 0) {
@@ -478,6 +506,7 @@ onMounted(async () => {
   emailUserActual = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen)
   semana.value = getWeek(new Date());
   emailLogged.value = emailUserActual;
+  await incrementarFecha();
 })
 
 </script>
@@ -786,6 +815,25 @@ input[type="date"]:disabled {
   font-size: 12px;
   font-weight: bold;
   margin-right: 5px;
+  cursor: pointer;
+}
+
+.semana_button-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.semanaAnterior_button,
+.semanaSiguiente_button {
+  background-color: #007bff;
+  color: white;
+  float: left;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
   cursor: pointer;
 }
 </style>
