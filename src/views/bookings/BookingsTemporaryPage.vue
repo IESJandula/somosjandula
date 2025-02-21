@@ -184,6 +184,7 @@ const fechaFinCurso = ref('');
 const semana = ref('');
 const day = ref('');
 const month = ref('');
+const preCargaSemana = ref('');
 
 // Obtener el año actual
 const currentDate = new Date();
@@ -413,7 +414,12 @@ const getRecurso = async () => {
 // Función para obtener las reservas estructuradas
 const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
-  semana.value = getWeek(new Date());
+  preCargaSemana.value = getWeek(new Date());
+
+  if(!semana.value) {
+    semana.value = preCargaSemana.value;
+  }
+
   const data = await getReservasTemporary(isToastOpen, toastMessage, toastColor, recurso, +semana.value)
 
   // Reestructurar reservas en un objeto organizado por tramos y días
