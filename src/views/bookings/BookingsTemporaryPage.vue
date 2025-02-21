@@ -141,7 +141,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
 import { getWeek, format, startOfWeek, addWeeks } from 'date-fns';
-import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary } from '@/services/bookings.js'
+import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes } from '@/services/constantes';
@@ -416,7 +416,7 @@ const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
   preCargaSemana.value = getWeek(new Date());
 
-  if(!semana.value) {
+  if (!semana.value) {
     semana.value = preCargaSemana.value;
   }
 
@@ -451,8 +451,18 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
-    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
 
+    if (rolesUsuario.value.includes('ADMINISTRADOR')) {
+      if (reservas[tramo.id][dia.id].esfija) {
+        await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
+      }
+      else {
+        await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
+      }
+    }
+    else {
+      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
+    }
     mensajeActualizacion = 'Reserva cancelada exitosamente'
     mensajeColor = 'success'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
