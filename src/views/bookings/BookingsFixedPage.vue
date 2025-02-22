@@ -226,16 +226,16 @@ const saveChanges = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     return;
   }
-  /*
-    // Validar si ya existe un email en la reserva del mismo día y tramo
-    const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
-    if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
-      mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
-      mensajeColor = 'danger';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-    }
-  */
+
+  // Validar si ya existe un email en la reserva del mismo día y tramo
+  const reservaExistente = reservas.value[currentTramo.value.id]?.[currentDia.value.id];
+  if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
+    mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
   try {
     mensajeActualizacion = 'Reserva guardada exitosamente';
     mensajeColor = 'success';

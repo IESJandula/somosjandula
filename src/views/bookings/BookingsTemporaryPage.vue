@@ -300,7 +300,7 @@ const saveChanges = async () => {
   }
 
   // Validar si ya existe un email en la reserva del mismo día y tramo
-  const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
+  const reservaExistente = reservas.value[currentTramo.value.id]?.[currentDia.value.id];
   if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
     mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
     mensajeColor = 'danger';
@@ -451,9 +451,8 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
-
     if (rolesUsuario.value.includes('ADMINISTRADOR')) {
-      if (reservas[tramo.id][dia.id].esfija) {
+      if (reservas.value[tramo.id]?.[dia.id]?.esfija) {
         await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
       }
       else {
