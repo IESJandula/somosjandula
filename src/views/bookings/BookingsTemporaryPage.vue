@@ -117,6 +117,17 @@
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
           placeholder="Número de alumnos" min="0"
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
+        <label>Opciones de Repetición:</label>
+
+        <select class="custom-select-modal" v-model="opcionRepeticion">
+          <option value="" selected>Ninguna</option>
+          <option value="Semanal">Semanal</option>
+          <option value="Mensual">Mensual</option>
+        </select>
+        <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
+          <label for="start">Limite de Repetición</label>
+          <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso" :max="fechaFinCurso" @change="fechaModal($event)" />
+        </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">El
           máximo permitido es de {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
@@ -177,14 +188,17 @@ const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
+const opcionRepeticion = ref('');
 
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
+const semanaLimite = ref('');
 const day = ref('');
 const month = ref('');
 const preCargaSemana = ref('');
+const fechaLimite = ref('');
 
 // Obtener el año actual
 const currentDate = new Date();
@@ -216,6 +230,17 @@ const actualizarSemana = (event) => {
   incrementarFecha();
 }
 
+const resetearSemana = () => {
+  semana.value = getWeek(fechaActual.value);
+}
+
+const fechaModal = (event) => {
+  event.stopPropagation();
+  const fechaSeleccionada = new Date(event.target.value); // Convert the selected date to a Date object
+  fechaLimite.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
+  semanaLimite.value = getWeek(fechaLimite.value);
+}
+
 const decrementarSemana = () => {
   semana.value = parseInt(semana.value) - 1;
   incrementarFecha();
@@ -232,6 +257,61 @@ const incrementarFecha = () => {
   const primerDiaSemana = startOfWeek(addWeeks(inicioYear, semana.value - 1), { weekStartsOn: 2 });
   day.value = format(primerDiaSemana, 'dd');
   month.value = format(primerDiaSemana, 'MM');
+}
+
+
+const repetirReserva = () => {
+  if (opcionRepeticion.value === 'Semanal')
+  {
+    do
+    {
+      postReservaTemporary(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+      profesorSeleccionado.value,
+      recursoSeleccionado.value,
+      currentDia.value.id,
+      currentTramo.value.id,
+      numAlumnos.value,
+      +semana.value
+    );
+      semana.value = parseInt(semana.value) + 1;
+    }
+    while (semana.value <= semanaLimite.value);
+    resetearSemana();
+    // Llamar a la API para guardar la reserva
+    /*
+  }
+  else if (opcionRepeticion.value === 'Mensual') {
+    // Llamar a la API para guardar la reserva
+    postReservaTemporary(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+      profesorSeleccionado.value,
+      recursoSeleccionado.value,
+      currentDia.value.id,
+      currentTramo.value.id,
+      numAlumnos.value,
+      +semana.value
+    );
+  }
+  else {
+    // Llamar a la API para guardar la reserva
+    postReservaTemporary(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+      profesorSeleccionado.value,
+      recursoSeleccionado.value,
+      currentDia.value.id,
+      currentTramo.value.id,
+      numAlumnos.value,
+      +semana.value
+    );
+    */
+  }
 }
 
 const verificarRecursos = () => {
@@ -320,7 +400,13 @@ const saveChanges = async () => {
       alumnos = maxAlumnos;
     }
 
-
+    if (opcionRepeticion.value === 'Semanal') {
+      repetirReserva();
+    }
+    else if (opcionRepeticion.value === 'Mensual') {
+      repetirReserva();
+    }
+    else {
     // Llamar a la API para guardar la reserva
     await postReservaTemporary(
       isToastOpen,
@@ -351,6 +437,7 @@ const saveChanges = async () => {
     }
 
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
   } catch (error) {
     mensajeActualizacion = 'Error al crear la reserva';
     mensajeColor = 'danger';
@@ -578,7 +665,7 @@ onMounted(async () => {
   width: 100%;
   padding: 10px;
   font-size: 16px;
-  border: 2px solid #007bff;
+  border: 1px solid #007bff;
   border-radius: 5px;
   background-color: white;
   color: #007bff;
@@ -587,6 +674,16 @@ onMounted(async () => {
   transition:
     border-color 0.3s,
     box-shadow 0.3s;
+}
+
+.date-picker-container-modal {
+  display: flex;
+  margin-top: 10px;
+  margin-right: 10%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  font-family: Arial, sans-serif;
 }
 
 .custom-numAlumnos {
