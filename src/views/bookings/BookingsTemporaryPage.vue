@@ -30,8 +30,8 @@
       <thead>
         <tr>
           <th class="sticky-column">Horarios</th>
-          <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }} {{ parseInt(day) + index }}/{{ month
-          }}
+          <th v-for="(dia, index) in diasSemanas" :key="index">
+            {{ dia.diaSemana }}
           </th>
         </tr>
       </thead>
@@ -126,18 +126,19 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso" :max="fechaFinCurso" @change="fechaModal($event)" />
+          <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso" :max="fechaFinCurso" @change="fechaModal($event)" />
         </div>
+        <p>El mes es: {{ mes }}</p>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">El
           máximo permitido es de {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
             cantidadSeleccionada)) }} Alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">El mínimo permitido es de 1 Alumno</span>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada)"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR')"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR') && (opcionRepeticion == '' || fechaSeleccionada)"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -151,7 +152,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getWeek, format, startOfWeek, addWeeks } from 'date-fns';
+import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -195,6 +196,7 @@ const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
 const semanaLimite = ref('');
+const mes = ref('');
 const day = ref('');
 const month = ref('');
 const preCargaSemana = ref('');
@@ -225,7 +227,9 @@ const actualizarSemana = (event) => {
   event.stopPropagation();
   const fechaSeleccionada = new Date(event.target.value); // Convert the selected date to a Date object
   fechaActual.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
-  semana.value = getWeek(fechaSeleccionada); // Calculate the week
+  semana.value = getWeek(fechaSeleccionada);
+  mes.value = getMonth(fechaSeleccionada);
+  validarFecha(); // Añadir validación de fecha
   getReserva(); // Update reservations when the week changes
   incrementarFecha();
 }
@@ -239,24 +243,65 @@ const fechaModal = (event) => {
   const fechaSeleccionada = new Date(event.target.value); // Convert the selected date to a Date object
   fechaLimite.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
   semanaLimite.value = getWeek(fechaLimite.value);
+  mes.value = getMonth(fechaLimite.value) + 1;
 }
 
 const decrementarSemana = () => {
   semana.value = parseInt(semana.value) - 1;
   incrementarFecha();
+  validarFecha(); // Añadir validación de fecha
   getReserva();
 }
 
 const incrementarSemana = () => {
   semana.value = parseInt(semana.value) + 1;
   incrementarFecha();
+  validarFecha(); // Añadir validación de fecha
   getReserva();
+}
+const getDaysInMonth = (year, month) => {
+  // Verificar si es año bisiesto para febrero
+  if (month === 1) { // Febrero (0-based month)
+    return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 29 : 28;
+  }
+  
+  // Array con los días de cada mes (0-based)
+  const daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return daysInMonth[month];
+}
+
+const validarFecha = () => {
+  const fecha = new Date(fechaActual.value);
+  const mes = fecha.getMonth(); // 0-11
+  const año = fecha.getFullYear();
+  const diasEnMes = getDaysInMonth(año, mes);
+  
+  // Si el día actual es mayor que los días del mes
+  if (parseInt(day.value) > diasEnMes) {
+    // Ajustamos al último día del mes
+    const ultimoDiaMes = new Date(año, mes, diasEnMes);
+    fechaActual.value = ultimoDiaMes.toISOString().slice(0, 10);
+    day.value = format(ultimoDiaMes, 'dd');
+  }
 }
 
 const incrementarFecha = () => {
-  const primerDiaSemana = startOfWeek(addWeeks(inicioYear, semana.value - 1), { weekStartsOn: 2 });
-  day.value = format(primerDiaSemana, 'dd');
-  month.value = format(primerDiaSemana, 'MM');
+  const primerDiaSemana = startOfWeek(addWeeks(new Date(fechaActual.value), semana.value - getWeek(new Date(fechaActual.value))), { weekStartsOn: 1 });
+  const fechaBase = new Date(primerDiaSemana);
+  
+  diasSemanas.value.forEach((dia, index) => {
+    const fechaDia = new Date(fechaBase);
+    fechaDia.setDate(fechaBase.getDate() + index);
+    
+    if (index === 0) {
+      day.value = fechaDia.getDate().toString().padStart(2, '0');
+      month.value = (fechaDia.getMonth() + 1).toString().padStart(2, '0');
+    }
+    
+    // Extraer solo el nombre del día (primera palabra) del dia.diaSemana
+    const nombreDia = dia.diaSemana.split(' ')[0];
+    dia.diaSemana = `${nombreDia} ${fechaDia.getDate()}/${(fechaDia.getMonth() + 1).toString().padStart(2, '0')}`;
+  });
 }
 
 
@@ -281,9 +326,12 @@ const repetirReserva = () => {
     while (semana.value <= semanaLimite.value);
     resetearSemana();
     // Llamar a la API para guardar la reserva
-    /*
+    
   }
-  else if (opcionRepeticion.value === 'Mensual') {
+  else if (opcionRepeticion.value === 'Mensual')
+  {
+    do
+    {
     // Llamar a la API para guardar la reserva
     postReservaTemporary(
       isToastOpen,
@@ -296,21 +344,11 @@ const repetirReserva = () => {
       numAlumnos.value,
       +semana.value
     );
-  }
-  else {
-    // Llamar a la API para guardar la reserva
-    postReservaTemporary(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      profesorSeleccionado.value,
-      recursoSeleccionado.value,
-      currentDia.value.id,
-      currentTramo.value.id,
-      numAlumnos.value,
-      +semana.value
-    );
-    */
+
+    }
+    while(semana.value <= semanaLimite.value);
+    resetearSemana();
+    getReservasTemporary();
   }
 }
 
@@ -502,6 +540,7 @@ const getRecurso = async () => {
 const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
   preCargaSemana.value = getWeek(new Date());
+  mes.value = getMonth(new Date()) + 1;
 
   if (!semana.value) {
     semana.value = preCargaSemana.value;
