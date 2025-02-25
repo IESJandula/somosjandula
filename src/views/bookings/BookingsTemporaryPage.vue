@@ -126,9 +126,10 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso" :max="fechaFinCurso" @change="fechaModal($event)" />
+          <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
+            :max="fechaFinCurso" @change="fechaModal($event)" />
         </div>
-        <p>El mes es: {{ mes }}</p>
+        <p>El mes limite es: {{ mes }}</p>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">El
           máximo permitido es de {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
@@ -264,7 +265,7 @@ const getDaysInMonth = (year, month) => {
   if (month === 1) { // Febrero (0-based month)
     return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 29 : 28;
   }
-  
+
   // Array con los días de cada mes (0-based)
   const daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   return daysInMonth[month];
@@ -275,7 +276,7 @@ const validarFecha = () => {
   const mes = fecha.getMonth(); // 0-11
   const año = fecha.getFullYear();
   const diasEnMes = getDaysInMonth(año, mes);
-  
+
   // Si el día actual es mayor que los días del mes
   if (parseInt(day.value) > diasEnMes) {
     // Ajustamos al último día del mes
@@ -288,16 +289,16 @@ const validarFecha = () => {
 const incrementarFecha = () => {
   const primerDiaSemana = startOfWeek(addWeeks(new Date(fechaActual.value), semana.value - getWeek(new Date(fechaActual.value))), { weekStartsOn: 1 });
   const fechaBase = new Date(primerDiaSemana);
-  
+
   diasSemanas.value.forEach((dia, index) => {
     const fechaDia = new Date(fechaBase);
     fechaDia.setDate(fechaBase.getDate() + index);
-    
+
     if (index === 0) {
       day.value = fechaDia.getDate().toString().padStart(2, '0');
       month.value = (fechaDia.getMonth() + 1).toString().padStart(2, '0');
     }
-    
+
     // Extraer solo el nombre del día (primera palabra) del dia.diaSemana
     const nombreDia = dia.diaSemana.split(' ')[0];
     dia.diaSemana = `${nombreDia} ${fechaDia.getDate()}/${(fechaDia.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -306,47 +307,54 @@ const incrementarFecha = () => {
 
 
 const repetirReserva = () => {
-  if (opcionRepeticion.value === 'Semanal')
-  {
-    do
-    {
+  if (opcionRepeticion.value === 'Semanal') {
+    do {
       postReservaTemporary(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      profesorSeleccionado.value,
-      recursoSeleccionado.value,
-      currentDia.value.id,
-      currentTramo.value.id,
-      numAlumnos.value,
-      +semana.value
-    );
+        isToastOpen,
+        toastMessage,
+        toastColor,
+        profesorSeleccionado.value,
+        recursoSeleccionado.value,
+        currentDia.value.id,
+        currentTramo.value.id,
+        numAlumnos.value,
+        +semana.value
+      );
       semana.value = parseInt(semana.value) + 1;
     }
     while (semana.value <= semanaLimite.value);
     resetearSemana();
     // Llamar a la API para guardar la reserva
-    
   }
-  else if (opcionRepeticion.value === 'Mensual')
-  {
-    do
-    {
-    // Llamar a la API para guardar la reserva
-    postReservaTemporary(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      profesorSeleccionado.value,
-      recursoSeleccionado.value,
-      currentDia.value.id,
-      currentTramo.value.id,
-      numAlumnos.value,
-      +semana.value
-    );
+  else if (opcionRepeticion.value === 'Mensual') {
+    let fechaReserva = new Date(fechaActual.value); // Fecha base
+    const diaReserva = fechaReserva.getDate(); // Guardamos el día exacto
 
+    while (getMonth(fechaReserva) + 1 <= parseInt(mes.value)) {
+      postReservaTemporary(
+        isToastOpen,
+        toastMessage,
+        toastColor,
+        profesorSeleccionado.value,
+        recursoSeleccionado.value,
+        currentDia.value.id,
+        currentTramo.value.id,
+        numAlumnos.value,
+        getWeek(fechaReserva)
+      );
+      
+      // Intentar avanzar exactamente un mes
+      const nuevoMes = fechaReserva.getMonth() + 1;
+      let nuevaFecha = new Date(fechaReserva.getFullYear(), nuevoMes, diaReserva);
+
+      // Si el mes cambió inesperadamente, ajustamos al último día disponible
+      if (nuevaFecha.getMonth() !== nuevoMes % 12) {
+        nuevaFecha = new Date(nuevaFecha.getFullYear(), nuevaFecha.getMonth() + 1, 0);
+      }
+
+      fechaReserva = nuevaFecha; // Asignamos la nueva fecha
     }
-    while(semana.value <= semanaLimite.value);
+
     resetearSemana();
     getReservasTemporary();
   }
@@ -445,41 +453,43 @@ const saveChanges = async () => {
       repetirReserva();
     }
     else {
-    // Llamar a la API para guardar la reserva
-    await postReservaTemporary(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      profesorSeleccionado.value,
-      recursoSeleccionado.value,
-      currentDia.value.id,
-      currentTramo.value.id,
-      alumnos,
-      +semana.value
-    );
+      // Llamar a la API para guardar la reserva
+      await postReservaTemporary(
+        isToastOpen,
+        toastMessage,
+        toastColor,
+        profesorSeleccionado.value,
+        recursoSeleccionado.value,
+        currentDia.value.id,
+        currentTramo.value.id,
+        alumnos,
+        +semana.value
+      );
 
-    // Actualizar reservas localmente
-    if (!reservas.value[currentDia.value.id]) {
-      reservas.value[currentDia.value.id] = {};
-    }
+      // Actualizar reservas localmente
+      if (!reservas.value[currentDia.value.id]) {
+        reservas.value[currentDia.value.id] = {};
+      }
 
-    reservas.value[currentDia.value.id][currentTramo.value.id] = {
-      email: correoProfesor.value, // Guardamos el email del profesor
-      nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
-      nalumnos: alumnos,
-    };
+      reservas.value[currentDia.value.id][currentTramo.value.id] = {
+        email: correoProfesor.value, // Guardamos el email del profesor
+        nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
+        nalumnos: alumnos,
+      };
 
-    if (valorConstante.value != '') {
-      mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
-      mensajeColor = 'danger';
-    }
+      if (valorConstante.value != '') {
+        mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
+        mensajeColor = 'danger';
+      }
 
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
   } catch (error) {
     mensajeActualizacion = 'Error al crear la reserva';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+
   }
 
   closeModal();
@@ -650,6 +660,8 @@ onMounted(async () => {
   semana.value = getWeek(new Date());
   emailLogged.value = emailUserActual;
   await incrementarFecha();
+
+
 })
 
 </script>
