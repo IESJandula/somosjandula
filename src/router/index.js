@@ -14,6 +14,11 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
+import HomePage from '../views/school_manager/HomePage.vue';
+import Ventana1Page from '../views/school_manager/Ventana1Page.vue';
+import Ventana2Page from '../views/school_manager/Ventana2Page.vue';
+import Ventana3Page from '../views/school_manager/Ventana3Page.vue';
+import CargaDatos from '../views/school_manager/CargaDatos.vue';
 
 const routes = [
   {
@@ -24,8 +29,8 @@ const routes = [
     path: '/login',
     component: LoginPage,
     name: 'Login',
-    meta: { 
-      requiresAuth: false 
+    meta: {
+      requiresAuth: false
     },
   },
   {
@@ -36,82 +41,123 @@ const routes = [
   {
     path: '/',
     component: MainLayout,
-    meta: { 
-      requiresAuth: true 
+    meta: {
+      requiresAuth: true
     },
     children: [
       {
         path: 'admin/firebase',
         component: AdminFirebasePage,
         name: 'AdminFirebase',
-        meta: { 
-          role: 'ADMINISTRADOR' 
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
       {
         path: 'printers/admin',
         component: PrintersAdminPage,
         name: 'PrintersAdmin',
-        meta: { 
-          role: 'DIRECCION' 
+        meta: {
+          role: 'DIRECCION'
         },
       },
       {
         path: 'printers/print',
         component: PrintersPrintPage,
         name: 'PrintersPrint',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'bookings/admin',
         component: BookingsAdminPage,
         name: 'BookingsAdmin',
-        meta: { 
-          role: 'DIRECCION' 
+        meta: {
+          role: 'DIRECCION'
         },
       },
       {
         path: 'bookings/fixed',
         component: BookingsFixedPage,
         name: 'BookingsFixed',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'bookings/temporary',
         component: BookingsTemporaryPage,
         name: 'BookingsTemporary',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/absences',
         component: AbsencesPage,
         name: 'DocumentsAbsences',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/teacherGuide',
         component: TeacherGuidePage,
         name: 'DocumentsTeacherGuidePage',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/itIssues',
         component: ITIssuesPage,
         name: 'DocumentsITIssuesPage',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
+      {
+        path: 'school_manager/cargarDatos',
+        component: CargaDatos,
+        name: 'CargaDatos',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/homePage',
+        component: HomePage,
+        name: 'HomePage',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/ventana1Page',
+        component: Ventana1Page,
+        name: 'Ventana1Page',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/ventana2Page',
+        component: Ventana2Page,
+        name: 'Ventana2Page',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/ventana3Page',
+        component: Ventana3Page,
+        name: 'Ventana3Page',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+
     ],
   },
 ];
@@ -121,25 +167,20 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => 
-{
+router.beforeEach(async (to, from, next) => {
   const auth = getAuth();
   let user = auth.currentUser;
 
-  if (!user) 
-  {
+  if (!user) {
     user = await waitForAuthReady(auth); // Espera a que Firebase termine de inicializar el estado de autenticación
   }
 
-  if (to.matched.some((record) => record.meta.requiresAuth)) 
-  {
-    if (!user) 
-    {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!user) {
       return next({ name: 'Login' });
     }
 
-    try 
-    {
+    try {
       const isToastOpen = ref(false);
       const toastMessage = ref('');
       const toastColor = ref('success');
@@ -148,36 +189,29 @@ router.beforeEach(async (to, from, next) =>
       const requiredRole = to.meta.role;
 
       // Si la ruta requiere un rol específico y el usuario no lo tiene, redirige a Login o muestra un error.
-      if (requiredRole && !userRoles.includes(requiredRole)) 
-      {
+      if (requiredRole && !userRoles.includes(requiredRole)) {
         return next({ name: 'AccessDenied' });
-      } 
-      else 
-      {
+      }
+      else {
         return next(); // Permite el acceso a la ruta solicitada
       }
-    } 
-    catch (error) 
-    {
+    }
+    catch (error) {
       console.error("Error during navigation guard:", error);
       return next({ name: 'Login' });
     }
-  } 
-  else 
-  {
+  }
+  else {
     return next(); // Si no requiere autenticación, continúa normalmente
   }
-});  
-  
+});
 
-function waitForAuthReady(auth)
-{
-  return new Promise((resolve) =>
-  {
-    const unsubscribe = onAuthStateChanged(auth, (user) =>
-    {
-      unsubscribe() ; // Nos desuscribimos después de obtener el usuario
-      resolve(user) ;
+
+function waitForAuthReady(auth) {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe(); // Nos desuscribimos después de obtener el usuario
+      resolve(user);
     });
   });
 }
