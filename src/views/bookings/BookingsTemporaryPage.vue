@@ -192,6 +192,7 @@ const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
 const opcionRepeticion = ref('');
 
+//Variables de Fecha
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
@@ -226,12 +227,12 @@ fechaFinCurso.value = new Date(finYear, 5, 31).toISOString().slice(0, 10); // 30
 
 const actualizarSemana = (event) => {
   event.stopPropagation();
-  const fechaSeleccionada = new Date(event.target.value); // Convert the selected date to a Date object
-  fechaActual.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
+  const fechaSeleccionada = new Date(event.target.value);
+  fechaActual.value = fechaSeleccionada.toISOString().slice(0, 10);
   semana.value = getWeek(fechaSeleccionada);
   mes.value = getMonth(fechaSeleccionada);
   validarFecha(); // Añadir validación de fecha
-  getReserva(); // Update reservations when the week changes
+  getReserva();
   incrementarFecha();
 }
 
@@ -241,8 +242,8 @@ const resetearSemana = () => {
 
 const fechaModal = (event) => {
   event.stopPropagation();
-  const fechaSeleccionada = new Date(event.target.value); // Convert the selected date to a Date object
-  fechaLimite.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
+  const fechaSeleccionada = new Date(event.target.value);
+  fechaLimite.value = fechaSeleccionada.toISOString().slice(0, 10);
   semanaLimite.value = getWeek(fechaLimite.value);
   mes.value = getMonth(fechaLimite.value) + 1;
 }
@@ -262,11 +263,9 @@ const incrementarSemana = () => {
 }
 const getDaysInMonth = (year, month) => {
   // Verificar si es año bisiesto para febrero
-  if (month === 1) { // Febrero (0-based month)
+  if (month === 1) {
     return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 29 : 28;
   }
-
-  // Array con los días de cada mes (0-based)
   const daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   return daysInMonth[month];
 }
@@ -298,18 +297,16 @@ const incrementarFecha = () => {
       day.value = fechaDia.getDate().toString().padStart(2, '0');
       month.value = (fechaDia.getMonth() + 1).toString().padStart(2, '0');
     }
-
-    // Extraer solo el nombre del día (primera palabra) del dia.diaSemana
     const nombreDia = dia.diaSemana.split(' ')[0];
     dia.diaSemana = `${nombreDia} ${fechaDia.getDate()}/${(fechaDia.getMonth() + 1).toString().padStart(2, '0')}`;
   });
 }
 
 
-const repetirReserva = () => {
+const repetirReserva = async () => {
   if (opcionRepeticion.value === 'Semanal') {
     do {
-      postReservaTemporary(
+      await postReservaTemporary(
         isToastOpen,
         toastMessage,
         toastColor,
@@ -324,14 +321,13 @@ const repetirReserva = () => {
     }
     while (semana.value <= semanaLimite.value);
     resetearSemana();
-    // Llamar a la API para guardar la reserva
   }
   else if (opcionRepeticion.value === 'Mensual') {
-    let fechaReserva = new Date(fechaActual.value); // Fecha base
-    const diaReserva = fechaReserva.getDate(); // Guardamos el día exacto
+    let fechaReserva = new Date(fechaActual.value);
+    const diaReserva = fechaReserva.getDate();
 
-    while (getMonth(fechaReserva) + 1 <= parseInt(mes.value)) {
-      postReservaTemporary(
+    do {
+      await postReservaTemporary(
         isToastOpen,
         toastMessage,
         toastColor,
@@ -342,22 +338,20 @@ const repetirReserva = () => {
         numAlumnos.value,
         getWeek(fechaReserva)
       );
-      
-      // Intentar avanzar exactamente un mes
-      const nuevoMes = fechaReserva.getMonth() + 1;
-      let nuevaFecha = new Date(fechaReserva.getFullYear(), nuevoMes, diaReserva);
 
-      // Si el mes cambió inesperadamente, ajustamos al último día disponible
-      if (nuevaFecha.getMonth() !== nuevoMes % 12) {
-        nuevaFecha = new Date(nuevaFecha.getFullYear(), nuevaFecha.getMonth() + 1, 0);
+      // Avanzar al siguiente mes
+      const nuevoMes = fechaReserva.getMonth() + 1;
+      fechaReserva = new Date(fechaReserva.getFullYear(), nuevoMes, diaReserva);
+
+      // Ajustar si el día no existe en el nuevo mes
+      while (fechaReserva.getMonth() !== nuevoMes % 12) {
+        fechaReserva.setDate(fechaReserva.getDate() - 1);
       }
 
-      fechaReserva = nuevaFecha; // Asignamos la nueva fecha
-    }
-
+    } while (fechaReserva <= new Date(fechaLimite.value));
     resetearSemana();
-    getReservasTemporary();
   }
+  getReserva(recursoSeleccionado);
 }
 
 const verificarRecursos = () => {
