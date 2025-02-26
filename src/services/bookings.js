@@ -405,3 +405,35 @@ export const getCantMaxResource = async (toastMessage, toastColor, isToastOpen) 
     console.log(error)
   }
 }
+
+export const getCheckAvailable = async (toastMessage, toastColor, isToastOpen,diaDeLaSemana,recurso,tramoHorario,numAlumnos,semanas) =>
+{
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings/available',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        'diaDeLaSemana': diaDeLaSemana,
+        'recurso': recurso,
+        'tramoHorario': tramoHorario,
+        'numAlumnos': numAlumnos,
+        'semanas': semanas
+      },
+    })
+
+    if (!response.ok)
+    {
+      throw new Error('No se ha cargado previamente ningun recurso')
+    }
+    return await response.json()
+  }
+  catch (error)
+  {
+    console.log(error)
+  }
+}

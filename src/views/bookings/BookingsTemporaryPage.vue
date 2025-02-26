@@ -136,10 +136,10 @@
             cantidadSeleccionada)) }} Alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">El mínimo permitido es de 1 Alumno</span>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada)"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR') && (opcionRepeticion == '' || fechaSeleccionada)"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR') && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -153,8 +153,8 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
-import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva } from '@/services/bookings.js'
+import { getWeek, format, startOfWeek, addWeeks, getMonth, getDate } from 'date-fns';
+import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes } from '@/services/constantes';
@@ -197,6 +197,7 @@ const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
+const semanas = ref([])
 const semanaLimite = ref('');
 const mes = ref('');
 const day = ref('');
@@ -638,6 +639,45 @@ async function verificarRoles() {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
+
+const comprobarDisponibilidad = async () => {
+
+  const data = ref('');
+
+  // Array para almacenar las semanas
+
+  if (opcionRepeticion.value == 'Semanal') {
+    for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {
+      semanas.value.push(i);  // Se agrega la semana al array
+    }
+    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
+    console.log(data.value);
+
+  }
+  else if (opcionRepeticion.value === 'Mensual') {
+    // Suponemos que 'fechaReserva' es la fecha de inicio
+    const fechaReserva = +semana.value;
+    const fechaLimiteMonth = getWeek(fechaLimite.value);
+
+    while (fechaReserva <= fechaLimiteMonth) {
+      // Obtener la semana de la fecha actual
+      semanas.value.push(fechaReserva);
+      fechaReserva.value = getDate(fechaReserva);
+
+      // Avanzar al siguiente mes
+      fechaReserva.setMonth(fechaReserva.getMonth() + 1);
+      fechaReserva.value = getWeek(fechaReserva);
+    }
+
+    // Llamada para comprobar la disponibilidad
+    console.log(semanas);
+
+    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
+  }
+
+  return data;
+}
+
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
