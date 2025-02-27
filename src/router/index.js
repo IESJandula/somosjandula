@@ -14,11 +14,10 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
-import HomePage from '../views/school_manager/HomePage.vue';
-import Ventana1Page from '../views/school_manager/Ventana1Page.vue';
-import Ventana2Page from '../views/school_manager/Ventana2Page.vue';
-import Ventana3Page from '../views/school_manager/Ventana3Page.vue';
-import CargaDatos from '../views/school_manager/CargaDatos.vue';
+import ValidadAsignaturaYBloque from '../views/school_manager/ValidadAsignaturaYBloque.vue';
+import CargaMatriculas from '../views/school_manager/CargaMatriculas.vue';
+import AsignarHorasAsignaturas from '../views/school_manager/AsignarHorasAsignaturas.vue';
+import CrearGrupos from '../views/school_manager/CrearGrupos.vue';
 
 const routes = [
   {
@@ -118,46 +117,37 @@ const routes = [
         },
       },
       {
-        path: 'school_manager/cargarDatos',
-        component: CargaDatos,
-        name: 'CargaDatos',
+        path: 'school_manager/cargaMatriculas',
+        component: CargaMatriculas,
+        name: 'CargaMatriculas',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
-        path: 'school_manager/homePage',
-        component: HomePage,
-        name: 'HomePage',
+        path: 'school_manager/crearGrupos',
+        component: CrearGrupos,
+        name: 'CrearGrupos',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
-        path: 'school_manager/ventana1Page',
-        component: Ventana1Page,
-        name: 'Ventana1Page',
+        path: 'school_manager/validarAsignaturaYBloque',
+        component: ValidadAsignaturaYBloque,
+        name: 'ValidadAsignaturaYBloque',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
-        path: 'school_manager/ventana2Page',
-        component: Ventana2Page,
-        name: 'Ventana2Page',
+        path: 'school_manager/asignarHorasAsignaturas',
+        component: AsignarHorasAsignaturas,
+        name: 'AsignarHorasAsignaturas',
         meta: {
           role: 'DIRECCION'
         },
       },
-      {
-        path: 'school_manager/ventana3Page',
-        component: Ventana3Page,
-        name: 'Ventana3Page',
-        meta: {
-          role: 'DIRECCION'
-        },
-      },
-
     ],
   },
 ];

@@ -56,11 +56,10 @@
               :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/cargarDatos')">Paso1. Carga de datos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/homePage')">Paso2</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/ventana1Page')">Paso3</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/ventana2Page')">Paso4</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/ventana3Page')">Paso5</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">Paso1. Carga de matrículas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">Paso2. Creación de grupos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/asignarHorasAsignaturas')">Paso3. Asignación de horas para asignaturas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/validarAsignaturaYBloque')">Paso4. Validación de asignaturas y bloques</ion-item>
           </ion-list>
         </ion-list>
       </ion-content>
@@ -244,6 +243,7 @@ export default defineComponent({
       toggleSubMenuPrinters,
       toggleSubMenuBookings,
       toggleSubMenuDocuments,
+      toggleSubMenuSchoolManager,
     };
   },
 });
