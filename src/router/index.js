@@ -14,10 +14,10 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
-import ValidadAsignaturaYBloque from '../views/school_manager/ValidadAsignaturaYBloque.vue';
-import CargaMatriculas from '../views/school_manager/CargaMatriculas.vue';
-import AsignarHorasAsignaturas from '../views/school_manager/AsignarHorasAsignaturas.vue';
-import CrearGrupos from '../views/school_manager/CrearGrupos.vue';
+import ValidadAsignaturaYBloque from '@/views/school_manager/ValidadAsignaturaYBloque.vue';
+import CargaMatriculas from '@/views/school_manager/CargaMatriculas.vue';
+import AsignarHorasAsignaturas from '@/views/school_manager/AsignarHorasAsignaturas.vue';
+import CrearGrupos from '@/views/school_manager/CrearGrupos.vue';
 
 const routes = [
   {

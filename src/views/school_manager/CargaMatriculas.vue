@@ -1,56 +1,47 @@
 <script setup>
-import { ref, onMounted, toRefs } from 'vue';
-import axios from 'axios';
-import { IonPage, IonContent, IonTitle, IonSelect, IonSelectOption, IonButton } from '@ionic/vue';
+import { ref, onMounted } from 'vue';
+import FileUpload from '@/components/printers/FileUpload.vue';
+import { cargarCursosEtapas, subirFicheros } from '@/services/schoolManager.js'
 
-const props = defineProps({
-  seleccionados: {
-    type: Object,
-    required: true
-  }
-});
-
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
 const cursosEtapas = ref([]);
 const emit = defineEmits(['actualizar-select']);
 const seleccionado = ref('');
-const { seleccionados } = toRefs(props);
-    // Ref para el input de archivo
-    const fileInputUsers = ref(null);
+let mensajeColor = ''
+let mensajeActualizacion = ''
 
 // Enviar datos al servidor
-const subirFichero = async () => {
+const subirFichero = async (file) => {
+  if (!file) return;
     try {
-        const file = fileInputUsers.value.files[0];
-        
-        const formData = new FormData();
-        formData.append('csv', file);
 
-        const response = await axios.post('http://localhost:8086/direccion/cargarMatriculas', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-                'curso': parseInt(seleccionados.value.curso,10),
-                'etapa': seleccionados.value.etapa
-            }
-        });
-        console.log("Fichero Cargado:", response.data);
-        window.location.reload();
+      const [curso, etapa] = seleccionado.value.split('-');
+
+      const data = await subirFicheros(file, curso, etapa, toastMessage, toastColor, isToastOpen);
+      console.log("Fichero Cargado:", data);
+      window.location.reload();
     } catch (error) {
         console.error('Error al cargar matriculas', error);
+        mensajeActualizacion = 'Error al cargar matrículas';
+        mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
 };
 
-// Cargar los cursos y etapas desde la API
-const cargarCursosEtapas = async () => {
-    try {
-        const response = await axios.get('http://localhost:8086/direccionVentana3/etapaCursos');
-        cursosEtapas.value = response.data;
-    } catch (error) {
-        console.error('Error al cargar cursos y etapas', error);
-    }
+const cargarCursosEtapa = async () => {
+  try {
+    const data = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
+    cursosEtapas.value = data;
+  } catch (error) {
+    console.error('Error al cargar cursos y etapas', error);
+  }
 };
 
-onMounted(() => {
-    cargarCursosEtapas();
+onMounted(async () => {
+  await cargarCursosEtapa(),
+  subirFichero() ;
 });
 
 // Actualizar la selección y almacenar los valores en `filtroSeleccionado`
@@ -66,50 +57,36 @@ const actualizarSelect = () => {
 </script>
 
 <template>
-   <ion-page>
-    <ion-title class="header-title">Carga de Matrículas</ion-title>
+    <h1 class="m-2">Carga de Matrículas</h1>
+      <div class="container">
+        <!-- Selector de curso y etapa -->
+        <div class="dropdown">
+          <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
+          <select v-model="seleccionado" @ionChange="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
+            <option value="">Selecciona un curso</option>
+            <option v-for="cursoEtapa in cursosEtapas"
+              :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
+              :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
+              {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
+            </option>
+          </select>
+        </div>
 
-
-  <ion-content class="ion-padding no-padding">
-    <div class="container">
-      <!-- Selector de curso y etapa -->
-      <div class="section">
-        <label for="cursos-etapas">Filtrar por curso y etapa</label>
-        <ion-select v-model="seleccionado" @ionChange="actualizarSelect" id="cursos-etapas">
-          <ion-select-option value="">Selecciona un curso</ion-select-option>
-          <ion-select-option v-for="cursoEtapa in cursosEtapas"
-            :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
-            :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-            {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
-          </ion-select-option>
-        </ion-select>
+        <!-- Subida de ficheros -->
+        <div class="section">
+          <label class="m-1" for="fileInput">Subir fichero</label>
+          <FileUpload @file-selected="subirFichero" />
+        </div>
       </div>
-
-      <!-- Subida de ficheros -->
-      <div class="section">
-        <label for="fileInput">Subir fichero</label>
-        <input type="file" ref="fileInputUsers" id="fileInput" class="file-input" />
-        <ion-button expand="block" @click="subirFichero" class="button">Enviar</ion-button>
-      </div>
-    </div>
-  </ion-content>
-</ion-page>
-  </template>
+</template>
 
 <style scoped>
-/* Eliminar padding de ion-content */
-.no-padding {
-    padding-top: -25px; /* Reducir el espacio superior */
-    padding-bottom: 0px;
-}
-
 /* Centrar el título */
-.header-title {
+.m-2 {
+  font-size: 2.25rem;
+  font-weight: 700; 
+  margin-bottom: 1.5rem; 
   text-align: center;
-  font-weight: bold;
-  margin-top: -140px;
-  margin-bottom: -200px;
-  font-size: 30px;
 }
 
 /* Contenedor centrado */
@@ -117,42 +94,32 @@ const actualizarSelect = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  height: 100vh;
   text-align: center;
-  padding-top: -20px;
+}
+.m-1 {
+  margin-bottom: 1rem;
+  font-size: 20px;
+}
+.p-2{
+  padding: 0.5rem;
+  border: 1px solid #D1D5DB; 
+  border-radius: 0.375rem; 
 }
 
 /* Secciones */
-.section {
+ .dropdown { 
+  width: 100%;
+  max-width: 250px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+ .section { 
   width: 100%;
   max-width: 400px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 10px;
-}
-
-/* Inputs y selects */
-.file-input, ion-select {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 16px;
-  width: 100%;
-}
-
-/* Botón */
-.button {
-  margin-top: 5px;
-  font-size: 18px;
-  font-weight: bold;
-  background: #007bff;
-  color: white;
-  border-radius: 10px;
-}
-
-.button:hover {
-  background: #0056b3;
-}
+  margin-top: 20px;
+ } 
 </style>

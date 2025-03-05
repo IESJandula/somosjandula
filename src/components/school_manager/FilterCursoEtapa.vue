@@ -2,6 +2,7 @@
 // Importa las funciones necesarias de Vue y Axios
 import { onMounted, ref, defineEmits } from 'vue';
 import axios from 'axios';
+import {obtenerTokenJWTValido} from "@/services/firebaseService.js";
 
 // Declara una variable reactiva para almacenar los cursos y etapas obtenidos del servidor
 const cursosEtapas = ref([]);
@@ -13,10 +14,14 @@ const emit = defineEmits(['actualizar-select']);
 const seleccionado = ref('');
 
 // Función asíncrona para cargar los datos de cursos y etapas desde el servidor
-const cargarCursosEtapas = async () => {
+const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) => {
     try {
         // Realiza una petición HTTP GET para obtener los datos
-        const response = await axios.get('http://localhost:8086/direccion/cursoEtapa');
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+        const response = await axios.get('http://localhost:8086/direccion/cursoEtapa', {
+        headers: {
+            'Authorization': `Bearer ${tokenPropio}`
+        }});
         // Asigna los datos obtenidos a la variable reactiva
         cursosEtapas.value = response.data;
     } catch (error) {
@@ -49,14 +54,14 @@ const actualizarSelect = () => {
 <template>
     <div>
         <!-- Título del filtro -->
-        <p class="mb-4">Filtrar por curso y etapa</p>
+        <p class="m-1">Filtrar por curso y etapa</p>
         <!-- Dropdown para seleccionar curso y etapa -->
         <select 
             v-model="seleccionado" 
             @change="actualizarSelect" 
             name="cursos-etapas" 
             id="cursos-etapas" 
-            class="p-2 border border-gray-300 rounded-md"
+            class="p-2"
         >
             <!-- Opción inicial por defecto -->
             <option value="">Selecciona un curso</option>
@@ -73,5 +78,14 @@ const actualizarSelect = () => {
 </template>
 
 <style>
-/* Puedes agregar estilos personalizados aquí */
+.m-1 {
+  margin-bottom: 1rem;
+  font-size: 20px;
+  flex-grow: 1;
+}
+.p-2{
+  padding: 0.5rem;
+  border: 1px solid #D1D5DB; 
+  border-radius: 0.375rem; 
+}
 </style>
