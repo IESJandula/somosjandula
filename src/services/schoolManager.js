@@ -14,18 +14,18 @@ export const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) 
         {
           'Authorization': `Bearer ${tokenPropio}`
         },
-    })
+      });
 
-    if(!response.ok) 
-    {
-      throw new Error('No se pudieron cargar los cursos y etapas');
+      if(!response.ok) 
+      {
+        throw new Error('No se pudieron cargar los cursos y etapas');
+      }
+      return await response.json();
     }
-    return await response.json();
-  }
-  catch (error)
-  {
-    console.log(error);
-  }
+    catch (error)
+    {
+      console.log(error);
+    }
 }
 export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor, isToastOpen) => 
   {
@@ -50,16 +50,262 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
           'etapa': etapa,
         },
         body: formData
-    });
+      });
 
-    if(!response.ok) 
-    {
-      throw new Error('Error al cargar el fichero de matrículas');
+      if(!response.ok) 
+      {
+        throw new Error('Error al cargar el fichero de matrículas');
+      }
+      return await response.json();
     }
-    return await response.json();
-  }
-  catch (error)
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+{
+    try
+    {
+      const cursoInt = parseInt(curso, 10);
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/grupos', 
+      {
+        method: 'POST',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa
+        },
+      });
+
+      if(!response.ok) 
+      {
+        throw new Error('Error al crear grupo');
+      }
+      return response;
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const obtenerGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
   {
-    console.log(error);
-  }
+    try
+    {
+      if (!curso || etapa === '') {
+        throw new Error('Curso o etapa inválidos');
+      }
+      const cursoInt = parseInt(curso, 10);
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/grupos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa
+        },
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al cargar grupos');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const obtenerAlumnos = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      if (!curso || !etapa || !grupo) {
+        throw new Error('Curso, etapa o grupo inválidos');
+      }
+      const cursoInt = parseInt(curso, 10);
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/grupos/alumnos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa,
+          'grupo': grupo
+        },
+        
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al cargar alumnos');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const enviarDatos = async (curso, etapa, grupo, alumnosSeleccionados, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const cursoInt = parseInt(curso, 10);
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/grupos/alumnos', 
+      {
+        method: 'POST',
+        headers: 
+        {
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa,
+          'grupo': grupo,
+        },
+        body: JSON.stringify(alumnosSeleccionados)
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al enviar alumnos');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const borrarAlumnos = async (alumno, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/grupos/alumnos', 
+      {
+        method: 'DELETE',
+        headers: 
+        {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+        body: JSON.stringify(alumno)
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al borrar el alumno');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const cargarAsignaturas = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccionVentana3/asignaturas', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': curso,
+          'etapa': etapa,
+        },
+        
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const queryParams = new URLSearchParams({
+        curso,
+        etapa,
+        asignaturas // Axios maneja listas automáticamente, pero en `fetch` puedes hacer `.join(",")`
+      }).toString();
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccionVentana3/bloques?' + queryParams, 
+      {
+        method: 'POST',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'Content-Type': 'application/json'
+        },
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al crear el bloque.');
+      }
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+
+export const eliminarBloques = async (curso, etapa, nombre, grupo, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccionVentana3/eliminarBloque', 
+      {
+        method: 'DELETE',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({curso, etapa, nombre, grupo})
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al eliminar el bloque.');
+      }
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
 }

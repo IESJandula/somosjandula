@@ -1,11 +1,13 @@
 <script setup>
 // Importa las funciones necesarias de Vue y Axios
 import { onMounted, ref, defineEmits } from 'vue';
-import axios from 'axios';
-import {obtenerTokenJWTValido} from "@/services/firebaseService.js";
+import { cargarCursosEtapas } from '@/services/schoolManager.js'
 
 // Declara una variable reactiva para almacenar los cursos y etapas obtenidos del servidor
 const cursosEtapas = ref([]);
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
 
 // Define un emisor para comunicar eventos al componente padre
 const emit = defineEmits(['actualizar-select']);
@@ -14,26 +16,19 @@ const emit = defineEmits(['actualizar-select']);
 const seleccionado = ref('');
 
 // Función asíncrona para cargar los datos de cursos y etapas desde el servidor
-const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) => {
-    try {
-        // Realiza una petición HTTP GET para obtener los datos
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-        const response = await axios.get('http://localhost:8086/direccion/cursoEtapa', {
-        headers: {
-            'Authorization': `Bearer ${tokenPropio}`
-        }});
-        // Asigna los datos obtenidos a la variable reactiva
-        cursosEtapas.value = response.data;
-    } catch (error) {
-        // Maneja errores en caso de que la solicitud falle
-        console.error('Error al cargar cursos y etapas', error);
-    }
+const cargarCursosEtapa = async () => {
+  try {
+    const data = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
+    cursosEtapas.value = data;
+  } catch (error) {
+    console.error('Error al cargar cursos y etapas', error);
+  }
 };
 
 // Usa el ciclo de vida onMounted para ejecutar código cuando el componente se monta
-onMounted(() => {
+onMounted(async() => {
     // Llama a la función para cargar los cursos y etapas
-    cargarCursosEtapas();
+    await cargarCursosEtapa();
 });
 
 // Función para emitir un evento con el curso y etapa seleccionados
@@ -68,10 +63,9 @@ const actualizarSelect = () => {
             <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
             <option 
                 v-for="cursoEtapa in cursosEtapas" 
-                :key="`${cursoEtapa.curso}-${cursoEtapa.etapa}`"
-                :value="`${cursoEtapa.curso}-${cursoEtapa.etapa}`"
-            >
-                {{ cursoEtapa.curso }} {{ cursoEtapa.etapa }}
+                :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
+                :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
+                {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
             </option>
         </select>
     </div>

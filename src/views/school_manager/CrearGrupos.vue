@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import {obtenerTokenJWTValido} from "@/services/firebaseService.js";
+import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnos, enviarDatos, borrarAlumnos } from '@/services/schoolManager.js'
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const grupoSeleccionado = ref('');
@@ -26,7 +25,7 @@ const actualizarSelect = (parametro) => {
     listadoAlumnosSeleccionados.value = [];
     listadoAlumnosSinGrupo.value = [];
     listadoAlumnosDelGrupoSeleccionado.value = [];
-    obtenerGrupos(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa);
+    obtenerGrupo(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa);
 };
 
 const actualizarGrupo = (parametro) => {
@@ -48,86 +47,58 @@ const actualizarGrupo = (parametro) => {
     return listadoAlumnosDelGrupoSeleccionado.value
   }
 
-
-
-
-
+  // Ya no sale el mensaje de que se ha creado el grupo
 const crearNuevoGrupo = async (curso, etapa) => {
-    try {
-        const cursoInt = parseInt(curso);
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+  try {
+    const response  = await crearNuevosGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
 
-        const response = await axios.post('http://localhost:8086/direccion/grupos', null, {
-          headers: {curso: cursoInt, etapa: etapa, 'Authorization': `Bearer ${tokenPropio}`
-        }});
-
-        if (response.status === 200) {
-            resultadoGrupos.value = "GRUPO CREADO CON ÉXITO";
-            obtenerGrupos(cursoInt, etapa);
-            actualizarGrupo('');
-        } else {
-            resultadoGrupos.value = "Hubo un problema al crear el grupo.";
-        }
-    } catch (error) {
-        console.error('Error al crear grupo:', error);
-    }
+      if (response.status === 200) {
+          resultadoGrupos.value = "GRUPO CREADO CON ÉXITO";
+          obtenerGrupo(parseInt(curso, 10), etapa);
+          actualizarGrupo('');
+      } else {
+          resultadoGrupos.value = "Hubo un problema al crear el grupo.";
+      }
+  } catch (error) {
+    console.error('Error al crear grupo:', error);
+    resultadoGrupos.value = "Hubo un problema al crear el grupo.";
+  }
 };
 
-
-
-const obtenerGrupos = async (curso, etapa) => {
-    try {
-        if (curso != null && etapa !== '') {
-            const cursoInt = parseInt(curso);
-            const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-
-            const response = await axios.get('http://localhost:8086/direccion/grupos', {
-              headers: {
-                curso: cursoInt, etapa: etapa, 'Authorization': `Bearer ${tokenPropio}`
-              }});
-            grupos.value = response.data;
-        }
-    } catch (error) {
-        console.error('Error al cargar grupos', error);
-    }
+const obtenerGrupo = async (curso, etapa) => {
+  try {
+      if (curso != null && etapa !== '') {
+          const data = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
+          grupos.value = data;
+      }
+  } catch (error) {
+      console.error('Error al cargar grupos', error);
+  }
 };
 
-const obtenerAlumnos = async () => {
-    try {
-        const { curso, etapa } = filtroSeleccionado.value;
-        const grupo = grupoSeleccionado.value;
-        if (curso && etapa && grupo) {
-          const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-            const params = { curso: parseInt(curso), etapa, grupo };
+const obtenerAlumno = async () => {
+  try {
+      const { curso, etapa } = filtroSeleccionado.value;
+      const grupo = grupoSeleccionado.value;
 
-            const response = await axios.get('http://localhost:8086/direccion/grupos/alumnos', { params,
-              headers : {
-                'Authorization': `Bearer ${tokenPropio}`
-              } });
-            listadoAlumnos.value = response.data;
-            listadoAlumnosSinGrupo.value = alumnosSinGrupo();
-            listadoAlumnosDelGrupoSeleccionado.value = alumnosDelGrupoSeleccionado();
-        }
-    } catch (error) {
-        console.error('Error al cargar alumnos', error);
-    }
+      if (curso && etapa && grupo) {
+        listadoAlumnos.value = await obtenerAlumnos(curso, etapa, grupo, toastMessage, toastColor, isToastOpen);
+        listadoAlumnosSinGrupo.value = alumnosSinGrupo();
+        listadoAlumnosDelGrupoSeleccionado.value = alumnosDelGrupoSeleccionado();
+      }
+  } catch (error) {
+      console.error('Error al cargar alumnos', error);
+  }
 };
 
-const enviarDatos = async () => {
+const enviarDato = async () => {
     try {
         const { curso, etapa } = filtroSeleccionado.value;
         const grupo = grupoSeleccionado.value;
         const cursoInt = parseInt(curso);
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-        const params = { curso: cursoInt, etapa, grupo };
 
-
-        await axios.post('http://localhost:8086/direccion/grupos/alumnos', listadoAlumnosSeleccionados.value, { params,
-          headers: {
-          'Authorization': `Bearer ${tokenPropio}`
-          }
-        });
-        obtenerAlumnos();
+        await enviarDatos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen); 
+        obtenerAlumno();
     } catch (error) {
         console.error('Error al enviar alumnos:', error);
     }
@@ -135,20 +106,17 @@ const enviarDatos = async () => {
 
 const borrarAlumno = async (alumno) => {
     try {
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-        await axios.delete('http://localhost:8086/direccion/grupos/alumnos', { data: alumno,
-        headers: {
-            'Authorization': `Bearer ${tokenPropio}`
-          }});
-        obtenerAlumnos();
+        await borrarAlumnos(alumno, toastMessage, toastColor, isToastOpen);
+        obtenerAlumno();
     } catch (error) {
         errorMensaje.value = "Error al borrar el alumno.";
     }
 };
 
-onMounted(
-  obtenerAlumnos, 
-  obtenerGrupos());
+onMounted(async () => {
+  await obtenerAlumno();
+  await obtenerGrupo();
+});
 </script>
 
 <template>
@@ -166,7 +134,7 @@ onMounted(
           <option value="">Selecciona un grupo</option>
           <option v-for="grupo in grupos" :key="grupo" :value="grupo">{{ grupo }}</option>
         </select>
-        <button @click="obtenerAlumnos" class="btn">Cargar alumnos</button>
+        <button @click="obtenerAlumno" class="btn">Cargar alumnos</button>
       </div>
 
       <!-- Segunda columna (Selección de alumnos y tabla de grupo) -->
@@ -179,7 +147,7 @@ onMounted(
             {{ alumno.nombre }} {{ alumno.apellidos }}
           </li>
         </ul>
-        <button @click="enviarDatos" class="btn">Enviar datos</button>
+        <button @click="enviarDato" class="btn">Añadir alumnos</button>
 
         <div v-if="grupoSeleccionado">
           <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ grupoSeleccionado }}</h1>

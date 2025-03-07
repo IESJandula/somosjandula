@@ -74,7 +74,7 @@ const actualizarSelect = () => {
 
         <!-- Subida de ficheros -->
         <div class="section">
-          <label class="m-1" for="fileInput">Subir fichero</label>
+          <label class="m-1" for="fileInput">Adjunta el csv de las matriculasde seneca</label>
           <FileUpload @file-selected="subirFichero" />
         </div>
       </div>

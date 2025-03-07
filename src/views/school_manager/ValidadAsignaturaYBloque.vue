@@ -1,8 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue';
-import axios from 'axios';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import {obtenerTokenJWTValido} from "@/services/firebaseService.js";
+import { cargarAsignaturas, crearBloques, eliminarBloques } from '@/services/schoolManager.js'
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const asignaturas = ref([]);
@@ -19,7 +18,7 @@ const actualizarSelect = (seleccionado) => {
     console.log("Filtro actualizado:", seleccionado);
 };
 
-const cargarAsignaturas = async () => {
+const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturas.value = [];
     columnasGrupos.value = [];
@@ -30,17 +29,9 @@ const cargarAsignaturas = async () => {
   errorMensaje.value = "";
 
   try {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await axios.get('http://localhost:8086/direccionVentana3/asignaturas', {
-      headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
-      },
-      params: { 
-        curso: filtroSeleccionado.value.curso, 
-        etapa: filtroSeleccionado.value.etapa },
-    });
-
-    asignaturas.value = response.data;
+    const data = await cargarAsignaturas(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
+    asignaturas.value = data;
+    
     const gruposSet = new Set();
     asignaturas.value.forEach((asignatura) => {
       Object.keys(asignatura.numeroAlumnosEnGrupo).forEach((grupo) => {
@@ -56,7 +47,7 @@ const cargarAsignaturas = async () => {
   }
 };
 
-const addBloque = async () => {
+const crearBloque = async () => {
   if (asignaturasSeleccionadas.value.length < 2) {
     errorMensaje.value = "Debe seleccionar al menos dos asignaturas.";
     return;
@@ -67,19 +58,16 @@ const addBloque = async () => {
 
   try {
     const nombresSeleccionados = asignaturasSeleccionadas.value.map(a => a.nombre);
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    await axios.post("http://localhost:8086/direccionVentana3/bloques", null, {
-      headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
-      },
-      params: {
-        curso: filtroSeleccionado.value.curso,
-        etapa: filtroSeleccionado.value.etapa,
-        asignaturas: nombresSeleccionados.join(","),
-      },
-    });
+    await crearBloques(
+      filtroSeleccionado.value.curso, 
+      filtroSeleccionado.value.etapa, 
+      nombresSeleccionados, 
+      toastMessage, 
+      toastColor, 
+      isToastOpen);
+    
     asignaturasSeleccionadas.value = [];
-    cargarAsignaturas();
+    cargarAsignatura();
   } catch (error) {
     errorMensaje.value = "Error al crear el bloque.";
     console.error("Error:", error);
@@ -92,19 +80,15 @@ const eliminarBloque = async (asignatura) => {
   loading.value = true;
   errorMensaje.value = "";
   try {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    await axios.delete('http://localhost:8086/direccionVentana3/eliminarBloque', {
-      headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
-      },
-      data: {
-        curso: filtroSeleccionado.value.curso,
-        etapa: filtroSeleccionado.value.etapa,
-        nombre: asignatura.nombre,
-        grupo: asignatura.grupo
-      }
-    });
-    cargarAsignaturas();
+    await eliminarBloques(
+      filtroSeleccionado.value.curso, 
+      filtroSeleccionado.value.etapa, 
+      asignatura.nombre, 
+      asignatura.grupo, 
+      toastMessage, 
+      toastColor, 
+      isToastOpen);
+    cargarAsignatura();
   } catch (error) {
     errorMensaje.value = "Error al eliminar el bloque.";
     console.error("Error:", error);
@@ -113,7 +97,7 @@ const eliminarBloque = async (asignatura) => {
   }
 };
 
-watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etapa], cargarAsignaturas, { immediate: true });
+watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etapa], cargarAsignatura, { immediate: true });
 </script>
 
 <template>
@@ -156,7 +140,7 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
             </tr>
           </tbody>
         </table>
-        <button @click="addBloque" :disabled="asignaturasSeleccionadas.length < 2 || loading">
+        <button @click="crearBloque" :disabled="asignaturasSeleccionadas.length < 2 || loading">
           {{ loading ? "Procesando..." : "Crear Bloque" }}
         </button>
       </div>
