@@ -162,7 +162,6 @@ import { obtenerImpresoras, obtenerEstados, filtrarDatos } from '@/services/prin
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
 import { printersApiUrl } from "@/environment/apiUrls.ts";
 
-
 const filtroBusqueda = ref({
   user: '',
   printer: '',
