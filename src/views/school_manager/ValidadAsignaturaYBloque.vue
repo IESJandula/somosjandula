@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { cargarAsignaturas, crearBloques, eliminarBloques } from '@/services/schoolManager.js'
+import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const asignaturas = ref([]);
@@ -149,6 +150,8 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
         <p style="color: #6b7280;">No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
       </div>
     </div>
+    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
   </div>
 </template>
 

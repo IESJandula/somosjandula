@@ -35,11 +35,8 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
     }
     try
     {
-      const formData = new FormData();
-      formData.append('csv', file);
-
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
+       
       const response = await fetch(schoolmanagerApiUrl + '/direccion/cargarMatriculas',
       {
         method: 'POST',
@@ -49,7 +46,7 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
           'curso': parseInt(curso,10),
           'etapa': etapa,
         },
-        body: formData
+        body: file
       });
 
       if(!response.ok) 
@@ -63,6 +60,8 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
       console.log(error);
     }
 }
+
+
 export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
 {
     try
@@ -258,7 +257,7 @@ export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toas
       const queryParams = new URLSearchParams({
         curso,
         etapa,
-        asignaturas // Axios maneja listas automáticamente, pero en `fetch` puedes hacer `.join(",")`
+        asignaturas 
       }).toString();
 
       const response = await fetch(schoolmanagerApiUrl + '/direccionVentana3/bloques?' + queryParams, 
