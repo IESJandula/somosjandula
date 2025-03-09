@@ -232,8 +232,8 @@ onMounted(async () => {
   overflow: scroll; 
 }
 .blue {
-  background-color: #3B82F6; /* bg-blue-500 */
-  color: #FFFFFF; /* text-white */
+  background-color: #3B82F6; 
+  color: #FFFFFF; 
 }
 .th {
   border: 1px solid currentColor; 
@@ -252,11 +252,13 @@ onMounted(async () => {
 }
 .container {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: flex-start;
   width: 100%;
   margin-left: 25%;
   padding-right: 40%;
+  gap: 20px;
 }
 
 /* Contenedor principal */
@@ -276,5 +278,14 @@ onMounted(async () => {
   max-width: 100%; /* Evita que una columna sea más ancha */
   display: flex;
   flex-direction: column; /* Asegura que todo esté en columna */
+}
+/* Media query para dispositivos móviles */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  
 }
 </style>

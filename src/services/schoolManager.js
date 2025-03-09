@@ -61,6 +61,64 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
     }
 }
 
+export const obtenerCursosCargados = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/cargarMatriculas',
+          {
+            method: 'GET',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`
+  
+                }
+          });
+      if(!response.ok)
+      {
+        throw new Error('Error al cargar grupos');
+      }
+      return await response.json();
+  
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
+  
+  export const borrarMatriculas = async (curso, etapa, toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/cargarMatriculas',
+          {
+            method: 'DELETE',
+            headers:
+                {
+                  'curso': curso,
+                  'etapa': etapa,
+                  'Authorization': `Bearer ${tokenPropio}`
+                },
+          });
+      if(!response.ok)
+      {
+        throw new Error('Error al cargar grupos');
+      }
+  
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
 
 export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
 {

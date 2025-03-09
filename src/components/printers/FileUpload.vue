@@ -44,6 +44,17 @@ const handleFileChange = (event) => {
     emits('file-selected', file.value); // Emite el archivo seleccionado
   }
 };
+
+const fileClear = () => {
+  file.value = null; // Limpia el archivo seleccionado
+  if (fileInput.value) {
+    fileInput.value.value = ""; // Resetea el input de archivo
+  }
+};
+
+defineExpose({
+  fileClear // Expone el método para poder llamarlo desde el componente padre
+});
 </script>
 <style scoped>
 .file-drop-area {

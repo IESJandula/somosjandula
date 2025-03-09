@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
-import { cargarCursosEtapas, subirFicheros } from '@/services/schoolManager.js'
+import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas } from '@/services/schoolManager.js'
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
@@ -15,6 +15,8 @@ let mensajeColor = ''
 let mensajeActualizacion = ''
 const archivoSeleccionado= ref(false)
 const file = ref(null);
+const cursosMapeados = ref([]);
+const fileUploadRef = ref(null);
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
@@ -65,7 +67,6 @@ const monitorizarSiHayArchivo = async (archivo) => {
   }
 };
 
-
 // Enviar datos al servidor
 const subirFichero = async () => {
   if (!file.value) return;
@@ -85,6 +86,11 @@ const subirFichero = async () => {
         mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
+    seleccionado.value = "";
+    const fileUploadComponent = fileUploadRef.value;
+    fileUploadComponent.fileClear();
+
+    await insertarCursosCargados()
 };
 
 const cargarCursosEtapa = async () => {
@@ -109,70 +115,87 @@ const actualizarSelect = () => {
   }
 };
 
+const insertarCursosCargados = async () => {
+  try {
+    const data = await obtenerCursosCargados(isToastOpen, toastMessage, toastColor);
+    cursosMapeados.value = data.map(curso => `${curso.curso} - ${curso.etapa}`);
+    console.log(cursosMapeados.value);
+  } catch (error) {
+    console.error('Error al insertar cursos cargados:', error);
+  }
+};
+
+const eliminarCursosCargados = async (cursoE) => {
+
+const [curso, etapa] = cursoE.split('-');
+const data = await borrarMatriculas(curso, etapa, isToastOpen, toastMessage, toastColor)
+await insertarCursosCargados();
+return console.log("Borrado con exito: "+data)
+}
+
 onMounted(async () => {
   await cargarCursosEtapa(),
+  await insertarCursosCargados(),
   comprobarBoton()
 });
 </script>
 
 <template>
   <h1 class="m-2">Carga de Matrículas</h1>
-  <div class="card-upload-csv">
-    <div class="container">
-      <!-- Selector de curso y etapa -->
-      <div class="dropdown">
-        <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
-        <select v-model="seleccionado" @ionChange="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
-          <option value="">Selecciona un curso</option>
-          <option v-for="cursoEtapa in cursosEtapas"
-            :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
-            :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-            {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
-          </option>
-        </select>
-      </div>
+  <div class="top-section">
+    <div class="card-upload-csv">
+      <div class="container">
+        <!-- Selector de curso y etapa -->
+        <div class="dropdown">
+          <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
+          <select v-model="seleccionado" @ionChange="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
+            <option value="">Selecciona un curso</option>
+            <option v-for="cursoEtapa in cursosEtapas"
+              :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
+              :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
+              {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
+            </option>
+          </select>
+        </div>
 
-      <!-- Subida de ficheros -->
-      <div class="section">
-        <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de seneca</label>
-        <FileUpload @file-selected="monitorizarSiHayArchivo" />
-        <button @click="subirFichero" class="btn" id = "enviar">Enviar</button>
+        <!-- Subida de ficheros -->
+        <div class="section">
+          <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de seneca</label>
+          <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
+          <button @click="subirFichero" class="btn" id = "enviar">Enviar</button>
+        </div>
+        <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+        @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
       </div>
-      <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-      @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
     </div>
-  </div>
-  <div class="card-upload-table">
-    <div class="container">
-      <h2 class="m-2">Tabla</h2>
-      >
-          <h1 class="m-4">{{ seleccionado.curso }} {{ seleccionado.etapa }}</h1>
-          <table class="tablaAlumnos">
-            <thead>
-              <tr class="blue">
-                <th class="th">curso</th>
-                <th class="th">etapa</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="alumno in listadoAlumnosDelGrupoSeleccionado" :key="alumno.id">
-                <td class="th"><button class="eliminar" @click="borrarAlumno(alumno)">&times;</button></td>
-                <td class="th">{{ alumno.nombre }}</td>
-                <td class="th">{{ alumno.apellidos }}</td>
-              </tr>
-            </tbody>
-          </table>
-        
+
+    <!-- Tabla con cursos y etapas que tienen datos -->
+    <div class="card-upload-table">
+      <h4 class="m-3 ">Curso y Etapas cargados</h4>
+      <table>
+      <tbody class="m-1">
+        <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
+          <td class="th">{{ cursoE }}</td>
+          <td class="th">
+            <button @click="eliminarCursosCargados(cursoE)" class="eliminar">&times;</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     </div>
-  </div>
+  </div>  
 </template>
 
 <style scoped>
 /* Centrar el título */
 .m-2 {
-  font-size: 2.25rem;
-  font-weight: 700; 
+  font-size: 2.2rem;
+  font-weight: 700px; 
   margin-bottom: 1.5rem; 
+  text-align: center;
+}
+.m-3{
+  font-size: 22px;
   text-align: center;
 }
 
@@ -186,6 +209,7 @@ onMounted(async () => {
 .m-1 {
   margin-bottom: 1rem;
   font-size: 20px;
+  text-align: center;
 }
 .p-2{
   padding: 0.5rem;
@@ -204,8 +228,22 @@ onMounted(async () => {
   background-color: #484848;
   color: #FFFFFF;
 }
+.eliminar {
+  color: #EF4444;
+  font-size: 28px; /* <-- Reducir tamaño */
+  background-color: transparent;
+  line-height: 1; /* <-- Ajuste para evitar desbordamiento */
+  border: none;
+}
 
 /* Secciones */
+.top-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
  .dropdown { 
   width: 100%;
   max-width: 250px;
@@ -224,7 +262,7 @@ onMounted(async () => {
  .card-upload-csv {
   flex: 1 1 30%;
   min-width: 300px;
-  max-width: 600px;
+  max-width: 35%;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -232,18 +270,49 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
+  }
  .card-upload-table {
-  flex: 5 5 30%;
+  flex: 1 1 30%;
   min-width: 300px;
-  max-width: 600px;
+  max-width: 35%;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
-  padding: 200px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: space-between;
+  overflow: auto;
+    height: 380px;
+}
+.th {
+  border: 1px solid currentColor; 
+  padding-left: 4rem; 
+  padding-right: 4rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  text-align: center;
+  margin-left: 50px;
+}
+.table{
+  table-layout: auto;
+  border-collapse: collapse;
+  border: 1px solid currentColor;
+  width: 100%;
+}
+/* Media queries para hacer que la tarjeta sea más responsive */
+@media (max-width: 768px) {
+  .top-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card-upload-csv,
+  .card-upload-table {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: auto;
+  }
 }
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
@@ -254,26 +323,10 @@ onMounted(async () => {
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
   }
-
-  .title {
-    color: var(--text-color-dark);
-  }
-
-  .printer-status-table th {
-    background-color: #3a3a3a;
-    color: var(--text-color-dark);
-  }
-
-  .printer-status-table tr:nth-child(even) {
-    background-color: #2c2c2c;
-  }
-
-  .printer-status-table tr:hover {
-    background-color: #3e3e3e;
-  }
-
-  .table-container {
-    background-color: #2c2c2c;
+  .card-upload-table {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
   }
 }
 </style>

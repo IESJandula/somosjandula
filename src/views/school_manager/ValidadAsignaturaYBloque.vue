@@ -188,7 +188,7 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
 .table{
   table-layout: auto;
   border-collapse: collapse;
-  border: 1px solid #cbd5e0;
+  border: 1px solid black;
   width: 100%;
 }
 .mensejeError{
