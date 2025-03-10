@@ -187,6 +187,7 @@ let mensajeInformativo = '';
 let mensajeIncidencia = '';
 const mostrarTabla = ref(true);
 const emailLogged = ref('');
+
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -478,7 +479,6 @@ const saveChanges = async () => {
         mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
         mensajeColor = 'danger';
       }
-
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
   } catch (error) {

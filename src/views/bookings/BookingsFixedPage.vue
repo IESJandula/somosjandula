@@ -105,7 +105,7 @@
           placeholder="Número de alumnos" min="0"
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
 
-          <span class="custom-message-numAlumno"
+        <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
           permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
             cantidadSeleccionada)) }} alumnos</span>
@@ -277,7 +277,7 @@ const saveChanges = async () => {
       nalumnos: alumnos,
     };
 
-    if (valorConstante.value != '') {
+    if (valorConstante.value != '' && !rolesUsuario.value.includes('ADMINISTRADOR')) {
       mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
       mensajeColor = 'danger';
     }
