@@ -309,8 +309,8 @@ const crearRecurso = async () => {
       mensajeActualizacion
     );
     // Limpiar el formulario después de crear el recurso
-    recurso.value = "";
-    cantidad.value = "";
+    //recurso.value = "";
+    //cantidad.value = "";
     cargarRecursos();
   } catch (error) {
     mensajeActualizacion = "Error al crear el recurso";
