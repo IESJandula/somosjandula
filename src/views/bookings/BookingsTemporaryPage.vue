@@ -1045,4 +1045,21 @@ input[type="date"]:disabled {
   margin-top: 10px;
   cursor: pointer;
 }
+
+.incidence-message {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-color-light);
+}
+
+.incidence-message a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.incidence-message a:hover {
+  color: var(--primary-color-hover);
+  cursor: pointer;
+}
 </style>
