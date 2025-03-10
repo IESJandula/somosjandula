@@ -131,10 +131,10 @@
         </div>
         <p>El mes limite es: {{ mes }}</p>
         <span class="custom-message-numAlumno"
-          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">El
-          máximo permitido es de {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
-            cantidadSeleccionada)) }} Alumnos</span>
-        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">El mínimo permitido es de 1 Alumno</span>
+          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
+          permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
+            cantidadSeleccionada)) }} alumnos</span>
+        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
         <button
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
           @click="saveChanges">Reservar</button>

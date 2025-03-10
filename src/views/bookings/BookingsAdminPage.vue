@@ -232,7 +232,7 @@ const actualizarConstanteSeleccionada = async () => {
       mensajeActualizacion
     );
     throw new Error(error.message);
-    
+
   }
 };
 
