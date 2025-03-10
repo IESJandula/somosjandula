@@ -395,12 +395,13 @@ watch(recursoSeleccionado, () => {
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
   isModalOpen.value = false
 
-  if (!recursoSeleccionadoCompartible.value) {
-    mensajeInformativo = 'Recuerda, este recurso no se puede compartir en el mismo tramo horario'
+  if (recursoSeleccionadoCompartible.value) {
+    mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
+    mensajeIncidencia = 'Si necesitas más recursos, crea una incidencia aquí: '
   }
   else {
-    mensajeInformativo = 'Recuerda, este recurso sí se puede compartir en el mismo tramo horario'
-    mensajeIncidencia = 'Si necesitas más recursos, crea una incidencia aquí: '
+    mensajeInformativo = ''
+    mensajeIncidencia = ''
   }
   getReserva();
 });
@@ -453,7 +454,7 @@ onMounted(async () => {
 }
 
 .mensajeInformativo {
-  color: #ffae00;
+  color: #007bff;
   padding: 10px;
   font-size: 25px;
   font-weight: bold;
