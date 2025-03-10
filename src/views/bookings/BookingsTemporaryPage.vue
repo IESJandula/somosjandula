@@ -19,11 +19,14 @@
       </option>
     </select>
 
+    <div class="incidence-message" v-if="recursoSeleccionadoCompartible">
+      {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
+    </div>
+
     <div class="semana_button-container">
       <button class="semanaAnterior_button" @click.stop="decrementarSemana()">Semana Anterior</button>
       <button class="semanaSiguiente_button" @click.stop="incrementarSemana()">Semana Siguiente</button>
     </div>
-
 
     <!-- Tabla con horarios y reservas -->
     <table class="tabla-container" v-if="mostrarTabla">
@@ -183,6 +186,7 @@ let mensajeColor = ''
 let emailUserActual = '';
 let logRecursos = '';
 let mensajeInformativo = '';
+let mensajeIncidencia = '';
 const mostrarTabla = ref(true);
 const emailLogged = ref('');
 // Variables para el toast
@@ -614,11 +618,13 @@ watch(recursoSeleccionado, () => {
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
   isModalOpen.value = false
 
-  if (!recursoSeleccionadoCompartible.value) {
-    mensajeInformativo = 'Recuerda, este recurso no se puede compartir en el mismo tramo horario'
+  if (recursoSeleccionadoCompartible.value) {
+    mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
+    mensajeIncidencia = '¿Necesitas más recursos? Crea una incidencia '
   }
   else {
-    mensajeInformativo = 'Recuerda, este recurso sí se puede compartir en el mismo tramo horario'
+    mensajeInformativo = ''
+    mensajeIncidencia = ''
   }
   getReserva();
 });
@@ -778,6 +784,10 @@ onMounted(async () => {
 .custom-select:hover {
   border-color: #0056b3;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+h1 {
+  margin-bottom: -3%;
 }
 
 table {
@@ -1033,6 +1043,23 @@ input[type="date"]:disabled {
   border-radius: 5px;
   padding: 10px;
   margin-top: 10px;
+  cursor: pointer;
+}
+
+.incidence-message {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-color-light);
+}
+
+.incidence-message a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.incidence-message a:hover {
+  color: var(--primary-color-hover);
   cursor: pointer;
 }
 </style>
