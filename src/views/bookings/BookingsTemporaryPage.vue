@@ -48,7 +48,7 @@
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
-                  <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija">Fija</div>
+                  <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual) && !reservas[tramo.id][dia.id].esfija"
@@ -74,7 +74,7 @@
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
                 </div>
@@ -579,13 +579,13 @@ const getReserva = async () => {
   reservas.value = estructuraReservas
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija) => {
   try {
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
     if (rolesUsuario.value.includes('ADMINISTRADOR')) {
-      if (reservas.value[tramo.id]?.[dia.id]?.esfija) {
+      if (esFija) {
         await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
       }
       else {
