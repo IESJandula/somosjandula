@@ -125,14 +125,12 @@
         <select class="custom-select-modal" v-model="opcionRepeticion">
           <option value="" selected>Ninguna</option>
           <option value="Semanal">Semanal</option>
-          <option value="Mensual">Mensual</option>
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
           <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
             :max="fechaFinCurso" @change="fechaModal($event)" />
         </div>
-        <p>El mes limite es: {{ mes }}</p>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
           permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
