@@ -12,7 +12,7 @@
       </option>
     </select>
     <div class="incidence-message" v-if="recursoSeleccionadoCompartible">
-      {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">Incidencia</a>
+      {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
     </div>
 
     <!-- Tabla con horarios y reservas -->
@@ -109,7 +109,7 @@
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR')"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR')"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -397,7 +397,7 @@ watch(recursoSeleccionado, () => {
 
   if (recursoSeleccionadoCompartible.value) {
     mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
-    mensajeIncidencia = 'Si necesitas más recursos, crea una incidencia aquí: '
+    mensajeIncidencia = '¿Necesitas más recursos? Crea una incidencia '
   }
   else {
     mensajeInformativo = ''
