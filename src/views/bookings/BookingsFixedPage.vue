@@ -514,6 +514,10 @@ onMounted(async () => {
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
+h1 {
+  margin-bottom: -3%;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
