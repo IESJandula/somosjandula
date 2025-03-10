@@ -24,9 +24,13 @@
     </div>
 
     <div class="semana_button-container">
-      <button class="semanaAnterior_button" @click.stop="decrementarSemana()" v-if="!deshabilitarSemanaAnterior()">Semana Anterior</button>
-      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()" v-if="!deshabilitarSemanaSiguiente()">Semana Siguiente</button>
+      <button class="semanaAnterior_button" @click.stop="decrementarSemana()"
+        v-if="!deshabilitarSemanaAnterior()">Semana Anterior</button>
+      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()"
+        v-if="!deshabilitarSemanaSiguiente()">Semana Siguiente</button>
     </div>
+
+    <div> {{ semana }} </div>
 
     <!-- Tabla con horarios y reservas -->
     <table class="tabla-container" v-if="mostrarTabla">
@@ -245,14 +249,14 @@ const resetearSemana = () => {
 }
 
 const deshabilitarSemanaAnterior = () => {
-  if(parseInt(semana.value) === parseInt(getWeek(fechaInicioCurso.value))) {
+  if (parseInt(semana.value) === parseInt(getWeek(fechaInicioCurso.value))) {
     return true;
   }
   return false;
 }
 
 const deshabilitarSemanaSiguiente = () => {
-  if(parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value))) {
+  if (parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value))) {
     return true;
   }
   return false;
@@ -267,12 +271,12 @@ const fechaModal = (event) => {
 }
 
 const decrementarSemana = () => {
+
   semana.value = parseInt(semana.value) - 1;
 
-  if(semana.value < 1)
-{
-  semana.value = 52;
-}
+  if (semana.value < 1) {
+    semana.value = getWeek(new Date(new Date().getFullYear() - 1, 11, 31 - 7));
+  }
   incrementarFecha();
   validarFecha(); // Añadir validación de fecha
   getReserva();
@@ -280,14 +284,14 @@ const decrementarSemana = () => {
 
 const incrementarSemana = () => {
   semana.value = parseInt(semana.value) + 1;
-  if(semana.value > 52)
-{
-  semana.value = 1;
-}
+  if (semana.value > getWeek(new Date(new Date().getFullYear(), 11, 31 - 7)) ) {
+    semana.value = 1;
+  }
   incrementarFecha();
   validarFecha(); // Añadir validación de fecha
   getReserva();
 }
+
 const getDaysInMonth = (year, month) => {
   // Verificar si es año bisiesto para febrero
   if (month === 1) {
@@ -1060,7 +1064,7 @@ input[type="date"]:disabled {
   width: 100%;
 }
 
-.semanaAnterior_button{
+.semanaAnterior_button {
   background-color: #007bff;
   color: white;
   float: left;
@@ -1071,6 +1075,7 @@ input[type="date"]:disabled {
   margin-top: 10px;
   cursor: pointer;
 }
+
 .semanaSiguiente_button {
   background-color: #007bff;
   color: white;
