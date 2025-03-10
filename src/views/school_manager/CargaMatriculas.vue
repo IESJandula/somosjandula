@@ -20,7 +20,7 @@ const fileUploadRef = ref(null);
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
-  if(seleccionado.value && archivoSeleccionado.value){
+  if(seleccionado.value && archivoSeleccionado.value && validarCSV(file.value)) {
     boton.disabled = false;
   } else {
     boton.disabled = true;
@@ -37,7 +37,7 @@ const validarCSV = (archivo) => {
       const encabezados = lineas[0].split(",").map(h => h.trim()); // Obtener la primera fila
 
       if (encabezados[0] !== "alumno") {
-        reject("El primer campo del CSV debe llamarse 'alumno'");
+        reject("El Csv no tiene el formato correcto");
       } else {
         resolve(); // El archivo es válido
       }
@@ -73,6 +73,7 @@ const subirFichero = async () => {
     try {
 
       const [curso, etapa] = seleccionado.value.split('-');
+      eliminarCursosCargados(seleccionado.value);
 
       const data = await subirFicheros(file.value, curso, etapa, toastMessage, toastColor, isToastOpen);
       console.log("Fichero Cargado:", data);
@@ -118,8 +119,14 @@ const actualizarSelect = () => {
 const insertarCursosCargados = async () => {
   try {
     const data = await obtenerCursosCargados(isToastOpen, toastMessage, toastColor);
-    cursosMapeados.value = data.map(curso => `${curso.curso} - ${curso.etapa}`);
-    console.log(cursosMapeados.value);
+    if (data===undefined){
+      cursosMapeados.value = ""
+    }
+    else {
+      cursosMapeados.value = data.map(curso => `${curso.curso}-${curso.etapa}`);
+      console.log(cursosMapeados.value);
+    }
+    console.log("No hay cursos con matriculas para cargar.")
   } catch (error) {
     console.error('Error al insertar cursos cargados:', error);
   }
@@ -127,10 +134,10 @@ const insertarCursosCargados = async () => {
 
 const eliminarCursosCargados = async (cursoE) => {
 
-const [curso, etapa] = cursoE.split('-');
-const data = await borrarMatriculas(curso, etapa, isToastOpen, toastMessage, toastColor)
-await insertarCursosCargados();
-return console.log("Borrado con exito: "+data)
+  const [curso, etapa] = cursoE.split('-');
+  const data = await borrarMatriculas(curso, etapa, isToastOpen, toastMessage, toastColor)
+  await insertarCursosCargados();
+  return console.log("Borrado con exito: " + data)
 }
 
 onMounted(async () => {
@@ -160,9 +167,9 @@ onMounted(async () => {
 
         <!-- Subida de ficheros -->
         <div class="section">
-          <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de seneca</label>
+          <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
           <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
-          <button @click="subirFichero" class="btn" id = "enviar">Enviar</button>
+          <button @click="subirFichero" ref="boton" class="btn" id = "enviar">Enviar</button>
         </div>
         <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
         @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
@@ -242,6 +249,7 @@ onMounted(async () => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+  align-items: stretch;
 }
 
  .dropdown { 
@@ -263,6 +271,8 @@ onMounted(async () => {
   flex: 1 1 30%;
   min-width: 300px;
   max-width: 35%;
+  min-height: 100%;
+  height: auto;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -272,32 +282,31 @@ onMounted(async () => {
   align-items: center;
   }
  .card-upload-table {
+  width: 65%;
   flex: 1 1 30%;
   min-width: 300px;
   max-width: 35%;
+  min-height: 100%;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
   padding: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   overflow: auto;
     height: 380px;
 }
 .th {
+  width: 100%;
   border: 1px solid currentColor; 
-  padding-left: 4rem; 
-  padding-right: 4rem;
+  padding: 0.5rem 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   text-align: center;
-  margin-left: 50px;
 }
-.table{
-  table-layout: auto;
+table{
   border-collapse: collapse;
-  border: 1px solid currentColor;
   width: 100%;
 }
 /* Media queries para hacer que la tarjeta sea más responsive */
@@ -312,6 +321,7 @@ onMounted(async () => {
     flex: 1 1 100%;
     max-width: 100%;
     min-width: auto;
+    min-height: 100%;
   }
 }
 /* Modo oscuro */
