@@ -17,12 +17,18 @@ const archivoSeleccionado= ref(false)
 const file = ref(null);
 const cursosMapeados = ref([]);
 const fileUploadRef = ref(null);
+const buttonText = ref('Enviar');
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
-  if(seleccionado.value && archivoSeleccionado.value && validarCSV(file.value)) {
+  if( archivoSeleccionado.value && seleccionado.value  && validarCSV(file.value)) {
     boton.disabled = false;
+    buttonText.value = "Enviar";
+    boton.style.backgroundColor = "#4782eb";
   } else {
+    boton.style.color = "#000000";
+    boton.style.backgroundColor = "#7fa9f4";
+    buttonText.value = "No puedes enviar";
     boton.disabled = true;
   }
 }
@@ -38,6 +44,10 @@ const validarCSV = (archivo) => {
 
       if (encabezados[0] !== "alumno") {
         reject("El Csv no tiene el formato correcto");
+        const fileUploadComponent = fileUploadRef.value;
+        fileUploadComponent.fileClear();
+        archivoSeleccionado.value = false;
+        comprobarBoton();
       } else {
         resolve(); // El archivo es válido
       }
@@ -82,10 +92,11 @@ const subirFichero = async () => {
       mensajeColor = "success";
       crearToast( toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     } catch (error) {
-        console.error('Error al cargar matriculas', error);
-        mensajeActualizacion = 'Error al cargar matrículas';
-        mensajeColor = 'danger';
+      console.error('Error al cargar matriculas', error);
+      mensajeActualizacion = 'Error al cargar matrículas';
+      mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      fileUploadComponent.fileClear();
     }
     seleccionado.value = "";
     const fileUploadComponent = fileUploadRef.value;
@@ -111,6 +122,7 @@ const actualizarSelect = () => {
     const [curso, etapa] = seleccionado.value.split('-');
     emit('actualizar-select', { curso: parseInt(curso), etapa });
     console.log("Evento emitido:", { curso: parseInt(curso), etapa });
+    comprobarBoton();
   } else {
     emit('actualizar-select', { curso: null, etapa: '' });
   }
@@ -155,7 +167,7 @@ onMounted(async () => {
         <!-- Selector de curso y etapa -->
         <div class="dropdown">
           <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
-          <select v-model="seleccionado" @ionChange="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
+          <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
             <option value="">Selecciona un curso</option>
             <option v-for="cursoEtapa in cursosEtapas"
               :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
@@ -169,7 +181,7 @@ onMounted(async () => {
         <div class="section">
           <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
           <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
-          <button @click="subirFichero" ref="boton" class="btn" id = "enviar">Enviar</button>
+          <button @click="subirFichero" ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
         </div>
         <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
         @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
@@ -227,7 +239,7 @@ onMounted(async () => {
   padding: 0.5rem;
   border: 1px solid ;
   border-radius: 0.375rem; 
-  background-color: #3B82F6;
+  background-color: #4782eb;
   color: #FFFFFF;
   font-size: 17px;
 }
@@ -319,8 +331,7 @@ table{
   .card-upload-csv,
   .card-upload-table {
     flex: 1 1 100%;
-    max-width: 100%;
-    min-width: auto;
+    min-width: 500px;
     min-height: 100%;
   }
 }
@@ -337,6 +348,9 @@ table{
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
+  }
+  .btn{
+    color: black;
   }
 }
 </style>
