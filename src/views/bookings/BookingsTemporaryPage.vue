@@ -24,8 +24,8 @@
     </div>
 
     <div class="semana_button-container">
-      <button class="semanaAnterior_button" @click.stop="decrementarSemana()">Semana Anterior</button>
-      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()">Semana Siguiente</button>
+      <button class="semanaAnterior_button" @click.stop="decrementarSemana()" v-if="!deshabilitarSemanaAnterior()">Semana Anterior</button>
+      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()" v-if="!deshabilitarSemanaSiguiente()">Semana Siguiente</button>
     </div>
 
     <!-- Tabla con horarios y reservas -->
@@ -244,6 +244,20 @@ const resetearSemana = () => {
   semana.value = getWeek(fechaActual.value);
 }
 
+const deshabilitarSemanaAnterior = () => {
+  if(parseInt(semana.value) === parseInt(getWeek(fechaInicioCurso.value))) {
+    return true;
+  }
+  return false;
+}
+
+const deshabilitarSemanaSiguiente = () => {
+  if(parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value))) {
+    return true;
+  }
+  return false;
+}
+
 const fechaModal = (event) => {
   event.stopPropagation();
   const fechaSeleccionada = new Date(event.target.value);
@@ -254,6 +268,11 @@ const fechaModal = (event) => {
 
 const decrementarSemana = () => {
   semana.value = parseInt(semana.value) - 1;
+
+  if(semana.value < 1)
+{
+  semana.value = 52;
+}
   incrementarFecha();
   validarFecha(); // Añadir validación de fecha
   getReserva();
@@ -261,6 +280,10 @@ const decrementarSemana = () => {
 
 const incrementarSemana = () => {
   semana.value = parseInt(semana.value) + 1;
+  if(semana.value > 52)
+{
+  semana.value = 1;
+}
   incrementarFecha();
   validarFecha(); // Añadir validación de fecha
   getReserva();
@@ -305,7 +328,6 @@ const incrementarFecha = () => {
     dia.diaSemana = `${nombreDia} ${fechaDia.getDate()}/${(fechaDia.getMonth() + 1).toString().padStart(2, '0')}`;
   });
 }
-
 
 const repetirReserva = async () => {
   if (opcionRepeticion.value === 'Semanal') {
@@ -1034,16 +1056,25 @@ input[type="date"]:disabled {
 }
 
 .semana_button-container {
-  display: flex;
   justify-content: space-between;
   width: 100%;
 }
 
-.semanaAnterior_button,
-.semanaSiguiente_button {
+.semanaAnterior_button{
   background-color: #007bff;
   color: white;
   float: left;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+.semanaSiguiente_button {
+  background-color: #007bff;
+  color: white;
+  float: right;
   font-weight: bold;
   border: none;
   border-radius: 5px;
