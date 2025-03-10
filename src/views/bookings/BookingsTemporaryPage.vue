@@ -139,7 +139,7 @@
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR') && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
