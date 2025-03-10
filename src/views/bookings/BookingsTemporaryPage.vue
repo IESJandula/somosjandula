@@ -750,6 +750,14 @@ onMounted(async () => {
     box-shadow 0.3s;
 }
 
+.mensajeInformativo {
+  color: #007bff;
+  padding: 10px;
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
 .custom-select-modal {
   width: 100%;
   padding: 10px;
