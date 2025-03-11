@@ -111,7 +111,7 @@
 
         <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
         <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal"
-          v-model="profesorSeleccionado">
+          v-model="profesorSeleccionado" @change="comprobarDisponibilidad()">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -121,28 +121,31 @@
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
           placeholder="Número de alumnos" min="0"
-          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
+          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))"
+          @change="comprobarDisponibilidad()" />
         <label>Opciones de Repetición:</label>
 
-        <select class="custom-select-modal" v-model="opcionRepeticion">
+        <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
           <option value="" selected>Ninguna</option>
           <option value="Semanal">Semanal</option>
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
           <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
-            :max="fechaFinCurso" @change="fechaModal($event)" />
+            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" />
         </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
           permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
             cantidadSeleccionada)) }} alumnos</span>
-        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
+        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
+          permitido: 1 Alumno</span>
+        <div>{{ disponibleSemanal }}</div>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal && comprobarDisponibilidad()"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal && comprobarDisponibilidad()"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -641,7 +644,7 @@ async function verificarRoles() {
 
 const comprobarDisponibilidad = async () => {
 
-  const data = ref(false);
+  const data = ref(true);
 
   // Array para almacenar las semanas
 
