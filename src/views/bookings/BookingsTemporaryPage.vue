@@ -344,7 +344,8 @@ const repetirReserva = async () => {
         currentDia.value.id,
         currentTramo.value.id,
         numAlumnos.value,
-        +semana.value
+        +semana.value,
+        true
       );
       semana.value = parseInt(semana.value) + 1;
     }
@@ -455,7 +456,8 @@ const saveChanges = async () => {
         currentDia.value.id,
         currentTramo.value.id,
         alumnos,
-        +semana.value
+        +semana.value,
+        false
       );
 
       // Actualizar reservas localmente
@@ -649,6 +651,7 @@ const comprobarDisponibilidad = async () => {
       semanas.value.push(i);  // Se agrega la semana al array
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
+    semanas = ref([]); // Se reinicia el array 
   }
   else if (opcionRepeticion.value === 'Mensual') {
     // Suponemos que 'fechaReserva' es la fecha de inicio

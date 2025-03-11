@@ -284,7 +284,7 @@ export const getProfesores = async (toastMessage, toastColor, isToastOpen) =>
 }
 
 
-export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana) =>
+export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana, esSemanal) =>
   {
   try
   {
@@ -302,7 +302,8 @@ export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen
         tramosHorarios: tramoHorario,
         nAlumnos: nAlumnos,
         numSemana: numSemana,
-      },
+        esSemanal: esSemanal
+      }
     })
 
     if (!response.ok)
