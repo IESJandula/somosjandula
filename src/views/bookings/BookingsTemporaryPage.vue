@@ -105,13 +105,13 @@
     <!-- Modal de edición -->
     <div
       v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible && reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0)"
-      class="modal-overlay">
+      class="modal-overlay" @change="comprobarDisponibilidad()">
       <div class="modal-content">
         <h2>Reservar</h2>
 
         <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal"
-          v-model="profesorSeleccionado">
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado"
+          @change="comprobarDisponibilidad()">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -121,28 +121,30 @@
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
           placeholder="Número de alumnos" min="0"
-          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
+          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))"
+          @change="comprobarDisponibilidad()" />
         <label>Opciones de Repetición:</label>
 
-        <select class="custom-select-modal" v-model="opcionRepeticion">
+        <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
           <option value="" selected>Ninguna</option>
           <option value="Semanal">Semanal</option>
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
           <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
-            :max="fechaFinCurso" @change="fechaModal($event)" />
+            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" />
         </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
           permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
             cantidadSeleccionada)) }} alumnos</span>
-        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
+        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
+          permitido: 1 Alumno</span>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -156,7 +158,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getWeek, format, startOfWeek, addWeeks, getMonth, getDate } from 'date-fns';
+import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -196,6 +198,7 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
 const opcionRepeticion = ref('');
+const disponibleSemanal = ref(false);
 
 //Variables de Fecha
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
@@ -642,7 +645,7 @@ async function verificarRoles() {
 
 const comprobarDisponibilidad = async () => {
 
-  const data = ref('');
+  const data = ref(true);
 
   // Array para almacenar las semanas
 
@@ -653,28 +656,7 @@ const comprobarDisponibilidad = async () => {
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
     semanas = ref([]); // Se reinicia el array 
   }
-  else if (opcionRepeticion.value === 'Mensual') {
-    // Suponemos que 'fechaReserva' es la fecha de inicio
-    const fechaReserva = +semana.value;
-    const fechaLimiteMonth = getWeek(fechaLimite.value);
-
-    while (fechaReserva <= fechaLimiteMonth) {
-      // Obtener la semana de la fecha actual
-      semanas.value.push(fechaReserva);
-      fechaReserva.value = getDate(fechaReserva);
-
-      // Avanzar al siguiente mes
-      fechaReserva.setMonth(fechaReserva.getMonth() + 1);
-      fechaReserva.value = getWeek(fechaReserva);
-    }
-
-    // Llamada para comprobar la disponibilidad
-    console.log(semanas);
-
-    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
-  }
-
-  return data;
+  disponibleSemanal.value = data.value;
 }
 
 
