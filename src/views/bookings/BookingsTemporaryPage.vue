@@ -105,13 +105,13 @@
     <!-- Modal de edición -->
     <div
       v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible && reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0)"
-      class="modal-overlay">
+      class="modal-overlay" @change="comprobarDisponibilidad()">
       <div class="modal-content">
         <h2>Reservar</h2>
 
         <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal"
-          v-model="profesorSeleccionado" @change="comprobarDisponibilidad()">
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado"
+          @change="comprobarDisponibilidad()">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -140,7 +140,6 @@
             cantidadSeleccionada)) }} alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
           permitido: 1 Alumno</span>
-        <div>{{ disponibleSemanal }}</div>
         <button
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
