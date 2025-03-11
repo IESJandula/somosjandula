@@ -199,6 +199,7 @@ const opcionRepeticion = ref('');
 
 //Variables de Fecha
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
+const fechaSeleccionada = ref('')
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
@@ -233,8 +234,8 @@ fechaFinCurso.value = new Date(finYear, 5, 31).toISOString().slice(0, 10); // 30
 
 const actualizarSemana = (event) => {
   event.stopPropagation();
-  const fechaSeleccionada = new Date(event.target.value);
-  fechaActual.value = fechaSeleccionada.toISOString().slice(0, 10);
+  fechaSeleccionada.value = new Date(event.target.value);
+  fechaActual.value = fechaSeleccionada.value.toISOString().slice(0, 10);
   semana.value = getWeek(fechaSeleccionada);
   mes.value = getMonth(fechaSeleccionada);
   validarFecha(); // Añadir validación de fecha
@@ -262,8 +263,8 @@ const deshabilitarSemanaSiguiente = () => {
 
 const fechaModal = (event) => {
   event.stopPropagation();
-  const fechaSeleccionada = new Date(event.target.value);
-  fechaLimite.value = fechaSeleccionada.toISOString().slice(0, 10);
+  fechaSeleccionada.value = new Date(event.target.value).toISOString().slice(0, 10);
+  fechaLimite.value = fechaSeleccionada.value;
   semanaLimite.value = getWeek(fechaLimite.value);
   mes.value = getMonth(fechaLimite.value) + 1;
 }
@@ -348,35 +349,6 @@ const repetirReserva = async () => {
       semana.value = parseInt(semana.value) + 1;
     }
     while (semana.value <= semanaLimite.value);
-    resetearSemana();
-  }
-  else if (opcionRepeticion.value === 'Mensual') {
-    let fechaReserva = new Date(fechaActual.value);
-    const diaReserva = fechaReserva.getDate();
-
-    do {
-      await postReservaTemporary(
-        isToastOpen,
-        toastMessage,
-        toastColor,
-        profesorSeleccionado.value,
-        recursoSeleccionado.value,
-        currentDia.value.id,
-        currentTramo.value.id,
-        numAlumnos.value,
-        getWeek(fechaReserva)
-      );
-
-      // Avanzar al siguiente mes
-      const nuevoMes = fechaReserva.getMonth() + 1;
-      fechaReserva = new Date(fechaReserva.getFullYear(), nuevoMes, diaReserva);
-
-      // Ajustar si el día no existe en el nuevo mes
-      while (fechaReserva.getMonth() !== nuevoMes % 12) {
-        fechaReserva.setDate(fechaReserva.getDate() - 1);
-      }
-
-    } while (fechaReserva <= new Date(fechaLimite.value));
     resetearSemana();
   }
   getReserva(recursoSeleccionado);
@@ -470,9 +442,7 @@ const saveChanges = async () => {
 
     if (opcionRepeticion.value === 'Semanal') {
       repetirReserva();
-    }
-    else if (opcionRepeticion.value === 'Mensual') {
-      repetirReserva();
+      getReserva(recursoSeleccionado);
     }
     else {
       // Llamar a la API para guardar la reserva
@@ -679,8 +649,6 @@ const comprobarDisponibilidad = async () => {
       semanas.value.push(i);  // Se agrega la semana al array
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
-    console.log(data.value);
-
   }
   else if (opcionRepeticion.value === 'Mensual') {
     // Suponemos que 'fechaReserva' es la fecha de inicio
