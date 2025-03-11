@@ -139,10 +139,10 @@
             cantidadSeleccionada)) }} alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal && comprobarDisponibilidad()"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && comprobarDisponibilidad()"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal && comprobarDisponibilidad()"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -156,7 +156,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getWeek, format, startOfWeek, addWeeks, getMonth, getDate } from 'date-fns';
+import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -196,6 +196,7 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
 const opcionRepeticion = ref('');
+const disponibleSemanal = ref(false);
 
 //Variables de Fecha
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
@@ -640,7 +641,7 @@ async function verificarRoles() {
 
 const comprobarDisponibilidad = async () => {
 
-  const data = ref('');
+  const data = ref(false);
 
   // Array para almacenar las semanas
 
@@ -650,28 +651,7 @@ const comprobarDisponibilidad = async () => {
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
   }
-  else if (opcionRepeticion.value === 'Mensual') {
-    // Suponemos que 'fechaReserva' es la fecha de inicio
-    const fechaReserva = +semana.value;
-    const fechaLimiteMonth = getWeek(fechaLimite.value);
-
-    while (fechaReserva <= fechaLimiteMonth) {
-      // Obtener la semana de la fecha actual
-      semanas.value.push(fechaReserva);
-      fechaReserva.value = getDate(fechaReserva);
-
-      // Avanzar al siguiente mes
-      fechaReserva.setMonth(fechaReserva.getMonth() + 1);
-      fechaReserva.value = getWeek(fechaReserva);
-    }
-
-    // Llamada para comprobar la disponibilidad
-    console.log(semanas);
-
-    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
-  }
-
-  return data;
+  disponibleSemanal.value = data.value;
 }
 
 
