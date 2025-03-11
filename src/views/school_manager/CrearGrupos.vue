@@ -1,17 +1,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnos, enviarDatos, borrarAlumnos } from '@/services/schoolManager.js'
+import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, enviarDatos, borrarAlumnos } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const grupoSeleccionado = ref('');
 const resultadoGrupos = ref('');
 const grupos = ref([]);
-const listadoAlumnos = ref([]);
 const listadoAlumnosSeleccionados = ref([]);
 const listadoAlumnosSinGrupo = ref([]);
-const listadoAlumnosDelGrupoSeleccionado = ref([]);
+const alumnosPorGrupo = ref({})
 const errorMensaje = ref("");
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -19,43 +18,28 @@ const toastColor = ref('success');
 
 const actualizarSelect = (parametro) => {
     filtroSeleccionado.value = parametro;
-    resultadoGrupos.value = "";
     grupos.value = [];
     grupoSeleccionado.value = '';
-    listadoAlumnos.value = [];
-    listadoAlumnosSeleccionados.value = [];
+    alumnosPorGrupo.value = {};
     listadoAlumnosSinGrupo.value = [];
-    listadoAlumnosDelGrupoSeleccionado.value = [];
+    
     obtenerGrupo(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa);
+    obtenerAlumno();
 };
 
 const actualizarGrupo = (parametro) => {
     grupoSeleccionado.value = parametro;
-    listadoAlumnos.value = [];
     listadoAlumnosSeleccionados.value = [];
-    listadoAlumnosDelGrupoSeleccionado.value = [];
-    listadoAlumnosSinGrupo.value = [];
 
 };
 
-  const alumnosSinGrupo =() =>  {
-    listadoAlumnosSinGrupo.value= listadoAlumnos.value.filter(alumno => !alumno.grupo);
-    return listadoAlumnosSinGrupo.value
-  };
-
-  const alumnosDelGrupoSeleccionado=() => {
-    listadoAlumnosDelGrupoSeleccionado.value = listadoAlumnos.value.filter(alumno => alumno.grupo === grupoSeleccionado.value);
-    return listadoAlumnosDelGrupoSeleccionado.value
-  }
-
-  // Ya no sale el mensaje de que se ha creado el grupo
 const crearNuevoGrupo = async (curso, etapa) => {
   try {
     const response  = await crearNuevosGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
 
       if (response.status === 200) {
           resultadoGrupos.value = "GRUPO CREADO CON ÉXITO";
-          obtenerGrupo(parseInt(curso, 10), etapa);
+          await obtenerGrupo(parseInt(curso, 10), etapa);
           actualizarGrupo('');
       } else {
           resultadoGrupos.value = "Hubo un problema al crear el grupo.";
@@ -68,9 +52,9 @@ const crearNuevoGrupo = async (curso, etapa) => {
 
 const obtenerGrupo = async (curso, etapa) => {
   try {
-      if (curso != null && etapa !== '') {
-          const data = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
-          grupos.value = data;
+      if (curso != null && etapa) {
+          grupos.value = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
+          await obtenerAlumno();
       }
   } catch (error) {
       console.error('Error al cargar grupos', error);
@@ -80,14 +64,20 @@ const obtenerGrupo = async (curso, etapa) => {
 const obtenerAlumno = async () => {
   try {
       const { curso, etapa } = filtroSeleccionado.value;
-      const grupo = grupoSeleccionado.value;
 
-      if (curso && etapa && grupo) {
-        listadoAlumnos.value = await obtenerAlumnos(curso, etapa, grupo, toastMessage, toastColor, isToastOpen);
-        listadoAlumnosSinGrupo.value = alumnosSinGrupo();
-        listadoAlumnosDelGrupoSeleccionado.value = alumnosDelGrupoSeleccionado();
-      }
-  } catch (error) {
+      listadoAlumnosSinGrupo.value = await obtenerAlumnosSinGrupos(curso,etapa,toastMessage, toastColor, isToastOpen);
+      alumnosPorGrupo.value = {}; //HAY QUE LIMPIAR PRIMERO, SI NO SE DUPLICAN
+      for (const grupo of grupos.value) {
+
+        const alumnosDeEseGrupo = await obtenerAlumnosConGrupos(
+            curso, etapa, grupo, toastMessage, toastColor, isToastOpen
+        );
+        console.log(`Alumnos de grupo ${grupo}`, alumnosDeEseGrupo);
+        // Guardamos ese array bajo la clave del grupo
+        alumnosPorGrupo.value[grupo] = alumnosDeEseGrupo;
+    }
+  }
+  catch (error) {
       console.error('Error al cargar alumnos', error);
   }
 };
@@ -96,63 +86,104 @@ const enviarDato = async () => {
     try {
         const { curso, etapa } = filtroSeleccionado.value;
         const grupo = grupoSeleccionado.value;
+        if (!grupo) {
+        // Si no se ha seleccionado grupo, avisas o retornas
+        toastMessage.value = "Debes seleccionar un grupo antes de añadir alumnos.";
+        toastColor.value = "warning";
+        isToastOpen.value = true;
+        return;
+      }
         const cursoInt = parseInt(curso);
 
-        await enviarDatos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen); 
-        obtenerAlumno();
+        await enviarDatos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
+      listadoAlumnosSinGrupo.value = listadoAlumnosSinGrupo.value.filter(
+          (al) => !listadoAlumnosSeleccionados.value.includes(al)
+      );
+      // Y los añadimos al array del grupo
+      if (!alumnosPorGrupo.value[grupo]) {
+        alumnosPorGrupo.value[grupo] = [];
+      }
+      alumnosPorGrupo.value[grupo].push(...listadoAlumnosSeleccionados.value);
+
+      // Limpiamos selección
+      listadoAlumnosSeleccionados.value = [];
     } catch (error) {
         console.error('Error al enviar alumnos:', error);
     }
 };
 
-const borrarAlumno = async (alumno) => {
-    try {
-        await borrarAlumnos(alumno, toastMessage, toastColor, isToastOpen);
-        obtenerAlumno();
-    } catch (error) {
-        errorMensaje.value = "Error al borrar el alumno.";
+const borrarAlumno = async (alumno, grupo) => {
+  try {
+    await borrarAlumnos(alumno, toastMessage, toastColor, isToastOpen);
+
+    console.log("Antes de borrar, grupo:", grupo, alumnosPorGrupo.value[grupo]);
+
+    // Buscar el índice del alumno dentro del grupo
+    const index = alumnosPorGrupo.value[grupo].findIndex(a =>
+        a.nombre === alumno.nombre && a.apellidos === alumno.apellidos
+    );
+
+    // Si el alumno está en la lista, lo eliminamos con splice()
+    if (index !== -1) {
+      alumnosPorGrupo.value[grupo].splice(index, 1);
     }
+
+    console.log("Después de borrar, grupo:", grupo, alumnosPorGrupo.value[grupo]);
+
+    // Agregarlo a la lista de alumnos sin grupo
+    listadoAlumnosSinGrupo.value.push(alumno);
+  } catch (error) {
+    errorMensaje.value = "Error al borrar el alumno.";
+  }
+};
+
+const limpiarGrupo = async (grupo) => {
+  try {
+    const alumnosDeEsteGrupo = alumnosPorGrupo.value[grupo] || [];
+    for (const alumno of alumnosDeEsteGrupo) {
+      await borrarAlumnos(alumno, toastMessage, toastColor, isToastOpen);
+
+      listadoAlumnosSinGrupo.value.push(alumno);
+    }
+
+    alumnosPorGrupo.value[grupo] = [];
+
+  } catch (error) {
+    console.error("Error al limpiar grupo:", error);
+  }
 };
 
 onMounted(async () => {
-  await obtenerAlumno();
-  await obtenerGrupo();
+  
 });
 </script>
 
 <template>
   <h1 class="m-2">Creación de grupos</h1>
-  <div class="container">
+  <div class="top-section">
+    <div class="card-upload-alumnos">
+      <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
+      <ul class="listaAlumnos">
+        <li v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
+        <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1">
+          <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
+          {{ alumno.nombre }} {{ alumno.apellidos }}
+        </li>
+      </ul>
+      <button @click="crearNuevoGrupo(filtroSeleccionado.curso, filtroSeleccionado.etapa)" class="btn">Crea grupo</button>
 
-    <div class="contenido m-1">
-      <!-- Primera columna (Filtros y selección de grupo) -->
-      <div class="columna">
-        <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
-        <button @click="crearNuevoGrupo(filtroSeleccionado.curso, filtroSeleccionado.etapa)" class="btn">Crea grupo</button>
-
-        <p class="m-1">Selecciona grupo</p>
-        <select v-model="grupoSeleccionado" @change="actualizarGrupo(grupoSeleccionado)" class="p-2 m-1">
-          <option value="">Selecciona un grupo</option>
-          <option v-for="grupo in grupos" :key="grupo" :value="grupo">{{ grupo }}</option>
-        </select>
-        <button @click="obtenerAlumno" class="btn">Cargar alumnos</button>
-      </div>
-
-      <!-- Segunda columna (Selección de alumnos y tabla de grupo) -->
-      <div class="columna">
-        <p class="m-1">Selecciona alumnos</p>
-        <ul class="listaAlumnos">
-          <li v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
-          <li v-for="(alumno, index) in listadoAlumnosSinGrupo" :key="index" class="p-2 m-1">
-            <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
-            {{ alumno.nombre }} {{ alumno.apellidos }}
-          </li>
-        </ul>
-        <button @click="enviarDato" class="btn">Añadir alumnos</button>
-
-        <div v-if="grupoSeleccionado">
-          <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ grupoSeleccionado }}</h1>
-          <table v-if="listadoAlumnos.length > 0" class="tablaAlumnos">
+      <p class="m-1">Selecciona grupo</p>
+      <select v-model="grupoSeleccionado" @change="actualizarGrupo(grupoSeleccionado)" class="p-2 m-1">
+        <option value="">Selecciona un grupo</option>
+        <option v-for="grupo in grupos" :key="grupo" :value="grupo">{{ grupo }}</option>
+      </select>
+      <button @click="enviarDato" class="btn">Añadir alumnos</button>
+    </div>
+    <div class="card-upload-table">
+      <div  v-for="grupo in grupos" :key="grupo">
+          <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ grupo }}
+            <button class="eliminarGrupo" @click="limpiarGrupo(grupo)"> Limpiar grupo</button></h1>
+          <table v-if="alumnosPorGrupo[grupo] && alumnosPorGrupo[grupo].length > 0" class="tablaAlumnos">
             <thead>
               <tr class="blue">
                 <th class="th">Acciones</th>
@@ -161,14 +192,14 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="alumno in listadoAlumnosDelGrupoSeleccionado" :key="alumno.id">
-                <td class="th"><button class="eliminar" @click="borrarAlumno(alumno)">&times;</button></td>
+              <tr v-for="alumno in alumnosPorGrupo[grupo]" :key="alumno.id">
+                <td class="th"><button class="eliminar" @click="borrarAlumno(alumno, grupo)">&times;</button></td>
                 <td class="th">{{ alumno.nombre }}</td>
                 <td class="th">{{ alumno.apellidos }}</td>
               </tr>
             </tbody>
           </table>
-        </div>
+          <p v-else>No hay alumnos en este grupo.</p>
       </div>
     </div>
     <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
@@ -176,8 +207,37 @@ onMounted(async () => {
   </div>
 </template>
 
-
 <style scoped>
+.card-upload-alumnos {
+flex: 1 1 30%;
+min-width: 300px;
+max-width: 30%;
+min-height: 100%;
+height: auto;
+background-color: var(--form-bg-light);
+box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+border-radius: 10px;
+padding: 20px;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+.card-upload-table {
+  width: 65%;
+  flex: 1 1 30%;
+  min-width: 300px;
+  max-width: 30%;
+  min-height: 100%;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: auto;
+    height: 380px;
+}
 .m-1 {
   font-size: 20px;
   flex-grow: 1; 
@@ -219,7 +279,7 @@ onMounted(async () => {
   max-width: 100%;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  width: 100%;
+  width: 50%;
   min-width: 300px;
 }
 .tablaAlumnos {
@@ -245,47 +305,73 @@ onMounted(async () => {
 
 .eliminar {
   color: #EF4444;
-  font-size: 24px; /* <-- Reducir tamaño */
+  font-size: 24px; 
   background-color: transparent;
-  line-height: 1; /* <-- Ajuste para evitar desbordamiento */
+  line-height: 1; 
   border: none;
 }
-.container {
+.eliminarGrupo {
+  color: #EF4444;
+  font-size: 15px;
+  background-color: transparent;
+  line-height: 1; 
+  border: none;
+}
+.top-section {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: row; 
+  justify-content: center; 
+  align-items: flex-start; 
+  flex-wrap: wrap; 
   width: 100%;
-  margin-left: 25%;
-  padding-right: 40%;
-  gap: 20px;
+  gap: 20px; 
+  max-width: 100%;
 }
 
 /* Contenedor principal */
 .contenido {
-  display: flex; /* Hace que las columnas estén lado a lado */
-  flex-direction: row; /* Asegura que estén en fila */
-  gap: 15rem; /* Espacio entre columnas */
-  justify-content: center; /* Espacio uniforme */
-  align-items: flex-start; /* Alinea los elementos arriba */
+  display: flex; 
+  flex-direction: row; 
+  gap: 15rem; 
+  justify-content: center; 
+  align-items: flex-start; 
   width: 80%;
   max-width: 500px;
 }
 
 /* Columnas */
 .columna {
-  flex: 1; /* Ambas columnas ocupan el mismo espacio */
-  max-width: 100%; /* Evita que una columna sea más ancha */
+  flex: 1; 
+  max-width: 100%; 
   display: flex;
-  flex-direction: column; /* Asegura que todo esté en columna */
+  flex-direction: column; 
 }
-/* Media query para dispositivos móviles */
+/* Media queries para hacer que la tarjeta sea más responsive */
 @media (max-width: 768px) {
-  .container {
+  .top-section {
     flex-direction: column;
     align-items: center;
   }
 
-  
+  .card-upload-alumnos,
+  .card-upload-table {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 500px;
+    min-height: 100%;
+  }
+}
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .card-upload-alumnos {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+  .card-upload-table {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
 }
 </style>

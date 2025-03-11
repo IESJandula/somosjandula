@@ -53,7 +53,6 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
       {
         throw new Error('Error al cargar el fichero de matrículas');
       }
-      return await response.json();
     }
     catch (error)
     {
@@ -65,7 +64,6 @@ export const obtenerCursosCargados = async (toastMessage, toastColor, isToastOpe
   {
     try
     {
-  
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
@@ -181,7 +179,7 @@ export const obtenerGrupos = async (curso, etapa, toastMessage, toastColor, isTo
       console.log(error);
     }
 }
-export const obtenerAlumnos = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => 
+export const obtenerAlumnosConGrupos = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => 
   {
     try
     {
@@ -200,6 +198,39 @@ export const obtenerAlumnos = async (curso, etapa, grupo, toastMessage, toastCol
           'curso': cursoInt,
           'etapa': etapa,
           'grupo': grupo
+        },
+        
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al cargar alumnos');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const obtenerAlumnosSinGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      if (!curso || !etapa) {
+        throw new Error('Curso, etapa o grupo inválidos');
+      }
+      const cursoInt = parseInt(curso, 10);
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/grupos/todos_alumnos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa,
         },
         
       });
@@ -238,6 +269,34 @@ export const enviarDatos = async (curso, etapa, grupo, alumnosSeleccionados, toa
       if(!response.ok) 
       {
         throw new Error('Error al enviar alumnos');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const borrarTodosAlumnos = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/direccion/grupos/borrar_alumnos', 
+      {
+        method: 'DELETE',
+        headers: 
+        {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+        body: JSON.stringify({curso, etapa, grupo})
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al borrar el alumno');
       }
       return await response.json();
       

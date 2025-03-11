@@ -40,9 +40,9 @@ const validarCSV = (archivo) => {
     reader.onload = (event) => {
       const contenido = event.target.result;
       const lineas = contenido.split("\n");
-      const encabezados = lineas[0].split(",").map(h => h.trim()); // Obtener la primera fila
+      const encabezados = Array.of(lineas[0].split(",").map(h => h.trim())); // Obtener la primera fila
 
-      if (encabezados[0] !== "alumno") {
+      if (encabezados[0][0] !== "Alumno/a") {
         reject("El Csv no tiene el formato correcto");
         const fileUploadComponent = fileUploadRef.value;
         fileUploadComponent.fileClear();
@@ -83,7 +83,10 @@ const subirFichero = async () => {
     try {
 
       const [curso, etapa] = seleccionado.value.split('-');
-      eliminarCursosCargados(seleccionado.value);
+      if(seleccionado.value && cursosMapeados.value.includes(seleccionado.value)){
+        eliminarCursosCargados(seleccionado.value);
+        
+      }
 
       const data = await subirFicheros(file.value, curso, etapa, toastMessage, toastColor, isToastOpen);
       console.log("Fichero Cargado:", data);
@@ -96,7 +99,6 @@ const subirFichero = async () => {
       mensajeActualizacion = 'Error al cargar matrículas';
       mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      fileUploadComponent.fileClear();
     }
     seleccionado.value = "";
     const fileUploadComponent = fileUploadRef.value;
@@ -133,12 +135,12 @@ const insertarCursosCargados = async () => {
     const data = await obtenerCursosCargados(isToastOpen, toastMessage, toastColor);
     if (data===undefined){
       cursosMapeados.value = ""
+      throw console.error("No hay datos")
     }
     else {
       cursosMapeados.value = data.map(curso => `${curso.curso}-${curso.etapa}`);
       console.log(cursosMapeados.value);
     }
-    console.log("No hay cursos con matriculas para cargar.")
   } catch (error) {
     console.error('Error al insertar cursos cargados:', error);
   }
@@ -181,7 +183,7 @@ onMounted(async () => {
         <div class="section">
           <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
           <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
-          <button @click="subirFichero" ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
+          <button @click="subirFichero(); $event.target.blur()"  ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
         </div>
         <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
         @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
