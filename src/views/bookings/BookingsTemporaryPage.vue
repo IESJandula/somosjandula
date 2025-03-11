@@ -30,8 +30,6 @@
         v-if="!deshabilitarSemanaSiguiente()">Semana Siguiente</button>
     </div>
 
-    <div> {{ semana }} </div>
-
     <!-- Tabla con horarios y reservas -->
     <table class="tabla-container" v-if="mostrarTabla">
       <thead>
@@ -56,7 +54,7 @@
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual) && !reservas[tramo.id][dia.id].esfija"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
                 </div>
@@ -284,7 +282,7 @@ const decrementarSemana = () => {
 
 const incrementarSemana = () => {
   semana.value = parseInt(semana.value) + 1;
-  if (semana.value > getWeek(new Date(new Date().getFullYear(), 11, 31 - 7)) ) {
+  if (semana.value > getWeek(new Date(new Date().getFullYear(), 11, 31 - 7))) {
     semana.value = 1;
   }
   incrementarFecha();
@@ -611,7 +609,7 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
 
     // Llamar a la API para cancelar la reserva
     if (rolesUsuario.value.includes('ADMINISTRADOR')) {
-      if (esFija) {
+      if (!esFija) {
         await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
       }
       else {
