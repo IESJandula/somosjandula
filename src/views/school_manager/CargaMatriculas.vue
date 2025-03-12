@@ -132,7 +132,7 @@ const actualizarSelect = () => {
 
 const insertarCursosCargados = async () => {
   try {
-    const data = await obtenerCursosCargados(isToastOpen, toastMessage, toastColor);
+    const data = await obtenerCursosCargados(isToastOpen, toastMessage, toastColor) || [];
     if (data===undefined){
       cursosMapeados.value = ""
       throw console.error("No hay datos")

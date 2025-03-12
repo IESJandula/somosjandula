@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
+import * as data from "ionicons/icons";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const grupoSeleccionado = ref('');
@@ -29,7 +30,6 @@ const actualizarSelect = (parametro) => {
 
 const actualizarGrupo = (parametro) => {
     grupoSeleccionado.value = parametro;
-    listadoAlumnosSeleccionados.value = [];
 
 };
 
@@ -65,7 +65,15 @@ const obtenerAlumno = async () => {
   try {
       const { curso, etapa } = filtroSeleccionado.value;
 
-      listadoAlumnosSinGrupo.value = await obtenerAlumnosSinGrupos(curso,etapa,toastMessage, toastColor, isToastOpen);
+      const data = await obtenerAlumnosSinGrupos(curso,etapa,toastMessage, toastColor, isToastOpen) || [];
+
+
+
+
+    listadoAlumnosSinGrupo.value = data.filter(function (el) {
+          return el.asignado === false;
+        })
+    console.log(listadoAlumnosSinGrupo)
 
       alumnosPorGrupo.value = {}; //HAY QUE LIMPIAR PRIMERO, SI NO SE DUPLICAN
       for (const grupo of grupos.value) {
@@ -77,6 +85,7 @@ const obtenerAlumno = async () => {
         // Guardamos ese array bajo la clave del grupo
         alumnosPorGrupo.value[grupo] = alumnosDeEseGrupo;
     }
+
   }
   catch (error) {
       console.error('Error al cargar alumnos', error);
@@ -188,10 +197,14 @@ onMounted(async () => {
         </span>
       <ul class="listaAlumnos">
         <li v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
+
         <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1">
+          <label>
           <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
           {{ alumno.nombre }} {{ alumno.apellidos }}
+          </label>
         </li>
+
       </ul>
       <button @click="crearNuevoGrupo(filtroSeleccionado.curso, filtroSeleccionado.etapa)" class="btn">Crea grupo</button>
 
@@ -260,6 +273,9 @@ align-items: center;
   justify-content: flex-start;
   overflow: auto;
     height: 380px;
+}
+label:hover{
+  color: #3B82F6;
 }
 .m-1 {
   font-size: 20px;
