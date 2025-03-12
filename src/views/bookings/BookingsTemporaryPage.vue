@@ -53,7 +53,7 @@
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
                   <button
                     v-if="rolesUsuario.includes('ADMINISTRADOR') ||
-                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual) && !reservas[tramo.id][dia.id].esfija"
+                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual) && reservas[tramo.id][dia.id].esfija"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
@@ -654,7 +654,7 @@ const comprobarDisponibilidad = async () => {
       semanas.value.push(i);  // Se agrega la semana al array
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
-    semanas = ref([]); // Se reinicia el array 
+    semanas.value = ref([]); // Se reinicia el array 
   }
   disponibleSemanal.value = data.value;
 }
