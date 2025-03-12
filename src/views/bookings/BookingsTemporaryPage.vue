@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-dupe-v-else-if -->
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <h1 class="titulo-pagina">Reservas Temporales</h1>
@@ -51,11 +52,14 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
-                  <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') && reservas[tramo.id][dia.id].esfija ||
-  (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual && !reservas[tramo.id][dia.id].esfija[index])"
+                  <button v-if="rolesUsuario.includes('ADMINISTRADOR') && reservas[tramo.id][dia.id].esfija[index]"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
+                  </button>
+                  <button
+                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    Borrado Periódico
                   </button>
                 </div>
               </template>
@@ -149,7 +153,27 @@
         <button @click="closeModal">Cerrar</button>
       </div>
     </div>
+
+    <!-- Modal de confirmación para borrar reservas -->
+    <div v-if="isDeleteModalOpen" class="modal-overlay">
+      <div class="modal-content">
+        <h2>¿Estás seguro de borrar la / las reservas?</h2>
+
+        <label for="deleteOption">Selecciona una opción:</label>
+        <select class="custom-select-modal" v-model="deleteOption">
+          <option value="" default>Esta Reserva</option>
+          <option value="Semanal">Reservas Semanales</option>
+        </select>
+
+        <div class="button-container">
+          <button @click="confirmDelete">Aceptar</button>
+          <button @click="closeDeleteModal">Cancelar</button>
+        </div>
+      </div>
+    </div>
   </div>
+
+
 
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
@@ -213,6 +237,21 @@ const day = ref('');
 const month = ref('');
 const preCargaSemana = ref('');
 const fechaLimite = ref('');
+
+// Variables para el modal de confirmación de borrado
+const isDeleteModalOpen = ref(false);
+const deleteOption = ref('');
+const reservaParaBorrar = ref(null);
+
+const openDeleteModal = (tramo, dia, recurso, email) => {
+  reservaParaBorrar.value = { tramo, dia, recurso, email };
+  isDeleteModalOpen.value = true;
+};
+
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false;
+  reservaParaBorrar.value = null;
+};
 
 // Obtener el año actual
 const currentDate = new Date();
