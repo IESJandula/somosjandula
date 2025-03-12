@@ -28,7 +28,7 @@ const comprobarBoton = () => {
   } else {
     boton.style.color = "#000000";
     boton.style.backgroundColor = "#7fa9f4";
-    buttonText.value = "No puedes enviar";
+    buttonText.value = "Rellenar campos para enviar";
     boton.disabled = true;
   }
 }
@@ -216,7 +216,7 @@ onMounted(async () => {
   text-align: center;
 }
 .m-3{
-  font-size: 22px;
+  font-size: 1.2rem;
   text-align: center;
 }
 
@@ -229,7 +229,7 @@ onMounted(async () => {
 }
 .m-1 {
   margin-bottom: 1rem;
-  font-size: 20px;
+  font-size: 1.2rem;
   text-align: center;
 }
 .p-2{
@@ -243,7 +243,7 @@ onMounted(async () => {
   border-radius: 0.375rem; 
   background-color: #4782eb;
   color: #FFFFFF;
-  font-size: 17px;
+  font-size: 1.2rem;
 }
 .btn:disabled {
   background-color: #484848;
@@ -251,7 +251,7 @@ onMounted(async () => {
 }
 .eliminar {
   color: #EF4444;
-  font-size: 28px; /* <-- Reducir tamaño */
+  font-size: 2rem; /* <-- Reducir tamaño */
   background-color: transparent;
   line-height: 1; /* <-- Ajuste para evitar desbordamiento */
   border: none;
@@ -333,8 +333,9 @@ table{
   .card-upload-csv,
   .card-upload-table {
     flex: 1 1 100%;
-    min-width: 500px;
+    min-width: 350px;
     min-height: 100%;
+    margin-right: 5px;
   }
 }
 /* Modo oscuro */

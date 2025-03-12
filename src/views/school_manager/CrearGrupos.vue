@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, enviarDatos, borrarAlumnos } from '@/services/schoolManager.js'
+import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
@@ -96,7 +96,7 @@ const enviarDato = async () => {
       }
         const cursoInt = parseInt(curso);
 
-        await enviarDatos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
+        await asignarAlumnos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
       listadoAlumnosSinGrupo.value = listadoAlumnosSinGrupo.value.filter(
           (al) => !listadoAlumnosSeleccionados.value.includes(al)
       );

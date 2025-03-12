@@ -19,7 +19,7 @@ export declare function obtenerGrupos(toastMessage: Ref<string>,
 export declare function obtenerAlumnos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function enviarDatos(toastMessage: Ref<string>,
+export declare function asignarAlumnos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 export declare function borrarTodosoAlumnos(toastMessage: Ref<string>,
