@@ -52,8 +52,8 @@
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
-                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual) && reservas[tramo.id][dia.id].esfija"
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') && reservas[tramo.id][dia.id].esfija ||
+  (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual && !reservas[tramo.id][dia.id].esfija[index])"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
