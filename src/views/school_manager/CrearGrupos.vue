@@ -66,6 +66,7 @@ const obtenerAlumno = async () => {
       const { curso, etapa } = filtroSeleccionado.value;
 
       listadoAlumnosSinGrupo.value = await obtenerAlumnosSinGrupos(curso,etapa,toastMessage, toastColor, isToastOpen);
+
       alumnosPorGrupo.value = {}; //HAY QUE LIMPIAR PRIMERO, SI NO SE DUPLICAN
       for (const grupo of grupos.value) {
 
@@ -132,6 +133,11 @@ const borrarAlumno = async (alumno, grupo) => {
 
     // Agregarlo a la lista de alumnos sin grupo
     listadoAlumnosSinGrupo.value.push(alumno);
+    listadoAlumnosSinGrupo.value.sort((a, b) => { //Primero filtra por nombre y después por apellido
+      const cmpNombre = a.nombre.localeCompare(b.nombre);
+      if (cmpNombre !== 0) return cmpNombre;
+      return a.apellidos.localeCompare(b.apellidos);
+    });
   } catch (error) {
     errorMensaje.value = "Error al borrar el alumno.";
   }
@@ -144,6 +150,11 @@ const limpiarGrupo = async (grupo) => {
       await borrarAlumnos(alumno, toastMessage, toastColor, isToastOpen);
 
       listadoAlumnosSinGrupo.value.push(alumno);
+      listadoAlumnosSinGrupo.value.sort((a, b) => { //Primero filtra por nombre y después por apellido
+        const cmpNombre = a.nombre.localeCompare(b.nombre);
+        if (cmpNombre !== 0) return cmpNombre;
+        return a.apellidos.localeCompare(b.apellidos);
+      });
     }
 
     alumnosPorGrupo.value[grupo] = [];
@@ -151,6 +162,14 @@ const limpiarGrupo = async (grupo) => {
   } catch (error) {
     console.error("Error al limpiar grupo:", error);
   }
+};
+
+const seleccionarTodo = () => {
+  listadoAlumnosSeleccionados.value = [...listadoAlumnosSinGrupo.value];
+};
+
+const deseleccionarTodo = () => {
+  listadoAlumnosSeleccionados.value = [];
 };
 
 onMounted(async () => {
@@ -163,6 +182,10 @@ onMounted(async () => {
   <div class="top-section">
     <div class="card-upload-alumnos">
       <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
+      <span style="display: flex; gap: 10px;">
+      <button @click="seleccionarTodo" class="btn">Seleccionar todo</button>
+      <button @click="deseleccionarTodo" class="btn">Quitar todo</button>
+        </span>
       <ul class="listaAlumnos">
         <li v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
         <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1">
@@ -289,7 +312,8 @@ align-items: center;
   width: 100%;
   border-collapse: collapse;
   min-width: 500px;
-  overflow: scroll; 
+  overflow: scroll;
+  text-align: center;
 }
 .blue {
   background-color: #3B82F6; 
@@ -304,15 +328,18 @@ align-items: center;
 }
 
 .eliminar {
+  display: block;
+  margin: auto;
   color: #EF4444;
-  font-size: 24px; 
+  font-size: 24px;
   background-color: transparent;
-  line-height: 1; 
+  line-height: 1;
   border: none;
 }
 .eliminarGrupo {
   color: #EF4444;
   font-size: 15px;
+  text-decoration: underline;
   background-color: transparent;
   line-height: 1; 
   border: none;
