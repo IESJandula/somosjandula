@@ -192,10 +192,7 @@ const getCantMax = async () => {
     toastMessage,
     toastColor
   );
-  recursosCantidadMaxima.value = data
-
-  console.log(recursosCantidadMaxima.value);
-
+  recursosCantidadMaxima.value = data;
 }
 
 // Función para actualizar la constante seleccionada
