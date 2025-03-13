@@ -422,7 +422,7 @@ const verificarConstantes = async () => {
   try {
     constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas temporales');
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas puntuales');
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
