@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue';
+import {computed, ref, watch} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { cargarAsignaturas, crearBloques, eliminarBloques } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
@@ -13,12 +13,21 @@ const errorMensaje = ref("");
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
+const asignaturaEnDropdown = ref(null);
+const horasDeAsignaturaEnDropdown = ref(0);
 
 const actualizarSelect = (seleccionado) => {
     filtroSeleccionado.value = seleccionado;
     console.log("Filtro actualizado:", seleccionado);
 };
 
+const mostrarHorasAsignatura = () => {
+  if (asignaturaEnDropdown.value && asignaturaEnDropdown.value.horas !== undefined) {
+    horasDeAsignaturaEnDropdown.value = asignaturaEnDropdown.value.horas;
+  } else {
+    horasDeAsignaturaEnDropdown.value = 0;
+  }
+};
 const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturas.value = [];
@@ -47,6 +56,18 @@ const cargarAsignatura = async () => {
     loading.value = false;
   }
 };
+
+const asignaturasDropdown = computed(() => {
+  const seen = new Set();
+  return asignaturas.value.filter(item => {
+    if (seen.has(item.nombre)) {
+      return false;
+    } else {
+      seen.add(item.nombre);
+      return true;
+    }
+  });
+});
 
 const crearBloque = async () => {
   if (asignaturasSeleccionadas.value.length < 2) {
@@ -106,13 +127,18 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
     <h1 class="m-4">Validación de asignaturas y bloques</h1>
     <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1"/>
 
-    <div class="m-6">
-      <div v-if="errorMensaje" class="mensejeError">{{ errorMensaje }}</div>
-      <div v-if="loading" class="cargar">Cargando datos...</div>
+    <!-- Tarjeta que contiene la tabla de asignaturas -->
+    <ion-card class="m-6">
+      <ion-card-header>
+        <ion-card-title>Tabla de Asignaturas</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div v-if="errorMensaje" class="mensejeError">{{ errorMensaje }}</div>
+        <div v-if="loading" class="cargar">Cargando datos...</div>
 
-      <div v-if="asignaturas.length > 0 && !loading">
-        <table class="table">
-          <thead>
+        <div v-if="asignaturas.length > 0 && !loading">
+          <table class="table">
+            <thead>
             <tr class="bg-gray-200">
               <th class="th"></th>
               <th class="th">Nombre</th>
@@ -121,11 +147,12 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
               <th v-for="grupo in columnasGrupos" :key="grupo" class="th">Grupo {{ grupo }}</th>
               <th class="th">Bloque</th>
             </tr>
-          </thead>
-          <tbody>
+            </thead>
+            <tbody>
             <tr v-for="asignatura in asignaturas" :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`">
               <td class="p-4">
-                <input type="checkbox" :disabled="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null" v-model="asignaturasSeleccionadas" :value="asignatura" />
+                <input type="checkbox" :disabled="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null"
+                       v-model="asignaturasSeleccionadas" :value="asignatura" />
               </td>
               <td class="th">{{ asignatura.nombre }}</td>
               <td class="th">{{ asignatura.grupo }}</td>
@@ -139,19 +166,78 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
                 <div v-else style="color: #cbd5e0;">Sin bloque</div>
               </td>
             </tr>
+            </tbody>
+          </table>
+          <button @click="crearBloque" :disabled="asignaturasSeleccionadas.length < 2 || loading">
+            {{ loading ? "Procesando..." : "Crear Bloque" }}
+          </button>
+        </div>
+
+        <div v-else-if="!loading" class="m-7">
+          <p style="color: #6b7280;">No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Tarjeta para modificar el número de horas de una asignatura -->
+    <ion-card class="m-6">
+      <ion-card-header>
+        <ion-card-title>Modificar Horas de Asignatura</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label>Asignatura</ion-label>
+          <ion-select
+              v-model="selectedAsignatura"
+              placeholder="Selecciona una asignatura"
+              @ion-change="mostrarHorasAsignatura">
+
+            <ion-select-option
+                v-for="item in asignaturasDropdown"
+                :key="item.nombre"
+                :value="item">
+              {{ item.nombre }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <table class="table">
+          <thead>
+          <tr>
+            <th class="th">Horas</th>
+            <th class="th">Acciones</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td class="p-4">
+              <ion-input
+                  type="number"
+                  v-model.number="horasDeAsignaturaEnDropdown"
+                  min="1"
+                  max="50"
+                  step="1"
+                  @ionChange="validateHorasInput">
+              </ion-input>
+            </td>
+            <td class="p-4">
+              <ion-button @click="guardarHoras">Guardar</ion-button>
+            </td>
+          </tr>
           </tbody>
         </table>
-        <button @click="crearBloque" :disabled="asignaturasSeleccionadas.length < 2 || loading">
-          {{ loading ? "Procesando..." : "Crear Bloque" }}
-        </button>
-      </div>
+        <ion-button @click="guardarTodasHoras">Guardar todo</ion-button>
+      </ion-card-content>
+    </ion-card>
 
-      <div v-else-if="!loading" class="m-7">
-        <p style="color: #6b7280;">No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
-      </div>
-    </div>
-    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+    <ion-toast
+        :is-open="isToastOpen"
+        :message="toastMessage"
+        :color="toastColor"
+        duration="2000"
+        @did-dismiss="() => (isToastOpen = false)"
+        position="top">
+    </ion-toast>
   </div>
 </template>
 

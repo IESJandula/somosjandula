@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
-import * as data from "ionicons/icons";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const grupoSeleccionado = ref('');
