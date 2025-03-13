@@ -14,6 +14,7 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
+import Formulario from '../views/issues/Formulario.vue';
 
 const routes = [
   {
@@ -108,6 +109,14 @@ const routes = [
         path: 'documents/itIssues',
         component: ITIssuesPage,
         name: 'DocumentsITIssuesPage',
+        meta: { 
+          role: 'PROFESOR' 
+        },
+      },
+      {
+        path: 'issues/formulario',
+        component: Formulario,
+        name: 'FormularioPage',
         meta: { 
           role: 'PROFESOR' 
         },
