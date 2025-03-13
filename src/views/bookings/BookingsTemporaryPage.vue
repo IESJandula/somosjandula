@@ -128,7 +128,6 @@
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))"
           @change="comprobarDisponibilidad()" />
         <label>Opciones de Repetición:</label>
-
         <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
           <option value="" selected>Ninguna</option>
           <option value="Semanal">Semanal</option>
@@ -279,8 +278,9 @@ const actualizarSemana = (event) => {
   event.stopPropagation();
   fechaSeleccionada.value = new Date(event.target.value);
   fechaActual.value = fechaSeleccionada.value.toISOString().slice(0, 10);
-  semana.value = getWeek(fechaSeleccionada);
-  mes.value = getMonth(fechaSeleccionada);
+  
+  semana.value = getWeek(fechaSeleccionada.value);
+  mes.value = getMonth(fechaSeleccionada.value);
   validarFecha(); // Añadir validación de fecha
   getReserva();
   incrementarFecha();
