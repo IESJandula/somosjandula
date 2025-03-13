@@ -349,7 +349,7 @@ export const getReservasTemporary = async (toastMessage, toastColor, isToastOpen
   }
 }
 
-export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, numSemana) =>
+export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, numSemana, esSemanal) =>
   {
   try
   {
@@ -365,6 +365,7 @@ export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOp
           diaDeLaSemana: diaDeLaSemana,
           tramoHorario: tramoHorario,
           numSemana: numSemana,
+          esSemanal: esSemanal
         },
       })
 

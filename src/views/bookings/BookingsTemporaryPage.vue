@@ -58,7 +58,7 @@
                   </button>
                   <button
                     v-else-if="rolesUsuario.includes('ADMINISTRADOR') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
-                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
                     Borrado Periódico
                   </button>
                 </div>
@@ -166,7 +166,7 @@
         </select>
 
         <div class="button-container">
-          <button @click="confirmDelete">Aceptar</button>
+          <button @click="confirmacionBorrado()">Aceptar</button>
           <button @click="closeDeleteModal">Cancelar</button>
         </div>
       </div>
@@ -230,7 +230,7 @@ const fechaSeleccionada = ref('')
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
-const semanas = ref([])
+let semanas = [];
 const semanaLimite = ref('');
 const mes = ref('');
 const day = ref('');
@@ -243,14 +243,15 @@ const isDeleteModalOpen = ref(false);
 const deleteOption = ref('');
 const reservaParaBorrar = ref(null);
 
-const openDeleteModal = (tramo, dia, recurso, email) => {
-  reservaParaBorrar.value = { tramo, dia, recurso, email };
+const openDeleteModal = (tramo, dia, recurso, email, fija, semana) => {
+  reservaParaBorrar.value = { tramo, dia, recurso, email, fija, semana };
   isDeleteModalOpen.value = true;
 };
 
 const closeDeleteModal = () => {
   isDeleteModalOpen.value = false;
   reservaParaBorrar.value = null;
+  getReserva();
 };
 
 // Obtener el año actual
@@ -287,6 +288,18 @@ const actualizarSemana = (event) => {
 
 const resetearSemana = () => {
   semana.value = getWeek(fechaActual.value);
+}
+
+const confirmacionBorrado = async () => {
+
+  if (deleteOption.value == "Semanal") {
+    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, true);
+    closeDeleteModal();
+  }
+  else {
+    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, false);
+    closeDeleteModal();
+  }
 }
 
 const deshabilitarSemanaAnterior = () => {
@@ -689,11 +702,11 @@ const comprobarDisponibilidad = async () => {
   // Array para almacenar las semanas
 
   if (opcionRepeticion.value == 'Semanal') {
-    for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {
-      semanas.value.push(i);  // Se agrega la semana al array
+    for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {      
+      semanas.push(i);  // Se agrega la semana al array
     }
-    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas.value);
-    semanas.value = ref([]); // Se reinicia el array 
+    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
+    semanas = []; // Se reinicia el array 
   }
   disponibleSemanal.value = data.value;
 }
