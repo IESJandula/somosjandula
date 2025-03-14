@@ -44,7 +44,8 @@
       <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
@@ -52,7 +53,8 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
-                  <button v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
+                  <button
+                    v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
@@ -70,7 +72,8 @@
       <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
@@ -113,9 +116,10 @@
       <div class="modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" class="custom-select-modal" v-model="profesorSeleccionado"
-          @change="comprobarDisponibilidad()">
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          class="custom-select-modal" v-model="profesorSeleccionado" @change="comprobarDisponibilidad()">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -278,7 +282,7 @@ const actualizarSemana = (event) => {
   event.stopPropagation();
   fechaSeleccionada.value = new Date(event.target.value);
   fechaActual.value = fechaSeleccionada.value.toISOString().slice(0, 10);
-  
+
   semana.value = getWeek(fechaSeleccionada.value);
   mes.value = getMonth(fechaSeleccionada.value);
   validarFecha(); // Añadir validación de fecha
@@ -438,7 +442,14 @@ const obtenerEmailUsuarioActual = async () => {
 };
 
 // Función para abrir el modal
-const openModal = (tramo, dia) => {
+const openModal = (tramo, dia, email) => {
+
+  if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
+    if (email.includes(emailUsuarioActual.value)) {
+      closeModal();
+      return;
+    }
+  }
 
   if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
@@ -446,7 +457,7 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    verificarConstantes()    
+    verificarConstantes()
     getReserva()
   }
   else {
@@ -703,7 +714,7 @@ const comprobarDisponibilidad = async () => {
   // Array para almacenar las semanas
 
   if (opcionRepeticion.value == 'Semanal') {
-    for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {      
+    for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {
       semanas.push(i);  // Se agrega la semana al array
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
