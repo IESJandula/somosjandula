@@ -1,40 +1,8 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="form-wrapper">
+    <!-- Gestión de Recursos (Arriba) -->
     <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Actualizar Constantes</h1>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Clave de la constante:</ion-label>
-            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
-                {{ constante.clave }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item v-if="selectedConstante">
-            <ion-label position="stacked">Valor:</ion-label>
-            <ion-input v-model="selectedConstante.valor"></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
-            Actualizar
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
-    <div class="form-container">
-      <ion-row v-if="mensajeActualizacion"> </ion-row>
       <div class="title-container">
         <h1 class="title">Gestión de Recursos</h1>
       </div>
@@ -61,8 +29,7 @@
               <input type="checkbox" v-model="esCompartibleGestion" />
               <span class="slider"></span>
             </label>
-            <span>Compartido
-            </span>
+            <span>Compartido</span>
           </div>
         </ion-col>
       </ion-row>
@@ -76,8 +43,8 @@
         </ion-col>
       </ion-row>
     </div>
-  </div>
-  <div class="form-wrapper">
+
+    <!-- Lista de Recursos (Arriba) -->
     <div class="form-container-table">
       <div class="title-container">
         <h1 class="title">Lista de Recursos</h1>
@@ -88,8 +55,7 @@
           <input type="checkbox" v-model="esCompartibleLista" @change="switchRecurso" />
           <span class="slider"></span>
         </label>
-        <span>Compartido
-        </span>
+        <span>Compartido</span>
       </div>
       <ion-row>
         <ion-col size="12">
@@ -127,6 +93,42 @@
           <ion-col v-else size="12">
             <ion-label>No hay recursos disponibles.</ion-label>
           </ion-col>
+        </ion-col>
+      </ion-row>
+    </div>
+  </div>
+
+  <!-- Actualizar Constantes (Debajo) -->
+  <div class="form-wrapper">
+    <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Actualizar Constantes</h1>
+      </div>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Clave de la constante:</ion-label>
+            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
+              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
+                {{ constante.clave }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item v-if="selectedConstante">
+            <ion-label position="stacked">Valor:</ion-label>
+            <ion-input v-model="selectedConstante.valor"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
+            Actualizar
+          </ion-button>
         </ion-col>
       </ion-row>
     </div>
