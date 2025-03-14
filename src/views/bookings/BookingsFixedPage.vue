@@ -34,7 +34,7 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
                     Borrar
@@ -45,7 +45,7 @@
           </td>
         </tr>
       </tbody>
-      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR')">
+      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
@@ -56,7 +56,7 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
                     Borrar
@@ -91,8 +91,8 @@
       <div class="modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal"
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR')|| rolesUsuario.includes('DIRECCION')" class="custom-select-modal"
           v-model="profesorSeleccionado">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
@@ -114,7 +114,7 @@
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR')"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION')"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -203,8 +203,8 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    getReserva()
     verificarConstantes()
+    getReserva()
   }
   else {
     currentTramo.value = tramo
@@ -212,8 +212,8 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    getReserva()
     verificarConstantes()
+    getReserva()
   }
 
 }
@@ -277,7 +277,7 @@ const saveChanges = async () => {
       nalumnos: alumnos,
     };
 
-    if (valorConstante.value != '' && !rolesUsuario.value.includes('ADMINISTRADOR')) {
+    if (valorConstante.value != '' && !rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION')) {
       mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
       mensajeColor = 'danger';
     }

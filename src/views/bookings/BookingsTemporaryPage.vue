@@ -52,12 +52,12 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
-                  <button v-if="rolesUsuario.includes('ADMINISTRADOR') && reservas[tramo.id][dia.id].esfija[index]"
+                  <button v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
                   <button
-                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
                     @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
                     Borrado Periódico
                   </button>
@@ -67,7 +67,7 @@
           </td>
         </tr>
       </tbody>
-      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR')">
+      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
@@ -78,7 +78,7 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
@@ -113,8 +113,8 @@
       <div class="modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal" v-model="profesorSeleccionado"
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" class="custom-select-modal" v-model="profesorSeleccionado"
           @change="comprobarDisponibilidad()">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
@@ -147,7 +147,7 @@
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -446,8 +446,8 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
+    verificarConstantes()    
     getReserva()
-    verificarConstantes()
   }
   else {
     currentTramo.value = tramo
@@ -455,8 +455,8 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    getReserva()
     verificarConstantes()
+    getReserva()
   }
 
 }
@@ -635,7 +635,7 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
-    if (rolesUsuario.value.includes('ADMINISTRADOR')) {
+    if (rolesUsuario.value.includes('ADMINISTRADOR') || rolesUsuario.value.includes('DIRECCION')) {
       if (!esFija) {
         await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
       }
