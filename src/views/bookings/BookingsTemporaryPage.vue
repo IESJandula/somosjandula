@@ -229,6 +229,7 @@ const disponibleSemanal = ref(false);
 
 //Variables de Fecha
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
+const reseteoFecha = ref('');
 const fechaSeleccionada = ref('')
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
@@ -291,7 +292,7 @@ const actualizarSemana = (event) => {
 }
 
 const resetearSemana = () => {
-  semana.value = getWeek(fechaActual.value);
+  semana.value = reseteoFecha.value;
 }
 
 const confirmacionBorrado = async () => {
@@ -331,6 +332,7 @@ const fechaModal = (event) => {
 const decrementarSemana = () => {
 
   semana.value = parseInt(semana.value) - 1;
+  reseteoFecha.value = semana.value;
 
   if (semana.value < 1) {
     semana.value = getWeek(new Date(new Date().getFullYear() - 1, 11, 31 - 7));
@@ -342,6 +344,9 @@ const decrementarSemana = () => {
 
 const incrementarSemana = () => {
   semana.value = parseInt(semana.value) + 1;
+
+  reseteoFecha.value = semana.value;
+
   if (semana.value > getWeek(new Date(new Date().getFullYear(), 11, 31 - 7))) {
     semana.value = 1;
   }
