@@ -20,7 +20,7 @@
       </option>
     </select>
 
-    <div class="incidence-message" v-if="recursoSeleccionadoCompartible">
+    <div class="incidence-message">
       {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
     </div>
 
@@ -185,6 +185,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
+import { useRouter } from 'vue-router';
 import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
@@ -450,7 +451,7 @@ const obtenerEmailUsuarioActual = async () => {
 const openModal = (tramo, dia, email) => {
 
   if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
-    if (email.includes(emailUsuarioActual.value)) {
+    if (email !== undefined && email.includes(emailUsuarioActual.value)) {
       closeModal();
       return;
     }
@@ -501,7 +502,7 @@ const saveChanges = async () => {
   }
 
   try {
-    mensajeActualizacion = 'Reserva guardada exitosamente';
+    mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
 
     // Normalizar número de alumnos
@@ -662,7 +663,7 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
     else {
       await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
     }
-    mensajeActualizacion = 'Reserva cancelada exitosamente'
+    mensajeActualizacion = 'Reserva cancelada correctamente'
     mensajeColor = 'success'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
@@ -685,16 +686,19 @@ watch(recursoSeleccionado, () => {
 
   if (recursoSeleccionadoCompartible.value) {
     mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
-    mensajeIncidencia = '¿Encontraste algun problema en el aula o necesitas mas recursos? Crea una incidencia '
+    mensajeIncidencia = '¿Encontraste algun problema en el aula o necesitas más recursos? Crea una incidencia '
 
   }
   else {
     mensajeInformativo = ''
-    mensajeIncidencia = '¿Encontraste algun problema en el aula? Crea una incidencia '
+    mensajeIncidencia = '¿Encontraste algún problema en el aula? Crea una incidencia '
   }
   getReserva();
 });
-
+const router = useRouter();
+const navigateToIssues = () => {
+  router.push({ path: '/documents/itIssues' });
+};
 
 const cargarDatos = async () => {
   users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
