@@ -26,7 +26,8 @@
       <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
@@ -195,8 +196,12 @@ const obtenerEmailUsuarioActual = async () => {
 };
 
 // Función para abrir el modal
-const openModal = (tramo, dia) => {
-
+const openModal = (tramo, dia, email) => {
+  
+  if (email.includes(emailUsuarioActual.value)) {
+    closeModal();
+    return;
+  }
   if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
     currentDia.value = dia
@@ -215,7 +220,6 @@ const openModal = (tramo, dia) => {
     verificarConstantes()
     getReserva()
   }
-
 }
 
 // Función para cerrar el modal
