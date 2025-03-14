@@ -377,7 +377,7 @@ const eliminarRecurso = async (recurso, event) => {
     if (recursoEliminar.includes(recurso)) {
       mensajeColor = "danger";
       mensajeActualizacion =
-        "No es posible eliminar un recurso asignado a una reserva";
+        "Como existen reservas asignadas a este recurso, no es posible borrarlo";
       crearToast(
         toastMessage,
         toastColor,
