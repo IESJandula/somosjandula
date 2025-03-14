@@ -11,7 +11,7 @@
         {{ recurso.recursos }} (Máximo permitido: {{ recurso.cantidad }})
       </option>
     </select>
-    <div class="incidence-message" v-if="recursoSeleccionadoCompartible">
+    <div class="incidence-message">
       {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
     </div>
 
@@ -415,7 +415,7 @@ watch(recursoSeleccionado, () => {
   }
   else {
     mensajeInformativo = ''
-    mensajeIncidencia = ''
+    mensajeIncidencia = '¿Encontraste algun problema en el aula? Crea una incidencia '
   }
   getReserva();
 });
