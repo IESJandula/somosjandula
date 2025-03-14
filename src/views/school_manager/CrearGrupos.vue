@@ -199,8 +199,8 @@ onMounted(async () => {
 
         <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1">
           <label>
-          <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
-          {{ alumno.nombre }} {{ alumno.apellidos }}
+            <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
+            {{ alumno.nombre }} {{ alumno.apellidos }}
           </label>
         </li>
 
@@ -215,9 +215,12 @@ onMounted(async () => {
       <button @click="enviarDato" class="btn">Añadir alumnos</button>
     </div>
     <div class="card-upload-table">
+      <div class="espacio">a
+      </div>
       <div  v-for="grupo in grupos" :key="grupo">
           <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ grupo }}
             <button class="eliminarGrupo" @click="limpiarGrupo(grupo)"> Limpiar grupo</button></h1>
+        <div class="scroll-wrapper">
           <table v-if="alumnosPorGrupo[grupo] && alumnosPorGrupo[grupo].length > 0" class="tablaAlumnos">
             <thead>
               <tr class="blue">
@@ -233,8 +236,12 @@ onMounted(async () => {
                 <td class="th">{{ alumno.apellidos }}</td>
               </tr>
             </tbody>
+
           </table>
+
           <p v-else>No hay alumnos en este grupo.</p>
+
+        </div>
       </div>
     </div>
     <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
@@ -258,11 +265,10 @@ flex-direction: column;
 align-items: center;
 }
 .card-upload-table {
-  width: 65%;
   flex: 1 1 30%;
   min-width: 300px;
-  max-width: 30%;
-  min-height: 100%;
+  max-width: 33%;
+  min-height: 455px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -270,8 +276,11 @@ align-items: center;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
     height: 380px;
+
+
 }
 label:hover{
   color: #3B82F6;
@@ -321,13 +330,13 @@ label:hover{
   min-width: 300px;
 }
 .tablaAlumnos {
-  table-layout: auto;
-  border: 1px solid;
-  max-width: 100%;
-  width: 100%;
+  display: table; /* o block, pero evita inline-block si no quieres ese “cuadro” */
   border-collapse: collapse;
-  min-width: 500px;
-  overflow: scroll;
+  border: 1px solid;
+  width: auto;         /* o min-width, según necesites */
+  min-width: 500px;    /* para forzar scroll si el contenedor es pequeño */
+  /* Quita margin-right si lo tenías, ya no hace falta */
+  margin-left: 10%;
   text-align: center;
 }
 .blue {
@@ -369,25 +378,32 @@ label:hover{
   gap: 20px; 
   max-width: 100%;
 }
-
-/* Contenedor principal */
-.contenido {
-  display: flex; 
-  flex-direction: row; 
-  gap: 15rem; 
-  justify-content: center; 
-  align-items: flex-start; 
-  width: 80%;
-  max-width: 500px;
+.espacio{
+  color: var(--form-bg-light);
 }
 
-/* Columnas */
-.columna {
-  flex: 1; 
-  max-width: 100%; 
-  display: flex;
-  flex-direction: column; 
+/* Media queries para hacer que la tarjeta sea más responsive */
+@media (max-width: 1080px) {
+  .top-section {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card-upload-alumnos,
+  .card-upload-table {
+    flex: 1 1 100%;
+    min-width: 350px;
+    min-height: 100%;
+  }
+
+  .espacio{
+    color: var(--form-bg-light);
+    margin-left: 184%;
+    margin-top: -30px;
+  }
+
 }
+
 /* Media queries para hacer que la tarjeta sea más responsive */
 @media (max-width: 768px) {
   .top-section {
@@ -398,11 +414,18 @@ label:hover{
   .card-upload-alumnos,
   .card-upload-table {
     flex: 1 1 100%;
-    max-width: 100%;
-    min-width: 500px;
+    min-width: 350px;
     min-height: 100%;
   }
+
+  .espacio{
+    color: var(--form-bg-light);
+    margin-left: 184%;
+    margin-top: -30px;
+  }
+
 }
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   .card-upload-alumnos {
@@ -415,5 +438,6 @@ label:hover{
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
   }
+
 }
 </style>
