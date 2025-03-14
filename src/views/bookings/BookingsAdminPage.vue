@@ -135,7 +135,7 @@
     <!-- Borrado Reservas -->
     <div class="form-container">
     <div class="title-container">
-      <h1 class="title">Borrar Recursos</h1>
+      <h1 class="title">Borrado de Reservas por recurso</h1>
     </div>
 
     <ion-row>
