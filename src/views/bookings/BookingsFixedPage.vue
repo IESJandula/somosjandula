@@ -92,9 +92,10 @@
       <div class="modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')|| rolesUsuario.includes('DIRECCION')" class="custom-select-modal"
-          v-model="profesorSeleccionado">
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          class="custom-select-modal" v-model="profesorSeleccionado">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -197,11 +198,14 @@ const obtenerEmailUsuarioActual = async () => {
 
 // Función para abrir el modal
 const openModal = (tramo, dia, email) => {
-  
-  if (email.includes(emailUsuarioActual.value)) {
-    closeModal();
-    return;
+
+  if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
+    if (email.includes(emailUsuarioActual.value)) {
+      closeModal();
+      return;
+    }
   }
+
   if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
     currentDia.value = dia
