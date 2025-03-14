@@ -26,7 +26,8 @@
       <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
@@ -91,9 +92,10 @@
       <div class="modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')|| rolesUsuario.includes('DIRECCION')" class="custom-select-modal"
-          v-model="profesorSeleccionado">
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          class="custom-select-modal" v-model="profesorSeleccionado">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -195,7 +197,14 @@ const obtenerEmailUsuarioActual = async () => {
 };
 
 // Función para abrir el modal
-const openModal = (tramo, dia) => {
+const openModal = (tramo, dia, email) => {
+
+  if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
+    if (email.includes(emailUsuarioActual.value)) {
+      closeModal();
+      return;
+    }
+  }
 
   if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
@@ -215,7 +224,6 @@ const openModal = (tramo, dia) => {
     verificarConstantes()
     getReserva()
   }
-
 }
 
 // Función para cerrar el modal
@@ -402,7 +410,7 @@ watch(recursoSeleccionado, () => {
 
   if (recursoSeleccionadoCompartible.value) {
     mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
-    mensajeIncidencia = '¿Necesitas más recursos? Crea una incidencia '
+    mensajeIncidencia = '¿Encontraste algun problema en el aula o necesitas mas recursos? Crea una incidencia '
   }
   else {
     mensajeInformativo = ''
