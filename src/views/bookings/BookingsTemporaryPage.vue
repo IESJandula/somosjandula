@@ -685,7 +685,7 @@ watch(recursoSeleccionado, () => {
   }
   else {
     mensajeInformativo = ''
-    mensajeIncidencia = ''
+    mensajeIncidencia = '¿Encontraste algun problema en el aula? Crea una incidencia '
   }
   getReserva();
 });

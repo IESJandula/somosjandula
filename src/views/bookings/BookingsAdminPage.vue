@@ -144,11 +144,11 @@
           <ion-label position="stacked">Seleccione el recurso a borrar:</ion-label>
           <ion-select v-model="selectedRecurso" @ionChange="onReservaChange">
             <ion-select-option
-              v-for="recurso in [...recursosCompartido, ...recursosNoCompartido]"
+              v-for="recurso in [...recursos]"
               :key="recurso.id"
               :value="recurso"
             >
-              {{ recurso.recursos }} (Cantidad: {{ recurso.cantidad }})
+              {{ recurso.recursos }}
             </ion-select-option>
           </ion-select>
         </ion-item>
@@ -157,7 +157,7 @@
 
     <ion-row>
       <ion-col size="12">
-        <ion-button expand="block" color="primary" @click="borrarRecurso">
+        <ion-button expand="block" color="primary" @click="borrarReservasRecurso">
           Borrar
         </ion-button>
       </ion-col>
@@ -186,7 +186,9 @@ import {
   getRecursosCompartible,
   deleteRecurso,
   getReservas,
-  getCantMaxResource
+  getRecursos,
+  getCantMaxResource,
+  deleteRecursoReserva
 } from "@/services/bookings";
 
 // Selección de constante
@@ -198,7 +200,7 @@ const recursosCompartido = ref([]);
 const esCompartibleLista = ref(false);
 const esCompartibleGestion = ref(false);
 const recursosCantidadMaxima = ref('');
-
+const recursos = ref([]);
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref("");
@@ -228,6 +230,19 @@ const onReservaChange = () => {
     selectedRecurso.value.valor = "";
   }
 };
+const borrarReservasRecurso = async() => 
+{
+  await deleteRecursoReserva(isToastOpen, toastMessage, toastColor, selectedRecurso.value.recursos);
+  mensajeActualizacion = "Reservas eliminadas correctamente";
+  mensajeColor = "success";
+  crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  getRecurso();
+}
+
+const getRecurso = async () => {
+  const data = await getRecursos(isToastOpen, toastMessage, toastColor);
+  recursos.value = data.map((item) => ({ recursos: item.id,}));
+}
 
 const getCantMax = async () => {
   const data = await getCantMaxResource(
@@ -474,6 +489,7 @@ const switchRecurso = async () => {
 onMounted(async () => {
   await cargarConstantes();
   await cargarRecursos();
+  await getRecurso();
   await switchRecurso();
   await getCantMaxResource();
 });
