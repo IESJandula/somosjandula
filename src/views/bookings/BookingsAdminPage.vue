@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="form-wrapper">
-    <!-- Gestión de Recursos (Arriba) -->
+    <!-- Gestión de Recursos -->
     <div class="form-container">
       <div class="title-container">
         <h1 class="title">Gestión de Recursos</h1>
@@ -43,8 +43,8 @@
         </ion-col>
       </ion-row>
     </div>
-
-    <!-- Lista de Recursos (Arriba) -->
+  
+    <!-- Lista de Recursos -->
     <div class="form-container-table">
       <div class="title-container">
         <h1 class="title">Lista de Recursos</h1>
@@ -97,8 +97,8 @@
       </ion-row>
     </div>
   </div>
-
-  <!-- Actualizar Constantes (Debajo) -->
+  
+  <!-- Actualizar Constantes -->
   <div class="form-wrapper">
     <div class="form-container">
       <div class="title-container">
@@ -132,10 +132,41 @@
         </ion-col>
       </ion-row>
     </div>
+    <!-- Borrado Reservas -->
+    <div class="form-container">
+    <div class="title-container">
+      <h1 class="title">Borrar Recursos</h1>
+    </div>
+
+    <ion-row>
+      <ion-col size="12">
+        <ion-item>
+          <ion-label position="stacked">Seleccione el recurso a borrar:</ion-label>
+          <ion-select v-model="selectedRecurso" @ionChange="onReservaChange">
+            <ion-select-option
+              v-for="recurso in [...recursosCompartido, ...recursosNoCompartido]"
+              :key="recurso.id"
+              :value="recurso"
+            >
+              {{ recurso.recursos }} (Cantidad: {{ recurso.cantidad }})
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+
+    <ion-row>
+      <ion-col size="12">
+        <ion-button expand="block" color="primary" @click="borrarRecurso">
+          Borrar
+        </ion-button>
+      </ion-col>
+    </ion-row>
   </div>
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
-</template>
+  </div>
+    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+      @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+  </template>
 
 <script setup>
 import { bookingsApiUrl } from "@/environment/apiUrls.ts";
@@ -160,6 +191,7 @@ import {
 
 // Selección de constante
 const selectedConstante = ref(null);
+const selectedRecurso = ref(null);
 const constantes = ref([]);
 const recursosNoCompartido = ref([]);
 const recursosCompartido = ref([]);
@@ -185,6 +217,15 @@ const onConstanteChange = () => {
     selectedConstante.value = { valor: "" };
   } else if (selectedConstante.value.valor === undefined) {
     selectedConstante.value.valor = "";
+  }
+};
+
+// Función que se llama cuando el usuario selecciona una reserva para borrar
+const onReservaChange = () => {
+  if (!selectedRecurso.value) {
+    selectedRecurso.value = { valor: "" };
+  } else if (selectedRecurso.value.valor === undefined) {
+    selectedRecurso.value.valor = "";
   }
 };
 
