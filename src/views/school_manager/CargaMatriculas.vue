@@ -105,6 +105,7 @@ const subirFichero = async () => {
     fileUploadComponent.fileClear();
 
     await insertarCursosCargados()
+    comprobarBoton()
 };
 
 const cargarCursosEtapa = async () => {
@@ -191,7 +192,7 @@ onMounted(async () => {
     </div>
 
     <!-- Tabla con cursos y etapas que tienen datos -->
-    <div class="card-upload-table">
+    <div class="card-upload-table card-upload-csv">
       <h4 class="m-3 ">Curso y Etapas cargados</h4>
       <table>
       <tbody class="m-1">
@@ -285,7 +286,7 @@ onMounted(async () => {
   flex: 1 1 30%;
   min-width: 300px;
   max-width: 35%;
-  min-height: 100%;
+  min-height: 400px;
   height: auto;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
@@ -296,17 +297,6 @@ onMounted(async () => {
   align-items: center;
   }
  .card-upload-table {
-  width: 65%;
-  flex: 1 1 30%;
-  min-width: 300px;
-  max-width: 35%;
-  min-height: 100%;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
   justify-content: flex-start;
   overflow: auto;
     height: 380px;

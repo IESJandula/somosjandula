@@ -195,9 +195,9 @@ onMounted(async () => {
       <button @click="deseleccionarTodo" class="btn">Quitar todo</button>
         </span>
       <ul class="listaAlumnos">
-        <li v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
+        <li class="pad" v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
 
-        <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1">
+        <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1 transparente">
           <label>
             <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
             {{ alumno.nombre }} {{ alumno.apellidos }}
@@ -207,7 +207,6 @@ onMounted(async () => {
       </ul>
       <button @click="crearNuevoGrupo(filtroSeleccionado.curso, filtroSeleccionado.etapa)" class="btn">Crea grupo</button>
 
-      <p class="m-1">Selecciona grupo</p>
       <select v-model="grupoSeleccionado" @change="actualizarGrupo(grupoSeleccionado)" class="p-2 m-1">
         <option value="">Selecciona un grupo</option>
         <option v-for="grupo in grupos" :key="grupo" :value="grupo">{{ grupo }}</option>
@@ -250,10 +249,15 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.pad{
+  padding-top: 4rem;
+  padding-bottom: 5rem;
+  padding-left: 2.2rem;
+}
 .card-upload-alumnos {
 flex: 1 1 30%;
-min-width: 300px;
-max-width: 30%;
+min-width: 350px;
+max-width: 490px;
 min-height: 100%;
 height: auto;
 background-color: var(--form-bg-light);
@@ -267,8 +271,8 @@ align-items: center;
 .card-upload-table {
   flex: 1 1 30%;
   min-width: 300px;
-  max-width: 33%;
-  min-height: 455px;
+  max-width: 490px;
+  min-height: 460px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -286,9 +290,9 @@ label:hover{
   color: #3B82F6;
 }
 .m-1 {
-  font-size: 20px;
+  font-size: 17px;
   flex-grow: 1; 
-  
+  margin-top: 10px;
 }
 .m-2 {
   font-size: 2.25rem;
@@ -297,13 +301,13 @@ label:hover{
   text-align: center;
 }
 .p-2{
-  padding: 0.5rem;
+  padding: 0.4rem;
   border: 1px solid #D1D5DB; 
   border-radius: 0.375rem; 
 }
 .m-4 {
   font-weight: 700;
-  font-size: 1.125rem;
+  font-size: 1.1rem;
   text-align: center;
   margin-top: 1rem; 
   margin-bottom: 1rem; 
@@ -318,8 +322,7 @@ label:hover{
 }
 .listaAlumnos {
   table-layout: auto;
-  padding: 0.55rem;
-  margin: 0.75px; 
+  padding: 0.0.5rem;
   border: 1px solid;
   overflow: auto; 
   max-height: 10rem;
@@ -328,17 +331,27 @@ label:hover{
   margin-bottom: 1rem;
   width: 50%;
   min-width: 300px;
+  border-radius: 10px;
 }
 .tablaAlumnos {
+  flex: 1;
   display: table; /* o block, pero evita inline-block si no quieres ese “cuadro” */
   border-collapse: collapse;
   border: 1px solid;
   width: auto;         /* o min-width, según necesites */
-  min-width: 500px;    /* para forzar scroll si el contenedor es pequeño */
+  min-width: 450px;    /* para forzar scroll si el contenedor es pequeño */
   /* Quita margin-right si lo tenías, ya no hace falta */
-  margin-left: 10%;
+  margin-left: 1%;
   text-align: center;
+  margin-right: 10px;
+  /* display: block; */
+  position: relative; 
 }
+
+.transparente{
+  border-color: transparent;
+}
+
 .blue {
   background-color: #3B82F6; 
   color: #FFFFFF; 
@@ -379,27 +392,19 @@ label:hover{
   max-width: 100%;
 }
 .espacio{
+  text-align: center;
   color: var(--form-bg-light);
 }
 
 /* Media queries para hacer que la tarjeta sea más responsive */
-@media (max-width: 1080px) {
-  .top-section {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .card-upload-alumnos,
-  .card-upload-table {
-    flex: 1 1 100%;
-    min-width: 350px;
-    min-height: 100%;
-  }
-
+@media ((min-width: 768px) and (max-width: 3571px)) {
   .espacio{
-    color: var(--form-bg-light);
-    margin-left: 184%;
+    color: transparent;
+    margin-left: 100%;
     margin-top: -30px;
+  }
+  .tablaAlumnos{
+    margin-left: 0%;
   }
 
 }
@@ -416,12 +421,16 @@ label:hover{
     flex: 1 1 100%;
     min-width: 350px;
     min-height: 100%;
+    max-width: 500px;
   }
 
   .espacio{
-    color: var(--form-bg-light);
-    margin-left: 184%;
+    color: transparent;
+    margin-left: 103%;
     margin-top: -30px;
+  }
+  .tablaAlumnos {
+    min-width: 300px;
   }
 
 }
