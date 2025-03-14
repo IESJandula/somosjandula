@@ -201,7 +201,7 @@ const obtenerEmailUsuarioActual = async () => {
 const openModal = (tramo, dia, email) => {
 
   if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
-    if (email.includes(emailUsuarioActual.value)) {
+    if (email !== undefined && email.includes(emailUsuarioActual.value)) {
       closeModal();
       return;
     }
@@ -251,7 +251,7 @@ const saveChanges = async () => {
   }
 
   try {
-    mensajeActualizacion = 'Reserva guardada exitosamente';
+    mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
 
     // Normalizar número de alumnos
@@ -388,7 +388,7 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
 
 
-    mensajeActualizacion = 'Reserva cancelada exitosamente'
+    mensajeActualizacion = 'Reserva cancelada correctamente'
     mensajeColor = 'success'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
