@@ -185,6 +185,7 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
+import { useRouter } from 'vue-router';
 import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
@@ -689,7 +690,10 @@ watch(recursoSeleccionado, () => {
   }
   getReserva();
 });
-
+const router = useRouter();
+const navigateToIssues = () => {
+  router.push({ path: '/documents/itIssues' });
+};
 
 const cargarDatos = async () => {
   users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
