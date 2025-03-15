@@ -411,7 +411,7 @@ watch(recursoSeleccionado, () => {
 
   if (recursoSeleccionadoCompartible.value) {
     mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
-    mensajeIncidencia = '¿Encontraste algun problema en el aula o necesitas mas recursos? Crea una incidencia '
+    mensajeIncidencia = '¿Encontraste algun problema en el aula o necesitas más recursos? Crea una incidencia '
   }
   else {
     mensajeInformativo = ''
