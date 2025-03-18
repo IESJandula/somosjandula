@@ -272,7 +272,7 @@ align-items: center;
   flex: 1 1 30%;
   min-width: 300px;
   max-width: 490px;
-  min-height: 460px;
+  min-height: 525px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;

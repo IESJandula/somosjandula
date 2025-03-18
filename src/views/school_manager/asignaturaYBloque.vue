@@ -1,8 +1,8 @@
 <script setup>
-import {computed, ref, watch} from 'vue';
+import { ref, watch} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { cargarAsignaturas, crearBloques, eliminarBloques } from '@/services/schoolManager.js'
-import { IonToast } from "@ionic/vue";
+import { cargarAsignaturas, crearBloques, eliminarBloques, mostrarHoras, asignarHoras } from '@/services/schoolManager.js'
+import { IonToast, IonCard, IonInput, IonButton, IonCardContent, IonCardHeader, IonCardTitle } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const asignaturas = ref([]);
@@ -13,21 +13,15 @@ const errorMensaje = ref("");
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
-const asignaturaEnDropdown = ref(null);
-const horasDeAsignaturaEnDropdown = ref(0);
+const asignaturasConHoras = ref([]);
+const horasPorAsignatura = ref({});
+const isProcessing = ref(false); // Estado de carga para "Guardar Todo"
 
 const actualizarSelect = (seleccionado) => {
     filtroSeleccionado.value = seleccionado;
     console.log("Filtro actualizado:", seleccionado);
 };
 
-const mostrarHorasAsignatura = () => {
-  if (asignaturaEnDropdown.value && asignaturaEnDropdown.value.horas !== undefined) {
-    horasDeAsignaturaEnDropdown.value = asignaturaEnDropdown.value.horas;
-  } else {
-    horasDeAsignaturaEnDropdown.value = 0;
-  }
-};
 const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturas.value = [];
@@ -40,11 +34,17 @@ const cargarAsignatura = async () => {
 
   try {
     const data = await cargarAsignaturas(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
+    
     asignaturas.value = data;
+
+    asignaturas.value = Array.isArray(data) ? data : [];
+    console.log(asignaturas.value.length);
+
     
     const gruposSet = new Set();
     asignaturas.value.forEach((asignatura) => {
-      Object.keys(asignatura.numeroAlumnosEnGrupo).forEach((grupo) => {
+      const grupos = typeof asignatura.numeroAlumnosEnGrupo === 'object' ? asignatura.numeroAlumnosEnGrupo : {};
+      Object.keys(grupos).forEach((grupo) => {
         gruposSet.add(grupo);
       });
     });
@@ -57,17 +57,6 @@ const cargarAsignatura = async () => {
   }
 };
 
-const asignaturasDropdown = computed(() => {
-  const seen = new Set();
-  return asignaturas.value.filter(item => {
-    if (seen.has(item.nombre)) {
-      return false;
-    } else {
-      seen.add(item.nombre);
-      return true;
-    }
-  });
-});
 
 const crearBloque = async () => {
   if (asignaturasSeleccionadas.value.length < 2) {
@@ -87,9 +76,14 @@ const crearBloque = async () => {
       toastMessage, 
       toastColor, 
       isToastOpen);
+
+    // Marcar asignaturas seleccionadas con un bloque ficticio (para que refleje cambios sin recargar)
+    asignaturasSeleccionadas.value.forEach(asignatura => {
+      asignatura.bloqueId = Math.floor(Math.random() * 1000); // Simulación de ID de bloque
+    });
     
     asignaturasSeleccionadas.value = [];
-    cargarAsignatura();
+    
   } catch (error) {
     errorMensaje.value = "Error al crear el bloque.";
     console.error("Error:", error);
@@ -110,8 +104,10 @@ const eliminarBloque = async (asignatura) => {
       toastMessage, 
       toastColor, 
       isToastOpen);
-    cargarAsignatura();
-  } catch (error) {
+
+    asignatura.bloqueId = null;
+
+    } catch (error) {
     errorMensaje.value = "Error al eliminar el bloque.";
     console.error("Error:", error);
   } finally {
@@ -119,12 +115,119 @@ const eliminarBloque = async (asignatura) => {
   }
 };
 
-watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etapa], cargarAsignatura, { immediate: true });
+// const listaAsignaturas = computed(() => {
+//   const seen = new Set();
+//   return asignaturas.value.filter(item => {
+//     if (seen.has(item.nombre)) {
+//       return false;
+//     } else {
+//       seen.add(item.nombre);
+//       return true;
+//     }
+//   });
+// });
+
+const mostrarHora = async () =>{
+
+  if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
+    asignaturasConHoras.value = [];
+    return;
+  }
+
+  loading.value = true;
+  errorMensaje.value = "";
+
+  try {
+    // Llamada al servicio que obtiene las horas
+    const data = await mostrarHoras(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
+    console.log(data);
+
+    asignaturasConHoras.value =Array.isArray(data) ? data : []; // Guarda los resultados
+
+    console.log(asignaturasConHoras.value)
+    // Inicializa el objeto de horasPorAsignatura
+    horasPorAsignatura.value = asignaturasConHoras.value.reduce((acc, item) => {
+      acc[item.nombre] = item.horas;
+      return acc;
+    }, {});
+
+  } catch (error) {
+    errorMensaje.value = "Error al cargar las horas. Inténtelo de nuevo.";
+    console.error('Error:', error);
+  } finally {
+    loading.value = false;
+  }
+};
+
+const guardarHoras = async (nombreAsignatura) => {
+  if (!horasPorAsignatura.value[nombreAsignatura] || horasPorAsignatura.value[nombreAsignatura] <= 0) {
+    errorMensaje.value = "Seleccione una asignatura válida y horas mayores a 0.";
+    return;
+  }
+
+  try {
+    await asignarHoras(
+      filtroSeleccionado.value.curso,
+      filtroSeleccionado.value.etapa,
+      nombreAsignatura,
+      horasPorAsignatura.value[nombreAsignatura],
+      toastMessage, 
+      toastColor, 
+      isToastOpen
+    );
+
+    toastMessage.value = `Horas actualizadas para ${nombreAsignatura}.`;
+    toastColor.value = "success";
+    isToastOpen.value = true;
+
+  } catch (error) {
+    errorMensaje.value = "Error al actualizar las horas.";
+    console.error("Error:", error);
+  } 
+};
+
+const guardarTodasHoras = async () => {
+  const asignaturasAActualizar = Object.entries(horasPorAsignatura.value).filter(
+    ([, horas]) => horas > 0
+  );
+
+  if (asignaturasAActualizar.length === 0) {
+    toastMessage.value = "No hay cambios para guardar.";
+    toastColor.value = "warning";
+    isToastOpen.value = true;
+    return;
+  }
+
+  isProcessing.value = true;
+
+  try {
+    for (const [nombre, horas] of asignaturasAActualizar) {
+      await guardarHoras(nombre, horas );
+    }
+
+    toastMessage.value = "Todas las asignaturas se actualizaron correctamente.";
+    toastColor.value = "success";
+  } catch (error) {
+    console.error("Error al actualizar todas las horas:", error);
+    toastMessage.value = "Error al actualizar las horas.";
+    toastColor.value = "danger";
+  } finally {
+    isProcessing.value = false;
+    isToastOpen.value = true;
+  }
+};
+
+watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etapa], 
+async () =>{
+  cargarAsignatura();
+  mostrarHora();
+},
+ { immediate: true });
 </script>
 
 <template>
   <div class="container">
-    <h1 class="m-4">Validación de asignaturas y bloques</h1>
+    <h1 class="m-4">Asignaturas y bloques</h1>
     <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1"/>
 
     <!-- Tarjeta que contiene la tabla de asignaturas -->
@@ -185,43 +288,24 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
         <ion-card-title>Modificar Horas de Asignatura</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <ion-item>
-          <ion-label>Asignatura</ion-label>
-          <ion-select
-              v-model="selectedAsignatura"
-              placeholder="Selecciona una asignatura"
-              @ion-change="mostrarHorasAsignatura">
-
-            <ion-select-option
-                v-for="item in asignaturasDropdown"
-                :key="item.nombre"
-                :value="item">
-              {{ item.nombre }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-
         <table class="table">
           <thead>
           <tr>
+            <th class="th">Asignatura</th>
             <th class="th">Horas</th>
             <th class="th">Acciones</th>
           </tr>
           </thead>
           <tbody>
-          <tr>
-            <td class="p-4">
-              <ion-input
-                  type="number"
-                  v-model.number="horasDeAsignaturaEnDropdown"
-                  min="1"
-                  max="50"
-                  step="1"
-                  @ionChange="validateHorasInput">
+          <tr v-for="item in asignaturasConHoras" :key="item.nombre">
+            <td class="th">{{ item.nombre }}</td>
+            <td class="p-4 th">
+              <ion-input type="number" v-model.number="horasPorAsignatura[item.nombre]"
+                  min="1" max="50" step="1">
               </ion-input>
             </td>
-            <td class="p-4">
-              <ion-button @click="guardarHoras">Guardar</ion-button>
+            <td class="p-4 th">
+              <button class="btn" @click="guardarHoras(item.nombre)">Guardar</button>
             </td>
           </tr>
           </tbody>
@@ -266,15 +350,15 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
 }
 .th {
   border: 1px solid currentColor; 
-  padding-left: 1rem; 
-  padding-right: 1rem;
+  padding-left: 0.5rem; 
+  padding-right: 0.5rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 .table{
   table-layout: auto;
   border-collapse: collapse;
-  border: 1px solid black;
+  border: 1px solid currentColor;
   width: 100%;
 }
 .mensejeError{
@@ -312,6 +396,12 @@ button{
   padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.btn {
+  background-color: #4782eb;
+  color: black;
   border-radius: 0.25rem;
 }
 button:hover {
