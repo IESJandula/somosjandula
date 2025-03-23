@@ -48,16 +48,13 @@ const actualizarSelect = () => {
 
 <template>
     <div>
-        <!-- Título del filtro -->
-        <p class="m-1">Filtrar por curso y etapa</p>
         <!-- Dropdown para seleccionar curso y etapa -->
         <select 
             v-model="seleccionado" 
             @change="actualizarSelect" 
             name="cursos-etapas" 
             id="cursos-etapas" 
-            class="p-2"
-        >
+            class="p-2">
             <!-- Opción inicial por defecto -->
             <option value="">Selecciona un curso</option>
             <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
@@ -79,7 +76,7 @@ const actualizarSelect = () => {
 }
 .p-2{
   padding: 0.5rem;
-  border: 1px solid #D1D5DB; 
+  border: 1px solid ; 
   border-radius: 0.375rem; 
 }
 </style>

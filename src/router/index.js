@@ -14,7 +14,7 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
-import AsignaturaYBloque from '@/views/school_manager/asignaturaYBloque.vue';
+import AsignaturaYBloque from '@/views/school_manager/AsignaturaYBloque.vue';
 import CargaMatriculas from '@/views/school_manager/CargaMatriculas.vue';
 import AsignarHorasAsignaturas from '@/views/school_manager/AsignarHorasAsignaturas.vue';
 import CrearGrupos from '@/views/school_manager/CrearGrupos.vue';
@@ -135,7 +135,7 @@ const routes = [
       {
         path: 'school_manager/asignaturaYBloque',
         component: AsignaturaYBloque,
-        name: 'ValidadAsignaturaYBloque',
+        name: 'AsignaturaYBloque',
         meta: {
           role: 'DIRECCION'
         },

@@ -142,9 +142,9 @@ const borrarAlumno = async (alumno, grupo) => {
     // Agregarlo a la lista de alumnos sin grupo
     listadoAlumnosSinGrupo.value.push(alumno);
     listadoAlumnosSinGrupo.value.sort((a, b) => { //Primero filtra por nombre y después por apellido
-      const cmpNombre = a.nombre.localeCompare(b.nombre);
-      if (cmpNombre !== 0) return cmpNombre;
-      return a.apellidos.localeCompare(b.apellidos);
+      const cmpApellidos  = a.apellidos.localeCompare(b.apellidos);
+      if (cmpApellidos  !== 0) return cmpApellidos ;
+      return a.nombre.localeCompare(b.nombre);
     });
   } catch (error) {
     errorMensaje.value = "Error al borrar el alumno.";
@@ -159,9 +159,9 @@ const limpiarGrupo = async (grupo) => {
 
       listadoAlumnosSinGrupo.value.push(alumno);
       listadoAlumnosSinGrupo.value.sort((a, b) => { //Primero filtra por nombre y después por apellido
-        const cmpNombre = a.nombre.localeCompare(b.nombre);
-        if (cmpNombre !== 0) return cmpNombre;
-        return a.apellidos.localeCompare(b.apellidos);
+        const cmpApellidos  = a.apellidos.localeCompare(b.apellidos);
+        if (cmpApellidos  !== 0) return cmpApellidos ;
+        return a.nombre.localeCompare(b.nombre);
       });
     }
 
@@ -200,7 +200,7 @@ onMounted(async () => {
         <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1 transparente">
           <label>
             <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
-            {{ alumno.nombre }} {{ alumno.apellidos }}
+            {{ alumno.apellidos }}, {{ alumno.nombre }}
           </label>
         </li>
 
@@ -272,7 +272,7 @@ align-items: center;
   flex: 1 1 30%;
   min-width: 300px;
   max-width: 490px;
-  min-height: 525px;
+  min-height: 465px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -446,6 +446,9 @@ label:hover{
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
+  }
+  .btn{
+    color: black;
   }
 
 }
