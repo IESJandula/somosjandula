@@ -77,12 +77,9 @@ const crearBloque = async () => {
       toastColor, 
       isToastOpen);
 
-    // Marcar asignaturas seleccionadas con un bloque ficticio (para que refleje cambios sin recargar)
-    asignaturasSeleccionadas.value.forEach(asignatura => {
-      asignatura.bloqueId = Math.floor(Math.random() * 1000); // Simulación de ID de bloque
-    });
     
     asignaturasSeleccionadas.value = [];
+    cargarAsignatura();
     
   } catch (error) {
     errorMensaje.value = "Error al crear el bloque.";
@@ -233,7 +230,7 @@ async () =>{
     <!-- Tarjeta que contiene la tabla de asignaturas -->
     <ion-card class="m-6">
       <ion-card-header>
-        <ion-card-title>Tabla de Asignaturas</ion-card-title>
+        <ion-card-title style="text-align: center;">Tabla de Asignaturas</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <div v-if="errorMensaje" class="mensejeError">{{ errorMensaje }}</div>
@@ -242,75 +239,50 @@ async () =>{
         <div v-if="asignaturas.length > 0 && !loading">
           <table class="table">
             <thead>
-            <tr class="bg-gray-200">
-              <th class="th"></th>
+            <tr>
+              <th class="th">Selecciona para crear un bloque</th>
               <th class="th">Nombre</th>
-              <th class="th">Grupo</th>
-              <th class="th">Total Alumnos</th>
-              <th v-for="grupo in columnasGrupos" :key="grupo" class="th">Grupo {{ grupo }}</th>
               <th class="th">Bloque</th>
+              <th class="th">Horas</th>
+              <th class="th">Acciones</th>
             </tr>
             </thead>
             <tbody>
             <tr v-for="asignatura in asignaturas" :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`">
-              <td class="p-4">
+              <td class="p-4 th">
                 <input type="checkbox" :disabled="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null"
                        v-model="asignaturasSeleccionadas" :value="asignatura" />
               </td>
               <td class="th">{{ asignatura.nombre }}</td>
-              <td class="th">{{ asignatura.grupo }}</td>
-              <td class="th">{{ asignatura.numeroDeAlumnos }}</td>
-              <td v-for="grupo in columnasGrupos" :key="grupo" class="th">{{ asignatura.numeroAlumnosEnGrupo[grupo] || 0 }}</td>
               <td class="th">
                 <div v-if="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null">
                   Bloque {{ asignatura.bloqueId }}
-                  <button @click="eliminarBloque(asignatura)" class="element">X</button>
+                  <button @click="eliminarBloque(asignatura)" class="btn-x">X</button>
                 </div>
-                <div v-else style="color: #cbd5e0;">Sin bloque</div>
+                <div v-else class="m-7">Sin bloque</div>
               </td>
-            </tr>
-            </tbody>
-          </table>
-          <button @click="crearBloque" :disabled="asignaturasSeleccionadas.length < 2 || loading">
-            {{ loading ? "Procesando..." : "Crear Bloque" }}
-          </button>
-        </div>
-
-        <div v-else-if="!loading" class="m-7">
-          <p style="color: #6b7280;">No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
-        </div>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Tarjeta para modificar el número de horas de una asignatura -->
-    <ion-card class="m-6">
-      <ion-card-header>
-        <ion-card-title>Modificar Horas de Asignatura</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <table class="table">
-          <thead>
-          <tr>
-            <th class="th">Asignatura</th>
-            <th class="th">Horas</th>
-            <th class="th">Acciones</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="item in asignaturasConHoras" :key="item.nombre">
-            <td class="th">{{ item.nombre }}</td>
-            <td class="p-4 th">
-              <ion-input type="number" v-model.number="horasPorAsignatura[item.nombre]"
+              <td class="p-4 th">
+              <ion-input type="number" v-model.number="horasPorAsignatura[asignatura.nombre]"
                   min="1" max="50" step="1">
               </ion-input>
             </td>
             <td class="p-4 th">
-              <button class="btn" @click="guardarHoras(item.nombre)">Guardar</button>
+              <button class="btn" @click="guardarHoras(asignatura.nombre)">Actualizar hora</button>
             </td>
-          </tr>
-          </tbody>
-        </table>
-        <ion-button @click="guardarTodasHoras">Guardar todo</ion-button>
+            </tr>
+            </tbody>
+          </table>
+          <div class="btn-container">
+            <ion-button @click="crearBloque" :disabled="asignaturasSeleccionadas.length < 2 || loading">
+            {{ loading ? "Procesando..." : "Crear Bloque" }}
+            </ion-button>
+            <ion-button class="btn-todo" @click="guardarTodasHoras">Actualizar horas</ion-button>
+          </div>
+        </div>
+
+        <div v-else-if="!loading" class="m-7">
+          <p>No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
+        </div>
       </ion-card-content>
     </ion-card>
 
@@ -339,14 +311,17 @@ async () =>{
   
 }
 .m-4 {
-  font-size: 2.25rem; /* text-4xl */
-  font-weight: 700; /* font-bold */
-  margin-bottom: 2.5rem; /* mb-10 */
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
 }
 .m-6 {
   margin-top: 1.5rem;
   width: 100%;
   max-width: 56rem;
+  overflow: auto;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
 }
 .th {
   border: 1px solid currentColor; 
@@ -356,6 +331,7 @@ async () =>{
   padding-bottom: 0.5rem;
 }
 .table{
+  color: black;
   table-layout: auto;
   border-collapse: collapse;
   border: 1px solid currentColor;
@@ -375,41 +351,67 @@ async () =>{
   padding-left: 1rem;
   padding-right: 1rem;
 }
-.element{
-  margin-left: 0.5rem;
-  color: #f56565;
-  font-size: 15px;
-}
-
-.element:hover {
-  text-decoration: underline;
-}
 .m-7{
   margin-top: 1.5rem;
   text-align: center;
+  color: black;
 }
-button{
-  margin-top: 1rem;
+
+.btn-x{
+  margin-left: 0.5rem;
+  color: #f56565;
+  font-size: 15px;
   background-color: transparent;
-  color: #ffffff;
+  border-radius: 0.25rem;
   padding-left: 1rem;
   padding-right: 1rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-  border-radius: 0.25rem;
+}
+
+.btn-x:hover {
+  text-decoration: underline;
+}
+
+.btn-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 1rem;
 }
 
 .btn {
   background-color: #4782eb;
-  color: black;
+  color: #ffffff;
   border-radius: 0.25rem;
+  margin-top: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
+.btn-todo{
+  margin-left: auto;
+}
+
 button:hover {
   background-color: #acaeb4;
 }
 
 button:disabled {
   opacity: 0.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .btn{
+    color: black
+  }
+  .table{
+    color: #c4c6ca;
+  }
+  .m-7{
+    color: #c4c6ca;
+  }
 }
 
 </style>

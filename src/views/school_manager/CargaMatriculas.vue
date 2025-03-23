@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
-import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas } from '@/services/schoolManager.js'
+import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas, obtenerDatosMatriculas } from '@/services/schoolManager.js'
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
@@ -11,6 +11,7 @@ const toastColor = ref('success');
 const cursosEtapas = ref([]);
 const emit = defineEmits(['actualizar-select']);
 const seleccionado = ref('');
+const cursoSeleccionado = ref('');
 let mensajeColor = ''
 let mensajeActualizacion = ''
 const archivoSeleccionado= ref(false)
@@ -18,6 +19,8 @@ const file = ref(null);
 const cursosMapeados = ref([]);
 const fileUploadRef = ref(null);
 const buttonText = ref('Enviar');
+const datosMatriculas = ref([]);
+const asignaturas = ref([]);
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
@@ -26,7 +29,7 @@ const comprobarBoton = () => {
     buttonText.value = "Enviar";
     boton.style.backgroundColor = "#4782eb";
   } else {
-    boton.style.color = "#000000";
+    // boton.style.color = "#000000";
     boton.style.backgroundColor = "#7fa9f4";
     buttonText.value = "Rellenar campos para enviar";
     boton.disabled = true;
@@ -155,22 +158,96 @@ const eliminarCursosCargados = async (cursoE) => {
   return console.log("Borrado con exito: " + data)
 }
 
+
+const cargarDatosMatriculas = async () => {
+  if (!cursoSeleccionado.value) return;
+
+  const [curso, etapa] = cursoSeleccionado.value.split('-');
+  try {
+    const datos = await obtenerDatosMatriculas(parseInt(curso), etapa);
+    
+    // Obtener todas las asignaturas únicas
+    asignaturas.value = [...new Set(datos.map(m => m.asignatura))];
+
+    // Agrupar datos por estudiante
+    const estudiantesMap = new Map();
+    datos.forEach(({ nombre, apellidos, asignatura, estadoMatricula }) => {
+      const claveEstudiante = `${nombre} ${apellidos}`;
+      if (!estudiantesMap.has(claveEstudiante)) {
+        estudiantesMap.set(claveEstudiante, { nombre, apellidos, matriculas: {} });
+      }
+      estudiantesMap.get(claveEstudiante).matriculas[asignatura] = estadoMatricula;
+    });
+
+    // Convertir el mapa en un array
+    datosMatriculas.value = Array.from(estudiantesMap.values());
+  } catch (error) {
+    console.error('No se pudieron cargar los datos de matrículas');
+    datosMatriculas.value = [];
+    asignaturas.value = [];
+  }
+};
+
 onMounted(async () => {
-  await cargarCursosEtapa(),
-  await insertarCursosCargados(),
-  comprobarBoton()
+  await cargarCursosEtapa();
+  await insertarCursosCargados();
+  comprobarBoton();
+  
 });
 </script>
 
 <template>
   <h1 class="m-2">Carga de Matrículas</h1>
-  <div class="top-section">
-    <div class="card-upload-csv">
-      <div class="container">
-        <!-- Selector de curso y etapa -->
+  <div class="top-container">
+    <div class="top-section">
+      <div class="card-upload-csv">
+        <div class="container">
+          <!-- Selector de curso y etapa -->
+          <div class="dropdown">
+            <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
+            <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
+              <option value="">Selecciona un curso</option>
+              <option v-for="cursoEtapa in cursosEtapas"
+                :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
+                :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
+                {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
+              </option>
+            </select>
+          </div>
+  
+          <!-- Subida de ficheros -->
+          <div class="section">
+            <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
+            <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
+            <button @click="subirFichero(); $event.target.blur()"  ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
+          </div>
+          <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+          @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+        </div>
+      </div>
+  
+      <!-- Tabla con cursos y etapas que tienen datos -->
+      <div class="card-upload-table card-upload-csv">
+        <h4 class="m-3 ">Curso y Etapas cargados</h4>
+        <table>
+        <tbody class="m-1">
+          <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
+            <td class="th">{{ cursoE }}</td>
+            <td class="th">
+              <button @click="eliminarCursosCargados(cursoE)" class="eliminar">&times;</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>  
+    <!-- Tabla con los datos cargados del CSV -->
+    <div class="card-upload-data">
+      <div class="centro">
+
+        <h4 class="m-3">Datos del CSV cargado</h4>
         <div class="dropdown">
-          <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
-          <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
+          <select v-model="cursoSeleccionado" id="seleccionar-curso" class="p-2 m-1">
             <option value="">Selecciona un curso</option>
             <option v-for="cursoEtapa in cursosEtapas"
               :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
@@ -178,34 +255,35 @@ onMounted(async () => {
               {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
             </option>
           </select>
+          <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
         </div>
-
-        <!-- Subida de ficheros -->
-        <div class="section">
-          <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
-          <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
-          <button @click="subirFichero(); $event.target.blur()"  ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
-        </div>
-        <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-        @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
       </div>
-    </div>
 
-    <!-- Tabla con cursos y etapas que tienen datos -->
-    <div class="card-upload-table card-upload-csv">
-      <h4 class="m-3 ">Curso y Etapas cargados</h4>
-      <table>
-      <tbody class="m-1">
-        <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
-          <td class="th">{{ cursoE }}</td>
-          <td class="th">
-            <button @click="eliminarCursosCargados(cursoE)" class="eliminar">&times;</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      <table v-if="datosMatriculas.length">
+        <thead>
+          <tr>
+            <th class="columna">Nombre</th>
+            <th class="columna">Apellidos</th>
+            <!-- <th class="columna" v-for="(asignatura, index) in datosMatriculas" :key="index">{{ asignatura.asignatura }}</th> -->
+            <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+              {{ asignatura }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
+            <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
+            <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
+            <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+              {{ estudiante.matriculas[asignatura] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p v-else>No hay datos cargados del CSV.</p>
     </div>
-  </div>  
+  </div>
 </template>
 
 <style scoped>
@@ -217,7 +295,7 @@ onMounted(async () => {
   text-align: center;
 }
 .m-3{
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   text-align: center;
 }
 
@@ -230,7 +308,7 @@ onMounted(async () => {
 }
 .m-1 {
   margin-bottom: 1rem;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   text-align: center;
 }
 .p-2{
@@ -244,12 +322,22 @@ onMounted(async () => {
   border-radius: 0.375rem; 
   background-color: #4782eb;
   color: #FFFFFF;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
-.btn:disabled {
-  background-color: #484848;
+.btn-csv {
+  width: 170px;
+  padding: 0.5rem;
+  border: 1px solid ;
+  border-radius: 0.375rem; 
+  background-color: #4782eb;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  align-self: center;
+}
+button:disabled{
   color: #FFFFFF;
 }
+
 .eliminar {
   color: #EF4444;
   font-size: 2rem; /* <-- Reducir tamaño */
@@ -264,7 +352,16 @@ onMounted(async () => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  align-items: stretch;
+}
+.top-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
 }
 
  .dropdown { 
@@ -273,6 +370,10 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   margin-bottom: 10px;
+}
+
+.centro{
+  justify-items: center;
 }
  .section { 
   width: 100%;
@@ -284,8 +385,7 @@ onMounted(async () => {
  } 
  .card-upload-csv {
   flex: 1 1 30%;
-  min-width: 300px;
-  max-width: 35%;
+  min-width: 520px;
   min-height: 400px;
   height: auto;
   background-color: var(--form-bg-light);
@@ -301,6 +401,27 @@ onMounted(async () => {
   overflow: auto;
     height: 380px;
 }
+.card-upload-data{
+  min-width: 1050px;
+  min-height: 400px;
+  max-width: 900px;
+  height: auto;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  overflow-y: auto;
+    max-width: 300px;
+  overflow-x: auto;
+    max-height: 200px;
+  font-size: 13px;
+}
+
 .th {
   width: 100%;
   border: 1px solid currentColor; 
@@ -309,9 +430,17 @@ onMounted(async () => {
   padding-bottom: 0.5rem;
   text-align: center;
 }
+.columna {
+  border: 1px solid currentColor; 
+  padding-left: 0.5rem; 
+  padding-right: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
 table{
-  border-collapse: collapse;
   width: 100%;
+  border-collapse: collapse;
 }
 /* Media queries para hacer que la tarjeta sea más responsive */
 @media (max-width: 768px) {
@@ -321,7 +450,7 @@ table{
   }
 
   .card-upload-csv,
-  .card-upload-table {
+  .card-upload-data{
     flex: 1 1 100%;
     min-width: 350px;
     min-height: 100%;
@@ -330,9 +459,8 @@ table{
 }
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
-  .form-container,
-  .printer-status-table,
-  .card-upload-csv {
+  .card-upload-csv, 
+  .card-upload-data {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
@@ -345,5 +473,11 @@ table{
   .btn{
     color: black;
   }
+  .btn-csv{
+    color: black;
+  }
+  button:disabled{
+  color: #000000;
+}
 }
 </style>

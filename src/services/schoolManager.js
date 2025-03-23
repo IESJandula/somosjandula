@@ -120,7 +120,7 @@ export const borrarMatriculas = async (curso, etapa, toastMessage, toastColor, i
     }
   }
 
-export const cargarAlumnosCsv = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+export const obtenerDatosMatriculas = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
   {
     try
     {
@@ -142,7 +142,75 @@ export const cargarAlumnosCsv = async (curso, etapa, toastMessage, toastColor, i
       {
         throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
       }
+      console.log(response.json)
       return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
+
+export const matricularAlumnosCsv = async (nombre, apellidos, asignatura, curso, etapa, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/datosMatriculas', 
+      {
+        method: 'POST',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'nombre': nombre,
+          'apellidos': apellidos,
+          'asignatura': asignatura,
+          'curso': curso,
+          'etapa': etapa,
+        },
+        
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
+
+export const desmatricularAlumnosCsv = async (nombre, apellidos, asignatura, curso, etapa, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/datosMatriculas', 
+      {
+        method: 'DELETE',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'nombre': nombre,
+          'apellidos': apellidos,
+          'asignatura': asignatura,
+          'curso': curso,
+          'etapa': etapa,
+        },
+        
+      });
+      if(!response.ok) 
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
       
     }
     catch (error)
