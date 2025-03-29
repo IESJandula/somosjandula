@@ -235,15 +235,15 @@ body {
 }
 
 .impresion-remota {
-  animation: fadeInOut 18s ease-in-out 0s infinite;
+  animation: fadeInOut 8s ease-in-out 0s infinite;
 }
 
 .reserva-recursos {
-  animation: fadeInOut 18s ease-in-out 6s infinite;
+  animation: fadeInOut 8s ease-in-out 2s infinite;
 }
 
 .reserva-proyectores {
-  animation: fadeInOut 18s ease-in-out 12s infinite;
+  animation: fadeInOut 8s ease-in-out 4s infinite;
 }
 
 @keyframes fadeInOut {
