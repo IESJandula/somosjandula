@@ -63,8 +63,8 @@ const crearBloque = async () => {
     errorMensaje.value = "Debe seleccionar al menos dos asignaturas.";
     return;
   }
-
-  loading.value = true;
+  // esta propiedad hace que se vuelva a cargar el template
+  // loading.value = true;
   errorMensaje.value = "";
 
   try {
@@ -79,7 +79,8 @@ const crearBloque = async () => {
 
     
     asignaturasSeleccionadas.value = [];
-    cargarAsignatura();
+    //Esta tambien pero quizas es necesario que lo haga para que cambie la casilla de bloque
+    // await cargarAsignatura();
     
   } catch (error) {
     errorMensaje.value = "Error al crear el bloque.";
