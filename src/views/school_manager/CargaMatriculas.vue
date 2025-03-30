@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
-import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas, obtenerDatosMatriculas } from '@/services/schoolManager.js'
+import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas, obtenerDatosMatriculas, matricularAlumnosCsv } from '@/services/schoolManager.js'
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
@@ -29,7 +29,6 @@ const comprobarBoton = () => {
     buttonText.value = "Enviar";
     boton.style.backgroundColor = "#4782eb";
   } else {
-    // boton.style.color = "#000000";
     boton.style.backgroundColor = "#7fa9f4";
     buttonText.value = "Rellenar campos para enviar";
     boton.disabled = true;
@@ -164,7 +163,7 @@ const cargarDatosMatriculas = async () => {
 
   const [curso, etapa] = cursoSeleccionado.value.split('-');
   try {
-    const datos = await obtenerDatosMatriculas(parseInt(curso), etapa);
+    const datos = await obtenerDatosMatriculas(parseInt(curso), etapa, isToastOpen, toastMessage, toastColor);
     
     // Obtener todas las asignaturas únicas
     asignaturas.value = [...new Set(datos.map(m => m.asignatura))];
@@ -187,6 +186,35 @@ const cargarDatosMatriculas = async () => {
     asignaturas.value = [];
   }
 };
+
+const matricularAlumnoCsv = async (index) => {
+  try {
+
+    const [curso, etapa] = cursoSeleccionado.value.split("-");
+    
+    const alumno = datosMatriculas.value[index].nombre;
+    const apellidos = datosMatriculas.value[index].apellidos;
+
+
+    for(const[asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)){
+      if(estado === "MATR" || estado === "NO_MATR" || estado === "SUPCA" || estado === "CONV" || estado === "APRO" || estado === "PEND"){ 
+        await matricularAlumnosCsv(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+      } else {
+        throw new Error("No has escrito 'MATR' o 'NO_MATR' en la celda correspondiente");
+      }
+    }
+
+    mensajeActualizacion = "Matricula modificada con exito";
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  } catch (error) {
+    mensajeActualizacion = error.message;
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  }
+};
+
+
 
 onMounted(async () => {
   await cargarCursosEtapa();
@@ -264,10 +292,10 @@ onMounted(async () => {
           <tr>
             <th class="columna">Nombre</th>
             <th class="columna">Apellidos</th>
-            <!-- <th class="columna" v-for="(asignatura, index) in datosMatriculas" :key="index">{{ asignatura.asignatura }}</th> -->
             <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
               {{ asignatura }}
             </th>
+            <th class="columna">Acción</th>
           </tr>
         </thead>
         <tbody>
@@ -275,12 +303,17 @@ onMounted(async () => {
             <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
             <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
             <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-              {{ estudiante.matriculas[asignatura] }}
+              <input 
+                type="text" 
+                v-model="estudiante.matriculas[asignatura]"
+                class="editable-cell">
+            </td>
+            <td class="columna">
+              <button class="btn" @click="matricularAlumnoCsv(index)">Guardar</button>
             </td>
           </tr>
         </tbody>
       </table>
-
       <p v-else>No hay datos cargados del CSV.</p>
     </div>
   </div>
@@ -336,6 +369,15 @@ onMounted(async () => {
 }
 button:disabled{
   color: #FFFFFF;
+}
+
+input {
+    background: transparent;
+    border: none;
+    text-align: center;
+    width: 100%;
+    padding: 0;
+    outline: none;
 }
 
 .eliminar {
@@ -403,7 +445,7 @@ button:disabled{
 }
 .card-upload-data{
   min-width: 1050px;
-  min-height: 400px;
+  min-height: 500px;
   max-width: 900px;
   height: auto;
   background-color: var(--form-bg-light);
@@ -418,7 +460,7 @@ button:disabled{
   overflow-y: auto;
     max-width: 300px;
   overflow-x: auto;
-    max-height: 200px;
+    max-height: 300px;
   font-size: 13px;
 }
 

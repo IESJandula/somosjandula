@@ -112,18 +112,6 @@ const eliminarBloque = async (asignatura) => {
   }
 };
 
-// const listaAsignaturas = computed(() => {
-//   const seen = new Set();
-//   return asignaturas.value.filter(item => {
-//     if (seen.has(item.nombre)) {
-//       return false;
-//     } else {
-//       seen.add(item.nombre);
-//       return true;
-//     }
-//   });
-// });
-
 const mostrarHora = async () =>{
 
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
