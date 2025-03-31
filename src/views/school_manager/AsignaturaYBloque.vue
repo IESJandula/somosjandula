@@ -80,7 +80,7 @@ const crearBloque = async () => {
     
     asignaturasSeleccionadas.value = [];
     //Esta tambien pero quizas es necesario que lo haga para que cambie la casilla de bloque
-    // await cargarAsignatura();
+    await cargarAsignatura();
     
   } catch (error) {
     errorMensaje.value = "Error al crear el bloque.";
@@ -102,8 +102,28 @@ const eliminarBloque = async (asignatura) => {
       toastMessage, 
       toastColor, 
       isToastOpen);
-
+      
     asignatura.bloqueId = null;
+
+    // Agrupar asignaturas por bloqueId
+    const bloques = asignaturas.value.reduce((acc, asignatura) => {
+      if (asignatura.bloqueId) {
+        if (!acc[asignatura.bloqueId]) {
+          acc[asignatura.bloqueId] = [];
+        }
+        acc[asignatura.bloqueId].push(asignatura);
+      }
+      return acc;
+    }, {});
+
+      // Buscar bloques con menos de 2 asignaturas
+      Object.entries(bloques).forEach(([bloqueId, asignaturasBloque]) => {
+      if (asignaturasBloque.length < 2) {
+        toastMessage.value = `El bloque ${bloqueId} debe tener al menos dos asignaturas.`;
+        toastColor.value = "warning";
+        isToastOpen.value = true;
+      }
+    });
 
     } catch (error) {
     errorMensaje.value = "Error al eliminar el bloque.";
