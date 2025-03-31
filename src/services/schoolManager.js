@@ -219,36 +219,7 @@ export const cargarAsignaturas = async (curso, etapa, toastMessage, toastColor, 
       console.log(error);
     }
 }
-export const cargarAsignaturasUnicas = async (curso, etapa, toastMessage, toastColor, isToastOpen) =>
-{
-  try
-  {
 
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await fetch(schoolmanagerApiUrl + '/asignaturasYBloques/asignaturasUnicas',
-        {
-          method: 'GET',
-          headers:
-              {
-                'Authorization': `Bearer ${tokenPropio}`,
-                'curso': curso,
-                'etapa': etapa,
-              },
-
-        });
-    if(!response.ok)
-    {
-      throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
-    }
-    return await response.json();
-
-  }
-  catch (error)
-  {
-    console.log(error);
-  }
-}
 export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toastColor, isToastOpen) => 
   {
     try
@@ -566,27 +537,57 @@ export const borrarAlumnos = async (alumno, toastMessage, toastColor, isToastOpe
     }
 }
 
-export const obtenerNumAlumnosAsignatura = async (curso, etapa, grupo, asignatura, toastMessage, toastColor, isToastOpen) => {
-  try {
-
-// Se obtiene un token válido
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-
-    const response =  await fetch(schoolmanagerApiUrl + '/crearGrupos/numeroAlumnosEnAsignatura', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
-        'curso': curso,
-        'etapa': etapa,
-        'grupo': grupo,
-        'asignatura': asignatura
-      },
-    })
-    return await response.json();
-  } catch (error) {
-    throw new Error(`Error al obtener alumnos para ${asignatura} - Grupo ${grupo}`);
+/****************************** Ventana 4 TablaResumen ******************************/
+export const cargarAsignaturasUnicas = async (curso, etapa, toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/resumenAsignaturas/asignaturasUnicas',
+          {
+            method: 'GET',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                  'curso': curso,
+                  'etapa': etapa,
+                },
+  
+          });
+      if(!response.ok)
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
+      return await response.json();
+  
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
   }
-}
 
-
+export const obtenerNumAlumnosAsignatura = async (curso, etapa, grupo, asignatura, toastMessage, toastColor, isToastOpen) => 
+  {
+    try 
+    {
+      // Se obtiene un token válido
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response =  await fetch(schoolmanagerApiUrl + '/resumenAsignaturas/numeroAlumnosEnAsignatura', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': curso,
+          'etapa': etapa,
+          'grupo': grupo,
+          'asignatura': asignatura
+        },
+      })
+      return await response.json();
+    } catch (error) {
+      throw new Error(`Error al obtener alumnos para ${asignatura} - Grupo ${grupo}`);
+    }
+  }

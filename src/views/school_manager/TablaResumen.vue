@@ -1,16 +1,14 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import {
-  cargarAsignaturasUnicas,
-  obtenerNumAlumnosAsignatura,
-} from '@/services/schoolManager.js';
+import { cargarAsignaturasUnicas, obtenerNumAlumnosAsignatura, obtenerGrupos } from '@/services/schoolManager.js';
 import { IonToast, IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue';
 
 // Variables reactivas
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const asignaturas = ref([]);
 const columnasGrupos = ref([]);
+const grupos = ref([]);
 const loading = ref(false);
 const errorMensaje = ref("");
 const isToastOpen = ref(false);
@@ -62,7 +60,7 @@ const cargarAsignatura = async () => {
     asignaturas.value = Array.isArray(data) ? data : [];
 
     // Aqui falta el endpoint de cargar los grupos de la asignatura asi que de mientras a fuego, podria ponerlo pero tengo sueño
-    columnasGrupos.value = ['A', 'B', 'C'];
+    columnasGrupos.value = await obtenerGrupo(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa,) || [];
 
     // Para cada asignatura, se saca el número de alumnos para cada grupo.
     await cargarNumeroAlumnosPorGrupo();
@@ -71,6 +69,17 @@ const cargarAsignatura = async () => {
     console.error("Error:", error);
   } finally {
     loading.value = false;
+  }
+};
+
+const obtenerGrupo = async (curso, etapa) => {
+  try {
+      if (curso != null && etapa) {
+          grupos.value = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
+          return grupos.value;
+      }
+  } catch (error) {
+      console.error('Error al cargar grupos', error);
   }
 };
 
@@ -126,7 +135,7 @@ onMounted(() => {
         <div v-if="loading" class="cargar">Cargando datos...</div>
 
         <div v-if="asignaturas.length > 0 && !loading">
-          <table class="tablaAlumnos">
+          <table class="tablaAsignaturas">
             <thead>
             <tr>
               <th class="th">Asignatura</th>
@@ -142,10 +151,10 @@ onMounted(() => {
             <tbody>
             <tr v-for="(asignatura) in asignaturas" :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`">
               <td class="th">{{ asignatura.nombre }}</td>
-              <td class="th">{{ asignatura.horas }}</td>
+              <td class="th th-center">{{ asignatura.horas }}</td>
               <!-- Se calcula el total al sumar los valores obtenidos en cada grupo -->
-              <td class="th">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
-              <td v-for="grupo in columnasGrupos" :key="grupo" class="th">
+              <td class="th th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
+              <td v-for="grupo in columnasGrupos" :key="grupo" class="th th-center">
                 {{ asignatura.numeroAlumnosEnGrupo[grupo] || 0 }}
               </td>
             </tr>
@@ -172,10 +181,14 @@ onMounted(() => {
 
 <style scoped>
 .container {
-  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  align-items: center;
 }
 .m-4 {
-  font-size: 1.1rem;
+  font-size: 2rem;
   font-weight: 700;
   text-align: center;
   margin-top: 1rem;
@@ -184,9 +197,15 @@ onMounted(() => {
 .m-1 {
   font-size: 17px;
   margin-top: 10px;
+  flex-grow: 1; 
 }
 .m-6 {
   margin: 1.5rem;
+  width: 100%;
+  max-width: 56rem;
+  overflow: auto;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
 }
 .cargar {
   text-align: center;
@@ -197,19 +216,35 @@ onMounted(() => {
   text-align: center;
   margin-bottom: 1rem;
 }
-.tablaAlumnos {
-  width: 100%;
+.tablaAsignaturas {
+  color: black;
+  table-layout: auto;
   border-collapse: collapse;
-  margin-top: 1rem;
+  border: 1px solid currentColor;
+  width: 100%;
 }
 .th {
   border: 1px solid currentColor;
-  padding: 0.5rem 1rem;
+  padding-left: 0.5rem; 
+  padding-right: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.th-center {
   text-align: center;
 }
+
 @media (max-width: 768px) {
-  .tablaAlumnos {
-    min-width: 300px;
+  .tablaAsignaturas {
+    min-width: 200px;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .tablaAsignaturas{
+    color: #c4c6ca;
+  }
+  .m-7{
+    color: #c4c6ca;
   }
 }
 </style>
