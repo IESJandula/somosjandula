@@ -50,7 +50,7 @@
           </ion-list>
         </ion-list>
         <ion-list>
-          <ion-item button @click="toggleSubMenuSchoolManager">
+          <ion-item v-if="mostrarSchoolManager" button @click="toggleSubMenuSchoolManager">
             Gestión de matriculas
             <ion-icon slot="end"
               :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
@@ -140,6 +140,7 @@ export default defineComponent({
     const mostrarAdmin = ref(false);
     const mostrarBookingsAdmin = ref(false);
     const mostrarPrintersAdmin = ref(false);
+    const mostrarSchoolManager = ref(false);
     const adminSubmenuVisible = ref(false);
     const printersSubmenuVisible = ref(false);
     const bookingsSubmenuVisible = ref(false);
@@ -217,6 +218,7 @@ export default defineComponent({
         mostrarAdmin.value = rolesMenu.mostrarAdmin;
         mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
         mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
+        mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
       }
       catch (error) {
         crearToast(
@@ -236,6 +238,7 @@ export default defineComponent({
       mostrarAdmin,
       mostrarPrintersAdmin,
       mostrarBookingsAdmin,
+      mostrarSchoolManager,
       adminSubmenuVisible,
       printersSubmenuVisible,
       bookingsSubmenuVisible,
