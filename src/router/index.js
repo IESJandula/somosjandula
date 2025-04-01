@@ -14,6 +14,12 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
+import AsignaturaYBloque from '@/views/school_manager/AsignaturaYBloque.vue';
+import CargaMatriculas from '@/views/school_manager/CargaMatriculas.vue';
+import DepartamentosYHoras from '@/views/school_manager/DepartamentosYHoras.vue';
+import CrearGrupos from '@/views/school_manager/CrearGrupos.vue';
+import TablaResumen from "@/views/school_manager/TablaResumen.vue";
+import ReduccionesProfesores from "@/views/school_manager/ReduccionesProfesores.vue";
 
 const routes = [
   {
@@ -24,8 +30,8 @@ const routes = [
     path: '/login',
     component: LoginPage,
     name: 'Login',
-    meta: { 
-      requiresAuth: false 
+    meta: {
+      requiresAuth: false
     },
   },
   {
@@ -36,80 +42,128 @@ const routes = [
   {
     path: '/',
     component: MainLayout,
-    meta: { 
-      requiresAuth: true 
+    meta: {
+      requiresAuth: true
     },
     children: [
       {
         path: 'admin/firebase',
         component: AdminFirebasePage,
         name: 'AdminFirebase',
-        meta: { 
-          role: 'ADMINISTRADOR' 
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
       {
         path: 'printers/admin',
         component: PrintersAdminPage,
         name: 'PrintersAdmin',
-        meta: { 
-          role: 'DIRECCION' 
+        meta: {
+          role: 'DIRECCION'
         },
       },
       {
         path: 'printers/print',
         component: PrintersPrintPage,
         name: 'PrintersPrint',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'bookings/admin',
         component: BookingsAdminPage,
         name: 'BookingsAdmin',
-        meta: { 
-          role: 'DIRECCION' 
+        meta: {
+          role: 'DIRECCION'
         },
       },
       {
         path: 'bookings/fixed',
         component: BookingsFixedPage,
         name: 'BookingsFixed',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'bookings/temporary',
         component: BookingsTemporaryPage,
         name: 'BookingsTemporary',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/absences',
         component: AbsencesPage,
         name: 'DocumentsAbsences',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/teacherGuide',
         component: TeacherGuidePage,
         name: 'DocumentsTeacherGuidePage',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/itIssues',
         component: ITIssuesPage,
         name: 'DocumentsITIssuesPage',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'school_manager/cargaMatriculas',
+        component: CargaMatriculas,
+        name: 'CargaMatriculas',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/crearGrupos',
+        component: CrearGrupos,
+        name: 'CrearGrupos',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/asignaturaYBloque',
+        component: AsignaturaYBloque,
+        name: 'AsignaturaYBloque',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/departamentos',
+        component: DepartamentosYHoras,
+        name: 'DepartamentosYHoras',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/tablaResumen',
+        component: TablaResumen,
+        name: 'TablaResumen',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/reducciones',
+        component: ReduccionesProfesores,
+        name: 'ReduccionesProfesores',
+        meta: {
+          role: 'DIRECCION'
         },
       },
     ],
@@ -121,25 +175,20 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => 
-{
+router.beforeEach(async (to, from, next) => {
   const auth = getAuth();
   let user = auth.currentUser;
 
-  if (!user) 
-  {
+  if (!user) {
     user = await waitForAuthReady(auth); // Espera a que Firebase termine de inicializar el estado de autenticación
   }
 
-  if (to.matched.some((record) => record.meta.requiresAuth)) 
-  {
-    if (!user) 
-    {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!user) {
       return next({ name: 'Login' });
     }
 
-    try 
-    {
+    try {
       const isToastOpen = ref(false);
       const toastMessage = ref('');
       const toastColor = ref('success');
@@ -148,36 +197,29 @@ router.beforeEach(async (to, from, next) =>
       const requiredRole = to.meta.role;
 
       // Si la ruta requiere un rol específico y el usuario no lo tiene, redirige a Login o muestra un error.
-      if (requiredRole && !userRoles.includes(requiredRole)) 
-      {
+      if (requiredRole && !userRoles.includes(requiredRole)) {
         return next({ name: 'AccessDenied' });
-      } 
-      else 
-      {
+      }
+      else {
         return next(); // Permite el acceso a la ruta solicitada
       }
-    } 
-    catch (error) 
-    {
+    }
+    catch (error) {
       console.error("Error during navigation guard:", error);
       return next({ name: 'Login' });
     }
-  } 
-  else 
-  {
+  }
+  else {
     return next(); // Si no requiere autenticación, continúa normalmente
   }
-});  
-  
+});
 
-function waitForAuthReady(auth)
-{
-  return new Promise((resolve) =>
-  {
-    const unsubscribe = onAuthStateChanged(auth, (user) =>
-    {
-      unsubscribe() ; // Nos desuscribimos después de obtener el usuario
-      resolve(user) ;
+
+function waitForAuthReady(auth) {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe(); // Nos desuscribimos después de obtener el usuario
+      resolve(user);
     });
   });
 }
