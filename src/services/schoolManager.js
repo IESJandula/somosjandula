@@ -9,7 +9,7 @@ export const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) 
     {
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/crearGrupos/cursoEtapa', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/cursoEtapa', 
       {
         method: 'GET',
         headers: 
@@ -39,7 +39,7 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
     {
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
        
-      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/matriculas',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/cargarMatriculas/matriculas',
       {
         method: 'POST',
         headers: 
@@ -69,7 +69,7 @@ export const obtenerCursosCargados = async (toastMessage, toastColor, isToastOpe
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/matriculas',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/cargarMatriculas/matriculas',
           {
             method: 'GET',
             headers:
@@ -98,7 +98,7 @@ export const borrarMatriculas = async (curso, etapa, toastMessage, toastColor, i
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/matriculas',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/cargarMatriculas/matriculas',
           {
             method: 'DELETE',
             headers:
@@ -127,7 +127,7 @@ export const obtenerDatosMatriculas = async (curso, etapa, toastMessage, toastCo
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/datosMatriculas', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/cargarMatriculas/datosMatriculas', 
       {
         method: 'GET',
         headers: 
@@ -159,7 +159,7 @@ export const matricularAsignaturasCsv = async (nombre, apellidos, asignatura, cu
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/datosMatriculas', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/cargarMatriculas/datosMatriculas', 
       {
         method: 'PUT',
         headers: 
@@ -193,7 +193,7 @@ export const matricularAlumnosCsv = async (nombre, apellidos, asignatura, curso,
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/datosMatriculas', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/cargarMatriculas/datosMatriculas', 
       {
         method: 'POST',
         headers: 
@@ -227,7 +227,7 @@ export const matricularAlumnosCsv = async (nombre, apellidos, asignatura, curso,
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/cargarMatriculas/datosMatriculas', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/cargarMatriculas/datosMatriculas', 
       {
         method: 'DELETE',
         headers: 
@@ -263,7 +263,7 @@ export const cargarAsignaturas = async (curso, etapa, toastMessage, toastColor, 
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/asignaturasYBloques/asignaturas', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYBloques/asignaturas', 
       {
         method: 'GET',
         headers: 
@@ -300,7 +300,7 @@ export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toas
         asignaturas 
       }).toString();
 
-      const response = await fetch(schoolmanagerApiUrl + '/asignaturasYBloques/bloques?' + queryParams, 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYBloques/bloques?' + queryParams, 
       {
         method: 'POST',
         headers: 
@@ -329,7 +329,7 @@ export const eliminarBloques = async (curso, etapa, nombre, grupo, toastMessage,
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/asignaturasYBloques/bloques', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYBloques/bloques', 
       {
         method: 'DELETE',
         headers: 
@@ -356,7 +356,7 @@ export const mostrarHoras = async (curso, etapa, toastMessage, toastColor, isToa
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/asignaturasYBloques/horas', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYBloques/horas', 
       {
         method: 'GET',
         headers: 
@@ -387,7 +387,7 @@ export const asignarHoras = async (curso, etapa, nombreAsignatura, horas, toastM
       
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/asignaturasYBloques/horas', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYBloques/horas', 
       {
         method: 'PUT',
         headers: 
@@ -421,7 +421,7 @@ export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, 
       const cursoInt = parseInt(curso, 10);
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/crearGrupos/grupos', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/grupos', 
       {
         method: 'POST',
         headers: 
@@ -453,7 +453,7 @@ export const obtenerGrupos = async (curso, etapa, toastMessage, toastColor, isTo
       const cursoInt = parseInt(curso, 10);
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/crearGrupos/grupos', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/grupos', 
       {
         method: 'GET',
         headers: 
@@ -485,7 +485,7 @@ export const obtenerAlumnosConGrupos = async (curso, etapa, grupo, toastMessage,
       const cursoInt = parseInt(curso, 10);
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/crearGrupos/gruposAlumnos', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/gruposAlumnos', 
       {
         method: 'GET',
         headers: 
@@ -519,7 +519,7 @@ export const obtenerAlumnosSinGrupos = async (curso, etapa, toastMessage, toastC
       const cursoInt = parseInt(curso, 10);
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/crearGrupos/gruposAlumnosTotales', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/gruposAlumnosTotales', 
       {
         method: 'GET',
         headers: 
@@ -549,7 +549,7 @@ export const asignarAlumnos = async (curso, etapa, grupo, alumnosSeleccionados, 
       const cursoInt = parseInt(curso, 10);
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/crearGrupos/gruposAlumnos', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/gruposAlumnos', 
       {
         method: 'POST',
         headers: 
@@ -581,7 +581,7 @@ export const borrarAlumnos = async (alumno, toastMessage, toastColor, isToastOpe
     {
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/crearGrupos/gruposAlumnos', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/gruposAlumnos', 
       {
         method: 'DELETE',
         headers: 
@@ -612,7 +612,7 @@ export const cargarAsignaturasUnicas = async (curso, etapa, toastMessage, toastC
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/resumenAsignaturas/asignaturasUnicas',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/resumenAsignaturas/asignaturasUnicas',
           {
             method: 'GET',
             headers:
@@ -643,7 +643,7 @@ export const obtenerNumAlumnosAsignatura = async (curso, etapa, grupo, asignatur
       // Se obtiene un token válido
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response =  await fetch(schoolmanagerApiUrl + '/resumenAsignaturas/numeroAlumnosEnAsignatura', {
+      const response =  await fetch(schoolmanagerApiUrl + '/schoolManager/resumenAsignaturas/numeroAlumnosEnAsignatura', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${tokenPropio}`,
@@ -667,7 +667,7 @@ export const cargarReducciones = async (toastMessage, toastColor, isToastOpen) =
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/crearReducciones/reducciones',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/reducciones',
           {
             method: 'GET',
             headers:
@@ -696,7 +696,7 @@ export const crearReduccion = async (nombre, horas, decideDireccion, toastMessag
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/crearReducciones/reducciones',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/reducciones',
           {
             method: 'GET',
             headers:
@@ -727,7 +727,7 @@ export const borrarReduccion = async (nombre, horas, decideDireccion, toastMessa
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/crearReducciones/reducciones',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/reducciones',
           {
             method: 'GET',
             headers:
