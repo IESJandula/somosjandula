@@ -49,6 +49,23 @@
             <ion-item button @click="navigateAndCloseMenu('/documents/itIssues')">Crear incidencia TIC</ion-item>
           </ion-list>
         </ion-list>
+        <!-- Proyectores -->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuProjectors">
+            Proyectores
+            <ion-icon slot="end"
+              :icon="projectorsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/projectors/EventsTable')">Cola eventos</ion-item>
+          </ion-list>
+          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Control remoto</ion-item>
+          </ion-list>
+          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Administración</ion-item>
+          </ion-list>
+        </ion-list>
       </ion-content>
     </ion-menu>
 
@@ -129,6 +146,7 @@ export default defineComponent({
     const printersSubmenuVisible = ref(false);
     const bookingsSubmenuVisible = ref(false);
     const documentsSubmenuVisible = ref(false);
+    const projectorsSubmenuVisible = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -156,6 +174,7 @@ export default defineComponent({
       printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuPrinters = () => {
@@ -163,6 +182,7 @@ export default defineComponent({
       printersSubmenuVisible.value = !printersSubmenuVisible.value;
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuBookings = () => {
@@ -170,13 +190,22 @@ export default defineComponent({
       printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       documentsSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuDocuments = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
+    };
+    const toggleSubMenuProjectors = () => {
+      adminSubmenuVisible.value = false;
+      printersSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      documentsSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = !projectorsSubmenuVisible.value;
     };
 
     onMounted(async () => {
@@ -212,10 +241,12 @@ export default defineComponent({
       printersSubmenuVisible,
       bookingsSubmenuVisible,
       documentsSubmenuVisible,
+      projectorsSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuPrinters,
       toggleSubMenuBookings,
       toggleSubMenuDocuments,
+      toggleSubMenuProjectors
     };
   },
 });

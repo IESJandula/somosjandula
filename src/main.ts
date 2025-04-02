@@ -7,6 +7,9 @@ import { signOut } from "firebase/auth";
 
 /* Importaciones de CSS */
 import '@ionic/vue/css/core.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
 
 /* Tema básico de Ionic */
 import '@ionic/vue/css/normalize.css';
