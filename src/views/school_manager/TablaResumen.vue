@@ -119,7 +119,7 @@ onMounted(() => {
 
 <template>
   <div class="container">
-    <h1 class="m-4">Resumen de cursos</h1>
+    <h1 class="m-4">Resumen por asignaturas</h1>
     <!-- Desplegable para elegir curso y etapa -->
     <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
 
