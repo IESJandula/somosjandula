@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
-import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas, obtenerDatosMatriculas, matricularAlumnosCsv } from '@/services/schoolManager.js'
+import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas, obtenerDatosMatriculas, matricularAsignaturasCsv, matricularAlumnosCsv, desmatricularAlumnosCsv } from '@/services/schoolManager.js'
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
@@ -21,6 +21,12 @@ const fileUploadRef = ref(null);
 const buttonText = ref('Enviar');
 const datosMatriculas = ref([]);
 const asignaturas = ref([]);
+const nuevoAlumno = ref({
+  nombre: "",
+  apellidos: "",
+  matriculas: {}
+});
+
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
@@ -107,6 +113,8 @@ const subirFichero = async () => {
     fileUploadComponent.fileClear();
 
     await insertarCursosCargados()
+    file.value = null;
+    archivoSeleccionado.value = false;
     comprobarBoton()
 };
 
@@ -187,7 +195,74 @@ const cargarDatosMatriculas = async () => {
   }
 };
 
-const matricularAlumnoCsv = async (index) => {
+const matricularAsignaturaCsv = async (index) => {
+  try {
+
+    const [curso, etapa] = cursoSeleccionado.value.split("-");
+    
+    const alumno = datosMatriculas.value[index].nombre;
+    const apellidos = datosMatriculas.value[index].apellidos;
+
+    if (Object.keys(matriculas).length === 0) {
+      throw new Error("Son obligatorios todos los campos.");
+    }
+
+
+    for(const[asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)){
+      if(estado === "MATR" || estado === "NO_MATR" || estado === "SUPCA" || estado === "CONV" || estado === "APRO" || estado === "PEND"){ 
+        await matricularAsignaturasCsv(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+      } else {
+        throw new Error("El estado de la asignatura debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.");
+      }
+    }
+
+    mensajeActualizacion = "Matricula modificada con exito";
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  } catch (error) {
+    mensajeActualizacion = error.message;
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  }
+};
+
+
+const registrarNuevoAlumno = async () => {
+  try {
+    
+    const [curso, etapa] = cursoSeleccionado.value.split("-");
+    const { nombre, apellidos, matriculas } = nuevoAlumno.value;
+    
+    
+    if (!nombre || !apellidos || Object.entries(matriculas).length !== asignaturas.value.length) {
+      throw new Error("Son obligatorios todos los campos.");
+    }
+
+    for (const [asignatura, estado] of Object.entries(matriculas)) {
+      if (!["MATR", "NO_MATR", "SUPCA", "CONV", "APRO", "PEND"].includes(estado)) {
+        throw new Error(`El estado de la asignatura debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
+      }
+      
+      await matricularAlumnosCsv(nombre, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+    }
+
+    mensajeActualizacion = "Alumno registrado con éxito";
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    
+    // Agregar el nuevo alumno a la tabla
+    datosMatriculas.value.push({ ...nuevoAlumno.value });
+
+    // Limpiar el formulario
+    nuevoAlumno.value = { nombre: "", apellidos: "", matriculas: {} };
+  } catch (error) {
+    mensajeActualizacion = error.message;
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  }
+};
+
+const desmatricularAlumnoCsv = async (index) => {
   try {
 
     const [curso, etapa] = cursoSeleccionado.value.split("-");
@@ -197,18 +272,40 @@ const matricularAlumnoCsv = async (index) => {
 
 
     for(const[asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)){
-      if(estado === "MATR" || estado === "NO_MATR" || estado === "SUPCA" || estado === "CONV" || estado === "APRO" || estado === "PEND"){ 
-        await matricularAlumnosCsv(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
-      } else {
-        throw new Error("No has escrito 'MATR' o 'NO_MATR' en la celda correspondiente");
-      }
+      
+      await desmatricularAlumnosCsv(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
     }
+
+    datosMatriculas.value.splice(index, 1); // Eliminar el alumno de la lista
 
     mensajeActualizacion = "Matricula modificada con exito";
     mensajeColor = "success";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
     mensajeActualizacion = error.message;
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  }
+};
+
+const guardarTodo = async () => {
+  try {
+    // Guardar todas las matrículas modificadas
+    for (let i = 0; i < datosMatriculas.value.length; i++) {
+      await matricularAsignaturaCsv(i);
+    }
+    
+    // Registrar nuevo alumno si hay datos
+    if (!nuevoAlumno.value.nombre || !nuevoAlumno.value.apellidos || !Object.keys(nuevoAlumno.value.matriculas).length > 0) {
+      throw new Error("Son obligatorios todos los campos.");
+    }
+    if (nuevoAlumno.value.nombre && nuevoAlumno.value.apellidos && Object.keys(nuevoAlumno.value.matriculas).length > 0) {
+      await registrarNuevoAlumno();
+      
+    }
+
+  } catch (error) {
+    mensajeActualizacion = "Error al guardar los cambios";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   }
@@ -269,12 +366,11 @@ onMounted(async () => {
       </table>
       </div>
     </div>  
-    <!-- Tabla con los datos cargados del CSV -->
+    <!-- Tarjeta con los datos cargados del CSV -->
     <div class="card-upload-data">
       <div class="centro">
-
         <h4 class="m-3">Datos del CSV cargado</h4>
-        <div class="dropdown">
+        <div class="dropdown-datos">
           <select v-model="cursoSeleccionado" id="seleccionar-curso" class="p-2 m-1">
             <option value="">Selecciona un curso</option>
             <option v-for="cursoEtapa in cursosEtapas"
@@ -286,35 +382,57 @@ onMounted(async () => {
           <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
         </div>
       </div>
-
-      <table v-if="datosMatriculas.length">
-        <thead>
-          <tr>
-            <th class="columna">Nombre</th>
-            <th class="columna">Apellidos</th>
-            <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-              {{ asignatura }}
-            </th>
-            <th class="columna">Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
-            <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
-            <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
-            <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-              <input 
-                type="text" 
-                v-model="estudiante.matriculas[asignatura]"
-                class="editable-cell">
-            </td>
-            <td class="columna">
-              <button class="btn" @click="matricularAlumnoCsv(index)">Guardar</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p v-else>No hay datos cargados del CSV.</p>
+      <!-- Tabla con los datos cargados del CSV -->
+       <div>
+         <table v-if="datosMatriculas.length">
+           <thead>
+             <tr>
+               <th class="columna">Eliminar</th>
+               <th class="columna">Nombre</th>
+               <th class="columna">Apellidos</th>
+               <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                 {{ asignatura }}
+               </th>
+               <th class="columna">Acción</th>
+             </tr>
+           </thead>
+           <tbody>
+             <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
+               <td class="columna">
+                 <button @click="desmatricularAlumnoCsv(index)" class="eliminar">&times;</button>
+               </td>
+               <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
+               <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
+               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                 <input 
+                   type="text" 
+                   v-model="estudiante.matriculas[asignatura]"
+                   class="editable-cell">
+               </td>
+               <td class="columna">
+                 <button class="btn" @click="matricularAsignaturaCsv(index)">Guardar</button>
+               </td>
+             </tr>
+             <tr>
+               <td class="columna"></td>
+               <td class="columna">
+                 <input type="text" v-model="nuevoAlumno.nombre">
+               </td>
+               <td class="columna">
+                 <input type="text" v-model="nuevoAlumno.apellidos">
+               </td>
+               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                 <input type="text" v-model="nuevoAlumno.matriculas[asignatura]">
+               </td>
+               <td class="columna">
+                 <button class="btn" @click="registrarNuevoAlumno">Registrar</button>
+               </td>
+             </tr>
+           </tbody>
+         </table>
+         <p v-else>No hay datos cargados del CSV.</p>
+       </div>
+       <button v-if="datosMatriculas.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
     </div>
   </div>
 </template>
@@ -366,7 +484,31 @@ onMounted(async () => {
   color: #FFFFFF;
   font-size: 1.1rem;
   align-self: center;
+  margin-left: 20px;
+  margin-bottom: 20px;
 }
+.btn-guardar-todo {
+  width: 170px;
+  padding: 0.5rem;
+  border: 1px solid ;
+  border-radius: 0.375rem; 
+  background-color: #4782eb;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  align-self: end;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.table-container {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
 button:disabled{
   color: #FFFFFF;
 }
@@ -406,12 +548,13 @@ input {
   padding: 0 20px;
 }
 
- .dropdown { 
-  width: 100%;
-  max-width: 250px;
+.dropdown { 
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px;
+}
+.dropdown-datos { 
+  display: flex;
+  flex-direction: row;
 }
 
 .centro{
@@ -425,7 +568,7 @@ input {
   gap: 10px;
   margin-top: 20px;
  } 
- .card-upload-csv {
+.card-upload-csv {
   flex: 1 1 30%;
   min-width: 520px;
   min-height: 400px;
@@ -437,14 +580,14 @@ input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  }
- .card-upload-table {
+}
+.card-upload-table {
   justify-content: flex-start;
   overflow: auto;
     height: 380px;
 }
-.card-upload-data{
-  min-width: 1050px;
+.card-upload-data {
+  min-width: 1060px;
   min-height: 500px;
   max-width: 900px;
   height: auto;
@@ -498,6 +641,50 @@ table{
     min-height: 100%;
     margin-right: 5px;
   }
+  .card-upload-table {
+    max-width: 400px;
+  }
+  .card-upload-data {
+    max-width: 75%;
+  }
+  
+  .dropdown,
+  .dropdown-datos { 
+  display: flex;
+  flex-direction: column;
+  }
+  .btn-guardar-todo {
+    position: relative;
+    left: 850px;
+  }
+}
+
+@media ((min-width: 768px) and (max-width: 1132px)) {
+  
+  .card-upload-csv {
+    min-width: 350px;
+    min-height: 100%;
+    margin-right: 5px;
+  }
+
+  .card-upload-table {
+    max-width: 100%;
+  }
+  
+  .card-upload-data {
+    min-width: 85%;
+    min-height: 100%;
+    margin-right: 5px;
+  }
+  
+  .dropdown-datos { 
+  display: flex;
+  flex-direction: column;
+  }
+  .btn-guardar-todo {
+    position: relative;
+    left: 850px;
+  }
 }
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
@@ -512,12 +699,12 @@ table{
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
   }
-  .btn{
+  .btn,
+  .btn-csv,
+  .btn-guardar-todo {
     color: black;
   }
-  .btn-csv{
-    color: black;
-  }
+  
   button:disabled{
   color: #000000;
 }

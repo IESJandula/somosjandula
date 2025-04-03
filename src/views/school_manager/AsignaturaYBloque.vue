@@ -64,7 +64,7 @@ const crearBloque = async () => {
     return;
   }
   // esta propiedad hace que se vuelva a cargar el template
-  // loading.value = true;
+  loading.value = true;
   errorMensaje.value = "";
 
   try {
@@ -90,6 +90,8 @@ const crearBloque = async () => {
   }
 };
 
+
+
 const eliminarBloque = async (asignatura) => {
   loading.value = true;
   errorMensaje.value = "";
@@ -104,6 +106,7 @@ const eliminarBloque = async (asignatura) => {
       isToastOpen);
       
     asignatura.bloqueId = null;
+    cargarAsignatura();
 
     // Agrupar asignaturas por bloqueId
     const bloques = asignaturas.value.reduce((acc, asignatura) => {
@@ -119,7 +122,7 @@ const eliminarBloque = async (asignatura) => {
       // Buscar bloques con menos de 2 asignaturas
       Object.entries(bloques).forEach(([bloqueId, asignaturasBloque]) => {
       if (asignaturasBloque.length < 2) {
-        toastMessage.value = `El bloque ${bloqueId} debe tener al menos dos asignaturas.`;
+        toastMessage.value = ` bloque ${bloqueId} tiene una asignatura, eliminalo ya un bloque debe tener al menos dos asignaturas.`;
         toastColor.value = "warning";
         isToastOpen.value = true;
       }
@@ -251,7 +254,7 @@ async () =>{
             <tr>
               <th class="th">Selecciona para crear un bloque</th>
               <th class="th">Nombre</th>
-              <th class="th">Bloque</th>
+              <th class="td-bloque">Bloque</th>
               <th class="th">Horas</th>
               <th class="th">Acciones</th>
             </tr>
@@ -264,7 +267,7 @@ async () =>{
               </td>
               <td class="th">{{ asignatura.nombre }}</td>
               <td class="th">
-                <div v-if="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null">
+                <div v-if="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null" class="bloque">
                   Bloque {{ asignatura.bloqueId }}
                   <button @click="eliminarBloque(asignatura)" class="btn-x">X</button>
                 </div>
@@ -272,7 +275,7 @@ async () =>{
               </td>
               <td class="p-4 th">
               <ion-input type="number" v-model.number="horasPorAsignatura[asignatura.nombre]"
-                  min="1" max="50" step="1">
+                  min="1" step="1" class="form-input-numer">
               </ion-input>
             </td>
             <td class="p-4 th">
@@ -334,10 +337,26 @@ async () =>{
 }
 .th {
   border: 1px solid currentColor; 
-  padding-left: 0.5rem; 
-  padding-right: 0.5rem;
+  padding-left: 0.3rem; 
+  padding-right: 0.3rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+.td-bloque{
+  border: 1px solid currentColor;
+  padding-left: 2rem; 
+  padding-right: 2rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.bloque{
+  text-align: center;
+}
+.form-input-numer {
+  max-width: 60px;
+  text-align: center;
+  background: transparent;
 }
 .table{
   color: black;
