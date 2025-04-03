@@ -191,9 +191,13 @@ onMounted(async () => {
     <div class="card-upload-alumnos">
       <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
       <span style="display: flex; gap: 10px;">
-      <button @click="seleccionarTodo" class="btn">Seleccionar todo</button>
-      <button @click="deseleccionarTodo" class="btn">Quitar todo</button>
-        </span>
+        <button @click="seleccionarTodo" class="btn">Seleccionar todo</button>
+        <button @click="deseleccionarTodo" class="btn">Quitar todo</button>
+      </span>
+      <!-- Listado de alumnos -->
+      <p v-if="listadoAlumnosSinGrupo.length > 0" class="cantidad-alumnos">
+        Total de alumnos: {{ listadoAlumnosSinGrupo.length }}
+      </p>
       <ul class="listaAlumnos">
         <li class="pad" v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
 
@@ -220,6 +224,9 @@ onMounted(async () => {
           <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ grupo }}
             <button class="eliminarGrupo" @click="limpiarGrupo(grupo)"> Limpiar grupo</button></h1>
         <div class="scroll-wrapper">
+          <p v-if="alumnosPorGrupo[grupo] && alumnosPorGrupo[grupo].length > 0" class="cantidad-alumnos">
+            Total de alumnos: {{ alumnosPorGrupo[grupo].length }}
+          </p>
           <table v-if="alumnosPorGrupo[grupo] && alumnosPorGrupo[grupo].length > 0" class="tablaAlumnos">
             <thead>
               <tr class="blue">
@@ -327,7 +334,7 @@ label:hover{
   overflow: auto; 
   max-height: 10rem;
   max-width: 100%;
-  margin-top: 1rem;
+  margin-top: 0.1rem;
   margin-bottom: 1rem;
   width: 50%;
   min-width: 300px;
@@ -335,16 +342,14 @@ label:hover{
 }
 .tablaAlumnos {
   flex: 1;
-  display: table; /* o block, pero evita inline-block si no quieres ese “cuadro” */
+  display: table; 
   border-collapse: collapse;
   border: 1px solid;
-  width: auto;         /* o min-width, según necesites */
-  min-width: 450px;    /* para forzar scroll si el contenedor es pequeño */
-  /* Quita margin-right si lo tenías, ya no hace falta */
+  width: auto;      
+  min-width: 450px;    
   margin-left: 1%;
   text-align: center;
   margin-right: 10px;
-  /* display: block; */
   position: relative; 
 }
 

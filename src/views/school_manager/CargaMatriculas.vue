@@ -113,6 +113,8 @@ const subirFichero = async () => {
     fileUploadComponent.fileClear();
 
     await insertarCursosCargados()
+    file.value = null;
+    archivoSeleccionado.value = false;
     comprobarBoton()
 };
 

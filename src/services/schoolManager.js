@@ -322,7 +322,7 @@ export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toas
 }
 
 
-export const eliminarBloques = async (curso, etapa, nombre, grupo, toastMessage, toastColor, isToastOpen) => 
+export const eliminarBloques = async (curso, etapa, nombre, toastMessage, toastColor, isToastOpen) => 
   {
     try
     {
@@ -335,9 +335,11 @@ export const eliminarBloques = async (curso, etapa, nombre, grupo, toastMessage,
         headers: 
         {
           'Authorization': `Bearer ${tokenPropio}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'curso': curso,
+          'etapa': etapa,
+          'nombre': nombre
         },
-        body: JSON.stringify({curso, etapa, nombre, grupo})
       });
       if(!response.ok) 
       {
