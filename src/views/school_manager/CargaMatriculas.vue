@@ -162,7 +162,10 @@ const eliminarCursosCargados = async (cursoE) => {
   const [curso, etapa] = cursoE.split('-');
   const data = await borrarMatriculas(curso, etapa, isToastOpen, toastMessage, toastColor)
   await insertarCursosCargados();
+  cursoSeleccionado.value = "" // Limpiar el curso seleccionado
+  datosMatriculas.value = [] // Limpiar los datos de matrículas
   return console.log("Borrado con exito: " + data)
+  
 }
 
 
@@ -495,13 +498,11 @@ onMounted(async () => {
   background-color: #4782eb;
   color: #FFFFFF;
   font-size: 1.1rem;
-  align-self: end;
   margin-top: 15px;
   margin-bottom: 5px;
   position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 850px;
 }
 
 .table-container {

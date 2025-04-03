@@ -16,11 +16,31 @@ const toastColor = ref('success');
 const asignaturasConHoras = ref([]);
 const horasPorAsignatura = ref({});
 const isProcessing = ref(false); // Estado de carga para "Guardar Todo"
+const bloquesConUnaAsignatura = ref([]);
+
 
 const actualizarSelect = (seleccionado) => {
     filtroSeleccionado.value = seleccionado;
     console.log("Filtro actualizado:", seleccionado);
 };
+
+const actualizarBloquesConUnaAsignatura = () => {
+  const bloques = asignaturas.value.reduce((acc, asignatura) => {
+    if (asignatura.bloqueId) {
+      if (!acc[asignatura.bloqueId]) {
+        acc[asignatura.bloqueId] = [];
+      }
+      acc[asignatura.bloqueId].push(asignatura);
+    }
+    return acc;
+  }, {});
+
+  // Filtrar los bloques que solo tienen una asignatura
+  bloquesConUnaAsignatura.value = Object.entries(bloques)
+    .filter(([, asignaturasBloque]) => asignaturasBloque.length === 1)
+    .map(([bloqueId]) => bloqueId);
+};
+
 
 const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
@@ -39,8 +59,9 @@ const cargarAsignatura = async () => {
 
     asignaturas.value = Array.isArray(data) ? data : [];
     console.log(asignaturas.value.length);
+  
+    actualizarBloquesConUnaAsignatura(); // Actualiza los bloques con una asignatura
 
-    
     const gruposSet = new Set();
     asignaturas.value.forEach((asignatura) => {
       const grupos = typeof asignatura.numeroAlumnosEnGrupo === 'object' ? asignatura.numeroAlumnosEnGrupo : {};
@@ -108,25 +129,7 @@ const eliminarBloque = async (asignatura) => {
     asignatura.bloqueId = null;
     cargarAsignatura();
 
-    // Agrupar asignaturas por bloqueId
-    const bloques = asignaturas.value.reduce((acc, asignatura) => {
-      if (asignatura.bloqueId) {
-        if (!acc[asignatura.bloqueId]) {
-          acc[asignatura.bloqueId] = [];
-        }
-        acc[asignatura.bloqueId].push(asignatura);
-      }
-      return acc;
-    }, {});
-
-      // Buscar bloques con menos de 2 asignaturas
-      Object.entries(bloques).forEach(([bloqueId, asignaturasBloque]) => {
-      if (asignaturasBloque.length < 2) {
-        toastMessage.value = ` bloque ${bloqueId} tiene una asignatura, eliminalo ya un bloque debe tener al menos dos asignaturas.`;
-        toastColor.value = "warning";
-        isToastOpen.value = true;
-      }
-    });
+    actualizarBloquesConUnaAsignatura(); // Actualiza los bloques con una asignatura
 
     } catch (error) {
     errorMensaje.value = "Error al eliminar el bloque.";
@@ -247,7 +250,13 @@ async () =>{
       <ion-card-content>
         <div v-if="errorMensaje" class="mensejeError">{{ errorMensaje }}</div>
         <div v-if="loading" class="cargar">Cargando datos...</div>
+        <div v-if="bloquesConUnaAsignatura.length > 0" class="mensajeBloqueUnico">
+          {{ bloquesConUnaAsignatura.length === 1
+            ? `El bloque ${bloquesConUnaAsignatura[0]} tiene una asignatura, elimínalo, ya un bloque debe tener al menos dos asignaturas.`
+            : `Los bloques ${bloquesConUnaAsignatura.join(", ")} tienen una asignatura, elimínalos, ya que un bloque debe tener al menos dos asignaturas.` }}
+        </div>
 
+        <!-- Tabla de asignaturas -->
         <div v-if="asignaturas.length > 0 && !loading">
           <table class="table">
             <thead>
@@ -349,6 +358,12 @@ async () =>{
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
+
+.mensajeBloqueUnico {
+  color: #f56565;
+  margin-bottom: 1rem;
+}
+
 
 .bloque{
   text-align: center;
