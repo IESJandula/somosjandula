@@ -12,7 +12,10 @@
         <div class="features-container">
           <div class="feature-text impresion-remota">Impresión remota</div>
           <div class="feature-text reserva-recursos">Reserva de recursos</div>
-          <div class="feature-text reserva-proyectores">Proximamente... uso de proyectores</div>
+          <div class="feature-text mat-agrup">Matriculaciones y agrupamientos</div>
+          <div class="feature-text gestion-ap">Gestión de alumnado y profesorado</div>
+          <div class="feature-text asignacion-materias">Asignación de materias y reducciones</div>
+          <div class="feature-text reserva-proyectores">Proximamente ... uso de proyectores</div>
         </div>
         
         <div class="buttons-container">
@@ -235,15 +238,27 @@ body {
 }
 
 .impresion-remota {
-  animation: fadeInOut 8s ease-in-out 0s infinite;
+  animation: fadeInOut 18s ease-in-out 0s infinite;
 }
 
 .reserva-recursos {
-  animation: fadeInOut 8s ease-in-out 2s infinite;
+  animation: fadeInOut 18s ease-in-out 3s infinite;
+}
+
+.mat-agrup {
+  animation: fadeInOut 18s ease-in-out 6s infinite;
+}
+
+.gestion-ap {
+  animation: fadeInOut 18s ease-in-out 9s infinite;
+}
+
+.asignacion-materias {
+  animation: fadeInOut 18s ease-in-out 12s infinite;
 }
 
 .reserva-proyectores {
-  animation: fadeInOut 8s ease-in-out 4s infinite;
+  animation: fadeInOut 18s ease-in-out 15s infinite;
 }
 
 @keyframes fadeInOut {
@@ -251,15 +266,15 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
-  10% {
+  2.78% { /* Start showing (fade in ends ~0.5s) */
     opacity: 1;
     transform: translateY(0);
   }
-  25% {
+  13.89% { /* Stay visible until (~2.5s) */
     opacity: 1;
     transform: translateY(0);
   }
-  33.33% {
+  16.67% { /* Start fading out (~3s) */
     opacity: 0;
     transform: translateY(-20px);
   }
