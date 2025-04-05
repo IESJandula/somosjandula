@@ -60,8 +60,8 @@
             <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">2. Asignaturas y bloques</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">3. Creación de grupos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por asignatura</ion-item>
-            <!-- <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Departamentos</ion-item> -->
-            <!-- <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item> -->
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Departamentos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
           </ion-list>
         </ion-list>
       </ion-content>

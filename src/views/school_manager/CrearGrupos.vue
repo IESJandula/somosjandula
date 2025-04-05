@@ -195,7 +195,7 @@ onMounted(async () => {
         <button @click="deseleccionarTodo" class="btn">Quitar todo</button>
       </span>
       <!-- Listado de alumnos -->
-      <p v-if="listadoAlumnosSinGrupo.length > 0" class="cantidad-alumnos">
+      <p class="cantidad-alumnos">
         Total de alumnos: {{ listadoAlumnosSinGrupo.length }}
       </p>
       <ul class="listaAlumnos">
@@ -279,7 +279,7 @@ align-items: center;
   flex: 1 1 30%;
   min-width: 300px;
   max-width: 490px;
-  min-height: 465px;
+  min-height: 502px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;

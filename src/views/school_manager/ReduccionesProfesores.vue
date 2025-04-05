@@ -10,51 +10,116 @@ const listaReducciones = ref(["65 años","TDE"])
 
 <template>
   <h1 class="t-1">Reducciones</h1>
-  <div class="top-section">
-    <!-- Tabla para crear las reducciones -->
-    <div class="card-crea-reduccion">
-      <div class="t-2">Crear reducción</div>
-      <div class="form-group">
-        <label class="form-label">Nombre:
-          <ion-input type="text" v-model="a" class="form-input"/>
+    <div class="top-section">
+      <!-- Tabla para crear las reducciones -->
+      <div class="card-crea-reduccion">
+        <div class="t-2">Crear reducción</div>
+        <div class="form-group">
+          <label class="form-label">Nombre:
+            <ion-input type="text" v-model="a" class="form-input"/>
+          </label>
+          <label class="form-label-numer">Horas:
+            <ion-input type="number" v-model.number="s" min="1" max="50" step="1" class="form-input-numer"/>
+          </label>
+        </div>
+        <label class="form-label">Elección de jefatura
+          <input type="checkbox" v-model="isJefatura" />
         </label>
-        <label class="form-label-numer">Horas:
-          <ion-input type="number" v-model.number="s" min="1" max="50" step="1" class="form-input-numer"/>
-        </label>
+        <!-- Aqui se guarda en la tabla de reducciones -->
+        <button @click="guardarReduccion" class="btn-guardar">Guardar</button>
+        <!-- formulario -->
       </div>
-      <label class="form-label">Elección de jefatura
-        <input type="checkbox" v-model="isJefatura" />
-      </label>
-      <!-- Aqui se guarda en la tabla de reducciones -->
-      <button @click="guardarReduccion" class="btn-guardar">Guardar</button>
-      <!-- formulario -->
+      <!-- Tabla con todas las reducciones que existen -->
+      <div class="card-cargar-reduccion">
+        <div class="t-2">Tabla de reducciones</div>
+        <table>
+         <thead>
+           <tr>
+             <th class="columna">Nombre</th>
+             <th class="columna">Horas</th>
+             <th class="columna">Asigna dirección</th>
+             <th class="columna">Acción</th>
+           </tr>
+         </thead>
+         <tbody>
+            <tr v-for="reduccion in listaReducciones" :key="reduccion">
+              <td class="columna">{{ reduccion.nombre }}</td>
+              <td class="columna">{{ reduccion.horas }}</td>
+              <td class="columna">{{ reduccion.asignacion }}</td>
+              <td class="columna">
+                <button @click="eliminarReduccion(reduccion.id)" class="btn-eliminar">&times;</button>
+              </td>
+            </tr>
+         </tbody>
+        </table>
+      </div>
     </div>
-    <!-- Tabla con todas las reducciones que existen -->
-    <div class="card-cargar-reduccion">
-      <div>Tabla de reducciones</div>
-      <table>
-       <thead>
-         <tr>
-           <th class="columna">Nombre</th>
-           <th class="columna">Horas</th>
-           <th class="columna">Asigna dirección</th>
-           <th class="columna">Acción</th>
-         </tr>
-       </thead>
-       <tbody>
-          <tr v-for="reduccion in listaReducciones" :key="reduccion">
-            <td class="columna">{{ reduccion.nombre }}</td>
-            <td class="columna">{{ reduccion.horas }}</td>
-            <td class="columna">{{ reduccion.asignacion }}</td>
-            <td class="columna">
-              <button @click="eliminarReduccion(reduccion.id)" class="btn-eliminar">&times;</button>
-            </td>
-          </tr>
-       </tbody>
-      </table>
+    <div class="top-section-dos">
+      <!-- Tabla para asignar las reducciones -->
+      <div class="card-crea-reduccion">
+        <div class="t-2">Asignar reducción</div>
+        <div class="dropdown-container">
+          <div class="dropdown-group">
+            <label  for="profesor-select">Profesor:</label>
+            <select 
+                id="profesor-select"
+                v-model="profesorSeleccionado" 
+                class="dropdown-select">
+                <option value="">Selecciona un profesor</option>
+                <option 
+                    v-for="profesor in listaProfesores" 
+                    :key="profesor.id" 
+                    :value="profesor.id">
+                    {{ profesor.nombre }}
+                </option>
+            </select>
+          </div>
 
+          <div class="dropdown-group">
+            <label for="reduccion-select">Reducción:</label>
+            <select 
+                id="reduccion-select"
+                v-model="reduccionSeleccionada" 
+                class="dropdown-select">
+                <option value="">Selecciona una reducción</option>
+                <option 
+                    v-for="reduccion in listaReducciones" 
+                    :key="reduccion.nombre" 
+                    :value="reduccion.nombre">
+                    {{ reduccion.nombre }}
+                </option>
+            </select>
+          </div>
+        </div>
+        <!-- Aqui se guarda en la tabla de reducciones -->
+        <button @click="asignarReduccion" class="btn-guardar">Asignar</button>
+        <!-- formulario -->
+      </div>
+      <!-- Tabla con todas las reducciones que existen -->
+      <div class="card-cargar-reduccion">
+        <div class="t-2">Reducciones asignadas</div>
+        <table>
+         <thead>
+           <tr>
+             <th class="columna">Profesor</th>
+             <th class="columna">Reducción</th>
+             <th class="columna">Horas</th>
+             <th class="columna">Acción</th>
+           </tr>
+         </thead>
+         <tbody>
+            <tr v-for="reduccion in listaReducciones" :key="reduccion">
+              <td class="columna">{{ reduccion.profesor }}</td>
+              <td class="columna">{{ reduccion.nombre }}</td>
+              <td class="columna">{{ reduccion.horas }}</td>
+              <td class="columna">
+                <button @click="eliminarReduccion(reduccion.id)" class="btn-eliminar">&times;</button>
+              </td>
+            </tr>
+         </tbody>
+        </table>
+      </div>
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -77,6 +142,14 @@ const listaReducciones = ref(["65 años","TDE"])
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+}
+
+.top-section-dos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 2rem;
 }
 
 .card-crea-reduccion {
@@ -111,7 +184,7 @@ const listaReducciones = ref(["65 años","TDE"])
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding-top: 3rem;
+  padding-top: 2.5rem;
 }
 
 .form-input {
@@ -158,12 +231,14 @@ const listaReducciones = ref(["65 años","TDE"])
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: auto;
+  height: 300px;
 }
 
 table{
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 .columna {
@@ -184,6 +259,42 @@ table{
   border: none;
 }
 
+.dropdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.dropdown-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.dropdown-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 0.5rem;
+}
+
+.dropdown-group label {
+  margin-bottom: 0.8rem;
+}
+
+.dropdown-select {
+  width: 280px;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid currentColor;
+}
+
+
 @media (prefers-color-scheme: dark) {
   .card-crea-reduccion,
   .card-cargar-reduccion {
@@ -201,7 +312,8 @@ table{
 }
 
 @media (max-width: 768px) {
-  .card-reduccion{
+  .card-crea-reduccion,
+  .card-cargar-reduccion {
     flex: 1 1 100%;
     min-width: 350px;
     min-height: 100%;
