@@ -16,7 +16,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
 import AsignaturaYBloque from '@/views/school_manager/AsignaturaYBloque.vue';
 import CargaMatriculas from '@/views/school_manager/CargaMatriculas.vue';
-import DepartamentosYHoras from '@/views/school_manager/DepartamentosYHoras.vue';
+import AsignaturasYDepartamentos from '@/views/school_manager/AsignaturasYDepartamentos.vue';
 import CrearGrupos from '@/views/school_manager/CrearGrupos.vue';
 import TablaResumen from "@/views/school_manager/TablaResumen.vue";
 import ReduccionesProfesores from "@/views/school_manager/ReduccionesProfesores.vue";
@@ -143,9 +143,9 @@ const routes = [
         },
       },
       {
-        path: 'school_manager/departamentos',
-        component: DepartamentosYHoras,
-        name: 'DepartamentosYHoras',
+        path: 'school_manager/asignaturasYDepartamentos',
+        component: AsignaturasYDepartamentos,
+        name: 'AsignaturasYDepartamentos',
         meta: {
           role: 'DIRECCION'
         },

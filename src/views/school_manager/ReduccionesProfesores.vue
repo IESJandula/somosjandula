@@ -93,7 +93,6 @@ const listaReducciones = ref(["65 años","TDE"])
         </div>
         <!-- Aqui se guarda en la tabla de reducciones -->
         <button @click="asignarReduccion" class="btn-guardar">Asignar</button>
-        <!-- formulario -->
       </div>
       <!-- Tabla con todas las reducciones que existen -->
       <div class="card-cargar-reduccion">
@@ -134,7 +133,7 @@ const listaReducciones = ref(["65 años","TDE"])
   font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
-  margin-top: 1.7rem;
+  margin-top: 1.5rem;
 }
 
 .top-section {
@@ -262,16 +261,10 @@ table{
 .dropdown-container {
   display: flex;
   flex-direction: column;
-  align-items: start;
-  margin-top: 1rem;
-}
-
-.dropdown-container {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 1.5rem;
   width: 100%;
+  margin-top: 1rem;
 }
 
 .dropdown-group {
@@ -308,6 +301,13 @@ table{
   }
   .btn-guardar {
     color: black;
+  }
+}
+
+@media ((min-width: 768px) and (max-width: 1422px)) {
+
+  .card-cargar-reduccion {
+    min-width: 420px;
   }
 }
 
