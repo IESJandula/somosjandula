@@ -61,7 +61,7 @@
                   <button
                     v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
                     @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
-                    Borrado Periódico
+                    Borrar
                   </button>
                 </div>
               </template>
@@ -661,7 +661,16 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
       }
     }
     else {
-      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
+      if (email !== emailUsuarioActual.value)
+      {
+        mensajeActualizacion = 'No puedes borrar reservas de otras personas'
+        mensajeColor = 'danger'
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      }
+      else
+      {
+        await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
+      }
     }
     mensajeActualizacion = 'Reserva cancelada correctamente'
     mensajeColor = 'success'
