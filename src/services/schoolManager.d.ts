@@ -69,6 +69,17 @@ export declare function obtenerNumAlumnosAsignatura(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 
+/****************************** Ventana 5 AsignaturasYDepartamentos  ******************************/
+export declare function obtenerDepartamentos(toastMessage: Ref<string>,
+                                             toastColor: Ref<string>,
+                                             isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignarProfesoresADepartamentos(toastMessage: Ref<string>,
+                                                        toastColor: Ref<string>,
+                                                        isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerDatosDepartamentosConAsignaturas(toastMessage: Ref<string>,
+                                                                toastColor: Ref<string>,
+                                                                isToastOpen: Ref<boolean>): Promise<void>;
+
 /****************************** Ventana 6 Reducciones ******************************/
 export declare function cargarReducciones(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,

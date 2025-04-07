@@ -661,6 +661,91 @@ export const obtenerNumAlumnosAsignatura = async (curso, etapa, grupo, asignatur
     }
   }
 
+/****************************** Ventana 5 AsignaturasYDepartamentos ******************************/
+export const obtenerDepartamentos = async (toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/departamentos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+      });
+
+      if(!response.ok) 
+      {
+        throw new Error('No se pudieron cargar los cursos y etapas');
+      }
+      return await response.json();
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+
+export const asignarProfesoresADepartamentos = async (nombre, plantilla, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const queryParams = new URLSearchParams({
+        nombre,
+        plantilla
+      }).toString();
+
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/departamentos?' + queryParams, 
+      {
+        method: 'PUT',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+      });
+
+      if(!response.ok) 
+      {
+        throw new Error('No se pudieron cargar los cursos y etapas');
+      }
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const obtenerDatosDepartamentosConAsignaturas = async (toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturas/infoDepartamentos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+      });
+
+      if(!response.ok) 
+      {
+        throw new Error('No se pudieron cargar los cursos y etapas');
+      }
+      return await response.json();
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+
 /****************************** Ventana 6 Reducciones ******************************/
 export const cargarReducciones = async (toastMessage, toastColor, isToastOpen) =>
   {

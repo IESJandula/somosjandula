@@ -1,66 +1,66 @@
 <script setup>
+import { ref, onMounted } from 'vue';
+import { IonInput, IonToast } from "@ionic/vue";
+import { obtenerDepartamentos, asignarProfesoresADepartamentos } from '@/services/schoolManager.js'
 
+// const errorMensaje = ref("");
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
+const departamentos = ref([]);
+const departamentoSeleccionado = ref('');
+const plantillaPorAsignatura = ref('');
+
+const obtenerDepartamento = async () => {
+  try {
+    const data = await obtenerDepartamentos(toastMessage, toastColor, isToastOpen);
+    departamentos.value = data;
+  } catch (error) {
+    console.error('Error al cargar departamentos', error);
+  }
+};
+
+const asignarProfesorADepartamento = async (nombreDepartamento) => {
+ 
+  if (nombreDepartamento === '') {
+    toastMessage.value = 'Por favor, selecciona un departamento.';
+    toastColor.value = 'warning';
+    isToastOpen.value = true;
+    return;
+  }
+  
+  if (plantillaPorAsignatura.value === '') {
+    toastMessage.value = 'La plantilla no puede estar vacía.';
+    toastColor.value = 'warning';
+    isToastOpen.value = true;
+    return;
+  }
+
+  try {
+    const data = await asignarProfesoresADepartamentos(nombreDepartamento, plantillaPorAsignatura.value, toastMessage, toastColor, isToastOpen);
+    departamentos.value = data;
+
+    toastMessage.value = 'Profesor asignado correctamente.';
+    toastColor.value = 'success';
+    isToastOpen.value = true;
+    // Limpiar los campos después de la asignación
+    departamentoSeleccionado.value = '';
+    obtenerDepartamento();
+    plantillaPorAsignatura.value = '';
+  } catch (error) {
+    console.error('Error al asignar profesor a departamento', error);
+  }
+};
+
+onMounted(async () => {
+  await obtenerDepartamento();
+  
+});
 </script>
 
 <template>
   <h1 class="t-1">Asignaturas y departamentos</h1>
   <div class="top-card">
-    <!-- * Tabla para asignar profesores a departamentos -->
-    <div class="card-asignacion">
-      <div class="t-2">Profesores en plantilla</div>
-      <div class="form-group">
-        <div class="dropdown-departamentos">
-          <label  for="profesor-select">Departamentos:</label>
-          <select 
-            id="profesor-select"
-            v-model="profesorSeleccionado" 
-            class="dropdown-select">
-            <option value="">Selecciona un departamento</option>
-            <option 
-              v-for="profesor in listaProfesores" 
-              :key="profesor.id" 
-              :value="profesor.id">
-              {{ profesor.nombre }}
-            </option>
-          </select>
-        </div>
-        <label class="form-label-numer">Plantilla:
-          <ion-input type="number" v-model.number="s" min="1" max="50" step="1" class="form-input-numer"/>
-        </label>
-      </div>
-      <!-- Aqui se guarda en la tabla de departamentos -->
-      <button @click="guardarReduccion" class="btn-asignar">Asignar</button>
-    </div>
-    <!-- ? Tabla con los datos de los departamentos -->
-    <div class="card-departamentos-asignaturas">
-      <div class="t-2">Tabla de departamentos</div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th class="columna">Departamentos</th>
-              <th class="columna">Plantilla</th>
-              <th class="columna">Horas necesarias</th>
-              <th class="columna">Hotas totales</th>
-              <th class="columna">Desfase</th>
-              <th class="columna">Resultado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="departamento in listaDepartamentos" :key="departamento">
-              <td class="columna">{{ departamento.nombre }}</td>
-              <td class="columna">{{ departamento.plantilla }}</td>
-              <td class="columna">{{ departamento.horasNecesaria }}</td>
-              <td class="columna">{{ departamento.horasTotales }}</td>
-              <td class="columna">{{ departamento.Desfase }}</td>
-              <td class="columna">{{ departamento.resultado }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="top-card-dos">
     <!-- TODO Tabla para asignar las asignaturas a los departamentos -->
     <div class="card-asignacion">
       <div class="t-2">Asignar de asignaturas a departamentos</div>
@@ -127,6 +127,62 @@
       <!-- Aqui se guarda en la tabla de asignaturas y departamentos -->
       <button @click="asignarReduccion" class="btn-asignar">Asignar</button>
     </div>
+    <!-- ? Tabla con los datos de los departamentos -->
+    <div class="card-departamentos-asignaturas">
+      <div class="t-2">Tabla de departamentos</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="columna">Departamentos</th>
+              <th class="columna">Plantilla</th>
+              <th class="columna">Horas necesarias</th>
+              <th class="columna">Hotas totales</th>
+              <th class="columna">Desfase</th>
+              <th class="columna">Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="departamento in listaDepartamentos" :key="departamento">
+              <td class="columna">{{ departamento.nombre }}</td>
+              <td class="columna">{{ departamento.plantilla }}</td>
+              <td class="columna">{{ departamento.horasNecesaria }}</td>
+              <td class="columna">{{ departamento.horasTotales }}</td>
+              <td class="columna">{{ departamento.Desfase }}</td>
+              <td class="columna">{{ departamento.resultado }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="top-card-dos">
+    <!-- * Tabla para asignar profesores a departamentos -->
+    <div class="card-asignacion">
+      <div class="t-2">Profesores en plantilla</div>
+      <div class="form-group">
+        <div class="dropdown-departamentos">
+          <label  for="profesor-select">Departamentos:</label>
+          <select 
+            id="departamento-select"
+            v-model="departamentoSeleccionado" 
+            class="dropdown-select">
+            <option value="">Selecciona un departamento</option>
+            <option 
+              v-for="departamento in departamentos" 
+              :key="departamento.nombre" 
+              :value="departamento.nombre">
+              {{ departamento.nombre }}
+            </option>
+          </select>
+        </div>
+        <label class="form-label-numer">Plantilla:
+          <ion-input type="number" v-model.number="plantillaPorAsignatura" min="1" max="50" step="1" class="form-input-numer"/>
+        </label>
+      </div>
+      <!-- Aqui se guarda en la tabla de departamentos -->
+      <button @click="asignarProfesorADepartamento(departamentoSeleccionado)" class="btn-asignar">Asignar</button>
+    </div>
     <!-- ? Tabla con todas las reducciones que existen -->
     <div class="card-departamentos-asignaturas">
       <div class="t-2">Tabla de asignaturas y departamentos</div>
@@ -155,6 +211,14 @@
         </table>
       </div>
     </div>
+    <ion-toast
+        :is-open="isToastOpen"
+        :message="toastMessage"
+        :color="toastColor"
+        duration="2000"
+        @did-dismiss="() => (isToastOpen = false)"
+        position="top">
+    </ion-toast>
   </div>
 </template>
 
