@@ -117,6 +117,7 @@ import { menuController } from '@ionic/vue'; // Importa el controlador del menú
 import { getAuth, signOut } from 'firebase/auth';
 import { validarRolesMenu, obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast';
+import { SESSION_JWT_TOKEN } from '@/utils/constants';
 
 export default defineComponent({
   name: 'MainLayout',
@@ -156,6 +157,10 @@ export default defineComponent({
       try {
         const auth = getAuth();
         await signOut(auth);
+
+        // Eliminamos el token de la sesión previa
+        localStorage.removeItem(SESSION_JWT_TOKEN) ;
+
         router.replace({ name: 'Login' });
         window.location.reload(); // Forzar la recarga para limpiar cualquier estado residual
       } catch (error) {

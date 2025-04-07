@@ -44,6 +44,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
 import { firebaseConfig } from '@/environment/firebaseConfig';
+import { APP_VERSION, SESSION_JWT_TOKEN } from '@/utils/constants.js';
 
 // Inicializar Firebase
 const firebaseApp = initializeApp(firebaseConfig);
@@ -111,5 +112,23 @@ export function setLoggingInStatus(status: boolean) {
 
 // Montar la aplicación cuando el router esté listo
 router.isReady().then(() => {
+
+  const cachedVersion = localStorage.getItem('app_version');
+
+  if (cachedVersion && cachedVersion !== APP_VERSION)
+  {
+    localStorage.setItem('app_version', APP_VERSION);
+
+    // Eliminamos el token de la sesión previa
+    localStorage.removeItem(SESSION_JWT_TOKEN) ;
+
+    console.log('[App] Nueva versión detectada, recargando...') ;
+    location.reload() ; // fuerza recarga completa
+  }
+  else if (!cachedVersion)
+  {
+    localStorage.setItem('app_version', APP_VERSION);
+  }
+
   app.mount("#app");
 });
