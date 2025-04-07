@@ -1,7 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { IonInput, IonToast } from "@ionic/vue";
-import { obtenerDepartamentos, asignarProfesoresADepartamentos } from '@/services/schoolManager.js'
+import {
+  obtenerDepartamentos,
+  asignarProfesoresADepartamentos,
+  obtenerCursosEtapasYGruposDistintos, asignaturasPorCursoYgrupo
+} from '@/services/schoolManager.js'
 
 // const errorMensaje = ref("");
 const isToastOpen = ref(false);
@@ -10,6 +14,20 @@ const toastColor = ref('success');
 const departamentos = ref([]);
 const departamentoSeleccionado = ref('');
 const plantillaPorAsignatura = ref('');
+const cursosYetapas = ref([]);
+const cursosYetapasSeleccionado = ref('');
+const asignaturas = ref([]);
+const asignaturaSeleccionada = ref(null);
+
+// Los deplegables de los departamentos de la primera tarjeta tal y como estan ahora
+// no se entienden del todo bien respecto a los endpoints. El objetivo del donante y propietario
+// era pasarse horas entre ellos no? Haria falta un contador numerico para eso.
+
+// Si necesitamos asignar el departamento nosotros primero lo que haría falta sería un segundo boton debajo
+// del de asignar para la donacion de horas y tener uno (el que hay, el de asignar) para usar el endpoint de asignar departamento
+// a la asignatura selecionada en el radio con un departamento. Haria falta otro desplegable
+// de departamentos identico al de la tarjeta de abajo para eso. Cuando pueda me pongo y lo acabo.
+
 
 const obtenerDepartamento = async () => {
   try {
@@ -18,6 +36,41 @@ const obtenerDepartamento = async () => {
   } catch (error) {
     console.error('Error al cargar departamentos', error);
   }
+};
+
+const obtenerCursoYEtapa = async () => {
+  try {
+    const data = await obtenerCursosEtapasYGruposDistintos(toastMessage, toastColor, isToastOpen);
+    cursosYetapas.value = data;
+  } catch (error) {
+    console.error('Error al cargar cursos', error);
+  }
+};
+
+const obtenerAsignaturas = async () => {
+  if (cursosYetapasSeleccionado.value) {
+    try {
+      const data = await asignaturasPorCursoYgrupo(
+          cursosYetapasSeleccionado.value.curso,
+          cursosYetapasSeleccionado.value.etapa,
+          cursosYetapasSeleccionado.value.grupo,
+          toastMessage,
+          toastColor,
+          isToastOpen
+      );
+      asignaturas.value = data;
+    } catch (error) {
+      console.error('Error al cargar asignaturas', error);
+    }
+  } else {
+    asignaturas.value = [];
+  }
+};
+
+const actualizarCurso = (parametro) => {
+  cursosYetapasSeleccionado.value = parametro;
+  obtenerAsignaturas()
+
 };
 
 const asignarProfesorADepartamento = async (nombreDepartamento) => {
@@ -54,6 +107,7 @@ const asignarProfesorADepartamento = async (nombreDepartamento) => {
 
 onMounted(async () => {
   await obtenerDepartamento();
+  await obtenerCursoYEtapa();
   
 });
 </script>
@@ -67,28 +121,28 @@ onMounted(async () => {
       <div class="top-container">
         <select 
             id="profesor-select"
-            v-model="profesorSeleccionado" 
+            v-model="cursosYetapasSeleccionado" @change="actualizarCurso(cursosYetapasSeleccionado)"
             class="dropdown-select">
             <option value="">Selecciona un curso-etapa-grupo</option>
-            <option 
-              v-for="profesor in listaProfesores" 
-              :key="profesor.id" 
-              :value="profesor.id">
-              {{ profesor.nombre }}
+            <option
+                v-for="item in cursosYetapas"
+                :key="`${item.curso}-${item.etapa}-${item.grupo}`"
+                :value="item">
+              {{ item.curso }} - {{ item.etapa }} - {{ item.grupo }}
             </option>
         </select>
         <div class="top-section">
           <ul class="listaAsignaturas p-2">
-            <li>AAAAAAA
-              <!-- <label>
-                <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
-                {{ alumno.apellidos }}, {{ alumno.nombre }}
-              </label> -->
+            <li v-for="asignatura in asignaturas" :key="asignatura.id">
+              <label>
+                <input
+                    type="radio"
+                    name="asignaturas"
+                    :value="asignatura"
+                    v-model="asignaturaSeleccionada">
+                {{ asignatura.nombreAsignaturas }}
+              </label>
             </li>
-            <li>BBBBBBB</li>
-            <li>CCCCCCC</li>
-            <li>DDDDDDD</li>
-            <li>EEEEEEE</li>
           </ul>
           <div class="form-groups">
             <div class="dropdown-departamentos">
