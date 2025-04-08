@@ -1,10 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { IonInput, IonToast } from "@ionic/vue";
-import {
-  obtenerDepartamentos,
-  asignarProfesoresADepartamentos,
-  obtenerCursosEtapasYGruposDistintos, asignaturasPorCursoYgrupo
+import { obtenerDepartamentos, asignarProfesoresADepartamentos, obtenerDatosDepartamentosConAsignaturas,
+  obtenerCursosEtapasGrupos, obtenerAsignaturasPorCursoEtapaGrupo
 } from '@/services/schoolManager.js'
 
 // const errorMensaje = ref("");
@@ -18,16 +16,7 @@ const cursosYetapas = ref([]);
 const cursosYetapasSeleccionado = ref('');
 const asignaturas = ref([]);
 const asignaturaSeleccionada = ref(null);
-
-// Los deplegables de los departamentos de la primera tarjeta tal y como estan ahora
-// no se entienden del todo bien respecto a los endpoints. El objetivo del donante y propietario
-// era pasarse horas entre ellos no? Haria falta un contador numerico para eso.
-
-// Si necesitamos asignar el departamento nosotros primero lo que haría falta sería un segundo boton debajo
-// del de asignar para la donacion de horas y tener uno (el que hay, el de asignar) para usar el endpoint de asignar departamento
-// a la asignatura selecionada en el radio con un departamento. Haria falta otro desplegable
-// de departamentos identico al de la tarjeta de abajo para eso. Cuando pueda me pongo y lo acabo.
-
+const listaDepartamentos = ref([]);
 
 const obtenerDepartamento = async () => {
   try {
@@ -40,17 +29,29 @@ const obtenerDepartamento = async () => {
 
 const obtenerCursoYEtapa = async () => {
   try {
-    const data = await obtenerCursosEtapasYGruposDistintos(toastMessage, toastColor, isToastOpen);
+    const data = await obtenerCursosEtapasGrupos(toastMessage, toastColor, isToastOpen);
     cursosYetapas.value = data;
   } catch (error) {
     console.error('Error al cargar cursos', error);
   }
 };
 
+const obtenerDatosDepartamentoConAsignatura = async () => {
+  try {
+    const data = await obtenerDatosDepartamentosConAsignaturas(toastMessage, toastColor, isToastOpen);
+    listaDepartamentos.value = data;
+    
+    
+    
+  } catch (error) {
+    console.error('Error al cargar departamentos con asignaturas', error);
+  }
+};
+
 const obtenerAsignaturas = async () => {
   if (cursosYetapasSeleccionado.value) {
     try {
-      const data = await asignaturasPorCursoYgrupo(
+      const data = await obtenerAsignaturasPorCursoEtapaGrupo(
           cursosYetapasSeleccionado.value.curso,
           cursosYetapasSeleccionado.value.etapa,
           cursosYetapasSeleccionado.value.grupo,
@@ -100,12 +101,14 @@ const asignarProfesorADepartamento = async (nombreDepartamento) => {
     departamentoSeleccionado.value = '';
     obtenerDepartamento();
     plantillaPorAsignatura.value = '';
+    obtenerDatosDepartamentoConAsignatura();
   } catch (error) {
     console.error('Error al asignar profesor a departamento', error);
   }
 };
 
 onMounted(async () => {
+  await obtenerDatosDepartamentoConAsignatura();
   await obtenerDepartamento();
   await obtenerCursoYEtapa();
   
@@ -133,10 +136,10 @@ onMounted(async () => {
         </select>
         <div class="top-section">
           <ul class="listaAsignaturas p-2">
-            <li v-for="asignatura in asignaturas" :key="asignatura.id">
+            <li v-for="asignatura in asignaturas" :key="asignatura.id" class="p-2 transparente ">
               <label>
                 <input
-                    type="radio"
+                    type="checkbox"
                     name="asignaturas"
                     :value="asignatura"
                     v-model="asignaturaSeleccionada">
@@ -200,10 +203,14 @@ onMounted(async () => {
             <tr v-for="departamento in listaDepartamentos" :key="departamento">
               <td class="columna">{{ departamento.nombre }}</td>
               <td class="columna">{{ departamento.plantilla }}</td>
-              <td class="columna">{{ departamento.horasNecesaria }}</td>
+              <td class="columna">{{ departamento.horasNecesarias }}</td>
               <td class="columna">{{ departamento.horasTotales }}</td>
-              <td class="columna">{{ departamento.Desfase }}</td>
-              <td class="columna">{{ departamento.resultado }}</td>
+              <td class="columna">{{ departamento.desfase }}</td>
+              <td class="columna" :class="{
+                'texto-amarillo': departamento.desfase > 0,
+                'texto-rojo': departamento.desfase < 0,
+                'texto-verde': departamento.desfase === 0
+              }">{{ departamento.desfase > 0 ? 'Sobran horas' : departamento.desfase < 0 ? 'Faltan horas' : 'Cerrado' }}</td>
             </tr>
           </tbody>
         </table>
@@ -389,7 +396,7 @@ table{
 
 .columna {
   min-width: 120px;
-  border: 1px solid currentColor;
+  border: 1px solid black;
   padding: 0.5rem;
   text-align: center;
 }
@@ -445,6 +452,7 @@ table{
 }
 
 .listaAsignaturas {
+  max-width: 250px;
   table-layout: auto;
   min-height: 10rem;
   margin-top: 0.5rem;
@@ -455,6 +463,16 @@ table{
     height: 100px;
 }
 
+.p-2{
+  padding: 0.4rem;
+  border: 1px solid currentColor; 
+  border-radius: 0.375rem; 
+}
+
+.transparente{
+  border-color: transparent;
+}
+
 li{
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
@@ -463,6 +481,16 @@ li{
 
 .form-label {
   margin-top: 1rem;
+}
+
+.texto-verde{
+  color: #2b8f06;
+}
+.texto-amarillo{
+  color: #e0a205;
+}
+.texto-rojo{
+  color: #EF4444;
 }
 
 
@@ -480,6 +508,12 @@ li{
   .btn-asignar {
     color: black;
   }
+  .columna{
+    border: 1px solid white;
+  }
+  .texto-amarillo{
+  color: #FBBF24;
+}
 }
 
 @media ((min-width: 768px) and (max-width: 1422px)) {

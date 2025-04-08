@@ -746,7 +746,7 @@ export const obtenerDatosDepartamentosConAsignaturas = async (toastMessage, toas
       console.log(error);
     }
 }
-export const obtenerCursosEtapasYGruposDistintos = async (toastMessage, toastColor, isToastOpen) =>
+export const obtenerCursosEtapasGrupos = async (toastMessage, toastColor, isToastOpen) =>
 {
   try
   {
@@ -776,7 +776,7 @@ export const obtenerCursosEtapasYGruposDistintos = async (toastMessage, toastCol
   }
 }
 
-export const asignaturasPorCursoYgrupo = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => {
+export const obtenerAsignaturasPorCursoEtapaGrupo = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => {
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -834,7 +834,7 @@ export const obtenerTodasLasAsignaturas = async (toastMessage, toastColor, isToa
   }
 }
 
-export const quitarDepartamentosDeAsignatura = async (curso, etapa, grupo, nombre, toastMessage, toastColor, isToastOpen) =>
+export const quitarAsignaturasDeDepartamentos = async (curso, etapa, grupo, nombre, toastMessage, toastColor, isToastOpen) =>
 {
   try
   {
@@ -870,7 +870,7 @@ export const quitarDepartamentosDeAsignatura = async (curso, etapa, grupo, nombr
   }
 }
 
-export const asignarDepartamentosDeAsignatura = async (curso, etapa, grupo, nombre, departamentoPropietario, departamentoReceptor, toastMessage, toastColor, isToastOpen) =>
+export const asignarAsignaturasADepartamentos = async (curso, etapa, grupo, nombre, departamentoPropietario, departamentoReceptor, toastMessage, toastColor, isToastOpen) =>
 {
   try
   {
