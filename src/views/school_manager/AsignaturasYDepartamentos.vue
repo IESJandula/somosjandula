@@ -1,8 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { IonInput, IonToast } from "@ionic/vue";
-import { obtenerDepartamentos, asignarProfesoresADepartamentos, obtenerDatosDepartamentosConAsignaturas,
-  obtenerCursosEtapasGrupos, obtenerAsignaturasPorCursoEtapaGrupo
+import {
+  obtenerDepartamentos,
+  asignarProfesoresADepartamentos,
+  obtenerCursosEtapasGrupos, obtenerAsignaturasPorCursoEtapaGrupo,
+  obtenerDatosDepartamentosConAsignaturas, asignarAsignaturasADepartamentos
 } from '@/services/schoolManager.js'
 
 // const errorMensaje = ref("");
@@ -15,7 +18,10 @@ const plantillaPorAsignatura = ref('');
 const cursosYetapas = ref([]);
 const cursosYetapasSeleccionado = ref('');
 const asignaturas = ref([]);
-const asignaturaSeleccionada = ref(null);
+const asignaturaSeleccionada = ref([]);
+const depPropietarioSeleccionado = ref('');
+const depReceptorSeleccionado = ref('');
+
 const listaDepartamentos = ref([]);
 
 const obtenerDepartamento = async () => {
@@ -40,9 +46,9 @@ const obtenerDatosDepartamentoConAsignatura = async () => {
   try {
     const data = await obtenerDatosDepartamentosConAsignaturas(toastMessage, toastColor, isToastOpen);
     listaDepartamentos.value = data;
-    
-    
-    
+
+
+
   } catch (error) {
     console.error('Error al cargar departamentos con asignaturas', error);
   }
@@ -71,8 +77,45 @@ const obtenerAsignaturas = async () => {
 const actualizarCurso = (parametro) => {
   cursosYetapasSeleccionado.value = parametro;
   obtenerAsignaturas()
-
 };
+
+const asignarDepPropietario = async () => {
+  if (cursosYetapasSeleccionado.value &&
+      asignaturaSeleccionada.value.length > 0 &&
+      depPropietarioSeleccionado.value) {
+  try{
+
+    for (const asignatura of asignaturaSeleccionada.value)
+    {
+      const nombreAsignatura = asignatura.nombreAsignaturas;
+      await asignarAsignaturasADepartamentos(
+          cursosYetapasSeleccionado.value.curso,
+          cursosYetapasSeleccionado.value.etapa,
+          cursosYetapasSeleccionado.value.grupo,
+          nombreAsignatura,
+          depPropietarioSeleccionado.value,
+          depReceptorSeleccionado.value,
+          toastMessage,
+          toastColor,
+          isToastOpen
+      );
+    }
+
+    toastMessage.value = "Asignación realizada correctamente.";
+    toastColor.value = "success";
+    isToastOpen.value = true;
+    await obtenerAsignaturas()
+    await obtenerDatosDepartamentoConAsignatura()
+    } catch (error) {
+      console.error('Error al asignar departamentos a las asignaturas', error);
+    }
+  } else {
+    toastMessage.value = "Se necesita seleccionar al menos un curso-etapa, una asignatura y un departamento";
+    toastColor.value = "warning";
+    isToastOpen.value = true;
+  }
+
+}
 
 const asignarProfesorADepartamento = async (nombreDepartamento) => {
  
@@ -99,9 +142,9 @@ const asignarProfesorADepartamento = async (nombreDepartamento) => {
     isToastOpen.value = true;
     // Limpiar los campos después de la asignación
     departamentoSeleccionado.value = '';
-    obtenerDepartamento();
+    await obtenerDepartamento();
     plantillaPorAsignatura.value = '';
-    obtenerDatosDepartamentoConAsignatura();
+    await obtenerDatosDepartamentoConAsignatura();
   } catch (error) {
     console.error('Error al asignar profesor a departamento', error);
   }
@@ -149,25 +192,25 @@ onMounted(async () => {
           </ul>
           <div class="form-groups">
             <div class="dropdown-departamentos">
-              <label for="profesor-select">Departamento propietario:</label>
+              <label for="depPropietario-select">Departamento propietario:</label>
               <select 
-                id="profesor-select"
-                v-model="profesorSeleccionado" 
+                id="depPropietario-select"
+                v-model="depPropietarioSeleccionado"
                 class="dropdown-select-group">
                 <option value="">Selecciona un departamento</option>
-                <option 
-                    v-for="profesor in listaProfesores" 
-                    :key="profesor.id" 
-                    :value="profesor.id">
-                    {{ profesor.nombre }}
+                <option
+                    v-for="departamento in departamentos"
+                    :key="departamento.nombre"
+                    :value="departamento.nombre">
+                  {{ departamento.nombre }}
                 </option>
               </select>
             </div>
             <div class="dropdown-departamentos">
-              <label class="form-label" for="reduccion-select">Departamento donante:</label>
+              <label class="form-label" for="depReceptor-select">Departamento donante:</label>
               <select 
-                id="reduccion-select"
-                v-model="reduccionSeleccionada" 
+                id="depReceptor-select"
+                v-model="depReceptorSeleccionado"
                 class="dropdown-select-group">
                 <option value="">Selecciona un departamento</option>
                 <option 
@@ -182,7 +225,7 @@ onMounted(async () => {
         </div>
       </div>
       <!-- Aqui se guarda en la tabla de asignaturas y departamentos -->
-      <button @click="asignarReduccion" class="btn-asignar">Asignar</button>
+      <button @click="asignarDepPropietario" class="btn-asignar">Asignar</button>
     </div>
     <!-- ? Tabla con los datos de los departamentos -->
     <div class="card-departamentos-asignaturas">
@@ -465,8 +508,8 @@ table{
 
 .p-2{
   padding: 0.4rem;
-  border: 1px solid currentColor; 
-  border-radius: 0.375rem; 
+  border: 1px solid currentColor;
+  border-radius: 0.375rem;
 }
 
 .transparente{
