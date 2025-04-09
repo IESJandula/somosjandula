@@ -1,11 +1,14 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { IonInput, IonToast } from "@ionic/vue";
+import {onMounted, ref} from 'vue';
+import {IonInput, IonToast} from "@ionic/vue";
 import {
-  obtenerDepartamentos,
+  asignarAsignaturasADepartamentos,
   asignarProfesoresADepartamentos,
-  obtenerCursosEtapasGrupos, obtenerAsignaturasPorCursoEtapaGrupo,
-  obtenerDatosDepartamentosConAsignaturas, asignarAsignaturasADepartamentos
+  obtenerAsignaturasPorCursoEtapaGrupo,
+  obtenerCursosEtapasGrupos,
+  obtenerDatosDepartamentosConAsignaturas,
+  obtenerDepartamentos,
+  obtenerTodasLasAsignaturas, quitarAsignaturasDeDepartamentos
 } from '@/services/schoolManager.js'
 
 // const errorMensaje = ref("");
@@ -21,6 +24,7 @@ const asignaturas = ref([]);
 const asignaturaSeleccionada = ref([]);
 const depPropietarioSeleccionado = ref('');
 const depReceptorSeleccionado = ref('');
+const listaAsignaturasDepartamentos = ref([]);
 
 const listaDepartamentos = ref([]);
 
@@ -54,6 +58,7 @@ const obtenerDatosDepartamentoConAsignatura = async () => {
   }
 };
 
+//Asignaturas sin departamento propietario asignado
 const obtenerAsignaturas = async () => {
   if (cursosYetapasSeleccionado.value) {
     try {
@@ -67,12 +72,21 @@ const obtenerAsignaturas = async () => {
       );
       asignaturas.value = data;
     } catch (error) {
-      console.error('Error al cargar asignaturas', error);
+      console.error('Error al cargar asignaturas sin departamento', error);
     }
   } else {
     asignaturas.value = [];
   }
 };
+
+//Todas las asignaturas
+const obtenerAsignaturasCompletas = async () => {
+  try {
+    listaAsignaturasDepartamentos.value = await obtenerTodasLasAsignaturas();
+  } catch (error) {
+    console.error('Error al cargar todas las asignaturas', error);
+  }
+}
 
 const actualizarCurso = (parametro) => {
   cursosYetapasSeleccionado.value = parametro;
@@ -105,6 +119,7 @@ const asignarDepPropietario = async () => {
     toastColor.value = "success";
     isToastOpen.value = true;
     await obtenerAsignaturas()
+    await obtenerAsignaturasCompletas()
     await obtenerDatosDepartamentoConAsignatura()
     } catch (error) {
       console.error('Error al asignar departamentos a las asignaturas', error);
@@ -116,6 +131,45 @@ const asignarDepPropietario = async () => {
   }
 
 }
+
+const eliminarAsignaturaDepartamento = async (index) => {
+  const registro = listaAsignaturasDepartamentos.value[index];
+  if (!registro) {
+    toastMessage.value = 'Registro no encontrado';
+    toastColor.value = 'warning';
+    isToastOpen.value = true;
+    return;
+  }
+
+  const curso = registro.curso;
+  const etapa = registro.etapa;
+  const grupo = registro.grupo;
+  const nombre = registro.nombre;
+
+  try {
+    await quitarAsignaturasDeDepartamentos(
+        curso,
+        etapa,
+        grupo,
+        nombre,
+        toastMessage,
+        toastColor,
+        isToastOpen
+    );
+
+    await obtenerAsignaturasCompletas();
+    await obtenerAsignaturas();
+    toastMessage.value = 'Desasignación realizada correctamente.';
+    toastColor.value = 'success';
+    isToastOpen.value = true;
+  } catch (error) {
+    console.error('Error al desasignar departamentos de la asignatura', error);
+    toastMessage.value = 'Error al desasignar la asignatura.';
+    toastColor.value = 'danger';
+    isToastOpen.value = true;
+  }
+};
+
 
 const asignarProfesorADepartamento = async (nombreDepartamento) => {
  
@@ -154,7 +208,7 @@ onMounted(async () => {
   await obtenerDatosDepartamentoConAsignatura();
   await obtenerDepartamento();
   await obtenerCursoYEtapa();
-  
+  await obtenerAsignaturasCompletas();
 });
 </script>
 
@@ -301,17 +355,17 @@ onMounted(async () => {
               <th class="columna">Acción</th>
             </tr>
           </thead>
-          <tbody>
-              <tr v-for="asignaturasDepartamentos in listaAsignaturasDepartamentos" :key="asignaturasDepartamentos">
-                <td class="columna">{{ asignaturasDepartamentos.cursoEtapaGrupo }}</td>
-                <td class="columna">{{ asignaturasDepartamentos.asignaturas }}</td>
-                <td class="columna">{{ asignaturasDepartamentos.departamentoPropietario }}</td>
-                <td class="columna">{{ asignaturasDepartamentos.departamentoDonante }}</td>
+            <tbody>
+              <tr v-for="(registro, index) in listaAsignaturasDepartamentos" :key="index">
+                <td class="columna">{{ registro.cursoEtapaGrupo }}</td>
+                <td class="columna">{{ registro.nombre }}</td>
+                <td class="columna">{{ registro.departamentoPropietario }}</td>
+                <td class="columna">{{ registro.departamentoDonante }}</td>
                 <td class="columna">
-                  <button @click="eliminarAsignaturaDepartamento(asignaturasDepartamentos.id)" class="btn-eliminar">&times;</button>
+                  <button @click="eliminarAsignaturaDepartamento(index)" class="btn-eliminar">&times;</button>
                 </td>
               </tr>
-          </tbody>
+           </tbody>
         </table>
       </div>
     </div>

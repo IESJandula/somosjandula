@@ -838,16 +838,17 @@ export const quitarAsignaturasDeDepartamentos = async (curso, etapa, grupo, nomb
 {
   try
   {
+    const cursoInt = parseInt(curso, 10);
     const url = new URL(
-        schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/quitarDepartamentos'
+        schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturas/quitarDepartamentos'
     );
-    url.searchParams.append('curso', curso);
+    url.searchParams.append('curso', cursoInt);
     url.searchParams.append('etapa', etapa);
     url.searchParams.append('grupo', grupo);
     url.searchParams.append('nombre', nombre);
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturas/quitarDepartamentos',
+    const response = await fetch(url.toString(),
         {
           method: 'PATCH',
           headers:
@@ -860,8 +861,6 @@ export const quitarAsignaturasDeDepartamentos = async (curso, etapa, grupo, nomb
     {
       throw new Error('Error al eliminar departamentos de la asignatura. Inténtelo de nuevo');
     }
-
-    return await response.json();
 
   }
   catch (error)
