@@ -131,6 +131,10 @@ const asignarDepPropietario = async () => {
     toastMessage.value = "Asignación realizada correctamente.";
     toastColor.value = "success";
     isToastOpen.value = true;
+    cursosYetapasSeleccionado.value = '';
+    asignaturaSeleccionada.value = [];
+    depPropietarioSeleccionado.value = '';
+    depReceptorSeleccionado.value = '';
     await obtenerAsignaturas()
     await obtenerAsignaturasCompletas()
     await obtenerDatosDepartamentoConAsignatura()
