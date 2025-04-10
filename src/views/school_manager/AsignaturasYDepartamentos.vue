@@ -89,12 +89,17 @@ const obtenerAsignaturas = async () => {
 //Todas las asignaturas
 const obtenerAsignaturasCompletas = async () => {
   try {
-    listaAsignaturasDepartamentos.value = await obtenerTodasLasAsignaturas();
-    console.log(listaAsignaturasDepartamentos.value);
+    const todasLasAsignaturas = await obtenerTodasLasAsignaturas();
+
+    listaAsignaturasDepartamentos.value = todasLasAsignaturas.filter(asignatura => {
+      const receptor = asignatura.departamentoReceptor?.trim();
+      const propietario = asignatura.departamentoPropietario?.trim();
+      return receptor && receptor.length > 0 || propietario && propietario.length > 0;
+    });
   } catch (error) {
     console.error('Error al cargar todas las asignaturas', error);
   }
-}
+};
 
 const actualizarCurso = (parametro) => {
   cursosYetapasSeleccionado.value = parametro;
@@ -306,7 +311,7 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="departamento in listaDepartamentos" :key="departamento">
+            <tr v-for="departamento in listaDepartamentosIterable" :key="departamento">
               <td class="columna">{{ departamento.nombre }}</td>
               <td class="columna">{{ departamento.plantilla }}</td>
               <td class="columna">{{ departamento.horasNecesarias }}</td>
