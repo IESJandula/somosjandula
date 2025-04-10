@@ -27,6 +27,7 @@ const depReceptorSeleccionado = ref('');
 const listaAsignaturasDepartamentos = ref([]);
 
 const listaDepartamentos = ref([]);
+const listaDepartamentosIterable = ref([]);
 
 const obtenerDepartamento = async () => {
   try {
@@ -49,10 +50,16 @@ const obtenerCursoYEtapa = async () => {
 const obtenerDatosDepartamentoConAsignatura = async () => {
   try {
     const data = await obtenerDatosDepartamentosConAsignaturas(toastMessage, toastColor, isToastOpen);
-    listaDepartamentos.value = data;
-
-
-
+    listaDepartamentosIterable.value = data;
+    console.log(data);
+    if (depPropietarioSeleccionado.value !== depReceptorSeleccionado.value) {
+      for (const departamento of listaDepartamentosIterable.value) {
+        departamento.horasTotales = departamento.horasTotales - departamento.horas;
+      }
+    } else {
+      listaDepartamentos.value = data;
+    } 
+    
   } catch (error) {
     console.error('Error al cargar departamentos con asignaturas', error);
   }
@@ -83,6 +90,7 @@ const obtenerAsignaturas = async () => {
 const obtenerAsignaturasCompletas = async () => {
   try {
     listaAsignaturasDepartamentos.value = await obtenerTodasLasAsignaturas();
+    console.log(listaAsignaturasDepartamentos.value);
   } catch (error) {
     console.error('Error al cargar todas las asignaturas', error);
   }
@@ -159,6 +167,7 @@ const eliminarAsignaturaDepartamento = async (index) => {
 
     await obtenerAsignaturasCompletas();
     await obtenerAsignaturas();
+    await obtenerDatosDepartamentoConAsignatura();
     toastMessage.value = 'Desasignación realizada correctamente.';
     toastColor.value = 'success';
     isToastOpen.value = true;
@@ -268,10 +277,10 @@ onMounted(async () => {
                 class="dropdown-select-group">
                 <option value="">Selecciona un departamento</option>
                 <option 
-                  v-for="reduccion in listaReducciones" 
-                  :key="reduccion.nombre" 
-                  :value="reduccion.nombre">
-                  {{ reduccion.nombre }}
+                  v-for="departamento in departamentos" 
+                  :key="departamento.nombre" 
+                  :value="departamento.nombre">
+                  {{ departamento.nombre }}
                 </option>
               </select>
             </div>
@@ -357,7 +366,7 @@ onMounted(async () => {
           </thead>
             <tbody>
               <tr v-for="(registro, index) in listaAsignaturasDepartamentos" :key="index">
-                <td class="columna">{{ registro.cursoEtapaGrupo }}</td>
+                <td class="columna">{{ registro.curso }} {{ registro.etapa }} {{ registro.grupo }}</td>
                 <td class="columna">{{ registro.nombre }}</td>
                 <td class="columna">{{ registro.departamentoPropietario }}</td>
                 <td class="columna">{{ registro.departamentoDonante }}</td>
