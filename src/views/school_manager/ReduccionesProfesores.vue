@@ -22,7 +22,7 @@ const listaReducciones = ref(["65 años","TDE"])
             <ion-input type="number" v-model.number="s" min="1" max="50" step="1" class="form-input-numer"/>
           </label>
         </div>
-        <label class="form-label">Elección de jefatura
+        <label class="form-label">Decide dirección:
           <input type="checkbox" v-model="isJefatura" />
         </label>
         <!-- Aqui se guarda en la tabla de reducciones -->

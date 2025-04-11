@@ -26,6 +26,8 @@ const nuevoAlumno = ref({
   apellidos: "",
   matriculas: {}
 });
+const estadosValidos = ["MATR", "NO_MATR", "SUPCA", "CONV", "APRO", "PEND"];
+
 
 
 const comprobarBoton = () => {
@@ -206,10 +208,9 @@ const matricularAsignaturaCsv = async (index) => {
     const alumno = datosMatriculas.value[index].nombre;
     const apellidos = datosMatriculas.value[index].apellidos;
 
-    if (Object.keys(matriculas).length === 0) {
+    if (datosMatriculas.value[index].matriculas.length === 0) {
       throw new Error("Son obligatorios todos los campos.");
     }
-
 
     for(const[asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)){
       if(estado === "MATR" || estado === "NO_MATR" || estado === "SUPCA" || estado === "CONV" || estado === "APRO" || estado === "PEND"){ 
@@ -242,7 +243,7 @@ const registrarNuevoAlumno = async () => {
     }
 
     for (const [asignatura, estado] of Object.entries(matriculas)) {
-      if (!["MATR", "NO_MATR", "SUPCA", "CONV", "APRO", "PEND"].includes(estado)) {
+      if (![estadosValidos].includes(estado)) {
         throw new Error(`El estado de la asignatura debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
       }
       
@@ -293,18 +294,33 @@ const desmatricularAlumnoCsv = async (index) => {
 
 const guardarTodo = async () => {
   try {
-    // Guardar todas las matrículas modificadas
-    for (let i = 0; i < datosMatriculas.value.length; i++) {
-      await matricularAsignaturaCsv(i);
-    }
     
-    // Registrar nuevo alumno si hay datos
-    if (!nuevoAlumno.value.nombre || !nuevoAlumno.value.apellidos || !Object.keys(nuevoAlumno.value.matriculas).length > 0) {
-      throw new Error("Son obligatorios todos los campos.");
-    }
-    if (nuevoAlumno.value.nombre && nuevoAlumno.value.apellidos && Object.keys(nuevoAlumno.value.matriculas).length > 0) {
-      await registrarNuevoAlumno();
+    if(nuevoAlumno.value.nombre !== ''){
+      // Registrar nuevo alumno si hay datos
+      if (!nuevoAlumno.value.nombre || !nuevoAlumno.value.apellidos || Object.keys(nuevoAlumno.value.matriculas).length !== asignaturas.value.length) {
+        throw new Error("Son obligatorios todos los campos.");
+      }
+      if (nuevoAlumno.value.nombre && nuevoAlumno.value.apellidos && Object.keys(nuevoAlumno.value.matriculas).length > 0) {
+          // Guardar el nuevo alumno
+        await registrarNuevoAlumno();
+        // Validar los estados de las asignaturas
+        for (const [asignatura, estado] of Object.entries(nuevoAlumno.value.matriculas)) {
+          if (![estadosValidos].includes(estado)) {
+            throw new Error(`El estado de la`, asignatura, `debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
+          }
+        }
+        mensajeActualizacion = "Todo guardado con éxito";
+        mensajeColor = "success";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      }
       
+    }
+    if(nuevoAlumno.value  !== null){
+      
+      // Guardar todas las matrículas modificadas
+      for (let i = 0; i < datosMatriculas.value.length; i++) {
+        await matricularAsignaturaCsv(i);
+      }
     }
 
   } catch (error) {
@@ -313,7 +329,6 @@ const guardarTodo = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   }
 };
-
 
 
 onMounted(async () => {
