@@ -139,7 +139,7 @@
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
           <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
-            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" />
+            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" :class="{'placeholder-date': !fechaSeleccionada }" />
         </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
@@ -997,6 +997,24 @@ tr:hover td {
     overflow-x: auto;
     display: block;
     white-space: nowrap;
+  }
+  input[type="date"].placeholder-date::before
+  {
+  content: "Elige una fecha";
+  color: #ffffff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-size: 1rem;
+  white-space: nowrap;
+  }
+
+  input[type="date"].placeholder-date {
+    position: relative;
+    color: transparent;
+    text-align: center;
   }
 
   /* Hacer que los tramos se mantengan visibles (bloqueados) */
