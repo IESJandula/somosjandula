@@ -31,7 +31,7 @@
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
@@ -54,7 +54,7 @@
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
@@ -76,7 +76,7 @@
           <td class="reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
                 </div>
@@ -109,16 +109,20 @@
           placeholder="Número de alumnos" min="0"
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
 
+        <label class="custom-motivoCurso" for="motivoCurso">Motivo y Curso:</label>
+        <input class="custom-select-modal" v-model="motivoCurso" type="text" id="motivoCurso"
+          placeholder="Justifica el motivo y curso" />
+
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
           permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
             cantidadSeleccionada)) }} alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && motivoCurso"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION')"
+          v-else-if="motivoCurso && numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION')"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -155,6 +159,7 @@ const recursoSeleccionadoBloqueado = ref(false)
 const isModalOpen = ref(false)
 const correoProfesor = ref('')
 const numAlumnos = ref('')
+const motivoCurso = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
 let mensajeActualizacion = ''
@@ -252,6 +257,13 @@ const saveChanges = async () => {
     return;
   }
 
+  if (motivoCurso.value === '') {
+    mensajeActualizacion = 'El campo "Motivo y Curso" es obligatorio.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
   try {
     mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
@@ -274,7 +286,8 @@ const saveChanges = async () => {
       recursoSeleccionado.value,
       currentDia.value.id,
       currentTramo.value.id,
-      alumnos
+      alumnos,
+      motivoCurso.value,
     );
 
     // Actualizar reservas localmente
@@ -301,6 +314,7 @@ const saveChanges = async () => {
   }
 
   closeModal();
+  motivoCurso.value = '';
   getReserva(recursoSeleccionado); // Actualizar reservas después de guardar
 };
 
@@ -377,7 +391,8 @@ const getReserva = async () => {
       nalumnos: reserva.nalumnos,
       nombreYapellidos: reserva.nombreYapellidos,
       email: reserva.email,
-      plazasRestantes: reserva.plazasRestantes
+      plazasRestantes: reserva.plazasRestantes,
+      motivoCurso: reserva.motivoCurso,
     }
   }
   reservas.value = estructuraReservas

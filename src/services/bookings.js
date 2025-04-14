@@ -192,7 +192,7 @@ export const deleteRecursoReserva = async(toastMessage, toastColor, isToastOpen,
     }
   }
 
-export const postReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos) =>
+export const postReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, motivoCurso) =>
   {
   try
   {
@@ -209,6 +209,7 @@ export const postReserva = async (toastMessage, toastColor, isToastOpen, email, 
         diaDeLaSemana: diaDeLaSemana,
         tramosHorarios: tramoHorario,
         nAlumnos: nAlumnos,
+        motivoCurso: motivoCurso
       },
     })
 
@@ -312,7 +313,7 @@ export const getProfesores = async (toastMessage, toastColor, isToastOpen) =>
 }
 
 
-export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana, esSemanal) =>
+export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana, esSemanal, motivoCurso) =>
   {
   try
   {
@@ -330,7 +331,8 @@ export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen
         tramosHorarios: tramoHorario,
         nAlumnos: nAlumnos,
         numSemana: numSemana,
-        esSemanal: esSemanal
+        esSemanal: esSemanal,
+        motivoCurso: motivoCurso
       }
     })
 
