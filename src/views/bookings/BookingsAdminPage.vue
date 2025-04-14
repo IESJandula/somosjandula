@@ -72,8 +72,14 @@
                 <td>{{ r.recursos }}</td>
                 <td>{{ r.cantidad }}</td>
                 <td>
-                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                  <button @click.stop="eliminarRecurso(r.recursos, $event)">
                     X
+                  </button>
+                  <button class="btn-modify-lock" v-if= "r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
+                    🔒
+                  </button>
+                  <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
+                    🔓
                   </button>
                 </td>
               </tr>
@@ -83,8 +89,14 @@
                 <td>{{ r.recursos }}</td>
                 <td>{{ r.cantidad }}</td>
                 <td>
-                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                  <button @click.stop="eliminarRecurso(r.recursos, $event)">
                     X
+                  </button>
+                  <button class="btn-modify-lock" v-if= "r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
+                    🔒
+                  </button>
+                  <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
+                    🔓
                   </button>
                 </td>
               </tr>
@@ -188,7 +200,8 @@ import {
   getReservas,
   getRecursos,
   getCantMaxResource,
-  deleteRecursoReserva
+  deleteRecursoReserva,
+  modifyResourceLock,
 } from "@/services/bookings";
 
 // Selección de constante
@@ -394,12 +407,14 @@ const cargarRecursos = async () => {
         recursos: item.id,
         cantidad: item.cantidad,
         esCompartible: item.esCompartibleLista,
+        bloqueado: item.bloqueado,
       }));
     } else {
       recursosNoCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
         esCompartible: item.esCompartibleLista,
+        bloqueado: item.bloqueado,
       }));
     }
 
@@ -416,6 +431,40 @@ const cargarRecursos = async () => {
     );
   }
 };
+
+const bloquearRecurso = async (recurso, bloqueado) => {
+  try
+  {
+    await modifyResourceLock(isToastOpen, toastMessage, toastColor, recurso, bloqueado);
+    mensajeActualizacion = "";
+
+    if (bloqueado) {
+      mensajeActualizacion = "Recurso bloqueado correctamente";
+    } else {
+      mensajeActualizacion = "Recurso desbloqueado correctamente";
+    }
+
+    mensajeColor = "success";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+    await cargarRecursos();
+  } catch (error) {
+    mensajeActualizacion = "Error al actualizar el recurso";
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+  }
+}
 
 const eliminarRecurso = async (recurso, event) => {
   try {
@@ -765,6 +814,23 @@ input:checked+.slider {
 
 input:checked+.slider:before {
   transform: translateX(26px);
+}
+
+.btn-modify-lock {
+  color: white;
+  border: none;
+  margin-left: 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-modify-unlock {
+  background-color: #025ec0;
+  color: white;
+  border: none;
+  margin-left: 15px;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 /* Modo oscuro */

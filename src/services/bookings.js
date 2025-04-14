@@ -467,3 +467,32 @@ export const getCheckAvailable = async (toastMessage, toastColor, isToastOpen,di
     console.log(error)
   }
 }
+
+export const modifyResourceLock = async (toastMessage, toastColor, isToastOpen, recurso, bloqueado) =>
+  {
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
+      {
+      method: 'PUT',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        recurso: recurso,
+        bloqueado: bloqueado,
+      }
+    })
+
+    if (!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+    return await response.json()
+  }
+  catch (error)
+  {
+    console.log();
+  }
+}

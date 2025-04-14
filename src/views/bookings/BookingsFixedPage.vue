@@ -4,7 +4,8 @@
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == '' && !recursoSeleccionadoBloqueado">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está bloqueado</span>
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
@@ -23,7 +24,7 @@
           <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
         </tr>
       </thead>
-      <tbody v-if="valorConstante === ''">
+      <tbody v-if="valorConstante === '' && !recursoSeleccionadoBloqueado">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
@@ -150,6 +151,7 @@ const recursoSeleccionado = ref('')
 const cantidadSeleccionada = ref('')
 const profesorSeleccionado = ref('')
 const recursoSeleccionadoCompartible = ref(false)
+const recursoSeleccionadoBloqueado = ref(false)
 const isModalOpen = ref(false)
 const correoProfesor = ref('')
 const numAlumnos = ref('')
@@ -336,13 +338,14 @@ const getTramosHorario = async () => {
 const getRecurso = async () => {
   try {
     const data = await getRecursos(isToastOpen, toastMessage, toastColor)
-    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible }))
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible, bloqueado: item.bloqueado }))
 
     // Nos aseguraramos que recursos no está vacío antes de asignar
     if (recursos.value.length > 0) {
       recursoSeleccionado.value = recursos.value[0].recursos;
       cantidadSeleccionada.value = recursos.value[0].cantidad;
       recursoSeleccionadoCompartible.value = recursos.value[0].esCompartible;
+      recursoSeleccionadoBloqueado.value = recursos.value[0].bloqueado;
     }
   }
   catch (error) {
@@ -407,6 +410,7 @@ watch(recursoSeleccionado, () => {
   );
   cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
+  recursoSeleccionadoBloqueado.value = recursoEncontrado ? recursoEncontrado.bloqueado : false;
   isModalOpen.value = false
 
   if (recursoSeleccionadoCompartible.value) {
@@ -469,6 +473,15 @@ onMounted(async () => {
 
 .mensajeInformativo {
   color: #007bff;
+  padding: 10px;
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.mensajeInformativoBloqueo
+{
+  color: #ff9900;
   padding: 10px;
   font-size: 25px;
   font-weight: bold;
