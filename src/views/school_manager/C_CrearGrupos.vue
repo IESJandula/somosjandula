@@ -1,13 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos } from '@/services/schoolManager.js'
+import { crearNuevosGrupos, obtenerInfoGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const grupoSeleccionado = ref('');
 const resultadoGrupos = ref('');
-const grupos = ref([]);
+const infoGrupos = ref([]);
 const listadoAlumnosSeleccionados = ref([]);
 const listadoAlumnosSinGrupo = ref([]);
 const alumnosPorGrupo = ref({})
@@ -18,7 +18,7 @@ const toastColor = ref('success');
 
 const actualizarSelect = (parametro) => {
     filtroSeleccionado.value = parametro;
-    grupos.value = [];
+    infoGrupos.value = [];
     grupoSeleccionado.value = '';
     alumnosPorGrupo.value = {};
     listadoAlumnosSinGrupo.value = [];
@@ -52,7 +52,7 @@ const crearNuevoGrupo = async (curso, etapa) => {
 const obtenerGrupo = async (curso, etapa) => {
   try {
       if (curso != null && etapa) {
-          grupos.value = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
+          infoGrupos.value = await obtenerInfoGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
           await obtenerAlumno();
       }
   } catch (error) {
@@ -75,14 +75,14 @@ const obtenerAlumno = async () => {
     console.log(listadoAlumnosSinGrupo)
 
       alumnosPorGrupo.value = {}; //HAY QUE LIMPIAR PRIMERO, SI NO SE DUPLICAN
-      for (const grupo of grupos.value) {
+      for (const infoGrupo of infoGrupos.value) {
 
         const alumnosDeEseGrupo = await obtenerAlumnosConGrupos(
-            curso, etapa, grupo, toastMessage, toastColor, isToastOpen
+            curso, etapa, infoGrupo.grupo, toastMessage, toastColor, isToastOpen
         );
-        console.log(`Alumnos de grupo ${grupo}`, alumnosDeEseGrupo);
+        console.log(`Alumnos de grupo ${infoGrupo.grupo}`, alumnosDeEseGrupo);
         // Guardamos ese array bajo la clave del grupo
-        alumnosPorGrupo.value[grupo] = alumnosDeEseGrupo;
+        alumnosPorGrupo.value[infoGrupo.grupo] = alumnosDeEseGrupo;
     }
 
   }
@@ -213,21 +213,24 @@ onMounted(async () => {
 
       <select v-model="grupoSeleccionado" @change="actualizarGrupo(grupoSeleccionado)" class="p-2 m-1">
         <option value="">Selecciona un grupo</option>
-        <option v-for="grupo in grupos" :key="grupo" :value="grupo">{{ grupo }}</option>
+        <option v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" :value="infoGrupo.grupo">{{ infoGrupo.grupo }}</option>
       </select>
       <button @click="enviarDato" class="btn">Añadir alumnos</button>
     </div>
     <div class="card-upload-table">
       <div class="espacio">a
       </div>
-      <div  v-for="grupo in grupos" :key="grupo">
-          <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ grupo }}
-            <button class="eliminarGrupo" @click="limpiarGrupo(grupo)"> Limpiar grupo</button></h1>
+      <div  v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo">
+          <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ infoGrupo.grupo }}
+            <button class="eliminarGrupo" @click="limpiarGrupo(infoGrupo.grupo)"> Limpiar grupo</button></h1>
         <div class="scroll-wrapper">
-          <p v-if="alumnosPorGrupo[grupo] && alumnosPorGrupo[grupo].length > 0" class="cantidad-alumnos">
-            Total de alumnos: {{ alumnosPorGrupo[grupo].length }}
+          <p v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="cantidad-alumnos">
+            Total de alumnos: {{ alumnosPorGrupo[infoGrupo.grupo].length }}
+            <label class="horario-checkbox">
+              <input type="checkbox" v-model="infoGrupo.horarioMatutino" /> horario de mañana
+            </label>
           </p>
-          <table v-if="alumnosPorGrupo[grupo] && alumnosPorGrupo[grupo].length > 0" class="tablaAlumnos">
+          <table v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="tablaAlumnos">
             <thead>
               <tr class="blue">
                 <th class="th">Acciones</th>
@@ -236,8 +239,8 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="alumno in alumnosPorGrupo[grupo]" :key="alumno.id">
-                <td class="th"><button class="eliminar" @click="borrarAlumno(alumno, grupo)">&times;</button></td>
+              <tr v-for="alumno in alumnosPorGrupo[infoGrupo.grupo]" :key="alumno.id">
+                <td class="th"><button class="eliminar" @click="borrarAlumno(alumno, infoGrupo.grupo)">&times;</button></td>
                 <td class="th">{{ alumno.nombre }}</td>
                 <td class="th">{{ alumno.apellidos }}</td>
               </tr>

@@ -1,14 +1,13 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { cargarAsignaturasUnicas, obtenerNumAlumnosAsignatura, obtenerGrupos } from '@/services/schoolManager.js';
+import { cargarAsignaturasUnicas, obtenerNumAlumnosAsignatura, obtenerInfoGrupos } from '@/services/schoolManager.js';
 import { IonToast, IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue';
 
 // Variables reactivas
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const asignaturas = ref([]);
-const columnasGrupos = ref([]);
-const grupos = ref([]);
+const infoGrupos = ref([]);
 const loading = ref(false);
 const errorMensaje = ref("");
 const isToastOpen = ref(false);
@@ -43,7 +42,7 @@ const actualizarSelect = (seleccionado) => {
 const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturas.value = [];
-    columnasGrupos.value = [];
+    infoGrupos.value = [];
     return;
   }
   loading.value = true;
@@ -60,7 +59,7 @@ const cargarAsignatura = async () => {
     asignaturas.value = Array.isArray(data) ? data : [];
 
     // Aqui falta el endpoint de cargar los grupos de la asignatura asi que de mientras a fuego, podria ponerlo pero tengo sueño
-    columnasGrupos.value = await obtenerGrupo(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa,) || [];
+    infoGrupos.value = await obtenerInfoGrupos(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa,) || [];
 
     // Para cada asignatura, se saca el número de alumnos para cada grupo.
     await cargarNumeroAlumnosPorGrupo();
@@ -69,17 +68,6 @@ const cargarAsignatura = async () => {
     console.error("Error:", error);
   } finally {
     loading.value = false;
-  }
-};
-
-const obtenerGrupo = async (curso, etapa) => {
-  try {
-      if (curso != null && etapa) {
-          grupos.value = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
-          return grupos.value;
-      }
-  } catch (error) {
-      console.error('Error al cargar grupos', error);
   }
 };
 
@@ -92,21 +80,21 @@ const cargarNumeroAlumnosPorGrupo = async () => {
   for (const asignatura of asignaturas.value) {
     // Banco de números obtenidos.
     asignatura.numeroAlumnosEnGrupo = {};
-    for (const grupo of columnasGrupos.value) {
+    for (const infoGrupo of infoGrupos.value) {
       try {
         const cursoInt = parseInt(filtroSeleccionado.value.curso, 10);
 
         const response = await obtenerNumAlumnosAsignatura(
             cursoInt,
             filtroSeleccionado.value.etapa,
-            grupo,
+            infoGrupo.grupo,
             asignatura.nombre
         );
         const numero = parseInt(response,10);
-        asignatura.numeroAlumnosEnGrupo[grupo] = isNaN(numero) ? 0 : numero;
+        asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = isNaN(numero) ? 0 : numero;
       } catch (error) {
-        console.error(`Error al obtener alumnos para ${asignatura.nombre} - Grupo ${grupo}:`, error);
-        asignatura.numeroAlumnosEnGrupo[grupo] = 0;
+        console.error(`Error al obtener alumnos para ${asignatura.nombre} - Grupo ${infoGrupo.grupo}:`, error);
+        asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = 0;
       }
     }
   }
@@ -143,8 +131,8 @@ onMounted(() => {
               <!-- Se calcula el total sumando los valores de cada grupo -->
               <th class="th">Tot. Alumnos</th>
               <!-- Cabeceras dinámicas para cada grupo -->
-              <th v-for="(grupo, index) in columnasGrupos" :key="index" class="th">
-                Grupo {{ grupo }}
+              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th">
+                Grupo {{ infoGrupo.grupo }}
               </th>
             </tr>
             </thead>
@@ -154,8 +142,8 @@ onMounted(() => {
               <td class="th th-center">{{ asignatura.horas }}</td>
               <!-- Se calcula el total al sumar los valores obtenidos en cada grupo -->
               <td class="th th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
-              <td v-for="grupo in columnasGrupos" :key="grupo" class="th th-center">
-                {{ asignatura.numeroAlumnosEnGrupo[grupo] || 0 }}
+              <td v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" class="th th-center">
+                {{ asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] || 0 }}
               </td>
             </tr>
             </tbody>

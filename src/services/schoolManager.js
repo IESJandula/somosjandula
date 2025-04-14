@@ -445,7 +445,7 @@ export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, 
       console.log(error);
     }
 }
-export const obtenerGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+export const obtenerInfoGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
   {
     try
     {
