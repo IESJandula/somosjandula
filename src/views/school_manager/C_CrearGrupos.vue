@@ -227,7 +227,7 @@ onMounted(async () => {
           <p v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="cantidad-alumnos">
             Total de alumnos: {{ alumnosPorGrupo[infoGrupo.grupo].length }}
             <label class="horario-checkbox">
-              <input type="checkbox" v-model="infoGrupo.horarioMatutino" /> horario de mañana
+              <input type="checkbox" v-model="infoGrupo.horarioMatutino" /> Horario de mañana
             </label>
           </p>
           <table v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="tablaAlumnos">
@@ -402,6 +402,14 @@ label:hover{
 .espacio{
   text-align: center;
   color: var(--form-bg-light);
+}
+
+.horario-checkbox {
+  float: right; /* Coloca el elemento a la derecha */
+  display: inline-block; /* Permite que esté en la misma línea que otros elementos */
+  text-align: right; /* Mantiene la alineación del texto a la derecha */
+  margin-left: auto; /* Empuja el elemento hacia la derecha */
+  vertical-align: middle; /* Alinea verticalmente con el texto */
 }
 
 /* Media queries para hacer que la tarjeta sea más responsive */
