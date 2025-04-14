@@ -111,6 +111,13 @@ const asignarDepPropietario = async () => {
       asignaturaSeleccionada.value.length > 0 &&
       depPropietarioSeleccionado.value) {
   try{
+    
+    if (asignaturaSeleccionada.value.length === 0) {
+      toastMessage.value = "No se ha seleccionado ninguna asignatura.";
+      toastColor.value = "warning";
+      isToastOpen.value = true;
+      return;
+    }
 
     for (const asignatura of asignaturaSeleccionada.value)
     {
@@ -131,6 +138,7 @@ const asignarDepPropietario = async () => {
     toastMessage.value = "Asignación realizada correctamente.";
     toastColor.value = "success";
     isToastOpen.value = true;
+    asignaturaSeleccionada.value = [];
     await obtenerAsignaturas()
     await obtenerAsignaturasCompletas()
     await obtenerDatosDepartamentoConAsignatura()

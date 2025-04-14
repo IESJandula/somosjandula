@@ -92,33 +92,39 @@ const obtenerAlumno = async () => {
 };
 
 const enviarDato = async () => {
-    try {
-        const { curso, etapa } = filtroSeleccionado.value;
-        const grupo = grupoSeleccionado.value;
-        if (!grupo) {
-        // Si no se ha seleccionado grupo, avisas o retornas
-        toastMessage.value = "Debes seleccionar un grupo antes de añadir alumnos.";
-        toastColor.value = "warning";
-        isToastOpen.value = true;
-        return;
-      }
-        const cursoInt = parseInt(curso);
-
-        await asignarAlumnos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
-      listadoAlumnosSinGrupo.value = listadoAlumnosSinGrupo.value.filter(
-          (al) => !listadoAlumnosSeleccionados.value.includes(al)
-      );
-      // Y los añadimos al array del grupo
-      if (!alumnosPorGrupo.value[grupo]) {
-        alumnosPorGrupo.value[grupo] = [];
-      }
-      alumnosPorGrupo.value[grupo].push(...listadoAlumnosSeleccionados.value);
-
-      // Limpiamos selección
-      listadoAlumnosSeleccionados.value = [];
-    } catch (error) {
-        console.error('Error al enviar alumnos:', error);
+  try {
+    const { curso, etapa } = filtroSeleccionado.value;
+    const grupo = grupoSeleccionado.value;
+    if (!grupo) {
+      // Si no se ha seleccionado grupo, avisas o retornas
+      toastMessage.value = "Debes seleccionar un grupo antes de añadir alumnos.";
+      toastColor.value = "warning";
+      isToastOpen.value = true;
+      return;
     }
+    const cursoInt = parseInt(curso);
+
+    await asignarAlumnos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
+
+    const idsSeleccionados = listadoAlumnosSeleccionados.value.map(a => a.nombre + ' ' + a.apellidos);
+    listadoAlumnosSinGrupo.value = listadoAlumnosSinGrupo.value.filter(
+      (al) => !idsSeleccionados.includes(al.nombre + ' ' + al.apellidos)
+    );
+
+    // Limpiamos el array de alumnos sin grupo para que no se repitan
+    listadoAlumnosSinGrupo.value = listadoAlumnosSinGrupo.value.filter(alumno => !listadoAlumnosSeleccionados.value.includes(alumno));
+
+    // Y los añadimos al array del grupo
+    if (!alumnosPorGrupo.value[grupo]) {
+      alumnosPorGrupo.value[grupo] = [];
+    }
+    alumnosPorGrupo.value[grupo].push(...listadoAlumnosSeleccionados.value);
+
+    // Limpiamos selección
+    listadoAlumnosSeleccionados.value = [];
+  } catch (error) {
+      console.error('Error al enviar alumnos:', error);
+  }
 };
 
 const borrarAlumno = async (alumno, grupo) => {

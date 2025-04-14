@@ -348,7 +348,7 @@ onMounted(async () => {
           <!-- Selector de curso y etapa -->
           <div class="dropdown">
             <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
-            <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
+            <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2">
               <option value="">Selecciona un curso</option>
               <option v-for="cursoEtapa in cursosEtapas"
                 :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
@@ -389,7 +389,7 @@ onMounted(async () => {
       <div class="centro">
         <h4 class="m-3">Datos del CSV cargado</h4>
         <div class="dropdown-datos">
-          <select v-model="cursoSeleccionado" id="seleccionar-curso" class="p-2 m-1">
+          <select v-model="cursoSeleccionado" id="seleccionar-curso" class="p-2">
             <option value="">Selecciona un curso</option>
             <option v-for="cursoEtapa in cursosEtapas"
               :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
@@ -484,6 +484,8 @@ onMounted(async () => {
   padding: 0.5rem;
   border: 1px solid #D1D5DB; 
   border-radius: 0.375rem; 
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
 .btn {
   padding: 0.5rem;
