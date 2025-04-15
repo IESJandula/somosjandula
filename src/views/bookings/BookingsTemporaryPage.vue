@@ -9,9 +9,8 @@
     <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está bloqueado</span>
 
     <div class="date-picker-container">
-      <label for="start">Selecciona una fecha</label>
-      <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso" :max="fechaFinCurso"
-        @change="actualizarSemana($event)" />
+      <label class="label-datepicker" for="start">Selecciona una fecha</label>
+      <Datepicker v-model="fechaActual" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es" input-class="datepicker-input-custom" menu-class="datepicker-menu-custom"/>
     </div>
     <br>
     <!-- Dropdown para seleccionar recurso -->
@@ -191,7 +190,9 @@
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { getWeek, format, startOfWeek, addWeeks, getMonth, addDays } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -249,6 +250,7 @@ const day = ref('');
 const month = ref('');
 const preCargaSemana = ref('');
 const fechaLimite = ref('');
+const semanaSeleccionada = ref([]);
 
 // Variables para el modal de confirmación de borrado
 const isDeleteModalOpen = ref(false);
@@ -287,10 +289,20 @@ if (currentDate.getMonth() >= 6) {
 fechaInicioCurso.value = new Date(inicioYear, 8, 2).toISOString().slice(0, 10); // 1 de septiembre
 fechaFinCurso.value = new Date(finYear, 5, 31).toISOString().slice(0, 10); // 30 de junio
 
-const actualizarSemana = (event) => {
-  event.stopPropagation();
-  fechaSeleccionada.value = new Date(event.target.value);
+const actualizarSemana = (fecha) => {
+  const selectedDate = new Date(fecha);
+  fechaSeleccionada.value = new Date(fecha);
   fechaActual.value = fechaSeleccionada.value.toISOString().slice(0, 10);
+  const monday = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const week = [];
+
+  for (let i = 0; i < 7; i++) {
+    week.push(addDays(monday, i));
+  }
+
+  semanaSeleccionada.value = week;
+
+  fechaActual.value = selectedDate.toISOString().slice(0, 10);
 
   semana.value = getWeek(fechaSeleccionada.value);
   mes.value = getMonth(fechaSeleccionada.value);
@@ -807,6 +819,26 @@ onMounted(async () => {
   margin-bottom: 15px;
 }
 
+::v-deep(.dp__input) {
+  background-color: #0078d7 !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+::v-deep(.dp__input_icon) {
+  color: #ffffff !important;
+}
+
+::v-deep(.dp__icon) {
+  color: #ffffff !important;
+}
+
+::v-deep(.dp__active_date) {
+  background-color: #0080ff !important;
+  color: white !important;
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -1044,12 +1076,10 @@ tr:hover td {
     text-align: center;
   }
 
-  /* Hacer que los tramos se mantengan visibles (bloqueados) */
   .sticky-column {
     position: sticky;
     left: 0;
     background: white;
-    /* Para que no se mezcle con otras celdas */
     z-index: 2;
   }
 
@@ -1061,10 +1091,17 @@ tr:hover td {
 /* Estilo para el contenedor del input */
 .date-picker-container {
   display: flex;
+  width: 8%;
   flex-direction: column;
-  align-items: flex-start;
   gap: 5px;
   font-family: Arial, sans-serif;
+}
+
+.label-datepicker {
+  font-weight: bold;
+  color: #000000;
+  text-align: center;
+  margin-bottom: 5px;
 }
 
 /* Etiqueta asociada */
