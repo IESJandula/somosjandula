@@ -523,6 +523,6 @@ export const getPaginatedLogs = async (toastMessage, toastColor, isToastOpen, pa
   }
   catch (error)
   {
-    console.log();
+    console.log("Error al obtener los logs:", error);
   }
 }

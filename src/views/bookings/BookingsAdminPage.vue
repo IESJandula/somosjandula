@@ -181,11 +181,11 @@
         <div class="title-container">
           <h1 class="title">Logs de Recursos</h1>
           <div class="pagina-container">
-            <button class="decrementar-button" v-if="paginaActual != 0" @click="paginarLogs(--paginaActual)">
+            <button class="decrementar-button" v-if="paginaActual > 0" @click="paginarLogs(--paginaActual)">
               Anterior
             </button>
-            <span> Página: {{ paginaActual + 1 }} </span>
-            <button class="incrementar-button" @click="paginarLogs(++paginaActual)">
+            <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
+            <button class="incrementar-button" v-if="disableLogsPaginated" @click="paginarLogs(++paginaActual)">
               Siguiente
             </button>
           </div>
@@ -253,6 +253,7 @@ const recursosCantidadMaxima = ref('');
 const recursos = ref([]);
 const logsPaginados = ref([]);
 const paginaActual = 0;
+const disableLogsPaginated = ref(true);
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref("");
@@ -578,8 +579,7 @@ const paginarLogs = async (pagina) =>
   try
   {
     const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
-    
-    if (data.length > 0)
+    if (data.length >= 0)
     {
       const formatearFecha = (fecha) => {
         const date = new Date(fecha);
@@ -601,7 +601,18 @@ const paginarLogs = async (pagina) =>
         recurso: item.recurso,
         profesor: item.profesor,
         locReserva: item.locReserva,
+        countMax: item.countMax,
+        numRegistro: item.numRegistro,
       }));
+
+      if(logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax)
+      {
+        disableLogsPaginated.value = false;
+      }
+      else
+      {
+        disableLogsPaginated.value = true;
+      }
     }
     else
     {
@@ -656,7 +667,7 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.form-container-table
+.form-container-table, .form-container-table-logs
 {
   width: 100%;
   max-width: 700px;
@@ -671,32 +682,41 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.form-container-table-logs
-{
-  width: 100%;
-  max-width: 45%;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-  border: 1px solid #444;
-  border-radius: 10px;
-  box-sizing: border-box;
-  padding: 20px 30px;
-  margin: auto;
-  font-family: "Roboto", sans-serif;
-  margin-top: 2%;
-}
-
-.logs-table
-{
-  display: block;
-}
-
 .sticky-column
 {
   position: sticky;
   left: 0;
   background: white;
   z-index: 2;
+}
+
+.decrementar-button
+{
+  background-color: #dc3545;
+  float: left;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-right: 10px;
+}
+.incrementar-button
+{
+  background-color: #007bff;
+  color: white;
+  border: none;
+  float: right;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.numPagina
+{
+  display: flex;
+  align-items: center;
+  justify-content: block;
 }
 
 .pagina-container
@@ -1005,6 +1025,14 @@ input:checked+.slider:before {
     white-space: nowrap;
   }
 
+  .form-container-table-logs table {
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
   table {
     font-size: 14px;
     width: 100%;
@@ -1020,5 +1048,6 @@ input:checked+.slider:before {
   .switch-container {
     margin-left: 0;
   }
+  
 }
 </style>
