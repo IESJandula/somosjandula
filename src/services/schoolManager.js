@@ -445,7 +445,7 @@ export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, 
       console.log(error);
     }
 }
-export const obtenerGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+export const obtenerInfoGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
   {
     try
     {
@@ -660,6 +660,252 @@ export const obtenerNumAlumnosAsignatura = async (curso, etapa, grupo, asignatur
       throw new Error(`Error al obtener alumnos para ${asignatura} - Grupo ${grupo}`);
     }
   }
+
+/****************************** Ventana 5 AsignaturasYDepartamentos ******************************/
+export const obtenerDepartamentos = async (toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/departamentos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+      });
+
+      if(!response.ok) 
+      {
+        throw new Error('No se pudieron cargar los cursos y etapas');
+      }
+      return await response.json();
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+
+export const asignarProfesoresADepartamentos = async (nombre, plantilla, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const queryParams = new URLSearchParams({
+        nombre,
+        plantilla
+      }).toString();
+
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/departamentos?' + queryParams, 
+      {
+        method: 'PUT',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+      });
+
+      if(!response.ok) 
+      {
+        throw new Error('No se pudieron cargar los cursos y etapas');
+      }
+
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const obtenerDatosDepartamentosConAsignaturas = async (toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturas/infoDepartamentos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`
+        },
+      });
+
+      if(!response.ok) 
+      {
+        throw new Error('No se pudieron cargar los cursos y etapas');
+      }
+      return await response.json();
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+}
+export const obtenerCursosEtapasGrupos = async (toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/curso',
+        {
+          method: 'GET',
+          headers:
+              {
+                'Authorization': `Bearer ${tokenPropio}`
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error('Error al cargar la lista de cursos. Inténtelo de nuevo');
+    }
+
+    return await response.json();
+
+  }
+  catch (error)
+  {
+    console.log(error);
+  }
+}
+
+export const obtenerAsignaturasPorCursoEtapaGrupo = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => {
+  try {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const url = new URL(
+        schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturasPorCursoEtapaGrupo'
+    );
+    url.searchParams.append('curso', curso);
+    url.searchParams.append('etapa', etapa);
+    url.searchParams.append('grupo', grupo);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al cargar la lista de asignaturas. Inténtelo de nuevo');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export const obtenerTodasLasAsignaturas = async (toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturas',
+        {
+          method: 'GET',
+          headers:
+              {
+                'Authorization': `Bearer ${tokenPropio}`
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error('Error al cargar la lista de asignaturas. Inténtelo de nuevo');
+    }
+
+    return await response.json();
+
+  }
+  catch (error)
+  {
+    console.log(error);
+  }
+}
+
+export const quitarAsignaturasDeDepartamentos = async (curso, etapa, grupo, nombre, toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+    const cursoInt = parseInt(curso, 10);
+    const url = new URL(
+        schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturas/quitarDepartamentos'
+    );
+    url.searchParams.append('curso', cursoInt);
+    url.searchParams.append('etapa', etapa);
+    url.searchParams.append('grupo', grupo);
+    url.searchParams.append('nombre', nombre);
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(url.toString(),
+        {
+          method: 'PATCH',
+          headers:
+              {
+                'Authorization': `Bearer ${tokenPropio}`
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error('Error al eliminar departamentos de la asignatura. Inténtelo de nuevo');
+    }
+
+  }
+  catch (error)
+  {
+    console.log(error);
+  }
+}
+
+export const asignarAsignaturasADepartamentos = async (curso, etapa, grupo, nombre, departamentoPropietario, departamentoReceptor, toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+    const cursoInt = parseInt(curso, 10);
+    const url = new URL(
+        schoolmanagerApiUrl + '/schoolManager/asignaturasYDepartamentos/asignaturas/asignarDepartamentos'
+    );
+    url.searchParams.append('curso', cursoInt);
+    url.searchParams.append('etapa', etapa);
+    url.searchParams.append('grupo', grupo);
+    url.searchParams.append('nombre', nombre);
+    url.searchParams.append('departamentoPropietario', departamentoPropietario);
+    url.searchParams.append('departamentoReceptor', departamentoReceptor);
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(url.toString(),
+        {
+          method: 'PATCH',
+          headers:
+              {
+                'Authorization': `Bearer ${tokenPropio}`
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error('Error al asignar departamentos a la asignatura. Inténtelo de nuevo');
+    }
+
+
+  }
+  catch (error)
+  {
+    console.log(error);
+  }
+}
 
 /****************************** Ventana 6 Reducciones ******************************/
 export const cargarReducciones = async (toastMessage, toastColor, isToastOpen) =>

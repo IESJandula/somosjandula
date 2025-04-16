@@ -45,7 +45,7 @@ export declare function asignarHoras(toastMessage: Ref<string>,
 export declare function crearNuevosGrupos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerGrupos(toastMessage: Ref<string>,
+export declare function obtenerInfoGrupos(toastMessage: Ref<string>,
                                           toastColor: Ref<string>,
                                           isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerAlumnosConGrupos(toastMessage: Ref<string>,
