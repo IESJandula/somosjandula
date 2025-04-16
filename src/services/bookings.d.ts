@@ -45,3 +45,7 @@ export declare function postReservaTemporary(toastMessage: Ref<string>,
 export declare function deleteReservaTemporary(toastMessage: Ref<string>,
                                                 toastColor: Ref<string>,
                                                 isToastOpen: Ref<boolean>): Promise<void>;
+
+export declare function deleteRecursoReserva(toastMessage: Ref<string>,
+                                                toastColor: Ref<string>,
+                                                isToastOpen: Ref<boolean>): Promise<void>;

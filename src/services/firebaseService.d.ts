@@ -34,6 +34,10 @@ export async function obtenerNombreYApellidosUsuario(toastMessage: Ref<string>,
                                                      toastColor: Ref<string>,
                                                      isToastOpen:Ref<boolean>): Promise<NombreYApellidos>;
 
+export async function obtenerEmailUsuario(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen:Ref<boolean>): Promise<string> ;
+
 export async function obtenerJwtDecodificado(toastMessage: Ref<string>,
                                              toastColor: Ref<string>,
                                              isToastOpen:Ref<boolean>): Promise<[]>;

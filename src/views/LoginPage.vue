@@ -7,10 +7,27 @@
           <span class="somos-text">SOMOS</span>
         </div>
         <h1 class="title">J&aacute;ndula</h1>
+        
+        <!-- Contenedor para las frases transitorias -->
+        <div class="features-container">
+          <div class="feature-text impresion-remota">Impresión remota</div>
+          <div class="feature-text reserva-recursos">Reserva de recursos</div>
+          <div class="feature-text mat-agrup">Matriculaciones y agrupamientos</div>
+          <div class="feature-text gestion-ap">Gestión de alumnado y profesorado</div>
+          <div class="feature-text asignacion-materias">Asignación de materias y reducciones</div>
+          <div class="feature-text reserva-proyectores">Proximamente ... uso de proyectores</div>
+        </div>
+        
         <div class="buttons-container">
           <div class="google-login-button" @click="loginWithGoogle">
             <ion-icon :icon="googleIcon" class="google-icon"></ion-icon>
             <span>Conecta con Google</span>
+          </div>
+          
+          <!-- Botón permanente del coche Lince -->
+          <div class="lince-button" @click="verCocheLince">
+            <ion-icon :icon="carIcon" class="lince-icon"></ion-icon>
+            <span>¡Vive en directo nuestro Eco-Jándula!</span>
           </div>
         </div>
       </div>
@@ -25,7 +42,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { IonContent, IonIcon, IonToast, IonPage } from '@ionic/vue';
-import { logoGoogle as googleIcon } from 'ionicons/icons';
+import { logoGoogle as googleIcon, car as carIcon } from 'ionicons/icons';
 import { signInWithPopup, signOut } from "firebase/auth";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario } from '@/services/firebaseService.js';
@@ -82,6 +99,12 @@ const loginWithGoogle = async () =>
   }
 };
 
+// Función para el botón del coche Lince
+const verCocheLince = () => {
+  // Aquí puedes añadir la lógica para ver el coche Lince en directo
+  window.open('https://telemetrialince.iesjandula.es/', '_blank'); // Ajusta esta URL según corresponda
+};
+
 </script>
 
 <style scoped>
@@ -105,7 +128,7 @@ body {
   box-sizing: border-box;
   padding: 20px 30px;
   margin: auto;
-  margin-top: 20%;
+  margin-top: 10%;
   font-family: 'Roboto', sans-serif;
   position: relative;
 }
@@ -135,7 +158,7 @@ body {
   font-size: 24px;
   font-weight: bold;
   color: var(--text-color-light);
-  animation: moveToCenter 5s ease-in-out forwards;
+  animation: moveToCenter 10s ease-in-out forwards;
   white-space: nowrap;
 }
 
@@ -144,12 +167,12 @@ body {
     left: -100%;
     opacity: 1;
   }
-  50% {
+  20% {
     left: 50%;
     transform: translateX(-85%);
     opacity: 1;
   }
-  70% {
+  80% {
     left: 50%;
     transform: translateX(-85%);
     opacity: 1;
@@ -195,6 +218,95 @@ body {
   color: var(--google-icon-light);
 }
 
+/* Características con transiciones */
+.features-container {
+  position: relative;
+  height: 40px;
+  width: 100%;
+  text-align: center;
+  margin: 0 0 20px 0;
+  overflow: hidden;
+}
+
+.feature-text {
+  position: absolute;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-color-light);
+  opacity: 0;
+}
+
+.impresion-remota {
+  animation: fadeInOut 18s ease-in-out 0s infinite;
+}
+
+.reserva-recursos {
+  animation: fadeInOut 18s ease-in-out 3s infinite;
+}
+
+.mat-agrup {
+  animation: fadeInOut 18s ease-in-out 6s infinite;
+}
+
+.gestion-ap {
+  animation: fadeInOut 18s ease-in-out 9s infinite;
+}
+
+.asignacion-materias {
+  animation: fadeInOut 18s ease-in-out 12s infinite;
+}
+
+.reserva-proyectores {
+  animation: fadeInOut 18s ease-in-out 15s infinite;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  2.78% { /* Start showing (fade in ends ~0.5s) */
+    opacity: 1;
+    transform: translateY(0);
+  }
+  13.89% { /* Stay visible until (~2.5s) */
+    opacity: 1;
+    transform: translateY(0);
+  }
+  16.67% { /* Start fading out (~3s) */
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* Botón del coche Lince */
+.lince-button {
+  border-radius: 20px;
+  box-sizing: border-box;
+  padding: 10px 15px;
+  background-color: var(--button-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.16) 0px 10px 36px 0px,
+    rgba(0, 0, 0, 0.06) 0px 0px 0px 1px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  gap: 5px;
+  border: 2px solid var(--button-border-light);
+}
+
+.lince-icon {
+  font-size: 18px;
+  margin-bottom: 1px;
+  color: var(--google-icon-light);
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   body {
@@ -225,6 +337,23 @@ body {
   }
 
   .google-icon {
+    color: var(--google-icon-dark);
+  }
+
+  .feature-text {
+    color: var(--text-color-dark);
+  }
+  
+  .lince-button {
+    background-color: var(--button-bg-dark);
+    border: 2px solid var(--button-border-dark);
+  }
+  
+  .lince-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .lince-icon {
     color: var(--google-icon-dark);
   }
 }

@@ -1,9 +1,7 @@
 import { firebaseApiUrl } from '@/environment/apiUrls';
-import { signOut } from "firebase/auth";
 import { crearToast } from '@/utils/toast.js';
-import { firebaseColeccionUsuarios } from '@/environment/firebaseConfig';
 import { getAuth } from "firebase/auth";
-import { SESSION_JWT_TOKEN } from '@/utils/constants.js' ;
+import { SESSION_JWT_TOKEN } from '@/utils/constants' ;
 import { jwtDecode } from 'jwt-decode';
 
 export async function importarUsuarios(toastMessage, toastColor, isToastOpen, file)

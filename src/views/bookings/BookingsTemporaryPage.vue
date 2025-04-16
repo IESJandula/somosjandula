@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-dupe-v-else-if -->
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <h1 class="titulo-pagina">Reservas Temporales</h1>
@@ -19,37 +20,47 @@
       </option>
     </select>
 
-    <div class="semana_button-container">
-      <button class="semanaAnterior_button" @click.stop="decrementarSemana()">Semana Anterior</button>
-      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()">Semana Siguiente</button>
+    <div class="incidence-message">
+      {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
     </div>
 
+    <div class="semana_button-container">
+      <button class="semanaAnterior_button" @click.stop="decrementarSemana()"
+        v-if="!deshabilitarSemanaAnterior()">Semana Anterior</button>
+      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()"
+        v-if="!deshabilitarSemanaSiguiente()">Semana Siguiente</button>
+    </div>
 
     <!-- Tabla con horarios y reservas -->
     <table class="tabla-container" v-if="mostrarTabla">
       <thead>
         <tr>
           <th class="sticky-column">Horarios</th>
-          <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }} {{ parseInt(day) + index }}/{{ month
-          }}
+          <th v-for="(dia, index) in diasSemanas" :key="index">
+            {{ dia.diaSemana }}
           </th>
         </tr>
       </thead>
       <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
-                  <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija">Fija</div>
+                  <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
-                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual) && !reservas[tramo.id][dia.id].esfija"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
+                    Borrar
+                  </button>
+                  <button
+                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
                     Borrar
                   </button>
                 </div>
@@ -58,10 +69,11 @@
           </td>
         </tr>
       </tbody>
-      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR')">
+      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
@@ -69,9 +81,9 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
                 </div>
@@ -100,13 +112,14 @@
     <!-- Modal de edición -->
     <div
       v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible && reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0)"
-      class="modal-overlay">
+      class="modal-overlay" @change="comprobarDisponibilidad()">
       <div class="modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal"
-          v-model="profesorSeleccionado">
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          class="custom-select-modal" v-model="profesorSeleccionado" @change="comprobarDisponibilidad()">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -116,22 +129,54 @@
         <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
         <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
           placeholder="Número de alumnos" min="0"
-          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
+          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))"
+          @change="comprobarDisponibilidad()" />
+        <label>Opciones de Repetición:</label>
+        <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
+          <option value="" selected>Ninguna</option>
+          <option value="Semanal">Semanal</option>
+        </select>
+        <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
+          <label for="start">Limite de Repetición</label>
+          <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
+            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" :class="{'placeholder-date': !fechaSeleccionada }" />
+        </div>
         <span class="custom-message-numAlumno"
-          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">El
-          máximo permitido es de {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
-            cantidadSeleccionada)) }} Alumnos</span>
-        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">El mínimo permitido es de 1 Alumno</span>
+          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
+          permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
+            cantidadSeleccionada)) }} alumnos</span>
+        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
+          permitido: 1 Alumno</span>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR')"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
     </div>
+
+    <!-- Modal de confirmación para borrar reservas -->
+    <div v-if="isDeleteModalOpen" class="modal-overlay">
+      <div class="modal-content">
+        <h2>¿Estás seguro de borrar la / las reservas?</h2>
+
+        <label for="deleteOption">Selecciona una opción:</label>
+        <select class="custom-select-modal" v-model="deleteOption">
+          <option value="" default>Esta Reserva</option>
+          <option value="Semanal">Reservas Semanales</option>
+        </select>
+
+        <div class="button-container">
+          <button @click="confirmacionBorrado()">Aceptar</button>
+          <button @click="closeDeleteModal">Cancelar</button>
+        </div>
+      </div>
+    </div>
   </div>
+
+
 
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
@@ -140,8 +185,9 @@
 
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
-import { getWeek, format, startOfWeek, addWeeks } from 'date-fns';
-import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary } from '@/services/bookings.js'
+import { useRouter } from 'vue-router';
+import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
+import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes } from '@/services/constantes';
@@ -170,21 +216,48 @@ let mensajeColor = ''
 let emailUserActual = '';
 let logRecursos = '';
 let mensajeInformativo = '';
+let mensajeIncidencia = '';
 const mostrarTabla = ref(true);
 const emailLogged = ref('');
+
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 const emailUsuarioActual = ref(null);
+const opcionRepeticion = ref('');
+const disponibleSemanal = ref(false);
 
+//Variables de Fecha
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
+const reseteoFecha = ref('');
+const fechaSeleccionada = ref('')
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
+let semanas = [];
+const semanaLimite = ref('');
+const mes = ref('');
 const day = ref('');
 const month = ref('');
 const preCargaSemana = ref('');
+const fechaLimite = ref('');
+
+// Variables para el modal de confirmación de borrado
+const isDeleteModalOpen = ref(false);
+const deleteOption = ref('');
+const reservaParaBorrar = ref(null);
+
+const openDeleteModal = (tramo, dia, recurso, email, fija, semana) => {
+  reservaParaBorrar.value = { tramo, dia, recurso, email, fija, semana };
+  isDeleteModalOpen.value = true;
+};
+
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false;
+  reservaParaBorrar.value = null;
+  getReserva();
+};
 
 // Obtener el año actual
 const currentDate = new Date();
@@ -209,29 +282,142 @@ fechaFinCurso.value = new Date(finYear, 5, 31).toISOString().slice(0, 10); // 30
 
 const actualizarSemana = (event) => {
   event.stopPropagation();
-  const fechaSeleccionada = new Date(event.target.value); // Convert the selected date to a Date object
-  fechaActual.value = fechaSeleccionada.toISOString().slice(0, 10); // Update the value of fechaActual
-  semana.value = getWeek(fechaSeleccionada); // Calculate the week
-  getReserva(); // Update reservations when the week changes
+  fechaSeleccionada.value = new Date(event.target.value);
+  fechaActual.value = fechaSeleccionada.value.toISOString().slice(0, 10);
+
+  semana.value = getWeek(fechaSeleccionada.value);
+  mes.value = getMonth(fechaSeleccionada.value);
+  validarFecha(); // Añadir validación de fecha
+  getReserva();
   incrementarFecha();
 }
 
+const resetearSemana = () => {
+  semana.value = reseteoFecha.value;
+}
+
+const confirmacionBorrado = async () => {
+
+  if (deleteOption.value == "Semanal") {
+    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, true);
+    closeDeleteModal();
+  }
+  else {
+    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, false);
+    closeDeleteModal();
+  }
+}
+
+const deshabilitarSemanaAnterior = () => {
+  if (parseInt(semana.value) === parseInt(getWeek(fechaInicioCurso.value))) {
+    return true;
+  }
+  return false;
+}
+
+const deshabilitarSemanaSiguiente = () => {
+  if (parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value))) {
+    return true;
+  }
+  return false;
+}
+
+const fechaModal = (event) => {
+  event.stopPropagation();
+  fechaSeleccionada.value = new Date(event.target.value).toISOString().slice(0, 10);
+  fechaLimite.value = fechaSeleccionada.value;
+  semanaLimite.value = getWeek(fechaLimite.value);
+  mes.value = getMonth(fechaLimite.value) + 1;
+}
+
 const decrementarSemana = () => {
+
   semana.value = parseInt(semana.value) - 1;
+  reseteoFecha.value = semana.value;
+
+  if (semana.value < 1) {
+    semana.value = getWeek(new Date(new Date().getFullYear() - 1, 11, 31 - 7));
+  }
   incrementarFecha();
+  validarFecha(); // Añadir validación de fecha
   getReserva();
 }
 
 const incrementarSemana = () => {
   semana.value = parseInt(semana.value) + 1;
+
+  reseteoFecha.value = semana.value;
+
+  if (semana.value > getWeek(new Date(new Date().getFullYear(), 11, 31 - 7))) {
+    semana.value = 1;
+  }
   incrementarFecha();
+  validarFecha(); // Añadir validación de fecha
   getReserva();
 }
 
+const getDaysInMonth = (year, month) => {
+  // Verificar si es año bisiesto para febrero
+  if (month === 1) {
+    return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 29 : 28;
+  }
+  const daysInMonth = [31, null, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return daysInMonth[month];
+}
+
+const validarFecha = () => {
+  const fecha = new Date(fechaActual.value);
+  const mes = fecha.getMonth(); // 0-11
+  const año = fecha.getFullYear();
+  const diasEnMes = getDaysInMonth(año, mes);
+
+  // Si el día actual es mayor que los días del mes
+  if (parseInt(day.value) > diasEnMes) {
+    // Ajustamos al último día del mes
+    const ultimoDiaMes = new Date(año, mes, diasEnMes);
+    fechaActual.value = ultimoDiaMes.toISOString().slice(0, 10);
+    day.value = format(ultimoDiaMes, 'dd');
+  }
+}
+
 const incrementarFecha = () => {
-  const primerDiaSemana = startOfWeek(addWeeks(inicioYear, semana.value - 1), { weekStartsOn: 2 });
-  day.value = format(primerDiaSemana, 'dd');
-  month.value = format(primerDiaSemana, 'MM');
+  const primerDiaSemana = startOfWeek(addWeeks(new Date(fechaActual.value), semana.value - getWeek(new Date(fechaActual.value))), { weekStartsOn: 1 });
+  const fechaBase = new Date(primerDiaSemana);
+
+  diasSemanas.value.forEach((dia, index) => {
+    const fechaDia = new Date(fechaBase);
+    fechaDia.setDate(fechaBase.getDate() + index);
+
+    if (index === 0) {
+      day.value = fechaDia.getDate().toString().padStart(2, '0');
+      month.value = (fechaDia.getMonth() + 1).toString().padStart(2, '0');
+    }
+    const nombreDia = dia.diaSemana.split(' ')[0];
+    dia.diaSemana = `${nombreDia} ${fechaDia.getDate()}/${(fechaDia.getMonth() + 1).toString().padStart(2, '0')}`;
+  });
+}
+
+const repetirReserva = async () => {
+  if (opcionRepeticion.value === 'Semanal') {
+    do {
+      await postReservaTemporary(
+        isToastOpen,
+        toastMessage,
+        toastColor,
+        profesorSeleccionado.value,
+        recursoSeleccionado.value,
+        currentDia.value.id,
+        currentTramo.value.id,
+        numAlumnos.value,
+        +semana.value,
+        true
+      );
+      semana.value = parseInt(semana.value) + 1;
+    }
+    while (semana.value <= semanaLimite.value);
+    resetearSemana();
+  }
+  getReserva(recursoSeleccionado);
 }
 
 const verificarRecursos = () => {
@@ -246,7 +432,7 @@ const verificarConstantes = async () => {
   try {
     constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas puntuales');
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas temporales');
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
@@ -262,7 +448,14 @@ const obtenerEmailUsuarioActual = async () => {
 };
 
 // Función para abrir el modal
-const openModal = (tramo, dia) => {
+const openModal = (tramo, dia, email) => {
+
+  if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
+    if (email !== undefined && email.includes(emailUsuarioActual.value)) {
+      closeModal();
+      return;
+    }
+  }
 
   if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
@@ -270,8 +463,8 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    getReserva()
     verificarConstantes()
+    getReserva()
   }
   else {
     currentTramo.value = tramo
@@ -279,8 +472,8 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    getReserva()
     verificarConstantes()
+    getReserva()
   }
 
 }
@@ -300,7 +493,7 @@ const saveChanges = async () => {
   }
 
   // Validar si ya existe un email en la reserva del mismo día y tramo
-  const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
+  const reservaExistente = reservas.value[currentTramo.value.id]?.[currentDia.value.id];
   if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
     mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
     mensajeColor = 'danger';
@@ -309,7 +502,7 @@ const saveChanges = async () => {
   }
 
   try {
-    mensajeActualizacion = 'Reserva guardada exitosamente';
+    mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
 
     // Normalizar número de alumnos
@@ -320,41 +513,48 @@ const saveChanges = async () => {
       alumnos = maxAlumnos;
     }
 
-
-    // Llamar a la API para guardar la reserva
-    await postReservaTemporary(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      profesorSeleccionado.value,
-      recursoSeleccionado.value,
-      currentDia.value.id,
-      currentTramo.value.id,
-      alumnos,
-      +semana.value
-    );
-
-    // Actualizar reservas localmente
-    if (!reservas.value[currentDia.value.id]) {
-      reservas.value[currentDia.value.id] = {};
+    if (opcionRepeticion.value === 'Semanal') {
+      repetirReserva();
+      getReserva(recursoSeleccionado);
     }
+    else {
+      // Llamar a la API para guardar la reserva
+      await postReservaTemporary(
+        isToastOpen,
+        toastMessage,
+        toastColor,
+        profesorSeleccionado.value,
+        recursoSeleccionado.value,
+        currentDia.value.id,
+        currentTramo.value.id,
+        alumnos,
+        +semana.value,
+        false
+      );
 
-    reservas.value[currentDia.value.id][currentTramo.value.id] = {
-      email: correoProfesor.value, // Guardamos el email del profesor
-      nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
-      nalumnos: alumnos,
-    };
+      // Actualizar reservas localmente
+      if (!reservas.value[currentDia.value.id]) {
+        reservas.value[currentDia.value.id] = {};
+      }
 
-    if (valorConstante.value != '') {
-      mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
-      mensajeColor = 'danger';
+      reservas.value[currentDia.value.id][currentTramo.value.id] = {
+        email: correoProfesor.value, // Guardamos el email del profesor
+        nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
+        nalumnos: alumnos,
+      };
+
+      if (valorConstante.value != '') {
+        mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
+        mensajeColor = 'danger';
+      }
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
-
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
     mensajeActualizacion = 'Error al crear la reserva';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+
   }
 
   closeModal();
@@ -415,8 +615,9 @@ const getRecurso = async () => {
 const getReserva = async () => {
   const recurso = recursoSeleccionado.value;
   preCargaSemana.value = getWeek(new Date());
+  mes.value = getMonth(new Date()) + 1;
 
-  if(!semana.value) {
+  if (!semana.value) {
     semana.value = preCargaSemana.value;
   }
 
@@ -446,14 +647,32 @@ const getReserva = async () => {
   reservas.value = estructuraReservas
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija) => {
   try {
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     // Llamar a la API para cancelar la reserva
-    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
-
-    mensajeActualizacion = 'Reserva cancelada exitosamente'
+    if (rolesUsuario.value.includes('ADMINISTRADOR') || rolesUsuario.value.includes('DIRECCION')) {
+      if (!esFija) {
+        await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
+      }
+      else {
+        await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
+      }
+    }
+    else {
+      if (email !== emailUsuarioActual.value)
+      {
+        mensajeActualizacion = 'No puedes borrar reservas de otras personas'
+        mensajeColor = 'danger'
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      }
+      else
+      {
+        await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
+      }
+    }
+    mensajeActualizacion = 'Reserva cancelada correctamente'
     mensajeColor = 'success'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
@@ -474,15 +693,21 @@ watch(recursoSeleccionado, () => {
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
   isModalOpen.value = false
 
-  if (!recursoSeleccionadoCompartible.value) {
-    mensajeInformativo = 'Recuerda, este recurso no se puede compartir en el mismo tramo horario'
+  if (recursoSeleccionadoCompartible.value) {
+    mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
+    mensajeIncidencia = '¿Encontraste algun problema en el aula o necesitas más recursos? Crea una incidencia '
+
   }
   else {
-    mensajeInformativo = 'Recuerda, este recurso sí se puede compartir en el mismo tramo horario'
+    mensajeInformativo = ''
+    mensajeIncidencia = '¿Encontraste algún problema en el aula? Crea una incidencia '
   }
   getReserva();
 });
-
+const router = useRouter();
+const navigateToIssues = () => {
+  router.push({ path: '/documents/itIssues' });
+};
 
 const cargarDatos = async () => {
   users.value = await obtenerInfoUsuarios(isToastOpen, toastMessage, toastColor);
@@ -500,6 +725,23 @@ async function verificarRoles() {
   }
 }
 
+const comprobarDisponibilidad = async () => {
+
+  const data = ref(true);
+
+  // Array para almacenar las semanas
+
+  if (opcionRepeticion.value == 'Semanal') {
+    for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {
+      semanas.push(i);  // Se agrega la semana al array
+    }
+    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
+    semanas = []; // Se reinicia el array 
+  }
+  disponibleSemanal.value = data.value;
+}
+
+
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await getDiasSemanas()
@@ -515,6 +757,8 @@ onMounted(async () => {
   semana.value = getWeek(new Date());
   emailLogged.value = emailUserActual;
   await incrementarFecha();
+
+
 })
 
 </script>
@@ -565,11 +809,19 @@ onMounted(async () => {
     box-shadow 0.3s;
 }
 
+.mensajeInformativo {
+  color: #007bff;
+  padding: 10px;
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
 .custom-select-modal {
   width: 100%;
   padding: 10px;
   font-size: 16px;
-  border: 2px solid #007bff;
+  border: 1px solid #007bff;
   border-radius: 5px;
   background-color: white;
   color: #007bff;
@@ -580,6 +832,16 @@ onMounted(async () => {
     box-shadow 0.3s;
 }
 
+.date-picker-container-modal {
+  display: flex;
+  margin-top: 10px;
+  margin-right: 10%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  font-family: Arial, sans-serif;
+}
+
 .custom-numAlumnos {
   margin-top: 10px;
 }
@@ -587,6 +849,10 @@ onMounted(async () => {
 .custom-select:hover {
   border-color: #0056b3;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+h1 {
+  margin-bottom: -3%;
 }
 
 table {
@@ -732,6 +998,24 @@ tr:hover td {
     display: block;
     white-space: nowrap;
   }
+  input[type="date"].placeholder-date::before
+  {
+  content: "Elige una fecha";
+  color: #ffffff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-size: 1rem;
+  white-space: nowrap;
+  }
+
+  input[type="date"].placeholder-date {
+    position: relative;
+    color: transparent;
+    text-align: center;
+  }
 
   /* Hacer que los tramos se mantengan visibles (bloqueados) */
   .sticky-column {
@@ -827,13 +1111,11 @@ input[type="date"]:disabled {
 }
 
 .semana_button-container {
-  display: flex;
   justify-content: space-between;
   width: 100%;
 }
 
-.semanaAnterior_button,
-.semanaSiguiente_button {
+.semanaAnterior_button {
   background-color: #007bff;
   color: white;
   float: left;
@@ -842,6 +1124,35 @@ input[type="date"]:disabled {
   border-radius: 5px;
   padding: 10px;
   margin-top: 10px;
+  cursor: pointer;
+}
+
+.semanaSiguiente_button {
+  background-color: #007bff;
+  color: white;
+  float: right;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.incidence-message {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--text-color-light);
+}
+
+.incidence-message a {
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.incidence-message a:hover {
+  color: var(--primary-color-hover);
   cursor: pointer;
 }
 </style>

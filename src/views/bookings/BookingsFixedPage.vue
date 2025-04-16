@@ -11,8 +11,8 @@
         {{ recurso.recursos }} (Máximo permitido: {{ recurso.cantidad }})
       </option>
     </select>
-    <div class="incidence-message" v-if="recursoSeleccionadoCompartible">
-      {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">Incidencia</a>
+    <div class="incidence-message">
+      {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
     </div>
 
     <!-- Tabla con horarios y reservas -->
@@ -26,7 +26,8 @@
       <tbody v-if="valorConstante === ''">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
@@ -34,7 +35,7 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
                     Borrar
@@ -45,10 +46,11 @@
           </td>
         </tr>
       </tbody>
-      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR')">
+      <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index" @click="openModal(tramo, dia)">
+          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+            @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
@@ -56,7 +58,7 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') ||
+                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
                     Borrar
@@ -91,9 +93,10 @@
       <div class="modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR')" for="profesorCorreo">Profesor:</label>
-        <select v-if="rolesUsuario.includes('ADMINISTRADOR')" class="custom-select-modal"
-          v-model="profesorSeleccionado">
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          for="profesorCorreo">Profesor:</label>
+        <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
+          class="custom-select-modal" v-model="profesorSeleccionado">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
@@ -105,11 +108,16 @@
           placeholder="Número de alumnos" min="0"
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
 
+        <span class="custom-message-numAlumno"
+          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
+          permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
+            cantidadSeleccionada)) }} alumnos</span>
+        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
         <button
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario[0].includes('PROFESOR')"
+          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION')"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -190,7 +198,14 @@ const obtenerEmailUsuarioActual = async () => {
 };
 
 // Función para abrir el modal
-const openModal = (tramo, dia) => {
+const openModal = (tramo, dia, email) => {
+
+  if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
+    if (email !== undefined && email.includes(emailUsuarioActual.value)) {
+      closeModal();
+      return;
+    }
+  }
 
   if (recursoSeleccionadoCompartible.value) {
     currentTramo.value = tramo
@@ -198,8 +213,8 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    getReserva()
     verificarConstantes()
+    getReserva()
   }
   else {
     currentTramo.value = tramo
@@ -207,10 +222,9 @@ const openModal = (tramo, dia) => {
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
     numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
     isModalOpen.value = true
-    getReserva()
     verificarConstantes()
+    getReserva()
   }
-
 }
 
 // Función para cerrar el modal
@@ -226,18 +240,18 @@ const saveChanges = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     return;
   }
-  /*
-    // Validar si ya existe un email en la reserva del mismo día y tramo
-    const reservaExistente = reservas.value[currentDia.value.id]?.[currentTramo.value.id];
-    if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
-      mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
-      mensajeColor = 'danger';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-    }
-  */
+
+  // Validar si ya existe un email en la reserva del mismo día y tramo
+  const reservaExistente = reservas.value[currentTramo.value.id]?.[currentDia.value.id];
+  if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
+    mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
   try {
-    mensajeActualizacion = 'Reserva guardada exitosamente';
+    mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
 
     // Normalizar número de alumnos
@@ -272,7 +286,7 @@ const saveChanges = async () => {
       nalumnos: alumnos,
     };
 
-    if (valorConstante.value != '') {
+    if (valorConstante.value != '' && !rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION')) {
       mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
       mensajeColor = 'danger';
     }
@@ -374,7 +388,7 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
 
 
-    mensajeActualizacion = 'Reserva cancelada exitosamente'
+    mensajeActualizacion = 'Reserva cancelada correctamente'
     mensajeColor = 'success'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
@@ -395,12 +409,13 @@ watch(recursoSeleccionado, () => {
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
   isModalOpen.value = false
 
-  if (!recursoSeleccionadoCompartible.value) {
-    mensajeInformativo = 'Recuerda, este recurso no se puede compartir en el mismo tramo horario'
+  if (recursoSeleccionadoCompartible.value) {
+    mensajeInformativo = 'Recuerda, este recurso SÍ se puede compartir en el mismo tramo horario'
+    mensajeIncidencia = '¿Encontraste algun problema en el aula o necesitas más recursos? Crea una incidencia '
   }
   else {
-    mensajeInformativo = 'Recuerda, este recurso sí se puede compartir en el mismo tramo horario'
-    mensajeIncidencia = 'Si necesitas más recursos, crea una incidencia aquí: '
+    mensajeInformativo = ''
+    mensajeIncidencia = '¿Encontraste algun problema en el aula? Crea una incidencia '
   }
   getReserva();
 });
@@ -453,7 +468,7 @@ onMounted(async () => {
 }
 
 .mensajeInformativo {
-  color: #ffae00;
+  color: #007bff;
   padding: 10px;
   font-size: 25px;
   font-weight: bold;
@@ -511,6 +526,10 @@ onMounted(async () => {
 .custom-select:hover {
   border-color: #0056b3;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+h1 {
+  margin-bottom: -3%;
 }
 
 table {

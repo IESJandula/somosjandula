@@ -14,12 +14,12 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
-import AsignaturaYBloque from '@/views/school_manager/AsignaturaYBloque.vue';
-import CargaMatriculas from '@/views/school_manager/CargaMatriculas.vue';
-import AsignaturasYDepartamentos from '@/views/school_manager/AsignaturasYDepartamentos.vue';
-import CrearGrupos from '@/views/school_manager/CrearGrupos.vue';
-import TablaResumen from "@/views/school_manager/TablaResumen.vue";
-import ReduccionesProfesores from "@/views/school_manager/ReduccionesProfesores.vue";
+import A_CargaMatriculas from '@/views/school_manager/A_CargaMatriculas.vue';
+import B_AsignaturaYBloque from '@/views/school_manager/B_AsignaturaYBloque.vue';
+import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
+import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
+import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
+import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
 
 const routes = [
   {
@@ -120,48 +120,48 @@ const routes = [
       },
       {
         path: 'school_manager/cargaMatriculas',
-        component: CargaMatriculas,
-        name: 'CargaMatriculas',
-        meta: {
-          role: 'DIRECCION'
-        },
-      },
-      {
-        path: 'school_manager/crearGrupos',
-        component: CrearGrupos,
-        name: 'CrearGrupos',
+        component: A_CargaMatriculas,
+        name: 'A_CargaMatriculas',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
         path: 'school_manager/asignaturaYBloque',
-        component: AsignaturaYBloque,
-        name: 'AsignaturaYBloque',
+        component: B_AsignaturaYBloque,
+        name: 'B_AsignaturaYBloque',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
-        path: 'school_manager/asignaturasYDepartamentos',
-        component: AsignaturasYDepartamentos,
-        name: 'AsignaturasYDepartamentos',
+        path: 'school_manager/crearGrupos',
+        component: C_CrearGrupos,
+        name: 'C_CrearGrupos',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
         path: 'school_manager/tablaResumen',
-        component: TablaResumen,
-        name: 'TablaResumen',
+        component: D_TablaResumen,
+        name: 'D_TablaResumen',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/departamentos',
+        component: E_DepartamentosYHoras,
+        name: 'E_DepartamentosYHoras',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
         path: 'school_manager/reducciones',
-        component: ReduccionesProfesores,
-        name: 'ReduccionesProfesores',
+        component: F_ReduccionesProfesores,
+        name: 'F_ReduccionesProfesores',
         meta: {
           role: 'DIRECCION'
         },

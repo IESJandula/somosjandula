@@ -46,8 +46,8 @@ export declare function crearNuevosGrupos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerGrupos(toastMessage: Ref<string>,
-                                           toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerAlumnosConGrupos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;

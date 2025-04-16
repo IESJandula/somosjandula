@@ -164,6 +164,34 @@ export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurs
   }
 }
 
+export const deleteRecursoReserva = async(toastMessage, toastColor, isToastOpen, recurso) =>
+  {
+    try
+    {
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+  
+      const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/bookings',
+      {
+        method: 'DELETE',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          recurso: recurso
+        },
+      })
+      
+      if (!response.ok)
+      {
+        throw new Error('No se ha cargado previamente ningun recurso')
+      }
+  
+    }
+    catch (error)
+    {
+      console.log(error)
+    }
+  }
+
 export const postReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos) =>
   {
   try
@@ -284,7 +312,7 @@ export const getProfesores = async (toastMessage, toastColor, isToastOpen) =>
 }
 
 
-export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana) =>
+export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana, esSemanal) =>
   {
   try
   {
@@ -302,7 +330,8 @@ export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen
         tramosHorarios: tramoHorario,
         nAlumnos: nAlumnos,
         numSemana: numSemana,
-      },
+        esSemanal: esSemanal
+      }
     })
 
     if (!response.ok)
@@ -348,7 +377,7 @@ export const getReservasTemporary = async (toastMessage, toastColor, isToastOpen
   }
 }
 
-export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, numSemana) =>
+export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, numSemana, esSemanal) =>
   {
   try
   {
@@ -364,6 +393,7 @@ export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOp
           diaDeLaSemana: diaDeLaSemana,
           tramoHorario: tramoHorario,
           numSemana: numSemana,
+          esSemanal: esSemanal
         },
       })
 
@@ -391,6 +421,38 @@ export const getCantMaxResource = async (toastMessage, toastColor, isToastOpen) 
       headers:
       {
         'Authorization': `Bearer ${tokenPropio}`,
+      },
+    })
+
+    if (!response.ok)
+    {
+      throw new Error('No se ha cargado previamente ningun recurso')
+    }
+    return await response.json()
+  }
+  catch (error)
+  {
+    console.log(error)
+  }
+}
+
+export const getCheckAvailable = async (toastMessage, toastColor, isToastOpen,diaDeLaSemana,recurso,tramoHorario,numAlumnos,semanas) =>
+{
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings/available',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        'diaDeLaSemana': diaDeLaSemana,
+        'recurso': recurso,
+        'tramoHorario': tramoHorario,
+        'numAlumnos': numAlumnos,
+        'semanas': semanas
       },
     })
 
