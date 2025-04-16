@@ -176,6 +176,42 @@
     </ion-row>
   </div>
   </div>
+  <div class="form-wrapper">
+    <div class="form-container-table-logs">
+        <div class="title-container">
+          <h1 class="title">Logs de Recursos</h1>
+          <div class="pagina-container">
+            <button class="decrementar-button" v-if="paginaActual != 0" @click="paginarLogs(--paginaActual)">
+              Anterior
+            </button>
+            <span> Página: {{ paginaActual + 1 }} </span>
+            <button class="incrementar-button" @click="paginarLogs(++paginaActual)">
+              Siguiente
+            </button>
+          </div>
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th class="sticky-column">Fecha</th>
+                <th>Acción</th>
+                <th>Recurso</th>
+                <th>Profesor</th>
+                <th>Reserva</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="log in logsPaginados" :key="log.fecha">
+                <td class="sticky-column">{{ log.fecha }}</td>
+                <td>{{ log.accion }}</td>
+                <td>{{ log.recurso }}</td>
+                <td>{{ log.profesor }}</td>
+                <td>{{ log.locReserva }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
     <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
       @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
   </template>
@@ -202,6 +238,7 @@ import {
   getCantMaxResource,
   deleteRecursoReserva,
   modifyResourceLock,
+  getPaginatedLogs,
 } from "@/services/bookings";
 
 // Selección de constante
@@ -214,6 +251,8 @@ const esCompartibleLista = ref(false);
 const esCompartibleGestion = ref(false);
 const recursosCantidadMaxima = ref('');
 const recursos = ref([]);
+const logsPaginados = ref([]);
+const paginaActual = 0;
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref("");
@@ -534,6 +573,63 @@ const switchRecurso = async () => {
   cargarRecursos();
 };
 
+const paginarLogs = async (pagina) =>
+{
+  try
+  {
+    const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
+    
+    if (data.length > 0)
+    {
+      const formatearFecha = (fecha) => {
+        const date = new Date(fecha);
+        const pad = (n) => n.toString().padStart(2, '0');
+
+        const dia = pad(date.getDate());
+        const mes = pad(date.getMonth() + 1);
+        const anio = date.getFullYear();
+        const horas = pad(date.getHours());
+        const minutos = pad(date.getMinutes());
+        const segundos = pad(date.getSeconds());
+
+        return `${dia}-${mes}-${anio} ${horas}:${minutos}:${segundos}`;
+      };
+
+      logsPaginados.value = data.map((item) => ({
+        fecha: formatearFecha(item.fecha),
+        accion: item.accion,
+        recurso: item.recurso,
+        profesor: item.profesor,
+        locReserva: item.locReserva,
+      }));
+    }
+    else
+    {
+      mensajeActualizacion = "No hay logs disponibles para la página seleccionada";
+      mensajeColor = "warning";
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        mensajeColor,
+        mensajeActualizacion
+      );
+    }
+  }
+  catch (error)
+  {
+    mensajeActualizacion = "Error al obtener los logs paginados";
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+  }
+}
+
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await cargarConstantes();
@@ -541,6 +637,7 @@ onMounted(async () => {
   await getRecurso();
   await switchRecurso();
   await getCantMaxResource();
+  await paginarLogs(0);
 });
 </script>
 
@@ -559,7 +656,8 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.form-container-table {
+.form-container-table
+{
   width: 100%;
   max-width: 700px;
   background-color: var(--form-bg-light);
@@ -573,6 +671,41 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
+.form-container-table-logs
+{
+  width: 100%;
+  max-width: 45%;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+  border: 1px solid #444;
+  border-radius: 10px;
+  box-sizing: border-box;
+  padding: 20px 30px;
+  margin: auto;
+  font-family: "Roboto", sans-serif;
+  margin-top: 2%;
+}
+
+.logs-table
+{
+  display: block;
+}
+
+.sticky-column
+{
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+}
+
+.pagina-container
+{
+  display: flex;
+  padding-top: 2%;
+  justify-content: space-between;
+  width: 100%;
+}
 
 .form-wrapper {
   display: flex;
@@ -736,6 +869,7 @@ tr:hover td {
 
 .title-container {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   position: relative;
   width: 100%;
@@ -842,6 +976,12 @@ input:checked+.slider:before {
   }
 
   .form-container-table {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+
+  .form-container-table-logs {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;

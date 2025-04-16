@@ -498,3 +498,31 @@ export const modifyResourceLock = async (toastMessage, toastColor, isToastOpen, 
     console.log();
   }
 }
+
+export const getPaginatedLogs = async (toastMessage, toastColor, isToastOpen, pagina) =>
+  {
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const response = await fetch(bookingsApiUrl + '/bookings/admin/logs',
+      {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        pagina: pagina
+      }
+    })
+
+    if (!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+    return await response.json()
+  }
+  catch (error)
+  {
+    console.log();
+  }
+}

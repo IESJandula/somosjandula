@@ -144,6 +144,7 @@
           <label for="start">Limite de Repetición</label>
           <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
             :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" :class="{'placeholder-date': !fechaSeleccionada }" />
+          <Datepicker v-model="fechaSeleccionada" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="handleDateChange" :input-class="{'placeholder-date': !fechaSeleccionada}"/>
         </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
@@ -309,6 +310,11 @@ const actualizarSemana = (fecha) => {
   validarFecha(); // Añadir validación de fecha
   getReserva();
   incrementarFecha();
+}
+
+function handleDateChange(date) {
+  fechaModal({ target: { value: date } })
+  comprobarDisponibilidad()
 }
 
 const resetearSemana = () => {
