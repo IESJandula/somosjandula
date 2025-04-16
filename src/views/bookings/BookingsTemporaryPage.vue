@@ -845,6 +845,26 @@ onMounted(async () => {
   color: white !important;
 }
 
+::v-deep(.dp__pointer.dp__input_readonly.dp__input.dp__input_icon_pad.dp__input_reg) {
+    width: 67%;
+}
+
+::v-deep(.dp__input_wrap) {
+    margin-left: 18%;
+    position: relative;
+    width: 100%;
+    box-sizing: unset;
+}
+
+::v-deep(.date-picker-container) {
+    display: flex;
+    width: auto;
+    flex-direction: column;
+    gap: 5px;
+    font-family: Arial, sans-serif;
+    align-items: center;
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -1097,7 +1117,7 @@ tr:hover td {
 /* Estilo para el contenedor del input */
 .date-picker-container {
   display: flex;
-  width: 8%;
+  width: auto;
   flex-direction: column;
   gap: 5px;
   font-family: Arial, sans-serif;
@@ -1105,9 +1125,11 @@ tr:hover td {
 
 .label-datepicker {
   font-weight: bold;
+  display: flex;
   color: #000000;
   text-align: center;
   margin-bottom: 5px;
+
 }
 
 /* Etiqueta asociada */
