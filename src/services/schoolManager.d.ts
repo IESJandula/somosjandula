@@ -99,10 +99,22 @@ export declare function asignarAsignaturasADepartamentos(toastMessage: Ref<strin
 export declare function cargarReducciones(toastMessage: Ref<string>,
                                           toastColor: Ref<string>,
                                           isToastOpen: Ref<boolean>): Promise<void>;
-export declare function crearReduccion(toastMessage: Ref<string>,
-                                       toastColor: Ref<string>,
-                                       isToastOpen: Ref<boolean>): Promise<void>;
-export declare function borrarReduccion(toastMessage: Ref<string>,
-                                        toastColor: Ref<string>,
-                                        isToastOpen: Ref<boolean>): Promise<void>;
+export declare function crearReducciones(toastMessage: Ref<string>,
+                                         toastColor: Ref<string>,
+                                         isToastOpen: Ref<boolean>): Promise<void>;
+export declare function borrarReducciones(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerProfesores(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignarReducciones(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerReduccionesProfesores(toastMessage: Ref<string>,
+                                                     toastColor: Ref<string>,
+                                                     isToastOpen: Ref<boolean>): Promise<void>;
+export declare function borrarReduccionesProfesores(toastMessage: Ref<string>,
+                                                    toastColor: Ref<string>,
+                                                    isToastOpen: Ref<boolean>): Promise<void>;
 

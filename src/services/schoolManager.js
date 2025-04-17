@@ -937,7 +937,7 @@ export const cargarReducciones = async (toastMessage, toastColor, isToastOpen) =
     }
   }
 
-export const crearReduccion = async (nombre, horas, decideDireccion, toastMessage, toastColor, isToastOpen) =>
+export const crearReducciones = async (nombre, horas, decideDireccion, toastMessage, toastColor, isToastOpen) =>
   {
     try
     {
@@ -946,7 +946,7 @@ export const crearReduccion = async (nombre, horas, decideDireccion, toastMessag
   
       const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/reducciones',
           {
-            method: 'GET',
+            method: 'POST',
             headers:
                 {
                   'Authorization': `Bearer ${tokenPropio}`,
@@ -968,7 +968,7 @@ export const crearReduccion = async (nombre, horas, decideDireccion, toastMessag
     }
   }
 
-export const borrarReduccion = async (nombre, horas, decideDireccion, toastMessage, toastColor, isToastOpen) =>
+export const borrarReducciones = async (nombre, horas, decideDireccion, toastMessage, toastColor, isToastOpen) =>
   {
     try
     {
@@ -977,13 +977,132 @@ export const borrarReduccion = async (nombre, horas, decideDireccion, toastMessa
   
       const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/reducciones',
           {
-            method: 'GET',
+            method: 'DELETE',
             headers:
                 {
                   'Authorization': `Bearer ${tokenPropio}`,
                   'nombre': nombre,
                   'horas': horas,
                   'decideDireccion': decideDireccion
+                },
+  
+          });
+      if(!response.ok)
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
+  
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
+
+export const obtenerProfesores = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/profesores',
+          {
+            method: 'GET',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                },
+  
+          });
+      if(!response.ok)
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
+      return await response.json();
+  
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
+
+export const asignarReducciones = async (email, reduccion, horas, toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/asignarReducciones',
+          {
+            method: 'POST',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                  'email': email,
+                  'reduccion': reduccion,
+                  'horas': horas
+                },
+          });
+      if(!response.ok)
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
+
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
+
+export const obtenerReduccionesProfesores = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/asignarReducciones',
+          {
+            method: 'GET',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                },
+  
+          });
+      if(!response.ok)
+      {
+        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+      }
+      return await response.json();
+  
+    }
+    catch (error)
+    {
+      console.log(error);
+    }
+  }
+
+export const borrarReduccionesProfesores = async (email, reduccion, horas, toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/asignarReducciones',
+          {
+            method: 'DELETE',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                  'email': email,
+                  'reduccion': reduccion,
+                  'horas': horas
                 },
   
           });

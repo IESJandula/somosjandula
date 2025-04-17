@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import {IonInput, IonToast} from "@ionic/vue";
-import { asignarAsignaturasADepartamentos, asignarProfesoresADepartamentos, obtenerAsignaturasPorCursoEtapaGrupo, obtenerCursosEtapasGrupos, obtenerDatosDepartamentosConAsignaturas, obtenerDepartamentos, obtenerTodasLasAsignaturas, quitarAsignaturasDeDepartamentos } from '@/services/schoolManager.js'
+import { asignarAsignaturasADepartamentos, asignarProfesoresADepartamentos, obtenerAsignaturasPorCursoEtapaGrupo, obtenerCursosEtapasGrupos, obtenerDatosDepartamentosConAsignaturas, obtenerDepartamentos, obtenerTodasLasAsignaturas, quitarAsignaturasDeDepartamentos } from '@/services/schoolManager.js';
 
 const isToastOpen = ref(false);
 const toastMessage = ref('');
