@@ -10,7 +10,7 @@
 
     <div class="date-picker-container">
       <label class="label-datepicker" for="start">Selecciona una fecha</label>
-      <Datepicker v-model="fechaActual" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es" input-class="datepicker-input-custom" menu-class="datepicker-menu-custom"/>
+      <Datepicker v-model="fechaActual" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es" input-class="datepicker-input-custom" menu-class="datepicker-menu-custom"/>
     </div>
     <br>
     <!-- Dropdown para seleccionar recurso -->
@@ -142,9 +142,7 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
-            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" :class="{'placeholder-date': !fechaSeleccionada }" />
-          <Datepicker v-model="fechaSeleccionada" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="handleDateChange" :input-class="{'placeholder-date': !fechaSeleccionada}"/>
+          <Datepicker v-model="fechaSeleccionada" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="handleDateChange" :input-class="{'placeholder-date': !fechaSeleccionada}"/>
         </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
@@ -180,8 +178,6 @@
       </div>
     </div>
   </div>
-
-
 
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
@@ -240,7 +236,7 @@ const disponibleSemanal = ref(false);
 //Variables de Fecha
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const reseteoFecha = ref('');
-const fechaSeleccionada = ref('')
+const fechaSeleccionada = ref(fechaActual.value);
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
@@ -268,6 +264,11 @@ const closeDeleteModal = () => {
   reservaParaBorrar.value = null;
   getReserva();
 };
+
+function disableWeekends(date) {
+  const day = date.getDay()
+  return day === 0 || day === 6
+}
 
 // Obtener el año actual
 const currentDate = new Date();
@@ -313,6 +314,14 @@ const actualizarSemana = (fecha) => {
 }
 
 function handleDateChange(date) {
+  const selectedDate = new Date(date);
+  const monday = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const week = [];
+  for (let i = 0; i < 7; i++) {
+    week.push(addDays(monday, i));
+  }
+  semanaSeleccionada.value = week;
+  
   fechaModal({ target: { value: date } })
   comprobarDisponibilidad()
 }
@@ -348,7 +357,6 @@ const deshabilitarSemanaSiguiente = () => {
 }
 
 const fechaModal = (event) => {
-  event.stopPropagation();
   fechaSeleccionada.value = new Date(event.target.value).toISOString().slice(0, 10);
   fechaLimite.value = fechaSeleccionada.value;
   semanaLimite.value = getWeek(fechaLimite.value);
@@ -828,9 +836,24 @@ onMounted(async () => {
 ::v-deep(.dp__input) {
   background-color: #0078d7 !important;
   color: #ffffff !important;
-  border-radius: 10px !important;
+  border-radius: 20px !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  text-align: center !important;
+  margin-left: 5px;
 }
+
+::v-deep(.dp__cell_highlight) {
+  background-color: #0078d7 !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+}
+
+::v-deep(.dp__cell_highlight_active)
+{
+  background-color: #0078d7 !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+}	
 
 ::v-deep(.dp__input_icon) {
   color: #ffffff !important;
@@ -841,7 +864,7 @@ onMounted(async () => {
 }
 
 ::v-deep(.dp__active_date) {
-  background-color: #0080ff !important;
+  background-color: #0078d7 !important;
   color: white !important;
 }
 
@@ -850,7 +873,7 @@ onMounted(async () => {
 }
 
 ::v-deep(.dp__input_wrap) {
-    margin-left: 18%;
+    margin-left: 16%;
     position: relative;
     width: 100%;
     box-sizing: unset;
