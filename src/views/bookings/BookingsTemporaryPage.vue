@@ -54,20 +54,25 @@
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
                   <span>Es semanal: {{ reservas[tramo.id][dia.id].esSemanal[index] }}</span>
+                  <!-- Botón A: Solo ADMINISTRADOR o DIRECCION y reserva fija -->
                   <button
                     v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
-                    A
-                  </button>               
-                  <button v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual && (!reservas[tramo.id][dia.id].esfija[index] && !reservas[tramo.id][dia.id].esSemanal[index]))"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index], !reservas[tramo.id][dia.id].esSemanal[index])">
-                    B
+                    Borrar
                   </button>
+
                   <button
-                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual && (!reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].esSemanal[index]))"
+                    v-else-if="!reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
                     @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
-                    C
+                    Borrar
                   </button>
+
+                  <button
+                    v-else-if="!reservas[tramo.id][dia.id].esfija[index] && !reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index], !reservas[tramo.id][dia.id].esSemanal[index])">
+                    Borrar
+                  </button>
+
                 </div>
               </template>
             </span>
@@ -710,8 +715,12 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
     if (esSemanal && esFija)
     {
       await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value, false)
+      mensajeActualizacion = 'Reserva cancelada correctamente'
+      mensajeColor = 'success'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      getReserva(recursoSeleccionado)
+      return;
     }
-    
     // Llamar a la API para cancelar la reserva
     if (rolesUsuario.value.includes('ADMINISTRADOR') || rolesUsuario.value.includes('DIRECCION')) {
       if (!esFija) {
