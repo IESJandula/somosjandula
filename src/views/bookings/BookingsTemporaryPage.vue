@@ -53,15 +53,20 @@
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
+                  <span>Es semanal: {{ reservas[tramo.id][dia.id].esSemanal[index] }}</span>
                   <button
                     v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
-                    Borrar
+                    A
+                  </button>               
+                  <button v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual && (!reservas[tramo.id][dia.id].esfija[index] && !reservas[tramo.id][dia.id].esSemanal[index]))"
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index], !reservas[tramo.id][dia.id].esSemanal[index])">
+                    B
                   </button>
                   <button
-                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual && (!reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].esSemanal[index]))"
                     @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
-                    Borrar
+                    C
                   </button>
                 </div>
               </template>
@@ -431,6 +436,11 @@ const incrementarFecha = () => {
 }
 
 const repetirReserva = async () => {
+  let motivo = '';
+  if (motivoCurso.value != '') {
+    motivo = motivoCurso.value;
+  }
+  
   if (opcionRepeticion.value === 'Semanal') {
     do {
       await postReservaTemporary(
@@ -443,7 +453,8 @@ const repetirReserva = async () => {
         currentTramo.value.id,
         numAlumnos.value,
         +semana.value,
-        true
+        true,
+        motivo,
       );
       semana.value = parseInt(semana.value) + 1;
     }
@@ -686,15 +697,21 @@ const getReserva = async () => {
       plazasRestantes: reserva.plazasRestantes,
       esfija: reserva.esfija,
       motivoCurso: reserva.motivoCurso,
+      esSemanal: reserva.esSemanal,
     }
   }
-  reservas.value = estructuraReservas
+  reservas.value = estructuraReservas  
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija) => {
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija, esSemanal) => {
   try {
-    event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
+    event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón    
 
+    if (esSemanal && esFija)
+    {
+      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value, false)
+    }
+    
     // Llamar a la API para cancelar la reserva
     if (rolesUsuario.value.includes('ADMINISTRADOR') || rolesUsuario.value.includes('DIRECCION')) {
       if (!esFija) {

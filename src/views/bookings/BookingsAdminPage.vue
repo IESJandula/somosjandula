@@ -629,8 +629,8 @@ const paginarLogs = async (pagina) =>
   }
   catch (error)
   {
-    mensajeActualizacion = "Error al obtener los logs paginados";
-    mensajeColor = "danger";
+    mensajeActualizacion = "Todavía no existen logs disponibles";
+    mensajeColor = "warning";
     crearToast(
       toastMessage,
       toastColor,
