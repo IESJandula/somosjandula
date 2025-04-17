@@ -54,7 +54,7 @@
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
                   <span>Es semanal: {{ reservas[tramo.id][dia.id].esSemanal[index] }}</span>
-                  <!-- Botón A: Solo ADMINISTRADOR o DIRECCION y reserva fija -->
+                  
                   <button
                     v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
