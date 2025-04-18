@@ -3,16 +3,20 @@ import {onMounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { cargarAsignaturasUnicas, obtenerNumAlumnosAsignatura, obtenerInfoGrupos } from '@/services/schoolManager.js';
 import { IonToast, IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue';
+import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const asignaturas = ref([]);
 const infoGrupos = ref([]);
 const loading = ref(false);
-const errorMensaje = ref("");
+// Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
+// Nueva variable reactiva para el mensaje de actualización
+let mensajeActualizacion = "";
+let mensajeColor = "";
 
 /**
  * Función auxiliar que recibe un objeto con los números de alumnos por grupo
@@ -46,7 +50,6 @@ const cargarAsignatura = async () => {
     return;
   }
   loading.value = true;
-  errorMensaje.value = "";
   try {
 
     const data = await cargarAsignaturasUnicas(
@@ -64,8 +67,10 @@ const cargarAsignatura = async () => {
     // Para cada asignatura, se saca el número de alumnos para cada grupo.
     await cargarNumeroAlumnosPorGrupo();
   } catch (error) {
-    errorMensaje.value = "Error al cargar asignaturas. Inténtelo de nuevo.";
-    console.error("Error:", error);
+    mensajeActualizacion = "Error al cargar asignaturas. Inténtelo de nuevo.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } finally {
     loading.value = false;
   }
@@ -93,7 +98,10 @@ const cargarNumeroAlumnosPorGrupo = async () => {
         const numero = parseInt(response,10);
         asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = isNaN(numero) ? 0 : numero;
       } catch (error) {
-        console.error(`Error al obtener alumnos para ${asignatura.nombre} - Grupo ${infoGrupo.grupo}:`, error);
+        mensajeActualizacion = `Error al obtener alumnos para ${asignatura.nombre} - Grupo ${infoGrupo.grupo}:`;
+        mensajeColor = "danger";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Error al cargar alumnos por grupo. Inténtelo de nuevo.");
+        console.error(error);
         asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = 0;
       }
     }
@@ -110,18 +118,16 @@ onMounted(() => {
     <h1 class="m-4">Resumen por asignaturas</h1>
     <!-- Desplegable para elegir curso y etapa -->
     <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
-
     <!-- Tarjeta que contiene la tabla -->
     <ion-card class="m-6">
       <ion-card-header>
-        <ion-card-title style="text-align: center;">
+        <ion-card-title class="th-center">
           Tabla de grupos por asignatura
         </ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <div v-if="errorMensaje" class="mensajeError">{{ errorMensaje }}</div>
+        <div v-if="mensajeActualizacion" class="mensajeError">{{ mensajeActualizacion }}</div>
         <div v-if="loading" class="cargar">Cargando datos...</div>
-
         <div v-if="asignaturas.length > 0 && !loading">
           <table class="tablaAsignaturas">
             <thead>
@@ -149,13 +155,11 @@ onMounted(() => {
             </tbody>
           </table>
         </div>
-
         <div v-else-if="!loading" class="m-7">
-          <p>No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
+          <p class="cargar">No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
         </div>
       </ion-card-content>
     </ion-card>
-
     <ion-toast
         :is-open="isToastOpen"
         :message="toastMessage"

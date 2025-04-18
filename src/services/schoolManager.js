@@ -20,13 +20,13 @@ export const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) 
 
       if(!response.ok) 
       {
-        throw new Error('No se pudieron cargar los cursos y etapas');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`);
       }
       return await response.json();
     }
     catch (error)
     {
-      console.log(error);
+      console.log('No se pudieron cargar los cursos y etapas: ', error);
     }
 }
 export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor, isToastOpen) => 
@@ -53,12 +53,12 @@ export const subirFicheros = async (file, curso, etapa, toastMessage, toastColor
 
       if(!response.ok) 
       {
-        throw new Error('Error al cargar el fichero de matrículas');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`);
       }
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar el fichero de matrículas: ', error);
     }
 }
 
@@ -80,14 +80,14 @@ export const obtenerCursosCargados = async (toastMessage, toastColor, isToastOpe
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar grupos');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar grupos: ', error);
     }
   }
 
@@ -110,13 +110,13 @@ export const borrarMatriculas = async (curso, etapa, toastMessage, toastColor, i
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar grupos');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al borrar los grupos: ', error);
     }
   }
 
@@ -140,7 +140,7 @@ export const obtenerDatosMatriculas = async (curso, etapa, toastMessage, toastCo
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       console.log(response.json)
       return await response.json();
@@ -148,7 +148,7 @@ export const obtenerDatosMatriculas = async (curso, etapa, toastMessage, toastCo
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar los datos de las matriculas: ', error);
     }
   }
 
@@ -176,13 +176,13 @@ export const matricularAsignaturasCsv = async (nombre, apellidos, asignatura, cu
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al matricular asignaturas: ', error);
     }
   }
 
@@ -210,13 +210,13 @@ export const matricularAlumnosCsv = async (nombre, apellidos, asignatura, curso,
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al matricular el alumno: ', error);
     }
   }
 
@@ -244,13 +244,13 @@ export const matricularAlumnosCsv = async (nombre, apellidos, asignatura, curso,
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al desmatricular el alumno: ', error);
     }
   }
 
@@ -276,14 +276,14 @@ export const cargarAsignaturas = async (curso, etapa, toastMessage, toastColor, 
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar las asignaturas: ', error);
     }
 }
 
@@ -311,13 +311,13 @@ export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toas
       });
       if(!response.ok) 
       {
-        throw new Error('Error al crear el bloque.');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al crear el bloque: ', error);
     }
 }
 
@@ -343,12 +343,12 @@ export const eliminarBloques = async (curso, etapa, nombre, toastMessage, toastC
       });
       if(!response.ok) 
       {
-        throw new Error('Error al eliminar el bloque.');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al eliminar el bloque: ', error);
     }
 }
 export const mostrarHoras = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
@@ -372,14 +372,14 @@ export const mostrarHoras = async (curso, etapa, toastMessage, toastColor, isToa
 
       if(!response.ok) 
         {
-          throw new Error('Error al eliminar el bloque.');
+          throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
         }
         
         return await response.json();
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar las horas', error);
     }
 }
 export const asignarHoras = async (curso, etapa, nombreAsignatura, horas, toastMessage, toastColor, isToastOpen) => 
@@ -405,12 +405,12 @@ export const asignarHoras = async (curso, etapa, nombreAsignatura, horas, toastM
 
       if(!response.ok) 
       {
-        throw new Error('Error al eliminar el bloque.');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al asignar las horas: ', error);
     }
 }
 
@@ -436,13 +436,13 @@ export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, 
 
       if(!response.ok) 
       {
-        throw new Error('Error al crear grupo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return response;
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al crear grupo: ', error);
     }
 }
 export const obtenerInfoGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
@@ -467,14 +467,14 @@ export const obtenerInfoGrupos = async (curso, etapa, toastMessage, toastColor, 
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar grupos');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar grupos: ', error);
     }
 }
 export const obtenerAlumnosConGrupos = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => 
@@ -501,14 +501,14 @@ export const obtenerAlumnosConGrupos = async (curso, etapa, grupo, toastMessage,
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar alumnos');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar alumnos: ', error);
     }
 }
 export const obtenerAlumnosSinGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
@@ -534,14 +534,14 @@ export const obtenerAlumnosSinGrupos = async (curso, etapa, toastMessage, toastC
       });
       if(!response.ok) 
       {
-        throw new Error('Error al cargar alumnos');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar alumnos sin grupo: ', error);
     }
 }
 export const asignarAlumnos = async (curso, etapa, grupo, alumnosSeleccionados, toastMessage, toastColor, isToastOpen) => 
@@ -566,14 +566,14 @@ export const asignarAlumnos = async (curso, etapa, grupo, alumnosSeleccionados, 
       });
       if(!response.ok) 
       {
-        throw new Error('Error al enviar alumnos');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al asignar alumnos: ', error);
     }
 }
 
@@ -595,14 +595,14 @@ export const borrarAlumnos = async (alumno, toastMessage, toastColor, isToastOpe
       });
       if(!response.ok) 
       {
-        throw new Error('Error al borrar el alumno');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
       
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al borrar el alumno: ', error);
     }
 }
 
@@ -627,14 +627,14 @@ export const cargarAsignaturasUnicas = async (curso, etapa, toastMessage, toastC
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar asignaturas: ', error);
     }
   }
 
@@ -679,13 +679,13 @@ export const obtenerDepartamentos = async (toastMessage, toastColor, isToastOpen
 
       if(!response.ok) 
       {
-        throw new Error('No se pudieron cargar los cursos y etapas');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
     }
     catch (error)
     {
-      console.log(error);
+      console.log('No se ha podido cargar los departamentos: ', error);
     }
 }
 
@@ -711,13 +711,13 @@ export const asignarProfesoresADepartamentos = async (nombre, plantilla, toastMe
 
       if(!response.ok) 
       {
-        throw new Error('No se pudieron cargar los cursos y etapas');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
 
     }
     catch (error)
     {
-      console.log(error);
+      console.log('No se pudieron asignar los profesores al departamento: ', error);
     }
 }
 export const obtenerDatosDepartamentosConAsignaturas = async (toastMessage, toastColor, isToastOpen) => 
@@ -737,13 +737,13 @@ export const obtenerDatosDepartamentosConAsignaturas = async (toastMessage, toas
 
       if(!response.ok) 
       {
-        throw new Error('No se pudieron cargar los cursos y etapas');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
     }
     catch (error)
     {
-      console.log(error);
+      console.log('No se ha podido obtener los tados de los departamentos con sus asignaturas asignadas: ', error);
     }
 }
 export const obtenerCursosEtapasGrupos = async (toastMessage, toastColor, isToastOpen) =>
@@ -764,7 +764,7 @@ export const obtenerCursosEtapasGrupos = async (toastMessage, toastColor, isToas
         });
     if(!response.ok)
     {
-      throw new Error('Error al cargar la lista de cursos. Inténtelo de nuevo');
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
     }
 
     return await response.json();
@@ -772,7 +772,7 @@ export const obtenerCursosEtapasGrupos = async (toastMessage, toastColor, isToas
   }
   catch (error)
   {
-    console.log(error);
+    console.log('Error al cargar la lista de cursos: ', error);
   }
 }
 
@@ -795,12 +795,13 @@ export const obtenerAsignaturasPorCursoEtapaGrupo = async (curso, etapa, grupo, 
     });
 
     if (!response.ok) {
-      throw new Error('Error al cargar la lista de asignaturas. Inténtelo de nuevo');
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
     }
 
     return await response.json();
-  } catch (error) {
-    console.error(error);
+  } catch (error) 
+  {
+    console.error('Error al cargar la lista de asignaturas por curso, etapa y grupo: ', error);
   }
 }
 
@@ -822,7 +823,7 @@ export const obtenerTodasLasAsignaturas = async (toastMessage, toastColor, isToa
         });
     if(!response.ok)
     {
-      throw new Error('Error al cargar la lista de asignaturas. Inténtelo de nuevo');
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
     }
 
     return await response.json();
@@ -830,7 +831,7 @@ export const obtenerTodasLasAsignaturas = async (toastMessage, toastColor, isToa
   }
   catch (error)
   {
-    console.log(error);
+    console.log('Error al cargar la lista de asignaturas: ', error);
   }
 }
 
@@ -859,13 +860,13 @@ export const quitarAsignaturasDeDepartamentos = async (curso, etapa, grupo, nomb
         });
     if(!response.ok)
     {
-      throw new Error('Error al eliminar departamentos de la asignatura. Inténtelo de nuevo');
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
     }
 
   }
   catch (error)
   {
-    console.log(error);
+    console.log('Error al eliminar la asignatura de los departamentos: ', error);
   }
 }
 
@@ -896,14 +897,14 @@ export const asignarAsignaturasADepartamentos = async (curso, etapa, grupo, nomb
         });
     if(!response.ok)
     {
-      throw new Error('Error al asignar departamentos a la asignatura. Inténtelo de nuevo');
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
     }
 
 
   }
   catch (error)
   {
-    console.log(error);
+    console.log('Error al asignar la asignatura de los departamentos: ', error);
   }
 }
 
@@ -926,14 +927,14 @@ export const cargarReducciones = async (toastMessage, toastColor, isToastOpen) =
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al cargar las reducciones: ', error);
     }
   }
 
@@ -958,13 +959,13 @@ export const crearReducciones = async (nombre, horas, decideDireccion, toastMess
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
 
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al crear la reduccion: ', error);
     }
   }
 
@@ -989,13 +990,13 @@ export const borrarReducciones = async (nombre, horas, decideDireccion, toastMes
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al borrar la reduccion: ', error);
     }
   }
 
@@ -1017,14 +1018,14 @@ export const obtenerProfesores = async (toastMessage, toastColor, isToastOpen) =
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al obtener los profesores: ', error);
     }
   }
 
@@ -1048,13 +1049,13 @@ export const asignarReducciones = async (email, reduccion, horas, toastMessage, 
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
 
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al asignar la reduccion: ', error);
     }
   }
 
@@ -1076,14 +1077,14 @@ export const obtenerReduccionesProfesores = async (toastMessage, toastColor, isT
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
       return await response.json();
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al obtener las reducciones asignadas: ', error);
     }
   }
 
@@ -1108,12 +1109,12 @@ export const borrarReduccionesProfesores = async (email, reduccion, horas, toast
           });
       if(!response.ok)
       {
-        throw new Error('Error al cargar asignaturas. Inténtelo de nuevo');
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
       }
   
     }
     catch (error)
     {
-      console.log(error);
+      console.log('Error al borrar la reduccion asignada: ', error);
     }
   }

@@ -5,15 +5,10 @@ import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatricu
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
-const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
 const cursosEtapas = ref([]);
 const emit = defineEmits(['actualizar-select']);
 const seleccionado = ref('');
 const cursoSeleccionado = ref('');
-let mensajeColor = ''
-let mensajeActualizacion = ''
 const archivoSeleccionado= ref(false)
 const file = ref(null);
 const cursosMapeados = ref([]);
@@ -28,7 +23,13 @@ const nuevoAlumno = ref({
 });
 const estadosValidos = ["MATR", "NO_MATR", "SUPCA", "CONV", "APRO", "PEND"];
 
-
+// Variable para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
+// Nueva variable reactiva para el mensaje de actualización
+let mensajeActualizacion = "";
+let mensajeColor = "";
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
@@ -80,10 +81,10 @@ const monitorizarSiHayArchivo = async (archivo) => {
     comprobarBoton();
   
   } catch (error) {
-    console.error(error);
-    mensajeActualizacion = error;
+    mensajeActualizacion = "El archivo no tiene el formato correcto";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -105,10 +106,10 @@ const subirFichero = async () => {
       mensajeColor = "success";
       crearToast( toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     } catch (error) {
-      console.error('Error al cargar matriculas', error);
-      mensajeActualizacion = 'Error al cargar matrículas';
+      mensajeActualizacion = 'Error al subir el fichero';
       mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      console.error(error);
     }
     seleccionado.value = "";
     const fileUploadComponent = fileUploadRef.value;
@@ -126,7 +127,10 @@ const cargarCursosEtapa = async () => {
     cursosEtapas.value = data;
     comprobarBoton()
   } catch (error) {
-    console.error('Error al cargar cursos y etapas', error);
+    mensajeActualizacion = "Error al cargar cursos y etapas";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -155,7 +159,10 @@ const insertarCursosCargados = async () => {
       console.log(cursosMapeados.value);
     }
   } catch (error) {
-    console.error('Error al insertar cursos cargados:', error);
+    mensajeActualizacion = "No se pudieron cargar los cursos y etapas";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -194,9 +201,12 @@ const cargarDatosMatriculas = async () => {
     // Convertir el mapa en un array
     datosMatriculas.value = Array.from(estudiantesMap.values());
   } catch (error) {
-    console.error('No se pudieron cargar los datos de matrículas');
     datosMatriculas.value = [];
     asignaturas.value = [];
+    mensajeActualizacion = "No se pudieron cargar los datos de matrículas";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -224,9 +234,10 @@ const matricularAsignaturaCsv = async (index) => {
     mensajeColor = "success";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
-    mensajeActualizacion = error.message;
+    mensajeActualizacion = "Error al modificar la matrícula";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -239,12 +250,18 @@ const registrarNuevoAlumno = async () => {
     
     
     if (!nombre || !apellidos || Object.entries(matriculas).length !== asignaturas.value.length) {
-      throw new Error("Son obligatorios todos los campos.");
+      mensajeActualizacion = "Son obligatorios todos los campos.";
+      mensajeColor = "danger";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
     }
 
     for (const [asignatura, estado] of Object.entries(matriculas)) {
-      if (![estadosValidos].includes(estado)) {
-        throw new Error(`El estado de la asignatura debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
+      if (!estadosValidos.includes(estado)) {
+        mensajeActualizacion = `El estado de la debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`;
+        mensajeColor = "danger";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+        return;
       }
       
       await matricularAlumnosCsv(nombre, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
@@ -263,6 +280,7 @@ const registrarNuevoAlumno = async () => {
     mensajeActualizacion = error.message;
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -282,13 +300,14 @@ const desmatricularAlumnoCsv = async (index) => {
 
     datosMatriculas.value.splice(index, 1); // Eliminar el alumno de la lista
 
-    mensajeActualizacion = "Matricula modificada con exito";
+    mensajeActualizacion = "Alumno borrado con exito";
     mensajeColor = "success";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
-    mensajeActualizacion = error.message;
+    mensajeActualizacion = "Error al borrar el alumno";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -298,15 +317,21 @@ const guardarTodo = async () => {
     if(nuevoAlumno.value.nombre !== ''){
       // Registrar nuevo alumno si hay datos
       if (!nuevoAlumno.value.nombre || !nuevoAlumno.value.apellidos || Object.keys(nuevoAlumno.value.matriculas).length !== asignaturas.value.length) {
-        throw new Error("Son obligatorios todos los campos.");
+        mensajeActualizacion = "Son obligatorios todos los campos.";
+        mensajeColor = "danger";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+        return;
       }
       if (nuevoAlumno.value.nombre && nuevoAlumno.value.apellidos && Object.keys(nuevoAlumno.value.matriculas).length > 0) {
           // Guardar el nuevo alumno
         await registrarNuevoAlumno();
         // Validar los estados de las asignaturas
-        for (const [asignatura, estado] of Object.entries(nuevoAlumno.value.matriculas)) {
-          if (![estadosValidos].includes(estado)) {
-            throw new Error(`El estado de la`, asignatura, `debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
+        for (const [estado] of Object.entries(nuevoAlumno.value.matriculas)) {
+          if (!estadosValidos.includes(estado)) {
+            mensajeActualizacion = `El estado de la debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`;
+            mensajeColor = "danger";
+            crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+            return;
           }
         }
         mensajeActualizacion = "Todo guardado con éxito";
@@ -327,6 +352,7 @@ const guardarTodo = async () => {
     mensajeActualizacion = "Error al guardar los cambios";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
