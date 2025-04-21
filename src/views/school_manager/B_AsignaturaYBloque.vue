@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
+import { crearToast } from '@/utils/toast.js';
 import { cargarAsignaturas, crearBloques, eliminarBloques, mostrarHoras, asignarHoras } from '@/services/schoolManager.js'
 import { IonToast, IonCard, IonInput, IonButton, IonCardContent, IonCardHeader, IonCardTitle } from "@ionic/vue";
 
@@ -9,18 +10,41 @@ const asignaturas = ref([]);
 const columnasGrupos = ref([]);
 const asignaturasSeleccionadas = ref([]);
 const loading = ref(false);
-const errorMensaje = ref("");
-const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
 const asignaturasConHoras = ref([]);
 const horasPorAsignatura = ref({});
 const isProcessing = ref(false); // Estado de carga para "Guardar Todo"
+const bloquesConUnaAsignatura = ref([]);
+// Variable para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
+// Nueva variable reactiva para el mensaje de actualización
+let mensajeActualizacion = "";
+let mensajeColor = "";
+
 
 const actualizarSelect = (seleccionado) => {
     filtroSeleccionado.value = seleccionado;
     console.log("Filtro actualizado:", seleccionado);
 };
+
+const actualizarBloquesConUnaAsignatura = () => {
+  const bloques = asignaturas.value.reduce((acc, asignatura) => {
+    if (asignatura.bloqueId) {
+      if (!acc[asignatura.bloqueId]) {
+        acc[asignatura.bloqueId] = [];
+      }
+      acc[asignatura.bloqueId].push(asignatura);
+    }
+    return acc;
+  }, {});
+
+  // Filtrar los bloques que solo tienen una asignatura
+  bloquesConUnaAsignatura.value = Object.entries(bloques)
+    .filter(([, asignaturasBloque]) => asignaturasBloque.length === 1)
+    .map(([bloqueId]) => bloqueId);
+};
+
 
 const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
@@ -30,7 +54,6 @@ const cargarAsignatura = async () => {
   }
 
   loading.value = true;
-  errorMensaje.value = "";
 
   try {
     const data = await cargarAsignaturas(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
@@ -39,8 +62,9 @@ const cargarAsignatura = async () => {
 
     asignaturas.value = Array.isArray(data) ? data : [];
     console.log(asignaturas.value.length);
+  
+    actualizarBloquesConUnaAsignatura(); // Actualiza los bloques con una asignatura
 
-    
     const gruposSet = new Set();
     asignaturas.value.forEach((asignatura) => {
       const grupos = typeof asignatura.numeroAlumnosEnGrupo === 'object' ? asignatura.numeroAlumnosEnGrupo : {};
@@ -50,8 +74,10 @@ const cargarAsignatura = async () => {
     });
     columnasGrupos.value = Array.from(gruposSet);
   } catch (error) {
-    errorMensaje.value = "Error al cargar asignaturas. Inténtelo de nuevo.";
-    console.error('Error:', error);
+    mensajeActualizacion = "Error al cargar asignaturas. Inténtelo de nuevo.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } finally {
     loading.value = false;
   }
@@ -60,12 +86,13 @@ const cargarAsignatura = async () => {
 
 const crearBloque = async () => {
   if (asignaturasSeleccionadas.value.length < 2) {
-    errorMensaje.value = "Debe seleccionar al menos dos asignaturas.";
+    mensajeActualizacion = "Debe seleccionar al menos dos asignaturas.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     return;
   }
   // esta propiedad hace que se vuelva a cargar el template
   loading.value = true;
-  errorMensaje.value = "";
 
   try {
     const nombresSeleccionados = asignaturasSeleccionadas.value.map(a => a.nombre);
@@ -83,8 +110,10 @@ const crearBloque = async () => {
     await cargarAsignatura();
     
   } catch (error) {
-    errorMensaje.value = "Error al crear el bloque.";
-    console.error("Error:", error);
+    mensajeActualizacion = "Error al crear el bloque.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } finally {
     loading.value = false;
   }
@@ -94,7 +123,6 @@ const crearBloque = async () => {
 
 const eliminarBloque = async (asignatura) => {
   loading.value = true;
-  errorMensaje.value = "";
   try {
     await eliminarBloques(
       filtroSeleccionado.value.curso, 
@@ -108,29 +136,13 @@ const eliminarBloque = async (asignatura) => {
     asignatura.bloqueId = null;
     cargarAsignatura();
 
-    // Agrupar asignaturas por bloqueId
-    const bloques = asignaturas.value.reduce((acc, asignatura) => {
-      if (asignatura.bloqueId) {
-        if (!acc[asignatura.bloqueId]) {
-          acc[asignatura.bloqueId] = [];
-        }
-        acc[asignatura.bloqueId].push(asignatura);
-      }
-      return acc;
-    }, {});
-
-      // Buscar bloques con menos de 2 asignaturas
-      Object.entries(bloques).forEach(([bloqueId, asignaturasBloque]) => {
-      if (asignaturasBloque.length < 2) {
-        toastMessage.value = ` bloque ${bloqueId} tiene una asignatura, eliminalo ya un bloque debe tener al menos dos asignaturas.`;
-        toastColor.value = "warning";
-        isToastOpen.value = true;
-      }
-    });
+    actualizarBloquesConUnaAsignatura(); // Actualiza los bloques con una asignatura
 
     } catch (error) {
-    errorMensaje.value = "Error al eliminar el bloque.";
-    console.error("Error:", error);
+    mensajeActualizacion = "Error al eliminar el bloque.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } finally {
     loading.value = false;
   }
@@ -144,7 +156,6 @@ const mostrarHora = async () =>{
   }
 
   loading.value = true;
-  errorMensaje.value = "";
 
   try {
     // Llamada al servicio que obtiene las horas
@@ -161,8 +172,10 @@ const mostrarHora = async () =>{
     }, {});
 
   } catch (error) {
-    errorMensaje.value = "Error al cargar las horas. Inténtelo de nuevo.";
-    console.error('Error:', error);
+    mensajeActualizacion = "Error al cargar las horas. Inténtelo de nuevo.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } finally {
     loading.value = false;
   }
@@ -170,7 +183,9 @@ const mostrarHora = async () =>{
 
 const guardarHoras = async (nombreAsignatura) => {
   if (!horasPorAsignatura.value[nombreAsignatura] || horasPorAsignatura.value[nombreAsignatura] <= 0) {
-    errorMensaje.value = "Seleccione una asignatura válida y horas mayores a 0.";
+    mensajeActualizacion = "Seleccione una asignatura válida y horas mayores a 0.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     return;
   }
 
@@ -184,14 +199,15 @@ const guardarHoras = async (nombreAsignatura) => {
       toastColor, 
       isToastOpen
     );
-
-    toastMessage.value = `Horas actualizadas para ${nombreAsignatura}.`;
-    toastColor.value = "success";
-    isToastOpen.value = true;
+    mensajeActualizacion = `Has actualizado las horas de ${nombreAsignatura}.`;
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
 
   } catch (error) {
-    errorMensaje.value = "Error al actualizar las horas.";
-    console.error("Error:", error);
+    mensajeActualizacion = "Error al actualizar las horas.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } 
 };
 
@@ -214,12 +230,14 @@ const guardarTodasHoras = async () => {
       await guardarHoras(nombre, horas );
     }
 
-    toastMessage.value = "Todas las asignaturas se actualizaron correctamente.";
-    toastColor.value = "success";
+    mensajeActualizacion = "Todas las asignaturas se actualizaron correctamente.";
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
-    console.error("Error al actualizar todas las horas:", error);
-    toastMessage.value = "Error al actualizar las horas.";
-    toastColor.value = "danger";
+    mensajeActualizacion = "Error al actualizar las horas.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } finally {
     isProcessing.value = false;
     isToastOpen.value = true;
@@ -245,9 +263,15 @@ async () =>{
         <ion-card-title style="text-align: center;">Tabla de Asignaturas</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <div v-if="errorMensaje" class="mensejeError">{{ errorMensaje }}</div>
+        <div v-if="mensajeActualizacion" class="mensejeError">{{ mensajeActualizacion }}</div>
         <div v-if="loading" class="cargar">Cargando datos...</div>
+        <div v-if="bloquesConUnaAsignatura.length > 0" class="mensajeBloqueUnico">
+          {{ bloquesConUnaAsignatura.length === 1
+            ? `El bloque ${bloquesConUnaAsignatura[0]} tiene una asignatura, elimínalo, ya un bloque debe tener al menos dos asignaturas.`
+            : `Los bloques ${bloquesConUnaAsignatura.join(", ")} tienen una asignatura, elimínalos, ya que un bloque debe tener al menos dos asignaturas.` }}
+        </div>
 
+        <!-- Tabla de asignaturas -->
         <div v-if="asignaturas.length > 0 && !loading">
           <table class="table">
             <thead>
@@ -349,6 +373,12 @@ async () =>{
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
+
+.mensajeBloqueUnico {
+  color: #f56565;
+  margin-bottom: 1rem;
+}
+
 
 .bloque{
   text-align: center;

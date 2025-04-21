@@ -5,15 +5,10 @@ import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatricu
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
-const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
 const cursosEtapas = ref([]);
 const emit = defineEmits(['actualizar-select']);
 const seleccionado = ref('');
 const cursoSeleccionado = ref('');
-let mensajeColor = ''
-let mensajeActualizacion = ''
 const archivoSeleccionado= ref(false)
 const file = ref(null);
 const cursosMapeados = ref([]);
@@ -26,7 +21,16 @@ const nuevoAlumno = ref({
   apellidos: "",
   matriculas: {}
 });
-
+const estadosValidos = ["MATR", "NO_MATR", "SUPCA", "CONV", "APRO", "PEND"];
+// Nueva variable reactiva para el estado de carga
+const isLoading = ref(false);
+// Variable para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
+// Nueva variable reactiva para el mensaje de actualización
+let mensajeActualizacion = "";
+let mensajeColor = "";
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
@@ -76,13 +80,12 @@ const monitorizarSiHayArchivo = async (archivo) => {
     file.value = formData;
 
     comprobarBoton();
-  
   } catch (error) {
-    console.error(error);
-    mensajeActualizacion = error;
+    mensajeActualizacion = "El archivo no tiene el formato correcto";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-  }
+    console.error(error);
+  } 
 };
 
 // Enviar datos al servidor
@@ -96,18 +99,24 @@ const subirFichero = async () => {
         
       }
 
+      isLoading.value = true; // Activar el estado de carga
       const data = await subirFicheros(file.value, curso, etapa, toastMessage, toastColor, isToastOpen);
+      console.log("Activando spinner...");
       console.log("Fichero Cargado:", data);
 
       mensajeActualizacion = "Csv cargado con éxito";
       mensajeColor = "success";
       crearToast( toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     } catch (error) {
-      console.error('Error al cargar matriculas', error);
-      mensajeActualizacion = 'Error al cargar matrículas';
+      mensajeActualizacion = 'Error al subir el fichero';
       mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      console.error(error);
     }
+    finally {
+    console.log("Desactivando spinner...");
+    isLoading.value = false; // Desactivar el estado de carga
+  }
     seleccionado.value = "";
     const fileUploadComponent = fileUploadRef.value;
     fileUploadComponent.fileClear();
@@ -124,7 +133,10 @@ const cargarCursosEtapa = async () => {
     cursosEtapas.value = data;
     comprobarBoton()
   } catch (error) {
-    console.error('Error al cargar cursos y etapas', error);
+    mensajeActualizacion = "Error al cargar cursos y etapas";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -146,14 +158,20 @@ const insertarCursosCargados = async () => {
     const data = await obtenerCursosCargados(isToastOpen, toastMessage, toastColor) || [];
     if (data===undefined){
       cursosMapeados.value = ""
-      throw console.error("No hay datos")
+      mensajeActualizacion = "No hay datos";
+      mensajeColor = "danger";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
     }
     else {
       cursosMapeados.value = data.map(curso => `${curso.curso}-${curso.etapa}`);
       console.log(cursosMapeados.value);
     }
   } catch (error) {
-    console.error('Error al insertar cursos cargados:', error);
+    mensajeActualizacion = "No se pudieron cargar los cursos y etapas";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -162,7 +180,10 @@ const eliminarCursosCargados = async (cursoE) => {
   const [curso, etapa] = cursoE.split('-');
   const data = await borrarMatriculas(curso, etapa, isToastOpen, toastMessage, toastColor)
   await insertarCursosCargados();
+  cursoSeleccionado.value = "" // Limpiar el curso seleccionado
+  datosMatriculas.value = [] // Limpiar los datos de matrículas
   return console.log("Borrado con exito: " + data)
+  
 }
 
 
@@ -189,45 +210,63 @@ const cargarDatosMatriculas = async () => {
     // Convertir el mapa en un array
     datosMatriculas.value = Array.from(estudiantesMap.values());
   } catch (error) {
-    console.error('No se pudieron cargar los datos de matrículas');
     datosMatriculas.value = [];
     asignaturas.value = [];
+    mensajeActualizacion = "No se pudieron cargar los datos de matrículas";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
-const matricularAsignaturaCsv = async (index) => {
+const matricularAsignaturaCsv = async (index, mostrarToast = true) => {
   try {
-
     const [curso, etapa] = cursoSeleccionado.value.split("-");
-    
     const alumno = datosMatriculas.value[index].nombre;
     const apellidos = datosMatriculas.value[index].apellidos;
 
-    if (Object.keys(matriculas).length === 0) {
-      throw new Error("Son obligatorios todos los campos.");
+    if (datosMatriculas.value[index].matriculas.length === 0) {
+      const error = new Error("Son obligatorios todos los campos.");
+      if (mostrarToast) {
+        mensajeActualizacion = error.message;
+        mensajeColor = "danger";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      }
+      throw error;
     }
 
-
-    for(const[asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)){
-      if(estado === "MATR" || estado === "NO_MATR" || estado === "SUPCA" || estado === "CONV" || estado === "APRO" || estado === "PEND"){ 
+    for (const [asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)) {
+      if (estadosValidos.includes(estado)) {
         await matricularAsignaturasCsv(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
       } else {
-        throw new Error("El estado de la asignatura debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.");
+        const error = new Error(`El estado de la asignatura '${asignatura}' debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
+        if (mostrarToast) {
+          mensajeActualizacion = error.message;
+          mensajeColor = "danger";
+          crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+        }
+        throw error;
       }
     }
 
-    mensajeActualizacion = "Matricula modificada con exito";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if (mostrarToast) {
+      mensajeActualizacion = "Matrícula modificada con éxito";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
+
   } catch (error) {
-    mensajeActualizacion = error.message;
-    mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if (mostrarToast) {
+      mensajeActualizacion = error.message;
+      mensajeColor = "danger";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
+    throw error;
   }
 };
 
 
-const registrarNuevoAlumno = async () => {
+const registrarNuevoAlumno = async (mostrarToast = true) => {
   try {
     
     const [curso, etapa] = cursoSeleccionado.value.split("-");
@@ -235,20 +274,28 @@ const registrarNuevoAlumno = async () => {
     
     
     if (!nombre || !apellidos || Object.entries(matriculas).length !== asignaturas.value.length) {
-      throw new Error("Son obligatorios todos los campos.");
+      mensajeActualizacion = "Son obligatorios todos los campos.";
+      mensajeColor = "danger";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
     }
 
     for (const [asignatura, estado] of Object.entries(matriculas)) {
-      if (!["MATR", "NO_MATR", "SUPCA", "CONV", "APRO", "PEND"].includes(estado)) {
-        throw new Error(`El estado de la asignatura debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
+      if (!estadosValidos.includes(estado)) {
+        mensajeActualizacion = `El estado de la debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`;
+        mensajeColor = "danger";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+        return;
       }
       
       await matricularAlumnosCsv(nombre, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
     }
 
-    mensajeActualizacion = "Alumno registrado con éxito";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if (mostrarToast) {
+      mensajeActualizacion = "Alumno registrado con éxito";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
     
     // Agregar el nuevo alumno a la tabla
     datosMatriculas.value.push({ ...nuevoAlumno.value });
@@ -259,6 +306,7 @@ const registrarNuevoAlumno = async () => {
     mensajeActualizacion = error.message;
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -278,39 +326,71 @@ const desmatricularAlumnoCsv = async (index) => {
 
     datosMatriculas.value.splice(index, 1); // Eliminar el alumno de la lista
 
-    mensajeActualizacion = "Matricula modificada con exito";
+    mensajeActualizacion = "Alumno borrado con exito";
     mensajeColor = "success";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
-    mensajeActualizacion = error.message;
+    mensajeActualizacion = "Error al borrar el alumno";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
 const guardarTodo = async () => {
+  let mensajeError = '';
+
   try {
-    // Guardar todas las matrículas modificadas
-    for (let i = 0; i < datosMatriculas.value.length; i++) {
-      await matricularAsignaturaCsv(i);
+    if(nuevoAlumno.value.nombre !== '') {
+      // Registrar nuevo alumno si hay datos
+      if (!nuevoAlumno.value.nombre || !nuevoAlumno.value.apellidos || Object.keys(nuevoAlumno.value.matriculas).length !== asignaturas.value.length) {
+        mensajeActualizacion = "Son obligatorios todos los campos.";
+        mensajeColor = "danger";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+        return;
+      }
+      if (nuevoAlumno.value.nombre && nuevoAlumno.value.apellidos && Object.keys(nuevoAlumno.value.matriculas).length > 0) {
+         // Validar los estados de las asignaturas
+        for (const [asignatura, estado] of Object.entries(nuevoAlumno.value.matriculas)) {
+          if (!estadosValidos.includes(estado)) {
+            mensajeActualizacion = `El estado de la asignatura '${asignatura}' debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`;
+            mensajeColor = "danger";
+            crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+            return;
+          }
+        }
+        // Guardar el nuevo alumno
+        await registrarNuevoAlumno(false);
+      }
     }
-    
-    // Registrar nuevo alumno si hay datos
-    if (!nuevoAlumno.value.nombre || !nuevoAlumno.value.apellidos || !Object.keys(nuevoAlumno.value.matriculas).length > 0) {
-      throw new Error("Son obligatorios todos los campos.");
+
+    if(nuevoAlumno.value !== null) {
+      // Procesar matrículas de todos los alumnos
+      for (let i = 0; i < datosMatriculas.value.length; i++) {
+        try {
+          await matricularAsignaturaCsv(i, false);
+        } catch (error) {
+          mensajeError += `Error en ${datosMatriculas.value[i].nombre} ${datosMatriculas.value[i].apellidos}: ${error.message}\n`;
+        }
+      }
     }
-    if (nuevoAlumno.value.nombre && nuevoAlumno.value.apellidos && Object.keys(nuevoAlumno.value.matriculas).length > 0) {
-      await registrarNuevoAlumno();
-      
+
+    if (mensajeError === '') {
+      mensajeActualizacion = "Todo guardado con éxito";
+      mensajeColor = "success";
+    } else {
+      mensajeActualizacion = mensajeError;
+      mensajeColor = "danger";
     }
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
 
   } catch (error) {
     mensajeActualizacion = "Error al guardar los cambios";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
-
 
 
 onMounted(async () => {
@@ -330,7 +410,7 @@ onMounted(async () => {
           <!-- Selector de curso y etapa -->
           <div class="dropdown">
             <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
-            <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2 m-1">
+            <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2">
               <option value="">Selecciona un curso</option>
               <option v-for="cursoEtapa in cursosEtapas"
                 :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
@@ -345,6 +425,10 @@ onMounted(async () => {
             <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
             <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
             <button @click="subirFichero(); $event.target.blur()"  ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
+            <!-- Spinner de carga -->
+            <div v-if="isLoading" class="fondo-gris">
+              <div class="circulo"></div>
+            </div>
           </div>
           <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
           @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
@@ -371,7 +455,7 @@ onMounted(async () => {
       <div class="centro">
         <h4 class="m-3">Datos del CSV cargado</h4>
         <div class="dropdown-datos">
-          <select v-model="cursoSeleccionado" id="seleccionar-curso" class="p-2 m-1">
+          <select v-model="cursoSeleccionado" id="seleccionar-curso" class="p-2">
             <option value="">Selecciona un curso</option>
             <option v-for="cursoEtapa in cursosEtapas"
               :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
@@ -445,7 +529,8 @@ onMounted(async () => {
   margin-bottom: 1.5rem; 
   text-align: center;
 }
-.m-3{
+
+.m-3 {
   font-size: 1.3rem;
   text-align: center;
 }
@@ -457,16 +542,21 @@ onMounted(async () => {
   align-items: center;
   text-align: center;
 }
+
 .m-1 {
   margin-bottom: 1rem;
   font-size: 1.1rem;
   text-align: center;
 }
-.p-2{
+
+.p-2 {
   padding: 0.5rem;
   border: 1px solid #D1D5DB; 
   border-radius: 0.375rem; 
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
 }
+
 .btn {
   padding: 0.5rem;
   border: 1px solid ;
@@ -475,6 +565,7 @@ onMounted(async () => {
   color: #FFFFFF;
   font-size: 1.1rem;
 }
+
 .btn-csv {
   width: 170px;
   padding: 0.5rem;
@@ -495,13 +586,11 @@ onMounted(async () => {
   background-color: #4782eb;
   color: #FFFFFF;
   font-size: 1.1rem;
-  align-self: end;
   margin-top: 15px;
   margin-bottom: 5px;
   position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 850px;
 }
 
 .table-container {
@@ -509,7 +598,7 @@ onMounted(async () => {
   overflow-y: auto;
 }
 
-button:disabled{
+button:disabled {
   color: #FFFFFF;
 }
 
@@ -537,6 +626,7 @@ input {
   justify-content: center;
   gap: 20px;
 }
+
 .top-container {
   display: flex;
   flex-direction: column;
@@ -552,14 +642,16 @@ input {
   display: flex;
   flex-direction: column;
 }
+
 .dropdown-datos { 
   display: flex;
   flex-direction: row;
 }
 
-.centro{
+.centro {
   justify-items: center;
 }
+
  .section { 
   width: 100%;
   max-width: 400px;
@@ -568,6 +660,7 @@ input {
   gap: 10px;
   margin-top: 20px;
  } 
+
 .card-upload-csv {
   flex: 1 1 30%;
   min-width: 520px;
@@ -581,11 +674,13 @@ input {
   flex-direction: column;
   align-items: center;
 }
+
 .card-upload-table {
   justify-content: flex-start;
   overflow: auto;
     height: 380px;
 }
+
 .card-upload-data {
   min-width: 1060px;
   min-height: 500px;
@@ -623,10 +718,43 @@ input {
   padding-bottom: 0.5rem;
 }
 
-table{
+table {
   width: 100%;
   border-collapse: collapse;
 }
+
+.fondo-gris {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); 
+  z-index: 9998; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.circulo {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4782eb;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  z-index: 9999;
+}
+
+@keyframes spin {
+  0% { 
+    transform: rotate(0deg); 
+  }
+  100% { 
+    transform: rotate(360deg); 
+  }
+}
+
 /* Media queries para hacer que la tarjeta sea más responsive */
 @media (max-width: 768px) {
   .top-section {
@@ -635,7 +763,7 @@ table{
   }
 
   .card-upload-csv,
-  .card-upload-data{
+  .card-upload-data {
     flex: 1 1 100%;
     min-width: 350px;
     min-height: 100%;
@@ -654,8 +782,9 @@ table{
   flex-direction: column;
   }
   .btn-guardar-todo {
-    position: relative;
-    left: 850px;
+    position: sticky;
+    top: 0;
+    left: 160px;
   }
 }
 
@@ -681,9 +810,11 @@ table{
   display: flex;
   flex-direction: column;
   }
+
   .btn-guardar-todo {
-    position: relative;
-    left: 850px;
+    position: sticky;
+    top: 0;
+    left: calc(100% - 180px);
   }
 }
 /* Modo oscuro */
@@ -705,8 +836,8 @@ table{
     color: black;
   }
   
-  button:disabled{
+  button:disabled {
   color: #000000;
-}
+  }
 }
 </style>
