@@ -9,6 +9,7 @@
           <div class="form-section">
             <!-- Usa el componente de carga de archivos -->
             <FileUpload @file-selected="handleFileSelected" />
+            
             <!-- Configuración de impresión -->
             <ion-card class="printer-settings-card">
               <ion-grid>
@@ -26,7 +27,6 @@
                   </ion-col>
                 </ion-row>
 
-                <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
                 <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
                 <ion-row>
                   <ion-col size="12" size-md="3">
@@ -112,6 +112,14 @@
         </form>
       </div>
 
+      <!-- Visor PDF cuando haya selección -->
+      <div v-if="pdfPreviewUrl" class="pdf-preview-container">
+        <ion-button fill="clear" class="close-preview-btn" @click="closePdfPreview">
+          <ion-icon :icon="closeOutline" size="small"></ion-icon>
+        </ion-button>
+        <PdfViewer :pdf-url="pdfPreviewUrl" @pages-counted="handlePagesCount" />
+      </div>
+
       <!-- Tabla de resultados -->
       <div class="table-container">
         <h2 class="title">Mis impresiones</h2>
@@ -133,13 +141,15 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
-import { IonSelect, IonSelectOption, IonInput, IonButton, IonText } from '@ionic/vue';
+import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon } from '@ionic/vue';
 import { obtenerConstantes } from '@/services/constantes';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import FileUpload from '@/components/printers/FileUpload.vue';
+import PdfViewer from '@/components/printers/PdfViewer.vue';
 import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { printersApiUrl } from "@/environment/apiUrls.ts";
+import { closeOutline } from 'ionicons/icons';
 
 // Configuramos la URL del Worker
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -152,6 +162,9 @@ const formData = ref({
   sidesSelected: 'Doble cara',
   file: null,
 });
+
+// PDF URL
+const pdfPreviewUrl = ref('');
 
 const printers = ref([]);
 const colors = ref([]);
@@ -189,37 +202,29 @@ const navigateToIssues = () => {
 const handleFileSelected = (selectedFile) => {
   formData.value.file = selectedFile;
   if (selectedFile) {
+    // Crea una URL para el PDF seleccionado para visualización
+    pdfPreviewUrl.value = URL.createObjectURL(selectedFile);
+    
     // Actualiza el botón y mensajes relacionados con el archivo
     buttonLabel.value = selectedFile.name;
-
-    // Actualizamos el número de folios a imprimir
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const arrayBuffer = e.target.result;
-      pagesToPrint.value = await countPages(arrayBuffer);
-      
-      // Actualizamos el mensaje de impresión después de contar las páginas
-      updatePrintMessage();
-
-      // Validamos el número de copias
-      validatePrint();
-    };
-    reader.readAsArrayBuffer(selectedFile);
   }
 };
 
-// Función para contar las páginas del PDF
-const countPages = async (file) => {
-  try {
-    const pdf = await getDocument({ data: file }).promise;
-    const numPages = pdf.numPages;
-    return numPages;
-  } 
-  catch (error) {
-    console.error('Error al procesar el PDF:', error);
-    handleError('Error al procesar el PDF'); // Maneja el error si falla el conteo de páginas
-    return 0;
+// Cierra la vista previa del PDF
+const closePdfPreview = () => {
+  if (pdfPreviewUrl.value) {
+    URL.revokeObjectURL(pdfPreviewUrl.value);
+    pdfPreviewUrl.value = '';
   }
+};
+
+// Recibe el conteo de páginas desde el componente PdfViewer
+const handlePagesCount = (count) => {
+  pagesToPrint.value = count;
+  // Actualizamos el mensaje de impresión después de contar las páginas
+  updatePrintMessage();
+  // Validamos el número de copias
+  validatePrint();
 };
 
 // Actualiza el mensaje de impresión basado en el cálculo de hojas y opciones de impresión
@@ -617,6 +622,28 @@ ion-input {
   color: #004085;
   font-size: 1rem;
   text-align: center;
+}
+
+.pdf-preview-container {
+  flex: 1 1 55%;
+  min-width: 300px;
+  max-width: 90%;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.close-preview-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 5;
+  --padding-start: 5px;
+  --padding-end: 5px;
 }
 
 /* Modo oscuro */
