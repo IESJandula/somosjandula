@@ -102,7 +102,7 @@ const emit = defineEmits(['pages-counted', 'selection-changed']);
 
 // Refs
 const pdfContainer = ref(null);
-const pdfCanvas = ref(null);
+const pdfCanvas = ref<HTMLCanvasElement | null>(null);
 const currentPage = ref(1);
 const totalPages = ref(0);
 const scale = ref(1.2);
@@ -115,7 +115,7 @@ const customPages = ref('');
 const selectedPages = ref<number[]>([]);
 
 // ref pdf
-let pdfDoc = null;
+let pdfDoc: pdfjsLib.PDFDocumentProxy | null = null;
 
 // Propiedad calculada para páginas seleccionadas
 const selectedPageCount = computed(() => {
@@ -136,7 +136,7 @@ onMounted(async () => {
   }
 });
 
-async function loadPDF(url) {
+async function loadPDF(url: string) {
   try {
     const loadingTask = pdfjsLib.getDocument(url);
     pdfDoc = await loadingTask.promise;
@@ -154,23 +154,36 @@ async function loadPDF(url) {
 }
 
 // Mostrar página actual
-async function renderPage(pageNum) {
-  if (!pdfDoc) return;
+async function renderPage(pageNum: number) {
+  if (!pdfDoc) {
+    console.error("Documento PDF no cargado aún.");
+    return;
+  }
 
   const page = await pdfDoc.getPage(pageNum);
   const viewport = page.getViewport({ scale: scale.value });
-  
+
   const canvas = pdfCanvas.value;
+  if (!canvas) {
+    console.error("Canvas no encontrado.");
+    return;
+  }
+
   const context = canvas.getContext('2d');
-  
+  if (!context) {
+    console.error("Contexto del canvas no encontrado.");
+    return;
+  }
+
   canvas.height = viewport.height;
   canvas.width = viewport.width;
-  
+
+  // Aquí context ya está validado como no nulo
   const renderContext = {
     canvasContext: context,
     viewport: viewport
   };
-  
+
   await page.render(renderContext).promise;
 }
 
