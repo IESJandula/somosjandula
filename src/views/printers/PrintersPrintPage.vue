@@ -9,6 +9,7 @@
           <div class="form-section">
             <!-- Usa el componente de carga de archivos -->
             <FileUpload @file-selected="handleFileSelected" />
+            
             <!-- Configuración de impresión -->
             <ion-card class="printer-settings-card">
               <ion-grid>
@@ -26,7 +27,6 @@
                   </ion-col>
                 </ion-row>
 
-                <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
                 <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
                 <ion-row>
                   <ion-col size="12" size-md="3">
@@ -104,6 +104,15 @@
                   </ion-col>
                 </ion-row>
 
+                <!-- Quinta Fila: Información de páginas seleccionadas (si no son todas) -->
+                <ion-row v-if="selectedPages.length > 0 && selectedPages.length !== pagesToPrint">
+                  <ion-col size="12">
+                    <ion-text color="secondary" class="pages-text">
+                      Se imprimirán únicamente {{ selectedPages.length }} de {{ pagesToPrint }} páginas.
+                    </ion-text>
+                  </ion-col>
+                </ion-row>
+
                 <!-- Botón de Imprimir -->
                 <ion-row class="ion-justify-content-center ion-padding-top">
                   <ion-col size="auto">
@@ -121,6 +130,17 @@
             </ion-card>
           </div>
         </form>
+      </div>
+      <!-- Visor PDF cuando haya selección -->
+      <div v-if="pdfPreviewUrl" class="pdf-preview-container">
+        <ion-button fill="clear" class="close-preview-btn" @click="closePdfPreview">
+          <ion-icon :icon="closeOutline" size="small"></ion-icon>
+        </ion-button>
+        <PdfViewer 
+          :pdf-url="pdfPreviewUrl" 
+          @pages-counted="handlePagesCount" 
+          @selection-changed="handlePageSelectionChanged"
+        />
       </div>
 
       <!-- Tabla de resultados -->
@@ -144,13 +164,15 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { obtenerColores, obtenerOrientaciones, obtenerCaras, obtenerGrapado, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
-import { IonSelect, IonSelectOption, IonInput, IonButton, IonText } from '@ionic/vue';
+import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon } from '@ionic/vue';
 import { obtenerConstantes } from '@/services/constantes';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import FileUpload from '@/components/printers/FileUpload.vue';
+import PdfViewer from '@/components/printers/PdfViewer.vue';
 import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { printersApiUrl } from "@/environment/apiUrls.ts";
+import { closeOutline } from 'ionicons/icons';
 
 // Configuramos la URL del Worker
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -164,6 +186,9 @@ const formData = ref({
   staplingSelected: 'Grapar',
   file: null,
 });
+
+// PDF URL
+const pdfPreviewUrl = ref('');
 
 const printers = ref([]);
 const colors = ref([]);
@@ -180,6 +205,7 @@ const globalError = ref('');
 const historialImpresiones = ref([]);
 
 const pagesToPrint = ref(0);
+const selectedPages = ref([]);
 
 const isButtonDisabled = ref(false);
 const buttonText = ref('¡IMPRIMIR!');
@@ -202,37 +228,47 @@ const navigateToIssues = () => {
 const handleFileSelected = (selectedFile) => {
   formData.value.file = selectedFile;
   if (selectedFile) {
+    // Crea una URL para el PDF seleccionado para visualización
+    pdfPreviewUrl.value = URL.createObjectURL(selectedFile);
+    
     // Actualiza el botón y mensajes relacionados con el archivo
     buttonLabel.value = selectedFile.name;
 
-    // Actualizamos el número de folios a imprimir
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const arrayBuffer = e.target.result;
-      pagesToPrint.value = await countPages(arrayBuffer);
-      
-      // Actualizamos el mensaje de impresión después de contar las páginas
-      updatePrintMessage();
-
-      // Validamos el número de copias
-      validatePrint();
-    };
-    reader.readAsArrayBuffer(selectedFile);
+    // Inicializa la selección de páginas a vacío (se actualizará cuando el PDF se cargue)
+    selectedPages.value = [];
   }
 };
 
-// Función para contar las páginas del PDF
-const countPages = async (file) => {
-  try {
-    const pdf = await getDocument({ data: file }).promise;
-    const numPages = pdf.numPages;
-    return numPages;
-  } 
-  catch (error) {
-    console.error('Error al procesar el PDF:', error);
-    handleError('Error al procesar el PDF'); // Maneja el error si falla el conteo de páginas
-    return 0;
+// Cierra la vista previa del PDF
+const closePdfPreview = () => {
+  if (pdfPreviewUrl.value) {
+    URL.revokeObjectURL(pdfPreviewUrl.value);
+    pdfPreviewUrl.value = '';
   }
+};
+
+// Recibe el conteo de páginas desde el componente PdfViewer
+const handlePagesCount = (count) => {
+  pagesToPrint.value = count;
+  // Actualizamos el mensaje de impresión después de contar las páginas
+  updatePrintMessage();
+  // Validamos el número de copias
+  validatePrint();
+};
+
+// Recibe las páginas seleccionadas desde el componente PdfViewer
+const handlePageSelectionChanged = (pages) => {
+  // Restaurar el array
+  if (typeof pages === 'string') {
+    selectedPages.value = pages.split(',').map(Number).filter(num => !isNaN(num));
+  } else {
+    selectedPages.value = pages;
+  }
+  
+  // Actualizamos el mensaje de impresión basado en las páginas seleccionadas
+  updatePrintMessage();
+  // Validamos el número de copias con las páginas seleccionadas
+  validatePrint();
 };
 
 // Actualiza el mensaje de impresión basado en el cálculo de hojas y opciones de impresión
@@ -247,9 +283,10 @@ const updatePrintMessage = () => {
   }
 };
 
-// Calcula el número total de hojas a imprimir
+// Calcula el número total de hojas a imprimir basado en las páginas seleccionadas
 const calculateTotalSheets = () => {
-  const pages = pagesToPrint.value;
+  // Usar el número de páginas seleccionadas si hay selección, de lo contrario usar el total
+  const pages = selectedPages.value.length > 0 ? selectedPages.value.length : pagesToPrint.value;
   const copies = formData.value.copiesSelected;
   const isDoubleSided = formData.value.sidesSelected === 'Doble cara';
 
@@ -348,7 +385,12 @@ const submitForm = async () =>
   formDataPayload.append('orientation', formData.value.orientationSelected);
   formDataPayload.append('color', formData.value.colorSelected);
   formDataPayload.append('sides', formData.value.sidesSelected);
-  formDataPayload.append('stapling', formData.value.staplingSelected);
+
+  // Agregar las páginas seleccionadas si no son todas
+  if (selectedPages.value.length > 0 && selectedPages.value.length !== pagesToPrint.value) {
+    formDataPayload.append('selectedPages', selectedPages.value.join(','));
+  }
+
   const userInfo = await obtenerNombreYApellidosUsuario();
   formDataPayload.append('user', `${userInfo.nombre} ${userInfo.apellidos}`);
 
@@ -635,6 +677,39 @@ ion-input {
   text-align: center;
 }
 
+.pages-text {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #d4edda;
+  color: #155724;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.pdf-preview-container {
+  flex: 1 1 55%;
+  min-width: 300px;
+  max-width: 90%;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.close-preview-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 5;
+  --padding-start: 5px;
+  --padding-end: 5px;
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   .form-container,
@@ -669,6 +744,11 @@ ion-input {
   .folio-text {
     background-color: #3e3e3e;
     color: #a2cffe;
+  }
+
+  .pages-text {
+    background-color: #3e4a3e;
+    color: #8fd19e;
   }
 }
 
