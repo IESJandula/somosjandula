@@ -15,13 +15,7 @@
         <ion-icon :icon="removeOutline"></ion-icon>
       </ion-button>
     </div>
-
-    <div class="pdf-container">
-      <div ref="pdfContainer" class="canvas-container">
-        <canvas ref="pdfCanvas"></canvas>
-      </div>
-    </div>
-
+    
     <div class="page-selection-controls">
       <div class="selection-mode">
         <ion-segment v-model="selectionMode">
@@ -76,6 +70,12 @@
         <p>Se imprimirán {{ selectedPageCount }} páginas de {{ totalPages }}.</p>
       </div>
     </div>
+    <div class="pdf-container">
+      <div ref="pdfContainer" class="canvas-container">
+        <canvas ref="pdfCanvas"></canvas>
+      </div>
+    </div>
+
   </div>
 </template>
 
