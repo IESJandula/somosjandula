@@ -276,8 +276,27 @@ function updateSelectedPages() {
   pages.sort((a, b) => a - b);
   
   selectedPages.value = pages;
-  emit('selection-changed', selectedPages.value);
+  
+  // Array a string separadas por comas
+  emit('selection-changed', pages.join(','));
 }
+
+// Verifica si una página específica está incluida en la selección actual
+function containsPage(page: number | string): boolean {
+  // Convertir el parámetro a número si es una cadena
+  const pageNum = typeof page === 'string' ? parseInt(page) : page;
+  
+  // Verificar si el número es válido y está en las páginas seleccionadas
+  if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages.value) {
+    return selectedPages.value.includes(pageNum);
+  }
+  return false;
+}
+
+// Exponer el método para que pueda ser llamado desde un componente padre
+defineExpose({
+  containsPage
+});
 </script>
 
 <style scoped>

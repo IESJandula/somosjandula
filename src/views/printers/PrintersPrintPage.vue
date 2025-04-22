@@ -245,7 +245,13 @@ const handlePagesCount = (count) => {
 
 // Recibe las páginas seleccionadas desde el componente PdfViewer
 const handlePageSelectionChanged = (pages) => {
-  selectedPages.value = pages;
+  // Restaurar el array
+  if (typeof pages === 'string') {
+    selectedPages.value = pages.split(',').map(Number).filter(num => !isNaN(num));
+  } else {
+    selectedPages.value = pages;
+  }
+  
   // Actualizamos el mensaje de impresión basado en las páginas seleccionadas
   updatePrintMessage();
   // Validamos el número de copias con las páginas seleccionadas
@@ -368,7 +374,7 @@ const submitForm = async () =>
   
   // Agregar las páginas seleccionadas si no son todas
   if (selectedPages.value.length > 0 && selectedPages.value.length !== pagesToPrint.value) {
-    formDataPayload.append('selectedPages', JSON.stringify(selectedPages.value));
+    formDataPayload.append('selectedPages', selectedPages.value.join(','));
   }
   
   const userInfo = await obtenerNombreYApellidosUsuario();
