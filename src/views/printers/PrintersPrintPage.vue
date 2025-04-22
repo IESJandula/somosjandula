@@ -93,6 +93,15 @@
                   </ion-col>
                 </ion-row>
 
+                <!-- Quinta Fila: Información de páginas seleccionadas (si no son todas) -->
+                <ion-row v-if="selectedPages.length > 0 && selectedPages.length !== pagesToPrint">
+                  <ion-col size="12">
+                    <ion-text color="secondary" class="pages-text">
+                      Se imprimirán únicamente {{ selectedPages.length }} de {{ pagesToPrint }} páginas.
+                    </ion-text>
+                  </ion-col>
+                </ion-row>
+
                 <!-- Botón de Imprimir -->
                 <ion-row class="ion-justify-content-center ion-padding-top">
                   <ion-col size="auto">
@@ -111,13 +120,16 @@
           </div>
         </form>
       </div>
-
       <!-- Visor PDF cuando haya selección -->
       <div v-if="pdfPreviewUrl" class="pdf-preview-container">
         <ion-button fill="clear" class="close-preview-btn" @click="closePdfPreview">
           <ion-icon :icon="closeOutline" size="small"></ion-icon>
         </ion-button>
-        <PdfViewer :pdf-url="pdfPreviewUrl" @pages-counted="handlePagesCount" />
+        <PdfViewer 
+          :pdf-url="pdfPreviewUrl" 
+          @pages-counted="handlePagesCount" 
+          @selection-changed="handlePageSelectionChanged"
+        />
       </div>
 
       <!-- Tabla de resultados -->
@@ -180,6 +192,7 @@ const globalError = ref('');
 const historialImpresiones = ref([]);
 
 const pagesToPrint = ref(0);
+const selectedPages = ref([]);
 
 const isButtonDisabled = ref(false);
 const buttonText = ref('¡IMPRIMIR!');
@@ -207,6 +220,9 @@ const handleFileSelected = (selectedFile) => {
     
     // Actualiza el botón y mensajes relacionados con el archivo
     buttonLabel.value = selectedFile.name;
+
+    // Inicializa la selección de páginas a vacío (se actualizará cuando el PDF se cargue)
+    selectedPages.value = [];
   }
 };
 
@@ -227,6 +243,15 @@ const handlePagesCount = (count) => {
   validatePrint();
 };
 
+// Recibe las páginas seleccionadas desde el componente PdfViewer
+const handlePageSelectionChanged = (pages) => {
+  selectedPages.value = pages;
+  // Actualizamos el mensaje de impresión basado en las páginas seleccionadas
+  updatePrintMessage();
+  // Validamos el número de copias con las páginas seleccionadas
+  validatePrint();
+};
+
 // Actualiza el mensaje de impresión basado en el cálculo de hojas y opciones de impresión
 const updatePrintMessage = () => {
   const totalSheets = calculateTotalSheets();
@@ -239,9 +264,10 @@ const updatePrintMessage = () => {
   }
 };
 
-// Calcula el número total de hojas a imprimir
+// Calcula el número total de hojas a imprimir basado en las páginas seleccionadas
 const calculateTotalSheets = () => {
-  const pages = pagesToPrint.value;
+  // Usar el número de páginas seleccionadas si hay selección, de lo contrario usar el total
+  const pages = selectedPages.value.length > 0 ? selectedPages.value.length : pagesToPrint.value;
   const copies = formData.value.copiesSelected;
   const isDoubleSided = formData.value.sidesSelected === 'Doble cara';
 
@@ -339,6 +365,12 @@ const submitForm = async () =>
   formDataPayload.append('orientation', formData.value.orientationSelected);
   formDataPayload.append('color', formData.value.colorSelected);
   formDataPayload.append('sides', formData.value.sidesSelected);
+  
+  // Agregar las páginas seleccionadas si no son todas
+  if (selectedPages.value.length > 0 && selectedPages.value.length !== pagesToPrint.value) {
+    formDataPayload.append('selectedPages', JSON.stringify(selectedPages.value));
+  }
+  
   const userInfo = await obtenerNombreYApellidosUsuario();
   formDataPayload.append('user', `${userInfo.nombre} ${userInfo.apellidos}`);
 
@@ -624,6 +656,17 @@ ion-input {
   text-align: center;
 }
 
+.pages-text {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #d4edda;
+  color: #155724;
+  font-size: 1rem;
+  text-align: center;
+}
+
 .pdf-preview-container {
   flex: 1 1 55%;
   min-width: 300px;
@@ -680,6 +723,11 @@ ion-input {
   .folio-text {
     background-color: #3e3e3e;
     color: #a2cffe;
+  }
+
+  .pages-text {
+    background-color: #3e4a3e;
+    color: #8fd19e;
   }
 }
 

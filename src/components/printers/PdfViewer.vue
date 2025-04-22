@@ -21,12 +21,68 @@
         <canvas ref="pdfCanvas"></canvas>
       </div>
     </div>
+
+    <div class="page-selection-controls">
+      <div class="selection-mode">
+        <ion-segment v-model="selectionMode">
+          <ion-segment-button value="all">
+            <ion-label>Todas las páginas</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="range">
+            <ion-label>Rango de páginas</ion-label>
+          </ion-segment-button>
+          <ion-segment-button value="custom">
+            <ion-label>Páginas específicas</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </div>
+
+      <div v-if="selectionMode === 'range'" class="range-selector">
+        <ion-item>
+          <ion-label position="stacked">Desde página:</ion-label>
+          <ion-input 
+            v-model="pageRangeStart" 
+            type="number" 
+            min="1" 
+            :max="totalPages" 
+            @ionChange="validateRangeInputs"
+          ></ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-label position="stacked">Hasta página:</ion-label>
+          <ion-input 
+            v-model="pageRangeEnd" 
+            type="number" 
+            min="1" 
+            :max="totalPages" 
+            @ionChange="validateRangeInputs"
+          ></ion-input>
+        </ion-item>
+      </div>
+
+      <div v-if="selectionMode === 'custom'" class="custom-selector">
+        <ion-item>
+          <ion-label position="stacked">Páginas específicas:</ion-label>
+          <ion-input 
+            v-model="customPages"
+            placeholder="Ej: 1,3,5-7,10" 
+            @ionChange="validateCustomPages"
+          ></ion-input>
+          <ion-note>Usa comas para separar páginas y guiones para rangos (ej: 1,3,5-7,10)</ion-note>
+        </ion-item>
+      </div>
+
+      <div class="page-summary">
+        <p>Se imprimirán {{ selectedPageCount }} páginas de {{ totalPages }}.</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { IonButton, IonIcon } from '@ionic/vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import { IonButton, IonIcon, IonSegment, IonSegmentButton, 
+         IonLabel, IonItem, IonInput, IonNote } from '@ionic/vue';
 import { chevronBackOutline, chevronForwardOutline, addOutline, 
          removeOutline } from 'ionicons/icons';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -42,7 +98,7 @@ const props = defineProps({
 });
 
 // Emits
-const emit = defineEmits(['pages-counted']);
+const emit = defineEmits(['pages-counted', 'selection-changed']);
 
 // Refs
 const pdfContainer = ref(null);
@@ -51,10 +107,27 @@ const currentPage = ref(1);
 const totalPages = ref(0);
 const scale = ref(1.2);
 
-// Documento PDF
+// Selección de páginas
+const selectionMode = ref('all'); // 'all', 'range', o 'custom'
+const pageRangeStart = ref(1);
+const pageRangeEnd = ref(1);
+const customPages = ref('');
+const selectedPages = ref<number[]>([]);
+
+// ref pdf
 let pdfDoc = null;
 
-// Cargamos
+// Propiedad calculada para páginas seleccionadas
+const selectedPageCount = computed(() => {
+  return selectedPages.value.length;
+});
+
+// Monitorizar cambios
+watch([selectionMode, pageRangeStart, pageRangeEnd, customPages, totalPages], () => {
+  updateSelectedPages();
+});
+
+// Carga del PDF
 onMounted(async () => {
   try {
     await loadPDF(props.pdfUrl);
@@ -63,7 +136,6 @@ onMounted(async () => {
   }
 });
 
-// Carga PDF
 async function loadPDF(url) {
   try {
     const loadingTask = pdfjsLib.getDocument(url);
@@ -71,12 +143,17 @@ async function loadPDF(url) {
     totalPages.value = pdfDoc.numPages;
     emit('pages-counted', totalPages.value);
     renderPage(currentPage.value);
+    
+    // Inicializar páginas
+    pageRangeEnd.value = totalPages.value;
+    // Initialzar páginas seleccionadas
+    updateSelectedPages();
   } catch (error) {
-    console.error('Error cargando PDF:', error);
+    console.error('Error loading PDF:', error);
   }
 }
 
-// render de la página actual
+// Mostrar página actual
 async function renderPage(pageNum) {
   if (!pdfDoc) return;
 
@@ -122,6 +199,85 @@ function zoomOut() {
   scale.value /= 1.2;
   renderPage(currentPage.value);
 }
+
+// Validar rango pags
+function validateRangeInputs() {
+  if (pageRangeStart.value < 1) {
+    pageRangeStart.value = 1;
+  }
+  
+  if (pageRangeEnd.value > totalPages.value) {
+    pageRangeEnd.value = totalPages.value;
+  }
+  
+  if (pageRangeStart.value > pageRangeEnd.value) {
+    pageRangeStart.value = pageRangeEnd.value;
+  }
+  
+  updateSelectedPages();
+}
+
+// Validar rango custom
+function validateCustomPages() {
+  updateSelectedPages();
+}
+
+// Actualziar páginas seleccionadas
+function updateSelectedPages() {
+  let pages: number[] = [];
+  
+  if (selectionMode.value === 'all') {
+    // todas
+    for (let i = 1; i <= totalPages.value; i++) {
+      pages.push(i);
+    }
+  } 
+  else if (selectionMode.value === 'range') {
+    // rango
+    for (let i = pageRangeStart.value; i <= pageRangeEnd.value; i++) {
+      pages.push(i);
+    }
+  } 
+  else if (selectionMode.value === 'custom') {
+    // Parseo del rango custom
+    if (customPages.value.trim()) {
+      const parts = customPages.value.split(',');
+      
+      for (const part of parts) {
+        if (part.includes('-')) {
+          // Rango tipo "5-10"
+          const [start, end] = part.split('-').map(Number);
+          
+          if (!isNaN(start) && !isNaN(end)) {
+            const validStart = Math.max(1, Math.min(start, totalPages.value));
+            const validEnd = Math.min(totalPages.value, Math.max(end, 1));
+            
+            for (let i = validStart; i <= validEnd; i++) {
+              if (!pages.includes(i)) {
+                pages.push(i);
+              }
+            }
+          }
+        } else {
+          // Rango "unico" ==> "3"
+          const pageNum = parseInt(part);
+          
+          if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= totalPages.value) {
+            if (!pages.includes(pageNum)) {
+              pages.push(pageNum);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Ordenar ascendentemente
+  pages.sort((a, b) => a - b);
+  
+  selectedPages.value = pages;
+  emit('selection-changed', selectedPages.value);
+}
 </script>
 
 <style scoped>
@@ -165,7 +321,39 @@ canvas {
   display: block;
 }
 
-/* Modo oscuro a futuro? */
+.page-selection-controls {
+  padding: 15px;
+  border-top: 1px solid #ddd;
+  background-color: #ffffff;
+}
+
+.selection-mode {
+  margin-bottom: 15px;
+}
+
+.range-selector {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.range-selector ion-item {
+  flex: 1;
+}
+
+.custom-selector {
+  margin-bottom: 15px;
+}
+
+.page-summary {
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #555;
+  padding: 10px 0;
+}
+
+/* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .pdf-container {
     background-color: #2d2d2d;
@@ -173,6 +361,15 @@ canvas {
   
   .pdf-controls {
     border-bottom: 1px solid #555;
+  }
+  
+  .page-selection-controls {
+    border-top: 1px solid #555;
+    background-color: #333333;
+  }
+  
+  .page-summary {
+    color: #ddd;
   }
 }
 </style>
