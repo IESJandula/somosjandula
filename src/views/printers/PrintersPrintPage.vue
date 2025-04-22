@@ -73,6 +73,17 @@
                       </ion-select>
                     </ion-item>
                   </ion-col>
+                  
+                  <ion-col size="12" size-md="3">
+                      <ion-item>
+                        <ion-label position="stacked">Grapar:</ion-label>
+                        <ion-select v-model="formData.staplingSelected">
+                          <ion-select-option v-for="staple in stapling" :key="staple" :value="staple">
+                            {{ staple }}
+                          </ion-select-option>
+                        </ion-select>
+                      </ion-item>
+                    </ion-col>
                 </ion-row>
 
                 <!-- Tercera Fila: Mensaje de error -->
@@ -131,7 +142,7 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
+import { obtenerColores, obtenerOrientaciones, obtenerCaras, obtenerGrapado, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonText } from '@ionic/vue';
 import { obtenerConstantes } from '@/services/constantes';
@@ -147,9 +158,10 @@ GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 const formData = ref({
   printerSelected: '',
   copiesSelected: 1,
-  colorSelected: 'Color',
+  colorSelected: 'Blanco y negro',
   orientationSelected: 'Vertical',
   sidesSelected: 'Doble cara',
+  staplingSelected: 'Grapar',
   file: null,
 });
 
@@ -157,6 +169,7 @@ const printers = ref([]);
 const colors = ref([]);
 const orientations = ref([]);
 const sides = ref([]);
+const stapling = ref([]);
 
 const buttonLabel = ref('Arrastra o selecciona un archivo PDF');
 
@@ -252,6 +265,7 @@ watch(
     () => formData.value.printerSelected,
     () => formData.value.copiesSelected,
     () => formData.value.sidesSelected,
+    () => formData.value.staplingSelected,
     () => formData.value.colorSelected,
     () => formData.value.file
   ],
@@ -334,6 +348,7 @@ const submitForm = async () =>
   formDataPayload.append('orientation', formData.value.orientationSelected);
   formDataPayload.append('color', formData.value.colorSelected);
   formDataPayload.append('sides', formData.value.sidesSelected);
+  formDataPayload.append('stapling', formData.value.staplingSelected);
   const userInfo = await obtenerNombreYApellidosUsuario();
   formDataPayload.append('user', `${userInfo.nombre} ${userInfo.apellidos}`);
 
@@ -408,6 +423,7 @@ const obtenerDatos = async () => {
     colors.value = await obtenerColores(toastMessage, toastColor, isToastOpen);
     orientations.value = await obtenerOrientaciones(toastMessage, toastColor, isToastOpen);
     sides.value = await obtenerCaras(toastMessage, toastColor, isToastOpen);
+    stapling.value = await obtenerGrapado(toastMessage, toastColor, isToastOpen);
   } catch (error) {
     console.error('Error al obtener datos:', error);
     handleError('Error al obtener datos de impresoras');
