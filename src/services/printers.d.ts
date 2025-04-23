@@ -18,10 +18,6 @@ export declare function obtenerCaras(toastMessage: Ref<string>,
                                      toastColor: Ref<string>,
                                      isToastOpen: Ref<boolean>): Promise<string[]>;
 
-export declare function obtenerGrapado(toastMessage: Ref<string>,
-                                     toastColor: Ref<string>,
-                                     isToastOpen: Ref<boolean>): Promise<string[]>;
-
 export declare function prevalidacionesImpresion(toastMessage: Ref<string>,
                                                  toastColor: Ref<string>,
                                                  isToastOpen: Ref<boolean>): Promise<string[]>;
