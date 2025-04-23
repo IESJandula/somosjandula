@@ -71,20 +71,6 @@ export const obtenerCaras = async (toastMessage, toastColor, isToastOpen) =>
     }).then(res => res.json());
 };
 
-export const obtenerGrapado = async (toastMessage, toastColor, isToastOpen) =>
-    {
-        let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-    
-        return await fetch(printersApiUrl + '/printers/web/stapling',
-        {
-            method: 'GET', // o 'POST', 'PUT', etc. dependiendo de tu caso
-            headers:
-            {
-                'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
-            }
-        }).then(res => res.json());
-    };
-
 export const prevalidacionesImpresion = async (toastMessage, toastColor, isToastOpen) =>
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
