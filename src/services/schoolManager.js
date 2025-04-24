@@ -606,6 +606,39 @@ export const borrarAlumnos = async (alumno, toastMessage, toastColor, isToastOpe
     }
 }
 
+export const actualizarTurnoHorario = async (curso, etapa, grupo, esHorarioMatutino, toastMessage, toastColor, isToastOpen) => 
+  {
+    try
+    {
+      const cursoInt = parseInt(curso, 10);
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/turnoHorario', 
+      {
+        method: 'POST',
+        headers: 
+        {
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa,
+          'grupo': grupo,
+          'esHorarioMatutino': esHorarioMatutino
+        },
+      });
+      if(!response.ok) 
+      {
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+      }
+      return await response.json();
+      
+    }
+    catch (error)
+    {
+      console.log('Error al asignar el turno horario: ', error);
+    }
+}
+
 /****************************** Ventana 4 TablaResumen ******************************/
 export const cargarAsignaturasUnicas = async (curso, etapa, toastMessage, toastColor, isToastOpen) =>
   {

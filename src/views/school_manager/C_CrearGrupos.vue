@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { crearToast } from '@/utils/toast.js';
-import { crearNuevosGrupos, obtenerInfoGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos } from '@/services/schoolManager.js'
+import { crearNuevosGrupos, obtenerInfoGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos, actualizarTurnoHorario } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
@@ -215,6 +215,26 @@ const deseleccionarTodo = () => {
   listadoAlumnosSeleccionados.value = [];
 };
 
+const actualizarTurno = async (infoGrupo) =>
+{
+  try
+  {
+    await actualizarTurnoHorario(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, infoGrupo.grupo, infoGrupo.horarioMatutino, toastMessage, toastColor, isToastOpen);    
+  }
+  catch (error)
+  {
+    // Revertimos el cambio en el modelo si la API falla
+    infoGrupo.horarioMatutino = !infoGrupo.horarioMatutino;
+    
+    // Mostramos toast de error
+    mensajeActualizacion = "Error al actualizar el turno horario.";
+    mensajeColor = "danger";
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error("Error actualizando turno:", error);
+  }
+};
+
 onMounted(async () => {
   
 });
@@ -260,7 +280,9 @@ onMounted(async () => {
           <p v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="cantidad-alumnos">
             Total de alumnos: {{ alumnosPorGrupo[infoGrupo.grupo].length }}
             <label class="horario-checkbox">
-              <input type="checkbox" v-model="infoGrupo.horarioMatutino" /> Horario de mañana
+              <input type="checkbox" 
+                     v-model="infoGrupo.horarioMatutino" 
+                     @change="actualizarTurno(infoGrupo)" /> Horario de mañana
             </label>
           </p>
           <table v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="tablaAlumnos">

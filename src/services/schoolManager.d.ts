@@ -60,6 +60,13 @@ export declare function asignarAlumnos(toastMessage: Ref<string>,
 export declare function borrarAlumnos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
+export declare function actualizarTurnoHorario(curso: Ref<string>,
+                                               etapa: Ref<string>,
+                                               grupo: Ref<string>,
+                                               esHorarioMatutino: Ref<boolean>,
+                                               toastMessage: Ref<string>,
+                                               toastColor: Ref<string>,
+                                               isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Ventana 4 TablaResumen ******************************/
 export declare function cargarAsignaturasUnicas(toastMessage: Ref<string>,
