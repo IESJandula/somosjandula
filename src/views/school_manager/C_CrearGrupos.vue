@@ -80,6 +80,9 @@ const obtenerAlumno = async () => {
     console.log(listadoAlumnosSinGrupo)
 
     alumnosPorGrupo.value = {}; //HAY QUE LIMPIAR PRIMERO, SI NO SE DUPLICAN
+
+    //La comprobacion de los grupos se realiza si la variable info grupos no esta vacía, asi se evita una falsa excepcion
+    if(infoGrupos.value !== undefined) {
     for (const infoGrupo of infoGrupos.value) {
 
       const alumnosDeEseGrupo = await obtenerAlumnosConGrupos(
@@ -88,8 +91,8 @@ const obtenerAlumno = async () => {
       console.log(`Alumnos de grupo ${infoGrupo.grupo}`, alumnosDeEseGrupo);
       // Guardamos ese array bajo la clave del grupo
       alumnosPorGrupo.value[infoGrupo.grupo] = alumnosDeEseGrupo;
+      }
     }
-
   }
   catch (error) {
     mensajeActualizacion = "Error al cargar alumnos.";
