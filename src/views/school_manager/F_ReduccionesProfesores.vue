@@ -26,8 +26,6 @@ const cargarReduccion = async () => {
     const data = await cargarReducciones(toastMessage, toastColor, isToastOpen);
     listaReducciones.value = data;
     decideDireccion.value = false;
-    nombre.value = '';
-    horas.value = '';
     
   } catch (error) {
     mensajeActualizacion = 'Error al cargar las reducciones.';
@@ -41,13 +39,14 @@ const crearReduccion = async (nombreRe, horasRe, decideDireccionRe) => {
 
   try {
 
-    if (horasRe === 0) {
-      mensajeActualizacion = 'Las horas deben mayor de 0.';
+    if (horasRe < 0) {
+      mensajeActualizacion = 'Las horas deben ser mayor o igual a 0.';
       mensajeColor = 'warning';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
       return;
     }
-    if (!nombreRe || !horasRe) {
+
+    if (!nombreRe || horasRe === '') {
       mensajeActualizacion = 'Por favor, completa todos los campos.';
       mensajeColor = 'warning';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -231,11 +230,11 @@ onMounted(async () => {
             <ion-input type="text" v-model="nombre" class="form-input"/>
           </label>
           <label class="form-label-numer">Horas:
-            <ion-input type="number" v-model.number="horas" min="1" max="50" step="1" class="form-input-numer"/>
+            <ion-input type="number" v-model.number="horas" min="0" max="50" step="1" class="form-input-numer"/>
           </label>
         </div>
-        <label class="form-label">Decide dirección:
-          <input type="checkbox" v-model="decideDireccion" />
+        <label class="form-label">
+          <input type="checkbox" v-model="decideDireccion" /> Decide dirección
         </label>
         <!-- Aqui se guarda en la tabla de reducciones -->
         <button @click="crearReduccion(nombre, horas, decideDireccion)" class="btn-guardar">Guardar</button>
@@ -286,38 +285,21 @@ onMounted(async () => {
                 </option>
             </select>
           </div>
-          <div class="dropdown-group-section">
             <div class="dropdown-group">
               <label for="reduccion-select">Reducción:</label>
               <select 
                   id="reduccion-select"
                   v-model="reduccionSeleccionada" 
-                  class="dropdown-select-row">
+                  class="dropdown-select">
                   <option value="">Selecciona una reducción</option>
                   <option 
                       v-for="reduccion in listaReducciones" 
                       :key="reduccion" 
                       :value="reduccion">
-                      {{ reduccion.nombre }} 
+                      {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
                   </option>
               </select>
             </div>
-            <div class="dropdown-group">
-              <label for="reduccion-select">Horas:</label>
-              <select 
-                  id="reduccion-select"
-                  v-model="reduccionSeleccionada" 
-                  class="dropdown-select-row">
-                  <option value="">Selecciona una hora</option>
-                  <option 
-                      v-for="reduccion in listaReducciones" 
-                      :key="reduccion" 
-                      :value="reduccion">
-                      {{ reduccion.horas }} 
-                  </option>
-              </select>
-            </div>
-          </div>
         </div>
         <!-- Aqui se guarda en la tabla de reducciones -->
         <button @click="asignarReduccion(profesorSeleccionado)" class="btn-guardar">Asignar</button>
@@ -450,13 +432,13 @@ onMounted(async () => {
   border-radius: 0.375rem;
   padding: 0.5rem;
   cursor: pointer;
-  margin-top: 2rem;
+  margin-top: 2.4rem;
   margin-left: 15px;
   margin-right: 15px;
 }
 
 .card-cargar-reduccion {
-  min-width: 520px;
+  min-width: 590px;
   min-height: 400px;
   height: auto;
   background-color: var(--form-bg-light);
@@ -516,30 +498,12 @@ table{
   margin-bottom: 0.8rem;
 }
 
-.dropdown-group-section {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  width: 100%;
-  max-width: 300px;
-  margin-top: 0.5rem;
-}
-
 .dropdown-select {
   width: 300px;
   padding: 0.5rem;
   border-radius: 5px;
   border: 1px solid currentColor;
 }
-
-.dropdown-select-row {
-  width: 145px;
-  padding: 0.5rem;
-  border-radius: 5px;
-  border: 1px solid currentColor;
-  margin-right: 1rem;
-}
-
 
 @media (prefers-color-scheme: dark) {
   .card-crea-reduccion,

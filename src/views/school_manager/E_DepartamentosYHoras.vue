@@ -83,9 +83,6 @@ const obtenerAsignaturas = async () => {
       );
       asignaturas.value = data;
     } catch (error) {
-      mensajeActualizacion = "Error al cargar asignaturas sin departamento";
-      mensajeColor = "danger";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
       console.error(error);
     }
   } else {
@@ -291,7 +288,7 @@ onMounted(async () => {
                 id="depPropietario-select"
                 v-model="depPropietarioSeleccionado"
                 class="dropdown-select-group">
-                <option value="">Selecciona un departamento</option>
+                <option value="">Selecciona un dpto</option>
                 <option
                     v-for="departamento in departamentos"
                     :key="departamento.nombre"
@@ -306,7 +303,7 @@ onMounted(async () => {
                 id="depReceptor-select"
                 v-model="depReceptorSeleccionado"
                 class="dropdown-select-group">
-                <option value="">Selecciona un departamento</option>
+                <option value="">Selecciona un dpto</option>
                 <option 
                   v-for="departamento in departamentos" 
                   :key="departamento.nombre" 
@@ -320,6 +317,64 @@ onMounted(async () => {
       </div>
       <!-- Aqui se guarda en la tabla de asignaturas y departamentos -->
       <button @click="asignarDepPropietario" class="btn-asignar">Asignar</button>
+    </div>
+    <!-- ? Tabla con todas las reducciones que existen -->
+    <div class="card-departamentos-asignaturas">
+      <div class="t-2">Tabla de asignaturas y departamentos</div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="columna">Curso-etapa-grupo</th>
+              <th class="columna">Asignaturas</th>
+              <th class="columna">Horas</th>
+              <th class="columna">Departamento propietario</th>
+              <th class="columna">Departamento donante</th>
+              <th class="columna">Acción</th>
+            </tr>
+          </thead>
+            <tbody>
+              <tr v-for="(registro, index) in listaAsignaturasDepartamentos" :key="index">
+                <td class="columna">{{ registro.curso }} {{ registro.etapa }} {{ registro.grupo }}</td>
+                <td class="columna">{{ registro.nombre }}</td>
+                <td class="columna">{{ registro.horas }}</td>
+                <td class="columna">{{ registro.departamentoPropietario }}</td>
+                <td class="columna">{{ registro.departamentoDonante }}</td>
+                <td class="columna">
+                  <button @click="eliminarAsignaturaDepartamento(index)" class="btn-eliminar">&times;</button>
+                </td>
+              </tr>
+           </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="top-card-dos">
+    <!-- * Tabla para asignar profesores a departamentos -->
+    <div class="card-asignacion">
+      <div class="t-2">Profesores en plantilla</div>
+      <div class="form-group">
+        <div class="dropdown-departamentos">
+          <label  for="profesor-select">Departamentos:</label>
+          <select 
+            id="departamento-select"
+            v-model="departamentoSeleccionado" 
+            class="dropdown-select">
+            <option value="">Selecciona un departamento</option>
+            <option 
+              v-for="departamento in departamentos" 
+              :key="departamento.nombre" 
+              :value="departamento.nombre">
+              {{ departamento.nombre }}
+            </option>
+          </select>
+        </div>
+        <label class="form-label-numer">Plantilla:
+          <ion-input type="number" v-model.number="plantillaPorAsignatura" min="1" max="50" step="1" class="form-input-numer"/>
+        </label>
+      </div>
+      <!-- Aqui se guarda en la tabla de departamentos -->
+      <button @click="asignarProfesorADepartamento(departamentoSeleccionado)" class="btn-asignar">Asignar</button>
     </div>
     <!-- ? Tabla con los datos de los departamentos -->
     <div class="card-departamentos-asignaturas">
@@ -353,62 +408,7 @@ onMounted(async () => {
         </table>
       </div>
     </div>
-  </div>
-  <div class="top-card-dos">
-    <!-- * Tabla para asignar profesores a departamentos -->
-    <div class="card-asignacion">
-      <div class="t-2">Profesores en plantilla</div>
-      <div class="form-group">
-        <div class="dropdown-departamentos">
-          <label  for="profesor-select">Departamentos:</label>
-          <select 
-            id="departamento-select"
-            v-model="departamentoSeleccionado" 
-            class="dropdown-select">
-            <option value="">Selecciona un departamento</option>
-            <option 
-              v-for="departamento in departamentos" 
-              :key="departamento.nombre" 
-              :value="departamento.nombre">
-              {{ departamento.nombre }}
-            </option>
-          </select>
-        </div>
-        <label class="form-label-numer">Plantilla:
-          <ion-input type="number" v-model.number="plantillaPorAsignatura" min="1" max="50" step="1" class="form-input-numer"/>
-        </label>
-      </div>
-      <!-- Aqui se guarda en la tabla de departamentos -->
-      <button @click="asignarProfesorADepartamento(departamentoSeleccionado)" class="btn-asignar">Asignar</button>
-    </div>
-    <!-- ? Tabla con todas las reducciones que existen -->
-    <div class="card-departamentos-asignaturas">
-      <div class="t-2">Tabla de asignaturas y departamentos</div>
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th class="columna">Curso-etapa-grupo</th>
-              <th class="columna">Asignaturas</th>
-              <th class="columna">Departamento propietario</th>
-              <th class="columna">Departamento donante</th>
-              <th class="columna">Acción</th>
-            </tr>
-          </thead>
-            <tbody>
-              <tr v-for="(registro, index) in listaAsignaturasDepartamentos" :key="index">
-                <td class="columna">{{ registro.curso }} {{ registro.etapa }} {{ registro.grupo }}</td>
-                <td class="columna">{{ registro.nombre }}</td>
-                <td class="columna">{{ registro.departamentoPropietario }}</td>
-                <td class="columna">{{ registro.departamentoDonante }}</td>
-                <td class="columna">
-                  <button @click="eliminarAsignaturaDepartamento(index)" class="btn-eliminar">&times;</button>
-                </td>
-              </tr>
-           </tbody>
-        </table>
-      </div>
-    </div>
+    
     <ion-toast
         :is-open="isToastOpen"
         :message="toastMessage"
@@ -508,7 +508,7 @@ onMounted(async () => {
 }
 
 .card-departamentos-asignaturas {
-  min-width: 850px;
+  min-width: 900px;
   min-height: 435px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
@@ -566,7 +566,7 @@ table{
 }
 
 .dropdown-select {
-  width: 250px;
+  width: 270px;
   padding: 0.5rem;
   border-radius: 5px;
   border: 1px solid currentColor;
