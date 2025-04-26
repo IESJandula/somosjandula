@@ -14,7 +14,6 @@ const asignaturaSeleccionada = ref([]);
 const depPropietarioSeleccionado = ref('');
 const depReceptorSeleccionado = ref('');
 const listaAsignaturasDepartamentos = ref([]);
-const listaDepartamentos = ref([]);
 const listaDepartamentosIterable = ref([]);
 // Variable para el toast
 const isToastOpen = ref(false);
@@ -50,17 +49,41 @@ const obtenerCursoYEtapa = async () => {
 
 const obtenerDatosDepartamentoConAsignatura = async () => {
   try {
-    const data = await obtenerDatosDepartamentosConAsignaturas(toastMessage, toastColor, isToastOpen);
+    const data = await obtenerDatosDepartamentosConAsignaturas(
+        toastMessage, toastColor, isToastOpen
+    );
     listaDepartamentosIterable.value = data;
-    console.log(data);
-    if (depPropietarioSeleccionado.value !== depReceptorSeleccionado.value) {
-      for (const departamento of listaDepartamentosIterable.value) {
-        departamento.horasTotales = departamento.horasTotales - departamento.horas;
+
+    // Aseguramos que desfase sea numérico
+    listaDepartamentosIterable.value.forEach(d =>
+        d.desfase = Number(d.desfase)
+    );
+
+    // Mapa rápido por nombre de departamento
+    const deptMap = new Map(
+        listaDepartamentosIterable.value.map(d => [d.nombre, d])
+    );
+
+    // Para cada asignación
+    listaAsignaturasDepartamentos.value.forEach(asign => {
+      const donor   = deptMap.get(asign.departamentoDonante);
+      const receptor= deptMap.get(asign.departamentoPropietario);
+      if (!donor || !receptor) return;
+
+      // Solo se dona si hay sobrante y déficit, es decir que a uno le sobre y otro este en negativo
+      if (donor.desfase > 0 && receptor.desfase < 0) {
+        // horas que realmente necesita el receptor
+        const receptorDeficit = -receptor.desfase;
+        // la donacion tiene que parar cuando el que dona que se queda sin sobrantes o cuando se queda a 0 el receptor
+        // el mas pequeño de los dos
+        const ajuste = Math.min(donor.desfase, receptorDeficit);
+
+        // aplicamos la donación
+        donor.desfase    -= ajuste;   // el donante pierde esas horas
+        receptor.desfase += ajuste;   // el receptor “cubre” parte de su déficit
       }
-    } else {
-      listaDepartamentos.value = data;
-    } 
-    
+    });
+
   } catch (error) {
     mensajeActualizacion = "Error al cargar departamentos con asignaturas";
     mensajeColor = "danger";
@@ -191,6 +214,7 @@ const eliminarAsignaturaDepartamento = async (index) => {
     await obtenerAsignaturasCompletas();
     await obtenerAsignaturas();
     await obtenerDatosDepartamentoConAsignatura();
+    await obtenerDepartamento();
     mensajeActualizacion = "Asignatura desasignada correctamente";
     mensajeColor = "success"; 
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -227,10 +251,8 @@ const asignarProfesorADepartamento = async (nombreDepartamento) => {
     mensajeActualizacion = "Profesor asignado correctamente.";
     mensajeColor = "success";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    // Limpiar los campos después de la asignación
-    departamentoSeleccionado.value = '';
+
     await obtenerDepartamento();
-    plantillaPorAsignatura.value = '';
     await obtenerDatosDepartamentoConAsignatura();
 
   } catch (error) {
@@ -242,10 +264,10 @@ const asignarProfesorADepartamento = async (nombreDepartamento) => {
 };
 
 onMounted(async () => {
-  await obtenerDatosDepartamentoConAsignatura();
   await obtenerDepartamento();
   await obtenerCursoYEtapa();
   await obtenerAsignaturasCompletas();
+  await obtenerDatosDepartamentoConAsignatura();
 });
 </script>
 
@@ -392,7 +414,7 @@ onMounted(async () => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="departamento in listaDepartamentosIterable" :key="departamento">
+            <tr v-for="departamento in listaDepartamentosIterable" :key="departamento.nombre">
               <td class="columna">{{ departamento.nombre }}</td>
               <td class="columna">{{ departamento.plantilla }}</td>
               <td class="columna">{{ departamento.horasNecesarias }}</td>
