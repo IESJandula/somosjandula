@@ -75,7 +75,7 @@
                   <button @click.stop="eliminarRecurso(r.recursos, $event)">
                     X
                   </button>
-                  <button class="btn-modify-lock" v-if= "r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
+                  <button class="btn-modify-lock" v-if="r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
                     🔒
                   </button>
                   <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
@@ -92,7 +92,7 @@
                   <button @click.stop="eliminarRecurso(r.recursos, $event)">
                     X
                   </button>
-                  <button class="btn-modify-lock" v-if= "r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
+                  <button class="btn-modify-lock" v-if="r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
                     🔒
                   </button>
                   <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
@@ -146,81 +146,77 @@
     </div>
     <!-- Borrado Reservas -->
     <div class="form-container">
-    <div class="title-container">
-      <h1 class="title">Borrado de Reservas por recurso</h1>
+      <div class="title-container">
+        <h1 class="title">Borrado de Reservas por recurso</h1>
+      </div>
+
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Seleccione el recurso a borrar:</ion-label>
+            <ion-select v-model="selectedRecurso" @ionChange="onReservaChange">
+              <ion-select-option v-for="recurso in [...recursos]" :key="recurso.id" :value="recurso">
+                {{ recurso.recursos }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" color="primary" @click="borrarReservasRecurso">
+            Borrar
+          </ion-button>
+        </ion-col>
+      </ion-row>
     </div>
-
-    <ion-row>
-      <ion-col size="12">
-        <ion-item>
-          <ion-label position="stacked">Seleccione el recurso a borrar:</ion-label>
-          <ion-select v-model="selectedRecurso" @ionChange="onReservaChange">
-            <ion-select-option
-              v-for="recurso in [...recursos]"
-              :key="recurso.id"
-              :value="recurso"
-            >
-              {{ recurso.recursos }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-      </ion-col>
-    </ion-row>
-
-    <ion-row>
-      <ion-col size="12">
-        <ion-button expand="block" color="primary" @click="borrarReservasRecurso">
-          Borrar
-        </ion-button>
-      </ion-col>
-    </ion-row>
-  </div>
   </div>
   <div class="form-wrapper">
     <div class="form-container-table-logs">
-        <div class="title-container">
-          <h1 class="title">Logs de Recursos</h1>
-          <div class="pagina-container">
-            <button class="decrementar-button" v-if="paginaActual > 0" @click="paginarLogs(--paginaActual)">
-              Anterior
-            </button>
-            <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
-            <button class="incrementar-button" v-if="disableLogsPaginated" @click="paginarLogs(++paginaActual)">
-              Siguiente
-            </button>
-          </div>
-          <table class="logs-table">
-            <thead>
-              <tr>
-                <th class="sticky-column">Registro</th>
-                <th>Fecha</th>
-                <th>Usuario</th>
-                <th>Acción</th>
-                <th>Tipo</th>
-                <th>Recurso</th>
-                <th>Reserva</th>
-                <th>Superusuario</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="log in logsPaginados" :key="log.numRegistro">
-                <td class="sticky-column">{{ log.numRegistro }}</td>
-                <td>{{ log.fecha }}</td>
-                <td>{{ log.usuario }}</td>
-                <td>{{ log.accion }}</td>
-                <td>{{ log.tipo }}</td>
-                <td>{{ log.recurso }}</td>
-                <td>{{ log.locReserva }}</td>
-                <td>{{ log.superusuario }}</td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="title-container">
+        <h1 class="title">Logs de Recursos</h1>
+        <div class="pagina-container">
+          <button class="decrementar-button" v-if="paginaActual > 0" @click="paginarLogs(--paginaActual)">
+            Anterior
+          </button>
+          <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
+          <button class="incrementar-button" v-if="disableLogsPaginated" @click="paginarLogs(++paginaActual)">
+            Siguiente
+          </button>
         </div>
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th class="sticky-column">Registro</th>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Tipo</th>
+              <th>Recurso</th>
+              <th>Reserva</th>
+              <th>Superusuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="log in logsPaginados" :key="log.numRegistro">
+              <td class="sticky-column">{{ log.numRegistro }}</td>
+              <td>{{ log.fecha }}</td>
+              <td>{{ log.usuario }}</td>
+              <td>{{ log.accion }}</td>
+              <td>{{ log.tipo }}</td>
+              <td>{{ log.recurso }}</td>
+              <td>{{ log.locReserva }}</td>
+              <td>{{ log.superusuario }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-      @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
-  </template>
+  </div>
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+</template>
 
 <script setup>
 import { bookingsApiUrl } from "@/environment/apiUrls.ts";
@@ -238,8 +234,8 @@ import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
 import {
   postRecurso,
   getRecursosCompartible,
+  comprobarEliminacion,
   deleteRecurso,
-  getReservas,
   getRecursos,
   getCantMaxResource,
   deleteRecursoReserva,
@@ -289,8 +285,7 @@ const onReservaChange = () => {
     selectedRecurso.value.valor = "";
   }
 };
-const borrarReservasRecurso = async() =>
-{
+const borrarReservasRecurso = async () => {
   await deleteRecursoReserva(isToastOpen, toastMessage, toastColor, selectedRecurso.value.recursos);
   mensajeActualizacion = "Reservas eliminadas correctamente";
   mensajeColor = "success";
@@ -300,7 +295,20 @@ const borrarReservasRecurso = async() =>
 
 const getRecurso = async () => {
   const data = await getRecursos(isToastOpen, toastMessage, toastColor);
-  recursos.value = data.map((item) => ({ recursos: item.id,}));
+  if (data) {
+    recursos.value = data.map((item) => ({ recursos: item.id, }));
+  }
+  else {
+    mensajeActualizacion = "No existen recursos todavía";
+    mensajeColor = "warning";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+  }
 }
 
 const getCantMax = async () => {
@@ -479,8 +487,7 @@ const cargarRecursos = async () => {
 };
 
 const bloquearRecurso = async (recurso, bloqueado) => {
-  try
-  {
+  try {
     await modifyResourceLock(isToastOpen, toastMessage, toastColor, recurso, bloqueado);
     mensajeActualizacion = "";
 
@@ -516,48 +523,19 @@ const eliminarRecurso = async (recurso, event) => {
   try {
     event.stopPropagation();
 
-    const data = await getReservas(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      recurso
-    );
+    const data = await comprobarEliminacion(toastMessage, toastColor, isToastOpen, recurso);
 
-    // Obtener un array de recursos asignados
-    const recursoEliminar = data.map((item) => item.recurso);
-
-    // Verificar si el recurso está asignado a alguna reserva
-    if ((recursoEliminar.includes(recurso))) {
-      mensajeColor = "danger";
-      mensajeActualizacion = "Como existen reservas asignadas a este recurso, no es posible borrarlo";
-      crearToast(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        mensajeColor,
-        mensajeActualizacion
-      );
-      return;
+    if (data) {
+      await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso);
+      mensajeColor = "success";
+      mensajeActualizacion = "Recurso eliminado correctamente";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
-
-    // Llamar a la API para eliminar el recurso en el backend
-    await deleteRecurso(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      recurso
-    );
-
-    // Mostrar mensaje de éxito
-    mensajeColor = "success";
-    mensajeActualizacion = "Recurso eliminado correctamente";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      mensajeActualizacion
-    );
+    else {
+      mensajeActualizacion = "No se puede eliminar el recurso, ya que tiene reservas asociadas";
+      mensajeColor = "danger";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
 
     // Recargar los recursos desde el backend para asegurarse de que todo esté sincronizado
     cargarRecursos();
@@ -579,13 +557,10 @@ const switchRecurso = async () => {
   cargarRecursos();
 };
 
-const paginarLogs = async (pagina) =>
-{
-  try
-  {
+const paginarLogs = async (pagina) => {
+  try {
     const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
-    if (data.length >= 0)
-    {
+    if (data.length >= 0) {
       const formatearFecha = (fecha) => {
         const date = new Date(fecha);
         const pad = (n) => n.toString().padStart(2, '0');
@@ -611,17 +586,14 @@ const paginarLogs = async (pagina) =>
         countMax: item.countMax,
       }));
 
-      if(logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax)
-      {
+      if (logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax) {
         disableLogsPaginated.value = false;
       }
-      else
-      {
+      else {
         disableLogsPaginated.value = true;
       }
     }
-    else
-    {
+    else {
       mensajeActualizacion = "No hay logs disponibles para la página seleccionada";
       mensajeColor = "warning";
       crearToast(
@@ -633,8 +605,7 @@ const paginarLogs = async (pagina) =>
       );
     }
   }
-  catch (error)
-  {
+  catch (error) {
     mensajeActualizacion = "Todavía no existen logs disponibles";
     mensajeColor = "warning";
     crearToast(
@@ -649,12 +620,12 @@ const paginarLogs = async (pagina) =>
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
+  await paginarLogs(0);
   await cargarConstantes();
   await cargarRecursos();
   await getRecurso();
   await switchRecurso();
   await getCantMaxResource();
-  await paginarLogs(0);
 });
 </script>
 
@@ -673,8 +644,8 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.form-container-table, .form-container-table-logs
-{
+.form-container-table,
+.form-container-table-logs {
   width: 100%;
   max-width: 50%;
   background-color: var(--form-bg-light);
@@ -696,16 +667,14 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.sticky-column
-{
+.sticky-column {
   position: sticky;
   left: 0;
   background: white;
   z-index: 2;
 }
 
-.decrementar-button
-{
+.decrementar-button {
   background-color: #dc3545;
   float: left;
   color: white;
@@ -715,8 +684,8 @@ onMounted(async () => {
   padding: 5px 10px;
   margin-right: 10px;
 }
-.incrementar-button
-{
+
+.incrementar-button {
   background-color: #007bff;
   color: white;
   border: none;
@@ -726,15 +695,13 @@ onMounted(async () => {
   padding: 5px 10px;
 }
 
-.numPagina
-{
+.numPagina {
   display: flex;
   align-items: center;
   justify-content: block;
 }
 
-.pagina-container
-{
+.pagina-container {
   display: flex;
   padding-top: 2%;
   justify-content: space-between;
