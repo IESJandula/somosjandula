@@ -43,7 +43,7 @@
         </ion-col>
       </ion-row>
     </div>
-  
+
     <!-- Lista de Recursos -->
     <div class="form-container-table">
       <div class="title-container">
@@ -109,7 +109,7 @@
       </ion-row>
     </div>
   </div>
-  
+
   <!-- Actualizar Constantes -->
   <div class="form-wrapper">
     <div class="form-container">
@@ -192,20 +192,26 @@
           <table class="logs-table">
             <thead>
               <tr>
-                <th class="sticky-column">Fecha</th>
+                <th class="sticky-column-1">Num Registro</th>
+                <th class="sticky-column-2">Fecha</th>
+                <th>Usuario</th>
                 <th>Acción</th>
+                <th>Tipo</th>
                 <th>Recurso</th>
-                <th>Profesor</th>
                 <th>Reserva</th>
+                <th>Superusuario</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="log in logsPaginados" :key="log.fecha">
-                <td class="sticky-column">{{ log.fecha }}</td>
+                <td class="sticky-column-1">{{ log.numRegistro }}</td>
+                <td class="sticky-column-2">{{ log.fecha }}</td>
+                <td>{{ log.usuario }}</td>
                 <td>{{ log.accion }}</td>
+                <td>{{ log.tipo }}</td>
                 <td>{{ log.recurso }}</td>
-                <td>{{ log.profesor }}</td>
                 <td>{{ log.locReserva }}</td>
+                <td>{{ log.superusuario }}</td>
               </tr>
             </tbody>
           </table>
@@ -283,7 +289,7 @@ const onReservaChange = () => {
     selectedRecurso.value.valor = "";
   }
 };
-const borrarReservasRecurso = async() => 
+const borrarReservasRecurso = async() =>
 {
   await deleteRecursoReserva(isToastOpen, toastMessage, toastColor, selectedRecurso.value.recursos);
   mensajeActualizacion = "Reservas eliminadas correctamente";
@@ -597,12 +603,14 @@ const paginarLogs = async (pagina) =>
 
       logsPaginados.value = data.map((item) => ({
         fecha: formatearFecha(item.fecha),
+        usuario: item.usuario,
         accion: item.accion,
+        tipo: item.tipo,
         recurso: item.recurso,
-        profesor: item.profesor,
         locReserva: item.locReserva,
-        countMax: item.countMax,
+        superusuario: item.superusuario,
         numRegistro: item.numRegistro,
+        countMax: item.countMax,
       }));
 
       if(logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax)
@@ -670,7 +678,7 @@ onMounted(async () => {
 .form-container-table, .form-container-table-logs
 {
   width: 100%;
-  max-width: 700px;
+  max-width: 50%;
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
@@ -682,11 +690,17 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.sticky-column
+.sticky-column-1
 {
   position: sticky;
   left: 0;
   background: white;
+  z-index: 2;
+}
+
+.sticky-column-2
+{
+  position: sticky;
   z-index: 2;
 }
 
@@ -1048,6 +1062,6 @@ input:checked+.slider:before {
   .switch-container {
     margin-left: 0;
   }
-  
+
 }
 </style>

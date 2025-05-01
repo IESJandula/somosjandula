@@ -143,7 +143,7 @@
 
         <label class="custom-motivoCurso" for="motivoCurso">Motivo y Curso:</label>
         <input class="custom-select-modal" v-model="motivoCurso" type="text" id="motivoCurso" placeholder="Justifica el motivo y curso" />
-        
+
         <label>Opciones de Repetición:</label>
         <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
           <option value="" selected>Ninguna</option>
@@ -330,7 +330,7 @@ function handleDateChange(date) {
     week.push(addDays(monday, i));
   }
   semanaSeleccionada.value = week;
-  
+
   fechaModal({ target: { value: date } })
   comprobarDisponibilidad()
 }
@@ -444,7 +444,7 @@ const repetirReserva = async () => {
   if (motivoCurso.value != '') {
     motivo = motivoCurso.value;
   }
-  
+
   if (opcionRepeticion.value === 'Semanal') {
     do {
       await postReservaTemporary(
@@ -704,12 +704,12 @@ const getReserva = async () => {
       esSemanal: reserva.esSemanal,
     }
   }
-  reservas.value = estructuraReservas  
+  reservas.value = estructuraReservas
 }
 
 const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija, esSemanal) => {
   try {
-    event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón    
+    event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
     if (esSemanal && esFija)
     {
@@ -760,6 +760,7 @@ watch(recursoSeleccionado, () => {
   );
   cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
+  recursoSeleccionadoBloqueado.value = recursoEncontrado ? recursoEncontrado.bloqueado : false;
   isModalOpen.value = false
 
   if (recursoSeleccionadoCompartible.value) {
@@ -805,7 +806,7 @@ const comprobarDisponibilidad = async () => {
       semanas.push(i);  // Se agrega la semana al array
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
-    semanas = []; // Se reinicia el array 
+    semanas = []; // Se reinicia el array
   }
   disponibleSemanal.value = data.value;
 }
@@ -878,7 +879,7 @@ onMounted(async () => {
   background-color: #0078d7 !important;
   color: #ffffff !important;
   border-radius: 20px !important;
-}	
+}
 
 ::v-deep(.dp__input_icon) {
   color: #ffffff !important;

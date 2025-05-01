@@ -276,13 +276,12 @@ const saveChanges = async () => {
       alumnos = maxAlumnos;
     }
 
-
     // Llamar a la API para guardar la reserva
     await postReserva(
       isToastOpen,
       toastMessage,
       toastColor,
-      profesorSeleccionado.value,
+      profesorSeleccionado.value  || emailUsuarioActual.value,
       recursoSeleccionado.value,
       currentDia.value.id,
       currentTramo.value.id,
