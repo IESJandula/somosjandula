@@ -203,7 +203,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="log in logsPaginados" :key="log.fecha">
+              <tr v-for="log in logsPaginados" :key="log.numRegistro">
                 <td class="sticky-column">{{ log.numRegistro }}</td>
                 <td>{{ log.fecha }}</td>
                 <td>{{ log.usuario }}</td>
@@ -527,10 +527,9 @@ const eliminarRecurso = async (recurso, event) => {
     const recursoEliminar = data.map((item) => item.recurso);
 
     // Verificar si el recurso está asignado a alguna reserva
-    if (recursoEliminar.includes(recurso)) {
+    if ((recursoEliminar.includes(recurso))) {
       mensajeColor = "danger";
-      mensajeActualizacion =
-        "Como existen reservas asignadas a este recurso, no es posible borrarlo";
+      mensajeActualizacion = "Como existen reservas asignadas a este recurso, no es posible borrarlo";
       crearToast(
         toastMessage,
         toastColor,
@@ -601,6 +600,7 @@ const paginarLogs = async (pagina) =>
       };
 
       logsPaginados.value = data.map((item) => ({
+        numRegistro: item.numRegistro,
         fecha: formatearFecha(item.fecha),
         usuario: item.usuario,
         accion: item.accion,
@@ -608,7 +608,6 @@ const paginarLogs = async (pagina) =>
         recurso: item.recurso,
         locReserva: item.locReserva,
         superusuario: item.superusuario,
-        numRegistro: item.numRegistro,
         countMax: item.countMax,
       }));
 
