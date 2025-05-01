@@ -192,8 +192,8 @@
           <table class="logs-table">
             <thead>
               <tr>
-                <th class="sticky-column-1">Num Registro</th>
-                <th class="sticky-column-2">Fecha</th>
+                <th class="sticky-column">Registro</th>
+                <th>Fecha</th>
                 <th>Usuario</th>
                 <th>Acción</th>
                 <th>Tipo</th>
@@ -204,8 +204,8 @@
             </thead>
             <tbody>
               <tr v-for="log in logsPaginados" :key="log.fecha">
-                <td class="sticky-column-1">{{ log.numRegistro }}</td>
-                <td class="sticky-column-2">{{ log.fecha }}</td>
+                <td class="sticky-column">{{ log.numRegistro }}</td>
+                <td>{{ log.fecha }}</td>
                 <td>{{ log.usuario }}</td>
                 <td>{{ log.accion }}</td>
                 <td>{{ log.tipo }}</td>
@@ -596,9 +596,8 @@ const paginarLogs = async (pagina) =>
         const anio = date.getFullYear();
         const horas = pad(date.getHours());
         const minutos = pad(date.getMinutes());
-        const segundos = pad(date.getSeconds());
 
-        return `${dia}-${mes}-${anio} ${horas}:${minutos}:${segundos}`;
+        return `${dia}-${mes}-${anio} ${horas}:${minutos}`;
       };
 
       logsPaginados.value = data.map((item) => ({
@@ -690,17 +689,19 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.sticky-column-1
+.form-container-table-logs {
+  overflow-x: auto;
+  max-width: 83%;
+  overflow-y: auto;
+  display: block;
+  white-space: nowrap;
+}
+
+.sticky-column
 {
   position: sticky;
   left: 0;
   background: white;
-  z-index: 2;
-}
-
-.sticky-column-2
-{
-  position: sticky;
   z-index: 2;
 }
 
