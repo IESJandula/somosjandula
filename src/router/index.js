@@ -20,6 +20,7 @@ import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
 import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
 import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
 import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
+import G_EleccionDeHorarios from '@/views/school_manager/G_EleccionDeHorarios.vue';
 
 const routes = [
   {
@@ -164,6 +165,14 @@ const routes = [
         name: 'F_ReduccionesProfesores',
         meta: {
           role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager_staff/profesores',
+        component: G_EleccionDeHorarios,
+        name: 'G_EleccionDeHorarios',
+        meta: {
+          role: 'PROFESOR'
         },
       },
     ],

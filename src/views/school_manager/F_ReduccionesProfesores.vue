@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref} from 'vue';
+import { onMounted, ref } from 'vue';
 import { IonInput, IonToast } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { cargarReducciones, crearReducciones, borrarReducciones, obtenerProfesores, asignarReducciones, obtenerReduccionesProfesores, borrarReduccionesProfesores } from '@/services/schoolManager.js';
@@ -238,7 +238,6 @@ onMounted(async () => {
         </label>
         <!-- Aqui se guarda en la tabla de reducciones -->
         <button @click="crearReduccion(nombre, horas, decideDireccion)" class="btn-guardar">Guardar</button>
-        <!-- formulario -->
       </div>
       <!-- Tabla con todas las reducciones que existen -->
       <div class="card-cargar-reduccion">
@@ -276,7 +275,7 @@ onMounted(async () => {
                 id="profesor-select"
                 v-model="profesorSeleccionado" 
                 class="dropdown-select">
-                <option value="">Selecciona un profesor</option>
+                <option value="" disabled hidden>Selecciona un profesor</option>
                 <option 
                     v-for="profesor in listaProfesores" 
                     :key="profesor"
@@ -291,7 +290,7 @@ onMounted(async () => {
                   id="reduccion-select"
                   v-model="reduccionSeleccionada" 
                   class="dropdown-select">
-                  <option value="">Selecciona una reducción</option>
+                  <option value="" disabled hidden>Selecciona una reducción</option>
                   <option 
                       v-for="reduccion in listaReducciones" 
                       :key="reduccion" 
