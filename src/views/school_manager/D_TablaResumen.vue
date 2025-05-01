@@ -1,19 +1,22 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { cargarAsignaturasUnicas, obtenerNumAlumnosAsignatura, obtenerGrupos } from '@/services/schoolManager.js';
+import { cargarAsignaturasUnicas, obtenerNumAlumnosAsignatura, obtenerInfoGrupos } from '@/services/schoolManager.js';
 import { IonToast, IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue';
+import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const asignaturas = ref([]);
-const columnasGrupos = ref([]);
-const grupos = ref([]);
+const infoGrupos = ref([]);
 const loading = ref(false);
-const errorMensaje = ref("");
+// Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
+// Nueva variable reactiva para el mensaje de actualización
+let mensajeActualizacion = "";
+let mensajeColor = "";
 
 /**
  * Función auxiliar que recibe un objeto con los números de alumnos por grupo
@@ -43,11 +46,10 @@ const actualizarSelect = (seleccionado) => {
 const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturas.value = [];
-    columnasGrupos.value = [];
+    infoGrupos.value = [];
     return;
   }
   loading.value = true;
-  errorMensaje.value = "";
   try {
 
     const data = await cargarAsignaturasUnicas(
@@ -60,26 +62,17 @@ const cargarAsignatura = async () => {
     asignaturas.value = Array.isArray(data) ? data : [];
 
     // Aqui falta el endpoint de cargar los grupos de la asignatura asi que de mientras a fuego, podria ponerlo pero tengo sueño
-    columnasGrupos.value = await obtenerGrupo(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa,) || [];
+    infoGrupos.value = await obtenerInfoGrupos(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa,) || [];
 
     // Para cada asignatura, se saca el número de alumnos para cada grupo.
     await cargarNumeroAlumnosPorGrupo();
   } catch (error) {
-    errorMensaje.value = "Error al cargar asignaturas. Inténtelo de nuevo.";
-    console.error("Error:", error);
+    mensajeActualizacion = "Error al cargar asignaturas. Inténtelo de nuevo.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   } finally {
     loading.value = false;
-  }
-};
-
-const obtenerGrupo = async (curso, etapa) => {
-  try {
-      if (curso != null && etapa) {
-          grupos.value = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
-          return grupos.value;
-      }
-  } catch (error) {
-      console.error('Error al cargar grupos', error);
   }
 };
 
@@ -92,21 +85,24 @@ const cargarNumeroAlumnosPorGrupo = async () => {
   for (const asignatura of asignaturas.value) {
     // Banco de números obtenidos.
     asignatura.numeroAlumnosEnGrupo = {};
-    for (const grupo of columnasGrupos.value) {
+    for (const infoGrupo of infoGrupos.value) {
       try {
         const cursoInt = parseInt(filtroSeleccionado.value.curso, 10);
 
         const response = await obtenerNumAlumnosAsignatura(
             cursoInt,
             filtroSeleccionado.value.etapa,
-            grupo,
+            infoGrupo.grupo,
             asignatura.nombre
         );
         const numero = parseInt(response,10);
-        asignatura.numeroAlumnosEnGrupo[grupo] = isNaN(numero) ? 0 : numero;
+        asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = isNaN(numero) ? 0 : numero;
       } catch (error) {
-        console.error(`Error al obtener alumnos para ${asignatura.nombre} - Grupo ${grupo}:`, error);
-        asignatura.numeroAlumnosEnGrupo[grupo] = 0;
+        mensajeActualizacion = `Error al obtener alumnos para ${asignatura.nombre} - Grupo ${infoGrupo.grupo}:`;
+        mensajeColor = "danger";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Error al cargar alumnos por grupo. Inténtelo de nuevo.");
+        console.error(error);
+        asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = 0;
       }
     }
   }
@@ -122,18 +118,16 @@ onMounted(() => {
     <h1 class="m-4">Resumen por asignaturas</h1>
     <!-- Desplegable para elegir curso y etapa -->
     <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
-
     <!-- Tarjeta que contiene la tabla -->
     <ion-card class="m-6">
       <ion-card-header>
-        <ion-card-title style="text-align: center;">
+        <ion-card-title class="th-center">
           Tabla de grupos por asignatura
         </ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <div v-if="errorMensaje" class="mensajeError">{{ errorMensaje }}</div>
+        <div v-if="mensajeActualizacion" class="mensajeError">{{ mensajeActualizacion }}</div>
         <div v-if="loading" class="cargar">Cargando datos...</div>
-
         <div v-if="asignaturas.length > 0 && !loading">
           <table class="tablaAsignaturas">
             <thead>
@@ -143,8 +137,8 @@ onMounted(() => {
               <!-- Se calcula el total sumando los valores de cada grupo -->
               <th class="th">Tot. Alumnos</th>
               <!-- Cabeceras dinámicas para cada grupo -->
-              <th v-for="(grupo, index) in columnasGrupos" :key="index" class="th">
-                Grupo {{ grupo }}
+              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th">
+                Grupo {{ infoGrupo.grupo }}
               </th>
             </tr>
             </thead>
@@ -154,20 +148,18 @@ onMounted(() => {
               <td class="th th-center">{{ asignatura.horas }}</td>
               <!-- Se calcula el total al sumar los valores obtenidos en cada grupo -->
               <td class="th th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
-              <td v-for="grupo in columnasGrupos" :key="grupo" class="th th-center">
-                {{ asignatura.numeroAlumnosEnGrupo[grupo] || 0 }}
+              <td v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" class="th th-center">
+                {{ asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] || 0 }}
               </td>
             </tr>
             </tbody>
           </table>
         </div>
-
         <div v-else-if="!loading" class="m-7">
-          <p>No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
+          <p class="cargar">No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
         </div>
       </ion-card-content>
     </ion-card>
-
     <ion-toast
         :is-open="isToastOpen"
         :message="toastMessage"
