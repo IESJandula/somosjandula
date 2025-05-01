@@ -5,12 +5,17 @@
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == '' && !recursoSeleccionadoBloqueado">{{ mensajeInformativo }}</span>
-    <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está bloqueado</span>
+    <span class="mensajeInformativo"
+      v-if="mensajeInformativo && valorConstante == '' && !recursoSeleccionadoBloqueado">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está
+      bloqueado</span>
 
     <div class="date-picker-container">
       <label class="label-datepicker" for="start">Selecciona una fecha</label>
-      <Datepicker v-model="fechaActual" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es" input-class="datepicker-input-custom" menu-class="datepicker-menu-custom"/>
+      <Datepicker v-model="fechaActual" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false"
+        :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso"
+        @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es"
+        input-class="datepicker-input-custom" menu-class="datepicker-menu-custom" />
     </div>
     <br>
     <!-- Dropdown para seleccionar recurso -->
@@ -142,7 +147,8 @@
           @change="comprobarDisponibilidad()" />
 
         <label class="custom-motivoCurso" for="motivoCurso">Motivo y Curso:</label>
-        <input class="custom-select-modal" v-model="motivoCurso" type="text" id="motivoCurso" placeholder="Justifica el motivo y curso" />
+        <input class="custom-select-modal" v-model="motivoCurso" type="text" id="motivoCurso"
+          placeholder="Justifica el motivo y curso" />
 
         <label>Opciones de Repetición:</label>
         <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
@@ -151,7 +157,10 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <Datepicker v-model="fechaSeleccionada" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso" @update:model-value="handleDateChange" :input-class="{'placeholder-date': !fechaSeleccionada}"/>
+          <Datepicker v-model="fechaSeleccionada" :disabled-dates="disableWeekends" :enable-time-picker="false"
+            :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
+            :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso" @update:model-value="handleDateChange"
+            :input-class="{ 'placeholder-date': !fechaSeleccionada }" />
         </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
@@ -233,6 +242,7 @@ let mensajeInformativo = '';
 let mensajeIncidencia = '';
 const mostrarTabla = ref(true);
 const emailLogged = ref('');
+const valorMaxDays = ref(0);
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -243,6 +253,7 @@ const opcionRepeticion = ref('');
 const disponibleSemanal = ref(false);
 
 //Variables de Fecha
+const fechaMaxima = ref('');
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const reseteoFecha = ref('');
 const fechaSeleccionada = ref(fechaActual.value);
@@ -359,7 +370,7 @@ const deshabilitarSemanaAnterior = () => {
 }
 
 const deshabilitarSemanaSiguiente = () => {
-  if (parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value))) {
+  if (parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value > fechaMaxima.value ? fechaMaxima.value : fechaFinCurso.value))) {
     return true;
   }
   return false;
@@ -481,6 +492,7 @@ const verificarConstantes = async () => {
     constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
     const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas temporales');
+    valorMaxDays.value = constantes.value.find(c => c.clave === 'Máximo vista calendario en días').valor;
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
@@ -497,7 +509,6 @@ const obtenerEmailUsuarioActual = async () => {
 
 // Función para abrir el modal
 const openModal = (tramo, dia, email) => {
-
   if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
     if (email !== undefined && email.includes(emailUsuarioActual.value)) {
       closeModal();
@@ -624,6 +635,7 @@ const getDiasSemanas = async () => {
   try {
     const data = await getDiasSemana(isToastOpen, toastMessage, toastColor)
     diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
+    fechaMaxima.value = new Date(new Date().setDate(new Date().getDate() + Number(valorMaxDays.value))).toISOString().slice(0, 10);
   }
   catch (error) {
     mensajeActualizacion = 'Error obteniendo los días de la semana'
@@ -711,8 +723,7 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
   try {
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
-    if (esSemanal && esFija)
-    {
+    if (esSemanal && esFija) {
       await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value, false)
       mensajeActualizacion = 'Reserva cancelada correctamente'
       mensajeColor = 'success'
@@ -730,14 +741,12 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
       }
     }
     else {
-      if (email !== emailUsuarioActual.value)
-      {
+      if (email !== emailUsuarioActual.value) {
         mensajeActualizacion = 'No puedes borrar reservas de otras personas'
         mensajeColor = 'danger'
         crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
       }
-      else
-      {
+      else {
         await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
       }
     }
@@ -814,6 +823,7 @@ const comprobarDisponibilidad = async () => {
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
+  await verificarConstantes()
   await getDiasSemanas()
   await getTramosHorario()
   await getRecurso()
@@ -822,7 +832,6 @@ onMounted(async () => {
   await cargarDatos()
   await verificarRoles()
   await obtenerEmailUsuarioActual()
-  await verificarConstantes()
   emailUserActual = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen)
   semana.value = getWeek(new Date());
   emailLogged.value = emailUserActual;
@@ -850,8 +859,7 @@ onMounted(async () => {
   margin-bottom: 15px;
 }
 
-.mensajeInformativoBloqueo
-{
+.mensajeInformativoBloqueo {
   color: #ff9900;
   padding: 10px;
   font-size: 25px;
@@ -874,8 +882,7 @@ onMounted(async () => {
   border-radius: 20px !important;
 }
 
-::v-deep(.dp__cell_highlight_active)
-{
+::v-deep(.dp__cell_highlight_active) {
   background-color: #0078d7 !important;
   color: #ffffff !important;
   border-radius: 20px !important;
@@ -895,23 +902,23 @@ onMounted(async () => {
 }
 
 ::v-deep(.dp__pointer.dp__input_readonly.dp__input.dp__input_icon_pad.dp__input_reg) {
-    width: 67%;
+  width: 67%;
 }
 
 ::v-deep(.dp__input_wrap) {
-    margin-left: 16%;
-    position: relative;
-    width: 100%;
-    box-sizing: unset;
+  margin-left: 16%;
+  position: relative;
+  width: 100%;
+  box-sizing: unset;
 }
 
 ::v-deep(.date-picker-container) {
-    display: flex;
-    width: auto;
-    flex-direction: column;
-    gap: 5px;
-    font-family: Arial, sans-serif;
-    align-items: center;
+  display: flex;
+  width: auto;
+  flex-direction: column;
+  gap: 5px;
+  font-family: Arial, sans-serif;
+  align-items: center;
 }
 
 .container {
@@ -1132,17 +1139,17 @@ tr:hover td {
     display: block;
     white-space: nowrap;
   }
-  input[type="date"].placeholder-date::before
-  {
-  content: "Elige una fecha";
-  color: #ffffff;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  font-size: 1rem;
-  white-space: nowrap;
+
+  input[type="date"].placeholder-date::before {
+    content: "Elige una fecha";
+    color: #ffffff;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    font-size: 1rem;
+    white-space: nowrap;
   }
 
   input[type="date"].placeholder-date {
