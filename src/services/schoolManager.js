@@ -9,7 +9,7 @@ export const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) 
     {
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/cursoEtapa', 
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/common/cursoEtapa', 
       {
         method: 'GET',
         headers: 
@@ -1040,7 +1040,7 @@ export const obtenerProfesores = async (toastMessage, toastColor, isToastOpen) =
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/profesores',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/common/profesores',
           {
             method: 'GET',
             headers:
@@ -1069,7 +1069,7 @@ export const asignarReducciones = async (email, reduccion, horas, toastMessage, 
   
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/asignarReducciones',
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/common/asignarReducciones',
           {
             method: 'POST',
             headers:

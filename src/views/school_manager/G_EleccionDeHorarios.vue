@@ -391,9 +391,11 @@ onMounted(async () => {
   border: none;
   border-top: 1.3px solid #b8b8b8;
   margin: 0.8rem 0;
-  width: 70%; /* Ajusta el ancho de la línea */
-  margin-left: auto; /* Centra la línea horizontal */
-  margin-right: auto; /* Centra la línea horizontal */
+  width: 70%;
+  margin-left: auto; 
+  margin-right: auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .dropdown-select-hours {
@@ -484,7 +486,7 @@ onMounted(async () => {
 
 .card-solicitudes {
   min-width: 750px;
-  min-height: 846px;
+  min-height: 859px;
   height: 300px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
