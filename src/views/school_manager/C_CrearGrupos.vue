@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { crearToast } from '@/utils/toast.js';
-import { crearNuevosGrupos, obtenerInfoGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos } from '@/services/schoolManager.js'
+import { crearNuevosGrupos, obtenerInfoGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos, actualizarTurnoHorario } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
@@ -218,6 +218,26 @@ const deseleccionarTodo = () => {
   listadoAlumnosSeleccionados.value = [];
 };
 
+const actualizarTurno = async (infoGrupo) =>
+{
+  try
+  {
+    await actualizarTurnoHorario(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, infoGrupo.grupo, infoGrupo.horarioMatutino, toastMessage, toastColor, isToastOpen);    
+  }
+  catch (error)
+  {
+    // Revertimos el cambio en el modelo si la API falla
+    infoGrupo.horarioMatutino = !infoGrupo.horarioMatutino;
+    
+    // Mostramos toast de error
+    mensajeActualizacion = "Error al actualizar el turno horario.";
+    mensajeColor = "danger";
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error("Error actualizando turno:", error);
+  }
+};
+
 onMounted(async () => {
   
 });
@@ -254,7 +274,6 @@ onMounted(async () => {
       <button @click="enviarDato" class="btn">Añadir alumnos</button>
     </div>
     <div class="card-upload-table">
-      <div class="espacio">a</div>
       <div  v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo">
         <h1 class="m-4">{{ filtroSeleccionado.curso }} {{ filtroSeleccionado.etapa }} {{ infoGrupo.grupo }}
           <button class="eliminarGrupo" @click="limpiarGrupo(infoGrupo.grupo)"> Limpiar grupo</button>
@@ -263,26 +282,30 @@ onMounted(async () => {
           <p v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="cantidad-alumnos">
             Total de alumnos: {{ alumnosPorGrupo[infoGrupo.grupo].length }}
             <label class="horario-checkbox">
-              <input type="checkbox" v-model="infoGrupo.horarioMatutino" /> Horario de mañana
+              <input type="checkbox" 
+                     v-model="infoGrupo.horarioMatutino" 
+                     @change="actualizarTurno(infoGrupo)" /> Horario de mañana
             </label>
           </p>
-          <table v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="tablaAlumnos">
-            <thead>
-              <tr class="blue">
-                <th class="th">Acciones</th>
-                <th class="th">Nombre</th>
-                <th class="th">Apellidos</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="alumno in alumnosPorGrupo[infoGrupo.grupo]" :key="alumno.id">
-                <td class="th"><button class="eliminar" @click="borrarAlumno(alumno, infoGrupo.grupo)">&times;</button></td>
-                <td class="th">{{ alumno.nombre }}</td>
-                <td class="th">{{ alumno.apellidos }}</td>
-              </tr>
-            </tbody>
-          </table>
-          <p style="text-align: center;" v-else>No hay alumnos en este grupo.</p>
+          <div class="table-wrapper">
+            <table v-if="alumnosPorGrupo[infoGrupo.grupo] && alumnosPorGrupo[infoGrupo.grupo].length > 0" class="tablaAlumnos">
+              <thead>
+                <tr class="blue">
+                  <th class="th">Acciones</th>
+                  <th class="th">Nombre</th>
+                  <th class="th">Apellidos</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="alumno in alumnosPorGrupo[infoGrupo.grupo]" :key="alumno.id">
+                  <td class="th"><button class="eliminar" @click="borrarAlumno(alumno, infoGrupo.grupo)">&times;</button></td>
+                  <td class="th">{{ alumno.nombre }}</td>
+                  <td class="th">{{ alumno.apellidos }}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style="text-align: center;" v-else>No hay alumnos en este grupo.</p>
+          </div>
         </div>
       </div>
     </div>
@@ -292,7 +315,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.pad{
+.pad {
   padding-top: 4rem;
   padding-bottom: 5rem;
   padding-left: 2.2rem;
@@ -330,7 +353,7 @@ onMounted(async () => {
     height: 380px;
 }
 
-label:hover{
+label:hover {
   color: #3B82F6;
 }
 
@@ -347,7 +370,7 @@ label:hover{
   text-align: center;
 }
 
-.p-2{
+.p-2 {
   padding: 0.4rem;
   border: 1px solid #D1D5DB; 
   border-radius: 0.375rem; 
@@ -397,7 +420,7 @@ label:hover{
   position: relative; 
 }
 
-.transparente{
+.transparente {
   border-color: transparent;
 }
 
@@ -444,9 +467,8 @@ label:hover{
   max-width: 100%;
 }
 
-.espacio{
-  text-align: center;
-  color: var(--form-bg-light);
+.table-wrapper {
+  width: 100%;
 }
 
 .horario-checkbox {
@@ -459,11 +481,6 @@ label:hover{
 
 /* Media queries para hacer que la tarjeta sea más responsive */
 @media ((min-width: 768px) and (max-width: 3571px)) {
-  .espacio{
-    color: transparent;
-    margin-left: 100%;
-    margin-top: -30px;
-  }
   .tablaAlumnos{
     margin-left: 0%;
   }
@@ -485,11 +502,6 @@ label:hover{
     max-width: 500px;
   }
 
-  .espacio{
-    color: transparent;
-    margin-left: 103%;
-    margin-top: -30px;
-  }
   .tablaAlumnos {
     min-width: 300px;
   }

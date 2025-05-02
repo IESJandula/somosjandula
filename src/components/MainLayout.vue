@@ -13,6 +13,15 @@
           </ion-list>
         </ion-list>
         <ion-list>
+          <ion-item button @click="toggleSubMenuSchoolManagerStaff">
+            Personal
+            <ion-icon slot="end" :icon="schoolManagerStaffSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="schoolManagerStaffSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/school_manager_staff/profesores')">Elección de horarios</ion-item>
+          </ion-list>
+        </ion-list>
+        <ion-list>
           <ion-item button @click="toggleSubMenuPrinters">
             Cola de impresión
             <ion-icon slot="end"
@@ -148,6 +157,7 @@ export default defineComponent({
     const bookingsSubmenuVisible = ref(false);
     const documentsSubmenuVisible = ref(false);
     const schoolManagerSubmenuVisible = ref(false);
+    const schoolManagerStaffSubmenuVisible = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -180,6 +190,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      schoolManagerStaffSubmenuVisible.value = false;
     };
 
     const toggleSubMenuPrinters = () => {
@@ -188,6 +199,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      schoolManagerStaffSubmenuVisible.value = false;
     };
 
     const toggleSubMenuBookings = () => {
@@ -196,6 +208,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      schoolManagerStaffSubmenuVisible.value = false;
     };
 
     const toggleSubMenuDocuments = () => {
@@ -204,6 +217,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
       schoolManagerSubmenuVisible.value = false;
+      schoolManagerStaffSubmenuVisible.value = false;
     };
 
     const toggleSubMenuSchoolManager = () => {
@@ -212,6 +226,15 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
+      schoolManagerStaffSubmenuVisible.value = false;
+    };
+    const toggleSubMenuSchoolManagerStaff = () => {
+      adminSubmenuVisible.value = false;
+      printersSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      documentsSubmenuVisible.value = false
+      schoolManagerSubmenuVisible.value = false;
+      schoolManagerStaffSubmenuVisible.value = !schoolManagerStaffSubmenuVisible.value;
     };
 
     onMounted(async () => {
@@ -250,11 +273,13 @@ export default defineComponent({
       bookingsSubmenuVisible,
       documentsSubmenuVisible,
       schoolManagerSubmenuVisible,
+      schoolManagerStaffSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuPrinters,
       toggleSubMenuBookings,
       toggleSubMenuDocuments,
       toggleSubMenuSchoolManager,
+      toggleSubMenuSchoolManagerStaff,
     };
   },
 });

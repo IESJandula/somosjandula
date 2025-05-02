@@ -9,6 +9,7 @@
           <div class="form-section">
             <!-- Usa el componente de carga de archivos -->
             <FileUpload @file-selected="handleFileSelected" />
+            
             <!-- Configuración de impresión -->
             <ion-card class="printer-settings-card">
               <ion-grid>
@@ -26,7 +27,6 @@
                   </ion-col>
                 </ion-row>
 
-                <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
                 <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
                 <ion-row>
                   <ion-col size="12" size-md="3">
@@ -75,6 +75,67 @@
                   </ion-col>
                 </ion-row>
 
+                <!-- Nueva fila: Selección de páginas -->
+                <ion-row v-if="pdfPreviewUrl && pagesToPrint > 0">
+                  <ion-col size="12">
+                    <div class="page-selection-controls">
+                      <h4>Selección de páginas</h4>
+                      <div class="selection-mode">
+                        <ion-segment v-model="selectionMode" @ionChange="updateSelectedPages">
+                          <ion-segment-button value="all">
+                            <ion-label>Todas págs.</ion-label>
+                          </ion-segment-button>
+                          <ion-segment-button value="range">
+                            <ion-label>Rango</ion-label>
+                          </ion-segment-button>
+                          <ion-segment-button value="custom">
+                            <ion-label>Personalizado</ion-label>
+                          </ion-segment-button>
+                        </ion-segment>
+                      </div>
+
+                      <div v-if="selectionMode === 'range'" class="range-selector">
+                        <ion-item>
+                          <ion-label position="stacked">Desde página:</ion-label>
+                          <ion-input 
+                            v-model="pageRangeStart" 
+                            type="number" 
+                            min="1" 
+                            :max="pagesToPrint" 
+                            @ionChange="validateRangeInputs"
+                          ></ion-input>
+                        </ion-item>
+                        <ion-item>
+                          <ion-label position="stacked">Hasta página:</ion-label>
+                          <ion-input 
+                            v-model="pageRangeEnd" 
+                            type="number" 
+                            min="1" 
+                            :max="pagesToPrint" 
+                            @ionChange="validateRangeInputs"
+                          ></ion-input>
+                        </ion-item>
+                      </div>
+
+                      <div v-if="selectionMode === 'custom'" class="custom-selector">
+                        <ion-item>
+                          <ion-label position="stacked">Páginas específicas:</ion-label>
+                          <ion-input 
+                            v-model="customPages"
+                            placeholder="Ej: 1,3,5-7,10" 
+                            @ionChange="validateCustomPages"
+                          ></ion-input>
+                          <ion-note>Usa comas para separar páginas y guiones para rangos (ej: 1,3,5-7,10)</ion-note>
+                        </ion-item>
+                      </div>
+
+                      <div class="page-summary">
+                        <p>Se imprimirán {{ selectedPageCount }} páginas de {{ pagesToPrint }}.</p>
+                      </div>
+                    </div>
+                  </ion-col>
+                </ion-row>
+
                 <!-- Tercera Fila: Mensaje de error -->
                 <ion-row v-if="mensajeError">
                   <ion-col size="12">
@@ -93,6 +154,15 @@
                   </ion-col>
                 </ion-row>
 
+                <!-- Quinta Fila: Información de páginas seleccionadas (si no son todas) 
+                <ion-row v-if="selectedPages.length > 0 && selectedPages.length !== pagesToPrint">
+                  <ion-col size="12">
+                    <ion-text color="secondary" class="pages-text">
+                      Se imprimirán únicamente {{ selectedPages.length }} de {{ pagesToPrint }} páginas.
+                    </ion-text>
+                  </ion-col>
+                </ion-row>-->
+
                 <!-- Botón de Imprimir -->
                 <ion-row class="ion-justify-content-center ion-padding-top">
                   <ion-col size="auto">
@@ -110,6 +180,17 @@
             </ion-card>
           </div>
         </form>
+      </div>
+      <!-- Visor PDF cuando haya selección -->
+      <div v-if="pdfPreviewUrl" class="pdf-preview-container">
+        <ion-button fill="clear" class="close-preview-btn" @click="closePdfPreview">
+          <ion-icon :icon="closeOutline" size="small"></ion-icon>
+        </ion-button>
+        <PdfViewer 
+          :pdf-url="pdfPreviewUrl" 
+          @pages-counted="handlePagesCount" 
+          @selection-changed="handlePageSelectionChanged"
+        />
       </div>
 
       <!-- Tabla de resultados -->
@@ -133,13 +214,15 @@ import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
-import { IonSelect, IonSelectOption, IonInput, IonButton, IonText } from '@ionic/vue';
+import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon, IonSegment, IonSegmentButton, IonNote } from '@ionic/vue';
 import { obtenerConstantes } from '@/services/constantes';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import FileUpload from '@/components/printers/FileUpload.vue';
+import PdfViewer from '@/components/printers/PdfViewer.vue';
 import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { printersApiUrl } from "@/environment/apiUrls.ts";
+import { closeOutline } from 'ionicons/icons';
 
 // Configuramos la URL del Worker
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -147,11 +230,14 @@ GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 const formData = ref({
   printerSelected: '',
   copiesSelected: 1,
-  colorSelected: 'Color',
+  colorSelected: 'Blanco y negro',
   orientationSelected: 'Vertical',
   sidesSelected: 'Doble cara',
   file: null,
 });
+
+// PDF URL
+const pdfPreviewUrl = ref('');
 
 const printers = ref([]);
 const colors = ref([]);
@@ -167,6 +253,7 @@ const globalError = ref('');
 const historialImpresiones = ref([]);
 
 const pagesToPrint = ref(0);
+const selectedPages = ref([]);
 
 const isButtonDisabled = ref(false);
 const buttonText = ref('¡IMPRIMIR!');
@@ -189,37 +276,73 @@ const navigateToIssues = () => {
 const handleFileSelected = (selectedFile) => {
   formData.value.file = selectedFile;
   if (selectedFile) {
+    // Si había un archivo anterior, liberar su URL para evitar fugas de memoria
+    if (pdfPreviewUrl.value) {
+      URL.revokeObjectURL(pdfPreviewUrl.value);
+    }
+    
+    // Crea una URL para el PDF seleccionado para visualización
+    pdfPreviewUrl.value = URL.createObjectURL(selectedFile);
+    
     // Actualiza el botón y mensajes relacionados con el archivo
     buttonLabel.value = selectedFile.name;
 
-    // Actualizamos el número de folios a imprimir
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const arrayBuffer = e.target.result;
-      pagesToPrint.value = await countPages(arrayBuffer);
-      
-      // Actualizamos el mensaje de impresión después de contar las páginas
-      updatePrintMessage();
-
-      // Validamos el número de copias
-      validatePrint();
-    };
-    reader.readAsArrayBuffer(selectedFile);
+    // Resetear las variables relacionadas con las páginas para el nuevo PDF
+    pagesToPrint.value = 0;
+    selectedPages.value = [];
+    selectionMode.value = 'all';
+    pageRangeStart.value = 1;
+    pageRangeEnd.value = 1;
+    customPages.value = '';
+    selectedPageCount.value = 0;
   }
 };
 
-// Función para contar las páginas del PDF
-const countPages = async (file) => {
-  try {
-    const pdf = await getDocument({ data: file }).promise;
-    const numPages = pdf.numPages;
-    return numPages;
-  } 
-  catch (error) {
-    console.error('Error al procesar el PDF:', error);
-    handleError('Error al procesar el PDF'); // Maneja el error si falla el conteo de páginas
-    return 0;
+// Cierra la vista previa del PDF
+const closePdfPreview = () => {
+  if (pdfPreviewUrl.value) {
+    URL.revokeObjectURL(pdfPreviewUrl.value);
+    pdfPreviewUrl.value = '';
   }
+};
+
+// Recibe el conteo de páginas desde el componente PdfViewer
+const handlePagesCount = (count) => {
+  pagesToPrint.value = count;
+  
+  // Inicializar correctamente las variables de selección de páginas
+  if (selectionMode.value === 'all') {
+    // Si está en modo "todas las páginas", seleccionar todas
+    selectedPages.value = Array.from({ length: count }, (_, i) => i + 1);
+    selectedPageCount.value = count;
+  } else if (selectionMode.value === 'range') {
+    // En modo rango, ajustar el rango final al número total de páginas
+    pageRangeEnd.value = count;
+    validateRangeInputs();
+  } else if (selectionMode.value === 'custom') {
+    // En modo personalizado, validar la selección actual
+    validateCustomPages();
+  }
+  
+  // Actualizamos el mensaje de impresión después de contar las páginas
+  updatePrintMessage();
+  // Validamos el número de copias
+  validatePrint();
+};
+
+// Recibe las páginas seleccionadas desde el componente PdfViewer
+const handlePageSelectionChanged = (pages) => {
+  // Restaurar el array
+  if (typeof pages === 'string') {
+    selectedPages.value = pages.split(',').map(Number).filter(num => !isNaN(num));
+  } else {
+    selectedPages.value = pages;
+  }
+  
+  // Actualizamos el mensaje de impresión basado en las páginas seleccionadas
+  updatePrintMessage();
+  // Validamos el número de copias con las páginas seleccionadas
+  validatePrint();
 };
 
 // Actualiza el mensaje de impresión basado en el cálculo de hojas y opciones de impresión
@@ -234,9 +357,10 @@ const updatePrintMessage = () => {
   }
 };
 
-// Calcula el número total de hojas a imprimir
+// Calcula el número total de hojas a imprimir basado en las páginas seleccionadas
 const calculateTotalSheets = () => {
-  const pages = pagesToPrint.value;
+  // Usar el número de páginas seleccionadas si hay selección, de lo contrario usar el total
+  const pages = selectedPages.value.length > 0 ? selectedPages.value.length : pagesToPrint.value;
   const copies = formData.value.copiesSelected;
   const isDoubleSided = formData.value.sidesSelected === 'Doble cara';
 
@@ -334,6 +458,12 @@ const submitForm = async () =>
   formDataPayload.append('orientation', formData.value.orientationSelected);
   formDataPayload.append('color', formData.value.colorSelected);
   formDataPayload.append('sides', formData.value.sidesSelected);
+
+  // Agregar las páginas seleccionadas si no son todas
+  if (selectedPages.value.length > 0 && selectedPages.value.length !== pagesToPrint.value) {
+    formDataPayload.append('selectedPages', selectedPages.value.join(','));
+  }
+
   const userInfo = await obtenerNombreYApellidosUsuario();
   formDataPayload.append('user', `${userInfo.nombre} ${userInfo.apellidos}`);
 
@@ -488,6 +618,89 @@ const obtenerConstantesInit = async () =>
     handleError('Error al obtener constantes');
   }
 };
+
+// Variables para la selección de páginas
+const selectionMode = ref('all');
+const pageRangeStart = ref(1);
+const pageRangeEnd = ref(pagesToPrint.value);
+const customPages = ref('');
+const selectedPageCount = ref(pagesToPrint.value);
+
+// Actualiza las páginas seleccionadas según el modo de selección
+const updateSelectedPages = () => {
+  if (selectionMode.value === 'all') {
+    selectedPages.value = Array.from({ length: pagesToPrint.value }, (_, i) => i + 1);
+  } else if (selectionMode.value === 'range') {
+    validateRangeInputs();
+  } else if (selectionMode.value === 'custom') {
+    validateCustomPages();
+  }
+  selectedPageCount.value = selectedPages.value.length;
+};
+
+// Valida los inputs de rango de páginas
+const validateRangeInputs = () => {
+  const start = parseInt(pageRangeStart.value, 10);
+  const end = parseInt(pageRangeEnd.value, 10);
+  if (start >= 1 && end <= pagesToPrint.value && start <= end) {
+    selectedPages.value = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  } else {
+    selectedPages.value = [];
+  }
+  selectedPageCount.value = selectedPages.value.length;
+};
+
+// Valida las páginas específicas ingresadas
+const validateCustomPages = () => {
+  const pages = customPages.value.split(',').flatMap(range => {
+    if (range.includes('-')) {
+      const [start, end] = range.split('-').map(Number);
+      if (start >= 1 && end <= pagesToPrint.value && start <= end) {
+        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+      }
+    } else {
+      const page = parseInt(range, 10);
+      if (page >= 1 && page <= pagesToPrint.value) {
+        return [page];
+      }
+    }
+    return [];
+  });
+  selectedPages.value = pages;
+  selectedPageCount.value = selectedPages.value.length;
+};
+
+// Watch for changes in total pages to update the page selection accordingly
+watch(
+  () => pagesToPrint.value,
+  (newPageCount) => {
+    if (newPageCount > 0) {
+      // Update pageRangeEnd to match the new total page count
+      pageRangeEnd.value = newPageCount;
+      
+      // If in 'all' mode, select all pages of the new document
+      if (selectionMode.value === 'all') {
+        selectedPages.value = Array.from({ length: newPageCount }, (_, i) => i + 1);
+        selectedPageCount.value = newPageCount;
+      } 
+      // If in range mode, make sure the end page doesn't exceed the total
+      else if (selectionMode.value === 'range') {
+        if (pageRangeEnd.value > newPageCount) {
+          pageRangeEnd.value = newPageCount;
+        }
+        validateRangeInputs();
+      }
+      // If in custom mode, validate the entered pages against the new total
+      else if (selectionMode.value === 'custom') {
+        validateCustomPages();
+      }
+      
+      // Update the print message and validate
+      updatePrintMessage();
+      validatePrint();
+    }
+  }
+);
 </script>
 <style scoped>
 .container {
@@ -619,6 +832,39 @@ ion-input {
   text-align: center;
 }
 
+.pages-text {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: #d4edda;
+  color: #155724;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.pdf-preview-container {
+  flex: 1 1 55%;
+  min-width: 300px;
+  max-width: 90%;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.close-preview-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  z-index: 5;
+  --padding-start: 5px;
+  --padding-end: 5px;
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   .form-container,
@@ -654,6 +900,11 @@ ion-input {
     background-color: #3e3e3e;
     color: #a2cffe;
   }
+
+  .pages-text {
+    background-color: #3e4a3e;
+    color: #8fd19e;
+  }
 }
 
 .incidence-message {
@@ -673,6 +924,24 @@ ion-input {
   cursor: pointer ;
 }
 
+.page-selection-controls {
+  margin-top: 20px;
+}
+
+.selection-mode {
+  margin-bottom: 10px;
+}
+
+.range-selector,
+.custom-selector {
+  margin-top: 10px;
+}
+
+.page-summary {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-color-light);
+}
 
 /* Media query para dispositivos móviles */
 @media (max-width: 768px) {

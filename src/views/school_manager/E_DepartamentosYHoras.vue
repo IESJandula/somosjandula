@@ -85,9 +85,6 @@ const obtenerDatosDepartamentoConAsignatura = async () => {
     });
 
   } catch (error) {
-    mensajeActualizacion = "Error al cargar departamentos con asignaturas";
-    mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     console.error(error);
   }
 };
@@ -137,13 +134,18 @@ const actualizarCurso = (parametro) => {
 };
 
 const asignarDepPropietario = async () => {
-  if (cursosYetapasSeleccionado.value &&
-      asignaturaSeleccionada.value.length > 0 &&
-      depPropietarioSeleccionado.value) {
+  
   try{
     
     if (asignaturaSeleccionada.value.length === 0) {
       mensajeActualizacion = "No se ha seleccionado ninguna asignatura.";
+      mensajeColor = "warning";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+
+    if (depPropietarioSeleccionado.value === '' || depReceptorSeleccionado.value === '') {
+      mensajeActualizacion = "No se ha seleccionado ningún departamento propietario o departamento donante.";
       mensajeColor = "warning";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
       return;
@@ -172,18 +174,12 @@ const asignarDepPropietario = async () => {
     await obtenerAsignaturas()
     await obtenerAsignaturasCompletas()
     await obtenerDatosDepartamentoConAsignatura()
-    } catch (error) {
-      mensajeActualizacion = "Error al asignar departamentos a las asignaturas";
-      mensajeColor = "danger";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      console.error(error);
-    }
-  } else {
-    mensajeActualizacion = "Se necesita seleccionar al menos un curso-etapa, una asignatura y un departamento";
-    mensajeColor = "warning";
+  } catch (error) {
+    mensajeActualizacion = "Error al asignar departamentos a las asignaturas";
+    mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
-
 }
 
 const eliminarAsignaturaDepartamento = async (index) => {
@@ -550,7 +546,7 @@ onMounted(async () => {
 
 table{
   margin-top: 1.5rem;
-  min-width: 800px;
+  min-width: 860px;
 }
 
 .columna {
