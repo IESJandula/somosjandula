@@ -1118,3 +1118,31 @@ export const borrarReduccionesProfesores = async (email, reduccion, horas, toast
       console.log('Error al borrar la reduccion asignada: ', error);
     }
   }
+
+export const lanzarGeneradorHorarios = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generadorHorarios/lanzar',
+    {
+      method: 'GET',
+      headers:
+          {
+            'Authorization': `Bearer ${tokenPropio}`,
+          },
+    });
+  }
+
+export const forzarDetencionGeneradorHorarios = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generadorHorarios/forzarDetencion',
+    {
+      method: 'POST',
+      headers:
+          {
+            'Authorization': `Bearer ${tokenPropio}`,
+          },
+    });
+  }

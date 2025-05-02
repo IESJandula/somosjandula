@@ -20,6 +20,7 @@ import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
 import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
 import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
 import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
+import H_GeneradorHorarios from '@/views/school_manager/H_GeneradorHorarios.vue';
 
 const routes = [
   {
@@ -165,6 +166,11 @@ const routes = [
         meta: {
           role: 'DIRECCION'
         },
+      },
+      {
+        path: 'school_manager/generadorHorarios',
+        component: H_GeneradorHorarios,
+        name: 'H_GeneradorHorarios',
       },
     ],
   },

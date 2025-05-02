@@ -118,3 +118,12 @@ export declare function borrarReduccionesProfesores(toastMessage: Ref<string>,
                                                     toastColor: Ref<string>,
                                                     isToastOpen: Ref<boolean>): Promise<void>;
 
+/****************************** Generador de Horarios ******************************/
+
+export declare function lanzarGeneradorHorarios(toastMessage: Ref<string>,
+                                                toastColor: Ref<string>,
+                                                isToastOpen: Ref<boolean>): Promise<void>;
+
+export declare function forzarDetencionGeneradorHorarios(toastMessage: Ref<string>,
+                                                          toastColor: Ref<string>,
+                                                          isToastOpen: Ref<boolean>): Promise<void>;
