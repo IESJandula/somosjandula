@@ -116,6 +116,7 @@ onMounted(async () => {
         </div>
         <div class="t-3">¿Solicitaste conciliación familiar?</div>
       </div>
+      <hr class="separator-line"/>
       <!-- Botón radio -->
       <div class="t-4">Independientemente de la respuesta anterior, elige la opción que desearías:</div>
       <div class="t-5">
@@ -126,6 +127,7 @@ onMounted(async () => {
         <input type="radio" id="opcion2" name="opcion" value="Opción 2" v-model="decideDireccion">
         <label for="opcion2"> No tener clase a ultima hora</label>
       </div>
+      <hr class="separator-line"/>
       <!-- Dropdowns -->
       <div class="t-6">Elige tres horas que te gustaría no tener clase, exceptuando la última del viernes y la primera del lunes:</div>
       <div class="top-content">
@@ -172,8 +174,9 @@ onMounted(async () => {
           </select>
         </div>
       </div>
+      <hr class="separator-line"/>
       <!-- Texto con otras observaciones -->
-      <div class="t-5">Escribe otras observaciones  
+      <div class="t-6">Escribe otras observaciones  
         <div class="info-circle">
           i
           <div class="tooltip">Solamente si quieren guardias de recreo, recursos necesarios, alternancia de clases con horas de descanso de voz, ...</div>
@@ -371,7 +374,6 @@ onMounted(async () => {
 .t-4 {
   font-size: 1.15rem;
   margin-left: 1rem;
-  margin-top: 0.6rem;
 }
 
 .t-5 {
@@ -383,7 +385,15 @@ onMounted(async () => {
 .t-6 {
   font-size: 1.15rem;
   margin-left: 1rem;
-  margin-top: 1.1rem;
+}
+
+.separator-line {
+  border: none;
+  border-top: 1.3px solid #b8b8b8;
+  margin: 0.8rem 0;
+  width: 70%; /* Ajusta el ancho de la línea */
+  margin-left: auto; /* Centra la línea horizontal */
+  margin-right: auto; /* Centra la línea horizontal */
 }
 
 .dropdown-select-hours {
@@ -446,7 +456,6 @@ onMounted(async () => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-bottom: 0.8rem;
   padding-top: 1rem;
 }
 
@@ -454,7 +463,7 @@ onMounted(async () => {
   background: transparent;
   border: none;
   outline: none;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid currentColor;
   padding: 0.5rem;
   max-width: 450px;
   margin-left: 1rem;
@@ -475,7 +484,7 @@ onMounted(async () => {
 
 .card-solicitudes {
   min-width: 750px;
-  min-height: 820px;
+  min-height: 846px;
   height: 300px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
@@ -553,6 +562,10 @@ table{
   .btn-actualizar,
   .btn-guardar-todo {
     color: black;
+  }
+
+  .separator-line {
+    border-top: 1.3px solid #949494;
   }
 }
 
