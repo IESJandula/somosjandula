@@ -147,7 +147,7 @@ const enviarDato = async () => {
 
 const borrarAlumno = async (alumno, grupo) => {
   try {
-    await borrarAlumnos(alumno, toastMessage, toastColor, isToastOpen);
+    await borrarAlumnos({ ...alumno, grupo }, toastMessage, toastColor, isToastOpen);
 
     mensajeActualizacion = "Alumno borrado correctamente.";
     mensajeColor = "success";
@@ -186,7 +186,7 @@ const limpiarGrupo = async (grupo) => {
   try {
     const alumnosDeEsteGrupo = alumnosPorGrupo.value[grupo] || [];
     for (const alumno of alumnosDeEsteGrupo) {
-      await borrarAlumnos(alumno, toastMessage, toastColor, isToastOpen);
+      await borrarAlumnos({ ...alumno, grupo }, toastMessage, toastColor, isToastOpen);
 
       mensajeActualizacion = "Grupo limpiado correctamente.";
       mensajeColor = "success";
