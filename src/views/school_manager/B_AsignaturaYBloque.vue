@@ -263,7 +263,6 @@ async () =>{
         <ion-card-title style="text-align: center;">Tabla de Asignaturas</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <div v-if="mensajeActualizacion" class="mensejeError">{{ mensajeActualizacion }}</div>
         <div v-if="loading" class="cargar">Cargando datos...</div>
         <div v-if="bloquesConUnaAsignatura.length > 0" class="mensajeBloqueUnico">
           {{ bloquesConUnaAsignatura.length === 1
@@ -394,11 +393,6 @@ async () =>{
   border-collapse: collapse;
   border: 1px solid currentColor;
   width: 100%;
-}
-.mensejeError{
-  color: #f56565;
-  margin-bottom: 1rem;
-  text-align: center;
 }
 .cargar{
   text-align: center;
