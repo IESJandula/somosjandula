@@ -3,13 +3,18 @@ import { onMounted, ref } from 'vue';
 import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
+import {
+  asignarAsignatura,
+  obtenerAsignaturas,
+  obtenerProfesores, obtenerReducciones
+} from "@/services/schoolManager.js";
 
 const rolesUsuario = ref([]);
 const profesorSeleccionado = ref('');
 const listaProfesores = ref([]);
 const reduccionSeleccionada = ref('');
 const listaReducciones = ref([]);
-const asignaturaSeleccionado = ref('');
+const asignaturaSeleccionada = ref('');
 const listaAsignaturas = ref([]);
 const listaAsignaturasReducciones = ref([]);
 const isOn = ref(true)
@@ -39,8 +44,76 @@ async function verificarRoles() {
   }
 }
 
+const obtenerProfesor = async () => {
+
+  try {
+
+    const data = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
+    listaProfesores.value = data;
+
+    profesorSeleccionado.value = '';
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al cargar los profesores.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const obtenerListaAsignaturas = async () => {
+    try {
+      const data = await obtenerAsignaturas(profesorSeleccionado.value.departamento);
+      listaAsignaturas.value = data;
+    } catch (error) {
+      console.error(error);
+    }
+
+};
+
+const obtenerListaReducciones = async () => {
+
+  try {
+
+    const data = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
+    listaReducciones.value = data;
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al cargar las reducciones.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const asignacionDeAsignaturas = async () => {
+  try{
+    console.log(profesorSeleccionado.value);
+     await asignarAsignatura(
+        asignaturaSeleccionada.value.nombre,
+        asignaturaSeleccionada.value.horas,
+        asignaturaSeleccionada.value.curso,
+        asignaturaSeleccionada.value.etapa,
+        asignaturaSeleccionada.value.grupo,
+        profesorSeleccionado.value.email,
+        toastMessage, toastColor, isToastOpen);
+
+    mensajeActualizacion = "Asignación de asignatura realizada correctamente.";
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  } catch (error){
+    mensajeActualizacion = 'Error al cargar las reducciones.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+}
+
 onMounted(async () => {
   await verificarRoles();
+  await obtenerProfesor();
+  await obtenerListaAsignaturas();
+  await obtenerListaReducciones();
 });
 
 </script>
@@ -77,7 +150,7 @@ onMounted(async () => {
             <label for="asignatura-select">Asignatura:</label>
             <select 
               id="asignatura-select"
-              v-model="asignaturaSeleccionado" 
+              v-model="asignaturaSeleccionada"
               class="dropdown-select">
               <option value="" disabled hidden>Selecciona una asignatura</option>
               <option 
@@ -87,7 +160,7 @@ onMounted(async () => {
                 {{ asignatura.nombre }}
               </option>
             </select>
-            <button class="btn-asignar">Asignar</button>
+            <button class="btn-asignar" @click="asignacionDeAsignaturas">Asignar</button>
           </div>
           <div class="dropdowns">
             <label for="reduccion-select">Reducción:</label>

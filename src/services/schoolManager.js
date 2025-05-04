@@ -1151,7 +1151,103 @@ export const borrarReduccionesProfesores = async (email, reduccion, horas, toast
       console.log('Error al borrar la reduccion asignada: ', error);
     }
   }
+/****************************** Ventana 7 EleccionDeHorarios ******************************/
+export const obtenerAsignaturas = async (toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
 
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/asignaturas',
+        {
+          method: 'GET',
+          headers:
+              {
+                'Authorization': `Bearer ${tokenPropio}`
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+
+    return await response.json();
+
+  }
+  catch (error)
+  {
+    console.log('Error al cargar la lista de asignaturas: ', error);
+  }
+}
+
+export const obtenerReducciones = async (toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/reduccion',
+        {
+          method: 'GET',
+          headers:
+              {
+                'Authorization': `Bearer ${tokenPropio}`,
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+    return await response.json();
+
+  }
+  catch (error)
+  {
+    console.log('Error al obtener las reducciones asignadas: ', error);
+  }
+}
+
+export const asignarAsignatura = async (nombre, horas, curso, etapa, grupo, email, toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+    const cursoInt = parseInt(curso, 10);
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/asignaturas',
+        {
+          method: 'POST',
+          headers:
+              {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${tokenPropio}`,
+                'nombre': nombre,
+                'horas': horas,
+                'curso': cursoInt,
+                'etapa': etapa,
+                'grupo': grupo,
+                'email': email,
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+    return await response.json();
+
+  }
+  catch (error)
+  {
+    console.log('Error al obtener las reducciones asignadas: ', error);
+  }
+}
+
+/****************************** Ventana 8 GeneradorDeHorarios ******************************/
 export const lanzarGeneradorHorarios = async (toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
