@@ -125,6 +125,34 @@ export declare function borrarReduccionesProfesores(toastMessage: Ref<string>,
                                                     toastColor: Ref<string>,
                                                     isToastOpen: Ref<boolean>): Promise<void>;
 
+/****************************** Eleccion de horarios ******************************/
+export declare function obtenerAsignaturas(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerGruposDeAsignaturas(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerReducciones(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignarAsignatura(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerSolicitudes(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function eliminarSolicitudes(toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>): Promise<void>;
+
+/****************************** Eleccion de horarios ******************************/
+export declare function obtenerSolicitudes(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function eliminarSolicitudes(toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>): Promise<void>;
+
 /****************************** Generador de Horarios ******************************/
 
 export declare function lanzarGeneradorHorarios(toastMessage: Ref<string>,

@@ -2,11 +2,11 @@
 import {computed, onMounted, ref} from 'vue';
 import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
-import { obtenerRolesUsuario } from '@/services/firebaseService';
+import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import {
   asignarAsignatura,
   obtenerAsignaturas,
-  obtenerProfesores, obtenerReducciones
+  obtenerProfesores, obtenerReducciones, obtenerSolicitudes, eliminarSolicitudes
 } from "@/services/schoolManager.js";
 
 const rolesUsuario = ref([]);
@@ -19,6 +19,7 @@ const listaAsignaturas = ref([]);
 const listaAsignaturasReducciones = ref([]);
 const isOn = ref(true)
 const tramoHorarioSeleccionado = ref('');
+const emailUsuarioActual = ref(null);
 
 // Variable para el toast
 const isToastOpen = ref(false);
@@ -43,6 +44,10 @@ async function verificarRoles() {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
+
+const obtenerEmailUsuarioActual = async () => {
+  emailUsuarioActual.value = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
+};
 
 const obtenerProfesor = async () => {
 
@@ -108,14 +113,28 @@ const reduccionesFiltradas = computed(() => {
 const asignacionDeAsignaturas = async () => {
   try{
     console.log(profesorSeleccionado.value);
-     await asignarAsignatura(
+    if (profesorSeleccionado.value !== '') {
+      await asignarAsignatura(
+       asignaturaSeleccionada.value.nombre,
+       asignaturaSeleccionada.value.horas,
+       asignaturaSeleccionada.value.curso,
+       asignaturaSeleccionada.value.etapa,
+       asignaturaSeleccionada.value.grupo,
+       profesorSeleccionado.value.email,
+       toastMessage, toastColor, isToastOpen);
+    }
+    else {
+      await asignarAsignatura(
         asignaturaSeleccionada.value.nombre,
         asignaturaSeleccionada.value.horas,
         asignaturaSeleccionada.value.curso,
         asignaturaSeleccionada.value.etapa,
         asignaturaSeleccionada.value.grupo,
-        profesorSeleccionado.value.email,
+        emailUsuarioActual.value,
         toastMessage, toastColor, isToastOpen);
+    }
+
+    await obtenerSolicitud();
 
     mensajeActualizacion = "Asignación de asignatura realizada correctamente.";
     mensajeColor = "success";
@@ -128,11 +147,59 @@ const asignacionDeAsignaturas = async () => {
   }
 }
 
+const obtenerSolicitud = async () => {
+  try {
+    const solicitudes = await obtenerSolicitudes(emailUsuarioActual.value, toastMessage, toastColor, isToastOpen);
+
+    listaAsignaturasReducciones.value = [
+      ...solicitudes.asigunaturas,
+      ...solicitudes.reduccionAsignadas
+    ];
+    console.log(listaAsignaturasReducciones.value); // Muestra las solicitudes en la consola
+  }
+  catch (error) {
+    mensajeActualizacion = 'Error al obtener solicitudes'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
+
+const eliminarSolicitur = async (index) => {
+  try {
+    const solicitud = listaAsignaturasReducciones.value[index];
+    console.log(solicitud); // Muestra la solicitud a eliminar en la consola
+    const data = {
+      email: emailUsuarioActual.value, // Incluye el email del usuario actual
+      nombreAsignatura: solicitud.nombreAsignatura,
+      horasAsignatura: solicitud.horasAsignatura,
+      curso: solicitud.curso,
+      etapa: solicitud.etapa,
+      grupo: solicitud.grupo,
+      nombreReduccion: solicitud.nombreReduccion,
+      horasReduccion: solicitud.horasReduccion,
+    };
+    await eliminarSolicitudes(data, toastMessage, toastColor, isToastOpen);
+
+    listaAsignaturasReducciones.value.splice(index, 1); // Elimina la solicitud de la lista
+    mensajeActualizacion = 'Solicitud eliminada correctamente'
+    mensajeColor = 'success'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+  catch (error) {
+    mensajeActualizacion = 'Error al eliminar solicitud'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
+
 onMounted(async () => {
   await verificarRoles();
+  await obtenerEmailUsuarioActual();
   await obtenerProfesor();
   await obtenerListaAsignaturas();
   await obtenerListaReducciones();
+  await obtenerGrupoDeAsignatura();
+  await obtenerSolicitud();
 });
 
 </script>
@@ -169,29 +236,29 @@ onMounted(async () => {
             <label for="asignatura-select">Asignatura:</label>
             <select 
               id="asignatura-select"
-              v-model="asignaturaSeleccionada"
+              v-model="asignaturaSeleccionada" 
               class="dropdown-select">
               <option value="" disabled hidden>Selecciona una asignatura</option>
               <option 
                 v-for="asignatura in listaAsignaturas" 
                 :key="asignatura" 
                 :value="asignatura">
-                {{ asignatura.nombre }}
+                {{ asignatura.nombre }} ({{ asignatura.horas }} horas) - {{ asignatura.curso }} {{ asignatura.etapa }} {{ asignatura.grupo }}
               </option>
             </select>
             <button class="btn-asignar" @click="asignacionDeAsignaturas">Asignar</button>
           </div>
           <div class="dropdowns">
             <label for="reduccion-select">Reducción:</label>
-            <select
-                id="reduccion-select"
-                v-model="reduccionSeleccionada"
-                class="dropdown-select">
+            <select 
+              id="reduccion-select"
+              v-model="reduccionSeleccionada" 
+              class="dropdown-select">
               <option value="" disabled hidden>Selecciona una reducción</option>
-              <option
-                  v-for="reduccion in reduccionesFiltradas"
-                  :key="reduccion.id"
-                  :value="reduccion">
+              <option 
+                v-for="reduccion in reduccionesFiltradas" 
+                :key="reduccion.id" 
+                :value="reduccion">
                 {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
               </option>
             </select>
@@ -298,42 +365,53 @@ onMounted(async () => {
           <tbody>
             <tr v-for="(asignaturaReduccion, index) in listaAsignaturasReducciones" :key="index">
               <td class="columna">
-                <button @click="borrarReduccion(index)" class="btn-eliminar">&times;</button>
+                <button @click="eliminarSolicitur(index)" class="btn-eliminar">&times;</button>
               </td>
               <td class="columna">{{ asignaturaReduccion.tipo }}</td>
-              <td class="columna">{{ asignaturaReduccion.nombre }}</td>
+              <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.nombreAsignatura : asignaturaReduccion.nombreReduccion}}</td>
               <td class="columna">
-                <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-                  <select id="horas-select">
-                    <option value="" disabled hidden>Selecciona horas</option>
-                    <option 
-                      v-for="horas in asignaturaReduccion.horas" 
-                      :key="horas" 
-                      :value="horas">
-                      {{ horas }}
-                    </option>
-                  </select>
+                <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
+                  <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
+                    <select id="horasAsignatura-select"
+                      v-model="asignaturaReduccion.horasAsignatura"
+                      class="dropdown-select-solicitudes">
+                      <option value="" disabled hidden>Selecciona horas</option>
+                      <option 
+                        v-for="horas in asignaturaReduccion.horasAsignatura" 
+                        :key="horas" 
+                        :value="horas">
+                        {{ horas }}
+                      </option>
+                    </select>
+                  </span>
+                  <span v-else>{{ asignaturaReduccion.horasAsignatura }}</span>
                 </span>
-                <span v-else>{{ asignaturaReduccion.horas }}</span>
+                <span v-else>{{ asignaturaReduccion.horasReduccion }}</span>
               </td>
-              <td class="columna">{{ asignaturaReduccion.curso }}</td>
-              <td class="columna">{{ asignaturaReduccion.etapa }}</td>
+              <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.curso : '-' }}</td>
+              <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.etapa : '-' }}</td>
               <td class="columna">
-                <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-                  <select 
-                    id="grupo-select" 
-                    v-model="asignaturaReduccion.grupo" 
-                    class="dropdown-select">
-                    <option value="" disabled hidden>Selecciona un grupo</option>
-                    <option 
-                      v-for="grupo in asignaturaReduccion.grupos" 
-                      :key="grupo" 
-                      :value="grupo">
-                      {{ grupo }}
-                    </option>
-                  </select>
+                <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
+                  <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
+                    <select 
+                      id="grupo-select" 
+                      v-model="asignaturaReduccion.grupo" 
+                      class="dropdown-select-solicitudes">
+                      <option value="" disabled hidden>Selecciona un grupo</option>
+                      <option 
+                        v-for="grupo in asignaturaReduccion.grupo" 
+                        :key="grupo" 
+                        :value="grupo">
+                        {{ grupo }}
+                      </option>
+                    </select>
+                  </span>
+                  <span v-else>-</span>
                 </span>
                 <span v-else>-</span>
+              </td>
+              <td class="columna">
+                <button @click="guardarReduccion(asignaturaReduccion)" class="btn">Guardar</button>
               </td>
             </tr>
           </tbody>
@@ -498,6 +576,13 @@ onMounted(async () => {
   margin-left: 1rem;
 }
 
+.dropdown-select-solicitudes {
+  width: 50px;
+  padding: 0.5rem;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+}
+
 /* Circulo de información */
 .info-circle {
   display: inline-block;
@@ -627,6 +712,15 @@ table{
   border: 1px solid currentColor;
 }
 
+.btn {
+  padding: 0.5rem;
+  border: 1px solid ;
+  border-radius: 0.375rem; 
+  background-color: #4782eb;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+}
+
 .btn-guardar-todo {
   width: 170px;
   padding: 0.5rem;
@@ -654,12 +748,18 @@ table{
   .option.active,
   .info-circle,
   .btn-actualizar,
+  .btn,
   .btn-guardar-todo {
     color: black;
   }
 
   .separator-line {
     border-top: 1.3px solid #949494;
+  }
+
+  .dropdown-select-solicitudes {
+    background-color: #353c36;
+    border: 1px solid #828181;
   }
 }
 
