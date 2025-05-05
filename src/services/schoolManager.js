@@ -1182,6 +1182,41 @@ export const obtenerAsignaturas = async (toastMessage, toastColor, isToastOpen) 
   }
 }
 
+export const obtenerGruposDeAsignaturas = async (nombreAsignatura, horaAsignatura, curso, etapa, toastMessage, toastColor, isToastOpen) =>
+{
+  try
+  {
+    const cursoInt = parseInt(curso, 10);
+    const horasInt = parseInt(horaAsignatura, 10);
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/gruposAsignaturas',
+        {
+          method: 'GET',
+          headers:
+              {
+                'Authorization': `Bearer ${tokenPropio}`,
+                'nombreAsignatura': nombreAsignatura,
+                'horaAsignatura': horasInt,
+                'curso': cursoInt,
+                'etapa': etapa,
+              },
+
+        });
+    if(!response.ok)
+    {
+      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    }
+
+    return await response.json();
+
+  }
+  catch (error)
+  {
+    console.log('Error al cargar la lista de asignaturas: ', error);
+  }
+}
+
 export const obtenerReducciones = async (toastMessage, toastColor, isToastOpen) =>
 {
   try

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
@@ -63,7 +63,7 @@ const obtenerProfesor = async () => {
 
 const obtenerListaAsignaturas = async () => {
     try {
-      const data = await obtenerAsignaturas(profesorSeleccionado.value.departamento);
+      const data = await obtenerAsignaturas(profesorSeleccionado.value.departamento,toastMessage, toastColor, isToastOpen);
       listaAsignaturas.value = data;
     } catch (error) {
       console.error(error);
@@ -71,13 +71,22 @@ const obtenerListaAsignaturas = async () => {
 
 };
 
+const obtenerGrupoDeAsignatura = async (nombre, horas, curso, etapa) => {
+  try {
+    const listaGrupos = await obtenerGrupoDeAsignatura(nombre, horas, curso, etapa, toastMessage, toastColor, isToastOpen);
+    return listaGrupos
+  } catch (error) {
+    console.error(error);
+  }
+};
 const obtenerListaReducciones = async () => {
 
   try {
 
     const data = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
     listaReducciones.value = data;
-
+    console.log(listaReducciones.value)
+    console.log(reduccionesFiltradas.value)
   } catch (error) {
     mensajeActualizacion = 'Error al cargar las reducciones.';
     mensajeColor = 'danger';
@@ -85,6 +94,16 @@ const obtenerListaReducciones = async () => {
     console.error(error);
   }
 };
+
+const reduccionesFiltradas = computed(() => {
+  const isDir = rolesUsuario.value.includes('DIRECCION')
+      || rolesUsuario.value.includes('ADMINISTRADOR');
+  if (isDir) {
+    return listaReducciones.value;
+  }
+  // solo las que tienen decideDireccion === false
+  return listaReducciones.value.filter(r => r.decideDireccion === false);
+});
 
 const asignacionDeAsignaturas = async () => {
   try{
@@ -164,15 +183,15 @@ onMounted(async () => {
           </div>
           <div class="dropdowns">
             <label for="reduccion-select">Reducción:</label>
-            <select 
-              id="reduccion-select"
-              v-model="reduccionSeleccionada" 
-              class="dropdown-select">
+            <select
+                id="reduccion-select"
+                v-model="reduccionSeleccionada"
+                class="dropdown-select">
               <option value="" disabled hidden>Selecciona una reducción</option>
-              <option 
-                v-for="reduccion in listaReducciones" 
-                :key="reduccion" 
-                :value="reduccion">
+              <option
+                  v-for="reduccion in reduccionesFiltradas"
+                  :key="reduccion.id"
+                  :value="reduccion">
                 {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
               </option>
             </select>
