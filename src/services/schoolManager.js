@@ -1314,6 +1314,43 @@ export const obtenerSolicitudes = async (email, toastMessage, toastColor, isToas
     }
   }
 
+export const guardarSolicitudes = async (data, toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/solicitudes',
+          {
+            method: 'PUT',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                  'email': data.email,
+                  'nombreAsignatura': data.nombreAsignatura || '',
+                  'horasAsignatura': data.horasAsignatura || '',
+                  'curso': data.curso || '',
+                  'etapa': data.etapa || '',
+                  'grupo': data.grupo || '',
+                  'nombreReduccion': data.nombreReduccion || '',
+                  'horasReduccion': data.horasReduccion || ''
+                },
+  
+          });
+      if(!response.ok)
+      {
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+      }
+      return await response.json();
+  
+    }
+    catch (error)
+    {
+      console.log('Error al obtener las reducciones asignadas: ', error);
+    }
+  }
+
 export const eliminarSolicitudes = async (data, toastMessage, toastColor, isToastOpen) =>
   {
     try

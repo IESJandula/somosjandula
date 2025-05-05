@@ -144,6 +144,9 @@ export declare function obtenerSolicitudes(toastMessage: Ref<string>,
 export declare function eliminarSolicitudes(toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
                                             isToastOpen: Ref<boolean>): Promise<void>;
+export declare function guardarSolicitudes(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Eleccion de horarios ******************************/
 export declare function obtenerSolicitudes(toastMessage: Ref<string>,

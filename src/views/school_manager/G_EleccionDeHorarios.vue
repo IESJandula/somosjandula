@@ -6,7 +6,7 @@ import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseSer
 import {
   asignarAsignatura,
   obtenerAsignaturas,
-  obtenerProfesores, obtenerReducciones, obtenerSolicitudes, eliminarSolicitudes
+  obtenerProfesores, obtenerReducciones, obtenerSolicitudes, eliminarSolicitudes, guardarSolicitudes
 } from "@/services/schoolManager.js";
 
 const rolesUsuario = ref([]);
@@ -57,6 +57,8 @@ const obtenerProfesor = async () => {
     listaProfesores.value = data;
 
     profesorSeleccionado.value = '';
+
+    await obtenerSolicitud();
 
   } catch (error) {
     mensajeActualizacion = 'Error al cargar los profesores.';
@@ -149,8 +151,16 @@ const asignacionDeAsignaturas = async () => {
 
 const obtenerSolicitud = async () => {
   try {
-    const solicitudes = await obtenerSolicitudes(emailUsuarioActual.value, toastMessage, toastColor, isToastOpen);
 
+    let solicitudes = null;
+    if (profesorSeleccionado.value !== undefined) {
+     
+      solicitudes = await obtenerSolicitudes(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
+    }
+    if(rolesUsuario.value.includes('PROFESOR') && !(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
+      solicitudes = await obtenerSolicitudes(emailUsuarioActual.value, toastMessage, toastColor, isToastOpen);
+    }
+    
     listaAsignaturasReducciones.value = [
       ...solicitudes.asigunaturas,
       ...solicitudes.reduccionAsignadas
@@ -192,6 +202,76 @@ const eliminarSolicitur = async (index) => {
   }
 }
 
+const guardarSolicitud = async (index) => {
+  try {
+    const solicitud = listaAsignaturasReducciones.value[index];
+    let data = null;
+    if(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR')) {
+      data = {
+        email: profesorSeleccionado.value.email, // Incluye el email del usuario actual
+        nombreAsignatura: solicitud.nombreAsignatura,
+        horasAsignatura: solicitud.horasAsignatura,
+        curso: solicitud.curso,
+        etapa: solicitud.etapa,
+        grupo: solicitud.grupo,
+        nombreReduccion: solicitud.nombreReduccion,
+        horasReduccion: solicitud.horasReduccion,
+      };
+    } else {
+      data = {
+        email: emailUsuarioActual.value, // Incluye el email del usuario actual
+        nombreAsignatura: solicitud.nombreAsignatura,
+        horasAsignatura: solicitud.horasAsignatura,
+        curso: solicitud.curso,
+        etapa: solicitud.etapa,
+        grupo: solicitud.grupo,
+        nombreReduccion: solicitud.nombreReduccion,
+        horasReduccion: solicitud.horasReduccion,
+      };
+    }
+    await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
+
+    mensajeActualizacion = 'Solicitud guardada correctamente'
+    mensajeColor = 'success'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+  catch (error) {
+    mensajeActualizacion = 'Error al guardar solicitud'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
+
+const guardarTodo = async () => {
+
+  for (let index = 0; index < listaAsignaturasReducciones.value.length; index++) {
+    const solicitud = listaAsignaturasReducciones.value[index];
+    const data = {
+      email: profesorSeleccionado.value.email,
+      nombreAsignatura: solicitud.nombreAsignatura,
+      horasAsignatura: solicitud.horasAsignatura,
+      curso: solicitud.curso,
+      etapa: solicitud.etapa,
+      grupo: solicitud.grupo,
+      nombreReduccion: solicitud.nombreReduccion,
+      horasReduccion: solicitud.horasReduccion,
+    };
+
+    try {
+      await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
+
+    mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
+    mensajeColor = 'success'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    }
+    catch (error) {
+      mensajeActualizacion = 'Error al guardar todas las solicitudes'
+      mensajeColor = 'danger'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    }
+  }
+}
+
 onMounted(async () => {
   await verificarRoles();
   await obtenerEmailUsuarioActual();
@@ -220,6 +300,7 @@ onMounted(async () => {
           <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
             id="profesor-select"
             v-model="profesorSeleccionado" 
+            @change="obtenerSolicitud"
             class="dropdown-select">
             <option value="">Selecciona un profesor</option>
             <option 
@@ -411,13 +492,13 @@ onMounted(async () => {
                 <span v-else>-</span>
               </td>
               <td class="columna">
-                <button @click="guardarReduccion(asignaturaReduccion)" class="btn">Guardar</button>
+                <button @click="guardarSolicitud(index)" class="btn">Guardar</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <button v-if="listaAsignaturasReducciones > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
+      <button v-if="listaAsignaturasReducciones.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
     </div>
   </div>
   <ion-toast
@@ -733,7 +814,7 @@ table{
   margin-bottom: 5px;
   position: sticky;
   top: 0;
-  left: 850px;
+  left: 550px;
 }
 
 @media (prefers-color-scheme: dark) {
