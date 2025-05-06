@@ -233,7 +233,11 @@ const obtenerSolicitud = async () => {
     listaGrupos.value = [];
 
     listaAsignaturasReducciones.value = [
-      ...solicitudes.asigunaturas,
+      ...solicitudes.asigunaturas.map(a => ({
+        ...a,
+        horasMax: a.horasAsignatura,              //Maximo original
+        horasSeleccionadas: a.horasAsignatura     //Las horas que se quieren
+      })),
       ...solicitudes.reduccionAsignadas
     ];
     console.log(listaAsignaturasReducciones.value);
@@ -516,7 +520,7 @@ onMounted(async () => {
               <th class="columna">Eliminar</th>
               <th class="columna">Tipo</th>
               <th class="columna">Nombre</th>
-              <th class="columna">Hores</th>
+              <th class="columna">Horas</th>
               <th class="columna">Curso</th>
               <th class="columna">Etapa</th>
               <th class="columna">Grupo</th>
@@ -534,12 +538,9 @@ onMounted(async () => {
               <td class="columna">
                 <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
                   <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-                    <select id="horasAsignatura-select" v-model="asignaturaReduccion.horasAsignatura"
-                      class="dropdown-select-solicitudes">
+                    <select v-model="asignaturaReduccion.horasSeleccionadas" class="dropdown-select-solicitudes">
                       <option value="" disabled hidden>Selecciona horas</option>
-                      <option v-for="horas in asignaturaReduccion.horasAsignatura" :key="horas" :value="horas">
-                        {{ horas }}
-                      </option>
+                      <option v-for="n in asignaturaReduccion.horasMax" :key="n" :value="n">{{ n }}</option>
                     </select>
                   </span>
                   <span v-else>{{ asignaturaReduccion.horasAsignatura }}</span>
