@@ -138,6 +138,12 @@ export declare function obtenerReducciones(toastMessage: Ref<string>,
 export declare function asignarAsignatura(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerDiasTramosTipoHorario(toastMessage: Ref<string>,
+                                                     toastColor: Ref<string>,
+                                                     isToastOpen: Ref<boolean>): Promise<void>;
+export declare function actualizarObservaciones(toastMessage: Ref<string>,
+                                                toastColor: Ref<string>,
+                                                isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerSolicitudes(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;

@@ -1184,12 +1184,12 @@ export const obtenerAsignaturas = async (toastMessage, toastColor, isToastOpen) 
     }
   }
   
-export const obtenerGruposDeAsignaturas = async (nombreAsignatura, horaAsignatura, curso, etapa, toastMessage, toastColor, isToastOpen) =>
+export const obtenerGruposDeAsignaturas = async (nombreAsignatura, horasAsignatura, curso, etapa, toastMessage, toastColor, isToastOpen) =>
   {
     try
     {
       const cursoInt = parseInt(curso, 10);
-      const horasInt = parseInt(horaAsignatura, 10);
+      const horasInt = parseInt(horasAsignatura, 10);
       const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
       const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/gruposAsignaturas',
@@ -1199,7 +1199,7 @@ export const obtenerGruposDeAsignaturas = async (nombreAsignatura, horaAsignatur
                 {
                   'Authorization': `Bearer ${tokenPropio}`,
                   'nombreAsignatura': nombreAsignatura,
-                  'horaAsignatura': horasInt,
+                  'horasAsignatura': horasInt,
                   'curso': cursoInt,
                   'etapa': etapa,
                 },
@@ -1268,6 +1268,71 @@ export const asignarAsignatura = async (nombre, horas, curso, etapa, grupo, emai
                   'etapa': etapa,
                   'grupo': grupo,
                   'email': email,
+                },
+  
+          });
+      if(!response.ok)
+      {
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+      }
+      return await response.json();
+  
+    }
+    catch (error)
+    {
+      console.log('Error al obtener las reducciones asignadas: ', error);
+    }
+  }
+
+export const obtenerDiasTramosTipoHorario = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones',
+          {
+            method: 'GET',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                },
+  
+          });
+      if(!response.ok)
+      {
+        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+      }
+      return await response.json();
+  
+    }
+    catch (error)
+    {
+      console.log('Error al obtener las reducciones asignadas: ', error);
+    }
+  }
+
+export const actualizarObservaciones = async (conciliacion, trabajarPrimeraHora, otrasObservaciones, dia, tramo, tipoHorario, email, toastMessage, toastColor, isToastOpen) =>
+  {
+    try
+    {
+  
+      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones',
+          {
+            method: 'PUT',
+            headers:
+                {
+                  'Authorization': `Bearer ${tokenPropio}`,
+                  'conciliacion': conciliacion,
+                  'trabajarPrimeraHora': trabajarPrimeraHora,
+                  'otrasObservaciones': otrasObservaciones,
+                  'dia': dia,
+                  'tramo': tramo,
+                  'tipoHorario': tipoHorario,
+                  'email': email
                 },
   
           });

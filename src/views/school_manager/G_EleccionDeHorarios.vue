@@ -1,12 +1,20 @@
 <script setup>
-import {computed, onMounted, ref} from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import {
   asignarAsignatura,
   obtenerAsignaturas,
-  obtenerProfesores, obtenerReducciones, obtenerSolicitudes, eliminarSolicitudes, guardarSolicitudes
+  obtenerGruposDeAsignaturas,
+  obtenerProfesores,
+  obtenerReducciones,
+  asignarReducciones,
+  obtenerDiasTramosTipoHorario,
+  obtenerSolicitudes,
+  eliminarSolicitudes,
+  guardarSolicitudes,
+  actualizarObservaciones
 } from "@/services/schoolManager.js";
 
 const rolesUsuario = ref([]);
@@ -17,10 +25,15 @@ const listaReducciones = ref([]);
 const asignaturaSeleccionada = ref('');
 const listaAsignaturas = ref([]);
 const listaAsignaturasReducciones = ref([]);
-const isOn = ref(true)
+const isOn = ref(false)
 const tramoHorarioSeleccionado = ref('');
+const tramoHorarioSeleccionado2 = ref('');
+const tramoHorarioSeleccionado3 = ref('');
+const listaTramoHorarioSeleccionado = ref([]);
 const emailUsuarioActual = ref(null);
-
+const trabajarPrimeraHoraSeleccionado = ref(false);
+const otrasObservacionesSeleccionado = ref('');
+const listaGrupos = ref([]);
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -69,61 +82,26 @@ const obtenerProfesor = async () => {
 };
 
 const obtenerListaAsignaturas = async () => {
-    try {
-      const data = await obtenerAsignaturas(profesorSeleccionado.value.departamento,toastMessage, toastColor, isToastOpen);
-      listaAsignaturas.value = data;
-    } catch (error) {
-      console.error(error);
-    }
-
-};
-
-const obtenerGrupoDeAsignatura = async (nombre, horas, curso, etapa) => {
   try {
-    const listaGrupos = await obtenerGrupoDeAsignatura(nombre, horas, curso, etapa, toastMessage, toastColor, isToastOpen);
-    return listaGrupos
+    const data = await obtenerAsignaturas(profesorSeleccionado.value.departamento, toastMessage, toastColor, isToastOpen);
+    listaAsignaturas.value = data;
   } catch (error) {
     console.error(error);
   }
 };
-const obtenerListaReducciones = async () => {
-
-  try {
-
-    const data = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
-    listaReducciones.value = data;
-    console.log(listaReducciones.value)
-    console.log(reduccionesFiltradas.value)
-  } catch (error) {
-    mensajeActualizacion = 'Error al cargar las reducciones.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-const reduccionesFiltradas = computed(() => {
-  const isDir = rolesUsuario.value.includes('DIRECCION')
-      || rolesUsuario.value.includes('ADMINISTRADOR');
-  if (isDir) {
-    return listaReducciones.value;
-  }
-  // solo las que tienen decideDireccion === false
-  return listaReducciones.value.filter(r => r.decideDireccion === false);
-});
 
 const asignacionDeAsignaturas = async () => {
-  try{
+  try {
     console.log(profesorSeleccionado.value);
     if (profesorSeleccionado.value !== '') {
       await asignarAsignatura(
-       asignaturaSeleccionada.value.nombre,
-       asignaturaSeleccionada.value.horas,
-       asignaturaSeleccionada.value.curso,
-       asignaturaSeleccionada.value.etapa,
-       asignaturaSeleccionada.value.grupo,
-       profesorSeleccionado.value.email,
-       toastMessage, toastColor, isToastOpen);
+        asignaturaSeleccionada.value.nombre,
+        asignaturaSeleccionada.value.horas,
+        asignaturaSeleccionada.value.curso,
+        asignaturaSeleccionada.value.etapa,
+        asignaturaSeleccionada.value.grupo,
+        profesorSeleccionado.value.email,
+        toastMessage, toastColor, isToastOpen);
     }
     else {
       await asignarAsignatura(
@@ -141,11 +119,101 @@ const asignacionDeAsignaturas = async () => {
     mensajeActualizacion = "Asignación de asignatura realizada correctamente.";
     mensajeColor = "success";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-  } catch (error){
+  } catch (error) {
     mensajeActualizacion = 'Error al cargar las reducciones.';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     console.error(error);
+  }
+}
+
+const obtenerListaReducciones = async () => {
+
+  try {
+
+    const data = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
+    listaReducciones.value = data;
+    console.log(listaReducciones.value)
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al cargar las reducciones.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const asignarReduccion = async () => {
+  try {
+    if (profesorSeleccionado.value !== '') {
+      await asignarReducciones(
+        profesorSeleccionado.value.email,
+        reduccionSeleccionada.value.nombre,
+        reduccionSeleccionada.value.horas,
+        toastMessage, toastColor, isToastOpen);
+    }
+    else {
+      await asignarReducciones(
+        emailUsuarioActual.value,
+        reduccionSeleccionada.value.nombre,
+        reduccionSeleccionada.value.horas,
+        toastMessage, toastColor, isToastOpen);
+    }
+
+    await obtenerSolicitud();
+
+    mensajeActualizacion = "Asignación de reducción realizada correctamente.";
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  } catch (error) {
+    mensajeActualizacion = 'Error al cargar las reducciones.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const obtenerDiaTramoTipoHorario = async () => {
+  try {
+
+    listaTramoHorarioSeleccionado.value = await obtenerDiasTramosTipoHorario(tramoHorarioSeleccionado.value, toastMessage, toastColor, isToastOpen);
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al cargar los tramos horarios.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const trabajarPrimeraHora = computed(() => {
+  return trabajarPrimeraHoraSeleccionado.value === 'Opción 1';
+});
+
+const actualizarObservacion = async () => {
+  try {
+    // Array con los tramos horarios seleccionados
+    const tramos = [
+      tramoHorarioSeleccionado.value,
+      tramoHorarioSeleccionado2.value,
+      tramoHorarioSeleccionado3.value,
+    ];
+
+    // Iteramos sobre los tramos y envíamos una solicitud por cada uno
+    for (const tramo of tramos) {
+      if (tramo) {
+        // Llama al método para enviar los datos al backend
+        await actualizarObservaciones(isOn.value, trabajarPrimeraHora.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailUsuarioActual.value,
+          toastMessage, toastColor, isToastOpen);
+      }
+    }
+    mensajeActualizacion = 'Observaciones actualizadas correctamente'
+    mensajeColor = 'success'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  } catch (error) {
+    mensajeActualizacion = 'Error al actualizar las observaciones'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
 
@@ -154,18 +222,27 @@ const obtenerSolicitud = async () => {
 
     let solicitudes = null;
     if (profesorSeleccionado.value !== undefined) {
-     
+
       solicitudes = await obtenerSolicitudes(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
+
     }
-    if(rolesUsuario.value.includes('PROFESOR') && !(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
+    if (rolesUsuario.value.includes('PROFESOR') && !(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
       solicitudes = await obtenerSolicitudes(emailUsuarioActual.value, toastMessage, toastColor, isToastOpen);
     }
-    
+
+    listaGrupos.value = [];
+
     listaAsignaturasReducciones.value = [
       ...solicitudes.asigunaturas,
       ...solicitudes.reduccionAsignadas
     ];
-    console.log(listaAsignaturasReducciones.value); // Muestra las solicitudes en la consola
+    console.log(listaAsignaturasReducciones.value);
+
+    for (let i = 0; i < listaAsignaturasReducciones.value.length; i++) {
+      if (listaAsignaturasReducciones.value[i].tipo === 'Asignatura') {
+        await obtenerGrupoDeAsignatura(i);
+      }
+    }
   }
   catch (error) {
     mensajeActualizacion = 'Error al obtener solicitudes'
@@ -174,12 +251,48 @@ const obtenerSolicitud = async () => {
   }
 }
 
-const eliminarSolicitur = async (index) => {
+const obtenerGrupoDeAsignatura = async (index) => {
+  try {
+    const asignatura = listaAsignaturasReducciones.value[index];
+
+    if (asignatura.tipo !== 'Asignatura') return;
+
+    const grupos = await obtenerGruposDeAsignaturas(
+      asignatura.nombreAsignatura,
+      asignatura.horasAsignatura,
+      asignatura.curso,
+      asignatura.etapa,
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
+    // Inicializa el array si no existe
+    if (!listaGrupos.value[index]) {
+      listaGrupos.value[index] = [];
+    }
+
+    // Asigna los grupos directamente
+    listaGrupos.value[index] = grupos;
+
+    console.log('Grupos obtenidos:', grupos);
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const eliminarSolicitud = async (index) => {
   try {
     const solicitud = listaAsignaturasReducciones.value[index];
-    console.log(solicitud); // Muestra la solicitud a eliminar en la consola
+    console.log(solicitud);
+
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
     const data = {
-      email: emailUsuarioActual.value, // Incluye el email del usuario actual
+      email: emailDestino,
       nombreAsignatura: solicitud.nombreAsignatura,
       horasAsignatura: solicitud.horasAsignatura,
       curso: solicitud.curso,
@@ -190,7 +303,8 @@ const eliminarSolicitur = async (index) => {
     };
     await eliminarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
-    listaAsignaturasReducciones.value.splice(index, 1); // Elimina la solicitud de la lista
+    // Elimina la solicitud de la lista
+    listaAsignaturasReducciones.value.splice(index, 1);
     mensajeActualizacion = 'Solicitud eliminada correctamente'
     mensajeColor = 'success'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -204,31 +318,25 @@ const eliminarSolicitur = async (index) => {
 
 const guardarSolicitud = async (index) => {
   try {
+
     const solicitud = listaAsignaturasReducciones.value[index];
+
     let data = null;
-    if(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR')) {
-      data = {
-        email: profesorSeleccionado.value.email, // Incluye el email del usuario actual
-        nombreAsignatura: solicitud.nombreAsignatura,
-        horasAsignatura: solicitud.horasAsignatura,
-        curso: solicitud.curso,
-        etapa: solicitud.etapa,
-        grupo: solicitud.grupo,
-        nombreReduccion: solicitud.nombreReduccion,
-        horasReduccion: solicitud.horasReduccion,
-      };
-    } else {
-      data = {
-        email: emailUsuarioActual.value, // Incluye el email del usuario actual
-        nombreAsignatura: solicitud.nombreAsignatura,
-        horasAsignatura: solicitud.horasAsignatura,
-        curso: solicitud.curso,
-        etapa: solicitud.etapa,
-        grupo: solicitud.grupo,
-        nombreReduccion: solicitud.nombreReduccion,
-        horasReduccion: solicitud.horasReduccion,
-      };
-    }
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
+    data = {
+      email: emailDestino,
+      nombreAsignatura: solicitud.nombreAsignatura,
+      horasAsignatura: solicitud.horasAsignatura,
+      curso: solicitud.curso,
+      etapa: solicitud.etapa,
+      grupo: solicitud.grupo,
+      nombreReduccion: solicitud.nombreReduccion,
+      horasReduccion: solicitud.horasReduccion,
+    };
+
     await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
     mensajeActualizacion = 'Solicitud guardada correctamente'
@@ -244,10 +352,14 @@ const guardarSolicitud = async (index) => {
 
 const guardarTodo = async () => {
 
+  const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+    ? profesorSeleccionado.value.email
+    : emailUsuarioActual.value;
+
   for (let index = 0; index < listaAsignaturasReducciones.value.length; index++) {
     const solicitud = listaAsignaturasReducciones.value[index];
     const data = {
-      email: profesorSeleccionado.value.email,
+      email: emailDestino,
       nombreAsignatura: solicitud.nombreAsignatura,
       horasAsignatura: solicitud.horasAsignatura,
       curso: solicitud.curso,
@@ -260,9 +372,9 @@ const guardarTodo = async () => {
     try {
       await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
-    mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
-    mensajeColor = 'success'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
+      mensajeColor = 'success'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
     }
     catch (error) {
       mensajeActualizacion = 'Error al guardar todas las solicitudes'
@@ -278,7 +390,7 @@ onMounted(async () => {
   await obtenerProfesor();
   await obtenerListaAsignaturas();
   await obtenerListaReducciones();
-  await obtenerGrupoDeAsignatura();
+  await obtenerDiaTramoTipoHorario();
   await obtenerSolicitud();
 });
 
@@ -295,18 +407,12 @@ onMounted(async () => {
         <!-- Dropdowns que aparece si eres dirección o administrador -->
         <div class="dropdowns">
           <label class="form-label" v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
-          for="profesor-select">Profesor:
+            for="profesor-select">Profesor:
           </label>
           <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
-            id="profesor-select"
-            v-model="profesorSeleccionado" 
-            @change="obtenerSolicitud"
-            class="dropdown-select">
+            id="profesor-select" v-model="profesorSeleccionado" @change="obtenerSolicitud" class="dropdown-select">
             <option value="">Selecciona un profesor</option>
-            <option 
-              v-for="profesor in listaProfesores" 
-              :key="profesor"
-              :value="profesor">
+            <option v-for="profesor in listaProfesores" :key="profesor" :value="profesor">
               {{ profesor.nombre }} {{ profesor.apellidos }}
             </option>
           </select>
@@ -315,116 +421,90 @@ onMounted(async () => {
         <div class="top-section">
           <div class="dropdowns">
             <label for="asignatura-select">Asignatura:</label>
-            <select 
-              id="asignatura-select"
-              v-model="asignaturaSeleccionada" 
-              class="dropdown-select">
+            <select id="asignatura-select" v-model="asignaturaSeleccionada" class="dropdown-select">
               <option value="" disabled hidden>Selecciona una asignatura</option>
-              <option 
-                v-for="asignatura in listaAsignaturas" 
-                :key="asignatura" 
-                :value="asignatura">
-                {{ asignatura.nombre }} ({{ asignatura.horas }} horas) - {{ asignatura.curso }} {{ asignatura.etapa }} {{ asignatura.grupo }}
+              <option v-for="asignatura in listaAsignaturas" :key="asignatura" :value="asignatura">
+                {{ asignatura.nombre }} ({{ asignatura.horas }} horas) - {{ asignatura.curso }} {{ asignatura.etapa }}
+                {{ asignatura.grupo }}
               </option>
             </select>
             <button class="btn-asignar" @click="asignacionDeAsignaturas">Asignar</button>
           </div>
           <div class="dropdowns">
             <label for="reduccion-select">Reducción:</label>
-            <select 
-              id="reduccion-select"
-              v-model="reduccionSeleccionada" 
+            <select id="reduccion-select" v-model="reduccionSeleccionada" @change="obtenerSolicitud"
               class="dropdown-select">
               <option value="" disabled hidden>Selecciona una reducción</option>
-              <option 
-                v-for="reduccion in reduccionesFiltradas" 
-                :key="reduccion.id" 
-                :value="reduccion">
+              <option v-for="reduccion in listaReducciones" :key="reduccion.id" :value="reduccion">
                 {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
               </option>
             </select>
-            <button class="btn-asignar">Asignar</button>
+            <button class="btn-asignar" @click="asignarReduccion">Asignar</button>
           </div>
-        </div>        
+        </div>
       </div>
       <div class="t-2">Preferencias horarias personales</div>
       <div class="top-content">
         <!-- Boton switch -->
         <div class="switch" @click="toggle">
-          <div :class="['option', !isOn ? 'active' : '']">Si</div>
-          <div :class="['option', isOn ? 'active on' : '']">No</div>
+          <div :class="['option', !isOn ? 'active' : '']">No</div>
+          <div :class="['option', isOn ? 'active on' : '']">Si</div>
         </div>
         <div class="t-3">¿Solicitaste conciliación familiar?</div>
       </div>
-      <hr class="separator-line"/>
+      <hr class="separator-line" />
       <!-- Botón radio -->
       <div class="t-4">Independientemente de la respuesta anterior, elige la opción que desearías:</div>
       <div class="t-5">
-        <input type="radio" id="opcion1" name="opcion" value="Opción 1" v-model="decideDireccion">
+        <input type="radio" id="opcion1" name="opcion" :value="true" v-model="trabajarPrimeraHoraSeleccionado">
         <label for="opcion1"> No tener clase a primera hora</label>
       </div>
       <div class="t-5">
-        <input type="radio" id="opcion2" name="opcion" value="Opción 2" v-model="decideDireccion">
+        <input type="radio" id="opcion2" name="opcion" :value="false" v-model="trabajarPrimeraHoraSeleccionado">
         <label for="opcion2"> No tener clase a ultima hora</label>
       </div>
-      <hr class="separator-line"/>
+      <hr class="separator-line" />
       <!-- Dropdowns -->
-      <div class="t-6">Elige tres horas que te gustaría no tener clase, exceptuando la última del viernes y la primera del lunes:</div>
+      <div class="t-6">Elige tres horas que te gustaría no tener clase, exceptuando la última del viernes y la primera
+        del lunes:</div>
       <div class="top-content">
         <div>
-          <select 
-            id="tramoHorario-select"
-            v-model="tramoHorarioSeleccionado" 
-            class="dropdown-select-hours">
-            <option value="" >Elige una hora</option>
-            <option 
-              v-for="asignatura in listaAsignaturas" 
-              :key="asignatura" 
-              :value="asignatura">
-              {{ asignatura.nombre }}
+          <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado" class="dropdown-select-hours">
+            <option value="">Elige una hora</option>
+            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" :key="tramoHorario" :value="tramoHorario">
+              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
             </option>
           </select>
         </div>
         <div>
-          <select 
-            id="tramoHorario-select"
-            v-model="tramoHorarioSeleccionado" 
-            class="dropdown-select-hours">
+          <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado2" class="dropdown-select-hours">
             <option value="" disabled hidden>Elige una hora</option>
-            <option 
-              v-for="asignatura in listaAsignaturas" 
-              :key="asignatura" 
-              :value="asignatura">
-              {{ asignatura.nombre }}
+            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" :key="tramoHorario" :value="tramoHorario">
+              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
             </option>
           </select>
         </div>
         <div>
-          <select 
-            id="tramoHorario-select"
-            v-model="tramoHorarioSeleccionado" 
-            class="dropdown-select-hours">
+          <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado3" class="dropdown-select-hours">
             <option value="" disabled hidden>Elige una hora</option>
-            <option 
-              v-for="asignatura in listaAsignaturas" 
-              :key="asignatura" 
-              :value="asignatura">
-              {{ asignatura.nombre }}
+            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" :key="tramoHorario" :value="tramoHorario">
+              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
             </option>
           </select>
         </div>
       </div>
-      <hr class="separator-line"/>
+      <hr class="separator-line" />
       <!-- Texto con otras observaciones -->
-      <div class="t-6">Escribe otras observaciones  
+      <div class="t-6">Escribe otras observaciones
         <div class="info-circle">
           i
-          <div class="tooltip">Solamente si quieren guardias de recreo, recursos necesarios, alternancia de clases con horas de descanso de voz, ...</div>
+          <div class="tooltip">Solamente si quieren guardias de recreo, recursos necesarios, alternancia de clases con
+            horas de descanso de voz, ...</div>
         </div>
       </div>
-      <ion-input type="text" v-model="nombre" placeholder="Observaciones" class="form-input" />
+      <ion-input type="text" v-model="otrasObservacionesSeleccionado" placeholder="Observaciones" class="form-input" />
       <!-- Botón para guardar las observaciónes -->
-      <button @click="crearReduccion(nombre, horas, decideDireccion)" class="btn-actualizar">Actualizar observaciones</button>
+      <button @click="actualizarObservacion()" class="btn-actualizar">Actualizar observaciones</button>
     </div>
     <!-- Tabla con todas las asignaturas y reducciones elegidas por el profesor -->
     <div class="card-solicitudes">
@@ -446,21 +526,18 @@ onMounted(async () => {
           <tbody>
             <tr v-for="(asignaturaReduccion, index) in listaAsignaturasReducciones" :key="index">
               <td class="columna">
-                <button @click="eliminarSolicitur(index)" class="btn-eliminar">&times;</button>
+                <button @click="eliminarSolicitud(index)" class="btn-eliminar">&times;</button>
               </td>
               <td class="columna">{{ asignaturaReduccion.tipo }}</td>
-              <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.nombreAsignatura : asignaturaReduccion.nombreReduccion}}</td>
+              <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.nombreAsignatura :
+                asignaturaReduccion.nombreReduccion }}</td>
               <td class="columna">
                 <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
                   <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-                    <select id="horasAsignatura-select"
-                      v-model="asignaturaReduccion.horasAsignatura"
+                    <select id="horasAsignatura-select" v-model="asignaturaReduccion.horasAsignatura"
                       class="dropdown-select-solicitudes">
                       <option value="" disabled hidden>Selecciona horas</option>
-                      <option 
-                        v-for="horas in asignaturaReduccion.horasAsignatura" 
-                        :key="horas" 
-                        :value="horas">
+                      <option v-for="horas in asignaturaReduccion.horasAsignatura" :key="horas" :value="horas">
                         {{ horas }}
                       </option>
                     </select>
@@ -474,16 +551,10 @@ onMounted(async () => {
               <td class="columna">
                 <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
                   <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-                    <select 
-                      id="grupo-select" 
-                      v-model="asignaturaReduccion.grupo" 
-                      class="dropdown-select-solicitudes">
-                      <option value="" disabled hidden>Selecciona un grupo</option>
-                      <option 
-                        v-for="grupo in asignaturaReduccion.grupo" 
-                        :key="grupo" 
-                        :value="grupo">
-                        {{ grupo }}
+                    <select id="grupo-select" v-model="asignaturaReduccion.grupo"
+                      @change="obtenerGrupoDeAsignatura(index)" class="dropdown-select-solicitudes">
+                      <option v-for="grupo in listaGrupos[index]" :key="grupo" :value="grupo.grupo">
+                        {{ grupo.grupo }}
                       </option>
                     </select>
                   </span>
@@ -498,21 +569,16 @@ onMounted(async () => {
           </tbody>
         </table>
       </div>
-      <button v-if="listaAsignaturasReducciones.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
+      <button v-if="listaAsignaturasReducciones.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar
+        todo</button>
     </div>
   </div>
-  <ion-toast
-    :is-open="isToastOpen"
-    :message="toastMessage"
-    :color="toastColor"
-    duration="2000"
-    @did-dismiss="() => (isToastOpen = false)"
-    position="top">
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top">
   </ion-toast>
 </template>
 
 <style scoped>
-
 .t-1 {
   font-size: 2.25rem;
   font-weight: 700;
@@ -538,7 +604,7 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-.t-2{
+.t-2 {
   font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
@@ -574,8 +640,8 @@ onMounted(async () => {
 .btn-asignar {
   width: 160px;
   padding: 0.4rem;
-  border: 1px solid ;
-  border-radius: 0.375rem; 
+  border: 1px solid;
+  border-radius: 0.375rem;
   background-color: #4782eb;
   color: #FFFFFF;
   font-size: 1.1rem;
@@ -604,13 +670,13 @@ onMounted(async () => {
 }
 
 .option.active {
-  background-color: green;
+  background-color: #EF4444;
   color: white;
   font-weight: bold;
 }
 
 .option.on {
-  background-color: #EF4444;
+  background-color: green;
 }
 
 .option:not(.active) {
@@ -643,7 +709,7 @@ onMounted(async () => {
   border-top: 1.3px solid #b8b8b8;
   margin: 0.8rem 0;
   width: 70%;
-  margin-left: auto; 
+  margin-left: auto;
   margin-right: auto;
   margin-top: 1rem;
   margin-bottom: 1rem;
@@ -693,7 +759,8 @@ onMounted(async () => {
   padding: 5px 10px;
   position: absolute;
   z-index: 1;
-  bottom: 130%; /* posición arriba del icono */
+  bottom: 130%;
+  /* posición arriba del icono */
   left: 50%;
   transform: translateX(-50%);
   transition: opacity 0.3s;
@@ -704,7 +771,8 @@ onMounted(async () => {
 .tooltip::after {
   content: '';
   position: absolute;
-  top: 100%; /* flecha apunta hacia abajo */
+  top: 100%;
+  /* flecha apunta hacia abajo */
   left: 50%;
   margin-left: 5px;
   border-width: 5px;
@@ -762,16 +830,16 @@ onMounted(async () => {
   width: 100%;
 }
 
-table{
+table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1.5rem;
 }
 
 .columna {
-  width: 12,5%;
+  width: 12, 5%;
   border: 1px solid currentColor;
-  padding-left: 0.5rem; 
+  padding-left: 0.5rem;
   padding-right: 0.5rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
@@ -780,7 +848,7 @@ table{
 
 .btn-eliminar {
   color: #EF4444;
-  font-size: 2rem; 
+  font-size: 2rem;
   background-color: transparent;
   line-height: 1;
   border: none;
@@ -795,8 +863,8 @@ table{
 
 .btn {
   padding: 0.5rem;
-  border: 1px solid ;
-  border-radius: 0.375rem; 
+  border: 1px solid;
+  border-radius: 0.375rem;
   background-color: #4782eb;
   color: #FFFFFF;
   font-size: 1.1rem;
@@ -805,8 +873,8 @@ table{
 .btn-guardar-todo {
   width: 170px;
   padding: 0.5rem;
-  border: 1px solid ;
-  border-radius: 0.375rem; 
+  border: 1px solid;
+  border-radius: 0.375rem;
   background-color: #4782eb;
   color: #FFFFFF;
   font-size: 1.1rem;
@@ -818,6 +886,7 @@ table{
 }
 
 @media (prefers-color-scheme: dark) {
+
   .card-asignaturas-reducciones,
   .card-solicitudes {
     background-color: var(--form-bg-dark);
@@ -849,6 +918,7 @@ table{
   .card-solicitudes {
     min-width: 420px;
   }
+
   .btn-guardar-todo {
     position: sticky;
     top: 0;
@@ -863,6 +933,7 @@ table{
     min-height: 100%;
     margin-right: 5px;
   }
+
   .btn-guardar-todo {
     position: sticky;
     top: 0;
@@ -898,6 +969,7 @@ table{
     min-height: 100%;
     margin-right: 5px;
   }
+
   .btn-guardar-todo {
     position: sticky;
     top: 0;
