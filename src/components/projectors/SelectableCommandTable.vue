@@ -1,9 +1,15 @@
 <script setup>
 import { computed, onMounted, defineProps, ref, defineEmits, watch } from "vue";
-import API from '@/utils/config';
 import axios from 'axios';
 import ComboBoxModel from "@/components/projectors/ComboBoxModel.vue";
-import CONSTANTS from '@/utils/constants';
+import constants from '@/utils/constants';
+
+import { obtenerTokenJWTValido } from '@/services/firebaseService';
+
+// Variables para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
 
 // ----------------- PROPS DEFINITION -----------------
 const props = defineProps({
@@ -116,20 +122,42 @@ watch(
 
 const modelsList = ref([]);
 
-// Function to fetch projectors for a specific classroom.
 const fetchProjectorModels = async () => {
-
-    console.log('Fetching projector models');
+    
+    console.log("Fetching projector models");
 
     try {
-        const response = await axios.get(API.MODELS);
 
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.get(constants.MODELS, {
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`,
+            }
+        });
+        
         modelsList.value = response.data;
 
-        selectedCommandModel.value = "default";
+        //selectedCommandModel.value = "default";
 
     } catch (error) {
-        console.error('Error loading projector list.', error);
+        responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
+
+        if (error.response) {
+            // Server responded with an error status (e.g., 400, 404, 500)
+            console.error("Server error:", error.response.status, error.response.data);
+            responseDataDelC.value = error.response.data.message || "Error while retrieving models list.";
+        }
+        else if (error.request) {
+            // No response from server (network issue, server down, timeout, CORS issue)
+            console.error("No response received from the server:", error.request);
+            responseDataDelC.value = "The server is not responding. Please check your connection and try again.";
+        }
+        else {
+            // Other errors (misconfigured request, axios setup issues)
+            console.error("Request configuration error:", error.message);
+            responseDataDelC.value = "An unexpected error occurred. Please try again.";
+        }
     }
 };
 
@@ -232,16 +260,16 @@ const fetchProjectorModels = async () => {
 
         <!-- ALERT BANNERS FOR OPERATION RESULTT -->
         <div class="pt-3"> 
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === constants.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === constants.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === constants.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === constants.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
             <div v-if="props.dataLoading" class="alert alert-info ms-3 me-3 p-3 text-center" role="alert">

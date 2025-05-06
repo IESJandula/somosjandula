@@ -49,7 +49,7 @@ const emitSelectUpdate = () => {
       id="selectDropDown"
       v-model="selectedValue" 
       @change="emitSelectUpdate" 
-      class="p-2 border border-gray-300 rounded border border-1 border-secondary"
+      class="p-2 border border-gray-300 rounded border border-1 border-secondary text-black"
       style="width: 100%; background-color: white;">
 
       <!-- Default option when no value is selected -->

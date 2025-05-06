@@ -3,9 +3,11 @@ import { defineProps, computed, defineEmits, ref, watch, onMounted } from "vue";
 import ComboBoxClassroom from "@/components/projectors/ComboBoxClassroom.vue";
 import ComboBoxFloor from "@/components/projectors/ComboBoxFloor.vue";
 import ComboBoxModel from "@/components/projectors/ComboBoxModel.vue";
-import API from "@/utils/config";
 import axios from "axios";
-import CONSTANTS from '@/utils/constants';
+import constants from '@/utils/constants';
+import { obtenerTokenJWTValido } from '@/services/firebaseService';
+
+
 
 // Llamar a la función al montar el componente
 onMounted(() => {
@@ -31,14 +33,14 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
-  responseType:{
-        type: String,
-        default: ""
-    },
-    responseData:{
-        type: String,
-        default: ""
-    },
+  responseType: {
+    type: String,
+    default: ""
+  },
+  responseData: {
+    type: String,
+    default: ""
+  },
 });
 
 // Emit events
@@ -76,14 +78,14 @@ watch(() => props.modelValue, (newModelValue) => {
 
 // When the page object changes reload the comboboxes.
 watch(() => props.pageObject, () => {
-    fetchFloorsList();
-    fetchProjectorModels();
+  fetchFloorsList();
+  fetchProjectorModels();
 });
 
 
 // Function to handle projector selection
 const toggleProjectorSelection = (projector) => {
-  let updatedSelection = [...selectedProjectors.value]; // Copiar la lista
+  const updatedSelection = [...selectedProjectors.value]; // Copiar la lista
 
   const selectedIndex = updatedSelection.findIndex(
     (p) => p.model === projector.model && p.classroom === projector.classroom
@@ -139,13 +141,30 @@ const classroomsForSelectedFloor = ref([]);
 const selectedClassroom = ref("default");
 
 const fetchFloorsList = async () => {
-  console.log("Loading floors list.");
+  console.log("Loading floors list for selectable projector table.");
   try {
-    const response = await axios.get(API.FLOORS);
+
+    // Variables para el toast
+    const isToastOpen = ref(false);
+    const toastMessage = ref('');
+    const toastColor = ref('success');
+
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await axios.get(constants.FLOORS, {
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`
+      }
+    });
+
     floorsList.value = response.data;
+
     console.log("Listado plantas obtenido.\n" + response.data);
+
   } catch (error) {
+
     console.error("Error loading list of values", error);
+
   }
 };
 
@@ -157,8 +176,19 @@ const fetchSelectedFloorClassrooms = async (floorParam) => {
     // Ensure floor is selected
     if (floorParam === "default") return;
 
-    const response = await axios.get(API.CLASSROOMS, {
+    // Variables para el toast
+    const isToastOpen = ref(false);
+    const toastMessage = ref('');
+    const toastColor = ref('success');
+
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+
+    const response = await axios.get(constants.CLASSROOMS, {
       params: { floor: floorParam },
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+      }
     });
 
     // List of the classrooms for the selected floor.
@@ -180,11 +210,23 @@ const fetchProjectorModels = async () => {
   console.log("Fetching projector models");
 
   try {
-    const response = await axios.get(API.MODELS);
+
+    // Variables para el toast
+    const isToastOpen = ref(false);
+    const toastMessage = ref('');
+    const toastColor = ref('success');
+
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await axios.get(constants.MODELS, {
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
+      }
+    },);
 
     projectorModels.value = response.data;
 
-    selectedModel.value = "default";
   } catch (error) {
     console.error("Error loading projector list.", error);
   }
@@ -227,7 +269,7 @@ const resetFilters = () => {
 
 const deleteSelectedProjectors = () => {
   emit("removeSelectedProjectors");
-}; 
+};
 
 const deleteAllProjectors = () => {
   emit("removeAllProjectors");
@@ -241,41 +283,25 @@ const deleteAllProjectors = () => {
       <div class="row justify-content-center gy-2">
         <!-- Select Floor -->
         <div class="col">
-          <ComboBoxFloor
-            :labelValue="'Planta:'"
-            :optionsList="floorsList"
-            v-model="selectedFloor"
-            @selectUpdate="fetchSelectedFloorClassrooms"
-          />
+          <ComboBoxFloor :labelValue="'Planta:'" :optionsList="floorsList" v-model="selectedFloor"
+            @selectUpdate="fetchSelectedFloorClassrooms" />
         </div>
 
         <!-- Select Classroom -->
         <div class="col">
-          <ComboBoxClassroom
-            v-model="selectedClassroom"
-            :labelValue="'Aula:'"
-            :key="selectedClassroom"
-            :optionsList="classroomsForSelectedFloor"
-          />
+          <ComboBoxClassroom v-model="selectedClassroom" :labelValue="'Aula:'" :key="selectedClassroom"
+            :optionsList="classroomsForSelectedFloor" />
         </div>
 
         <!-- Select Model -->
         <div class="col">
-          <ComboBoxModel
-            v-model="selectedModel"
-            :labelValue="'Modelo:'"
-            :key="selectedModel"
-            :optionsList="projectorModels"
-          />
+          <ComboBoxModel v-model="selectedModel" :labelValue="'Modelo:'" :key="selectedModel"
+            :optionsList="projectorModels" />
         </div>
 
         <!-- Reset Filters Button -->
         <div class="col-auto d-flex align-items-end">
-          <button
-            class="btn btn-warning w-100 border border-dark"
-            @click="resetFilters"
-            style="margin-bottom: 2px"
-          >
+          <button class="btn btn-warning w-100 border border-dark" @click="resetFilters" style="margin-bottom: 2px">
             <i class="bi bi-arrow-counterclockwise"></i>
           </button>
         </div>
@@ -289,22 +315,16 @@ const deleteAllProjectors = () => {
           <label for="ordenadores" class="text-black">Ordenar por:</label>
           <ul id="ordenadores" class="pagination">
             <li class="page-item">
-              <button
-                @click="orderBy('floor')"
-                type="button"
+              <button @click="orderBy('floor')" type="button"
                 class="btn btn-sm rounded-0 rounded-start btn-outline-dark btn-light"
-                :class="{ 'btn-active': floorOrder }"
-              >
+                :class="{ 'btn-active': floorOrder }">
                 Aula/Planta
               </button>
             </li>
             <li class="page-item">
-              <button
-                @click="orderBy('modelname')"
-                type="button"
+              <button @click="orderBy('modelname')" type="button"
                 class="btn btn-sm rounded-0 rounded-end btn-outline-dark btn-light"
-                :class="{ 'btn-active': modelOrder }"
-              >
+                :class="{ 'btn-active': modelOrder }">
                 Modelo
               </button>
             </li>
@@ -316,32 +336,22 @@ const deleteAllProjectors = () => {
           <label for="ordenadores" class="text-black">Por pagina:</label>
           <ul id="ordenadores" class="pagination">
             <li class="page-item">
-              <button
-                @click="pageBy(15)"
-                type="button"
+              <button @click="pageBy(15)" type="button"
                 class="btn btn-sm rounded-0 rounded-start btn-outline-dark btn-light"
-                :class="{ 'btn-active': pageSize === 15 }"
-              >
+                :class="{ 'btn-active': pageSize === 15 }">
                 15
               </button>
             </li>
             <li class="page-item">
-              <button
-                @click="pageBy(25)"
-                type="button"
-                class="btn btn-sm rounded-0 btn-outline-dark btn-light"
-                :class="{ 'btn-active': pageSize === 25 }"
-              >
+              <button @click="pageBy(25)" type="button" class="btn btn-sm rounded-0 btn-outline-dark btn-light"
+                :class="{ 'btn-active': pageSize === 25 }">
                 25
               </button>
             </li>
             <li class="page-item">
-              <button
-                @click="pageBy(50)"
-                type="button"
+              <button @click="pageBy(50)" type="button"
                 class="btn btn-sm rounded-0 rounded-end btn-outline-dark btn-light"
-                :class="{ 'btn-active': pageSize === 50 }"
-              >
+                :class="{ 'btn-active': pageSize === 50 }">
                 50
               </button>
             </li>
@@ -353,36 +363,27 @@ const deleteAllProjectors = () => {
           <label for="ordenadores" class="text-black">Pagina:</label>
           <ul id="ordenadores" class="pagination d-flex flex-wrap">
             <li class="page-item">
-              <button
-                @click="pageNumber(0)"
-                type="button"
+              <button @click="pageNumber(0)" type="button"
                 class="btn btn-sm rounded-0 rounded-start btn-outline-dark btn-light"
-                :class="{ 'btn-active': firstPage }"
-              >
+                :class="{ 'btn-active': firstPage }">
                 <i class="bi bi-chevron-bar-left"></i>
               </button>
             </li>
 
             <span v-for="index in numberOfPages" :key="index">
               <li class="page-item">
-                <button
-                  @click="pageNumber(index - 1)"
-                  type="button"
+                <button @click="pageNumber(index - 1)" type="button"
                   class="btn btn-sm rounded-0 btn-outline-dark btn-light"
-                  :class="{ 'btn-active': index === currentPage + 1 }"
-                >
+                  :class="{ 'btn-active': index === currentPage + 1 }">
                   {{ index }}
                 </button>
               </li>
             </span>
 
             <li class="page-item">
-              <button
-                @click="pageNumber(numberOfPages - 1)"
-                type="button"
+              <button @click="pageNumber(numberOfPages - 1)" type="button"
                 class="btn btn-sm rounded-0 rounded-end btn-outline-dark btn-light "
-                :class="{ 'btn-active': lastPage }"
-              >
+                :class="{ 'btn-active': lastPage }">
                 <i class="bi bi-chevron-bar-right"></i>
               </button>
             </li>
@@ -404,25 +405,17 @@ const deleteAllProjectors = () => {
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="(projector, index) in projectorsList"
-            :key="index"
-            :class="{ 'table-info': isProjectorSelected(projector) }"
-            class="clickable-row"
-            @click="toggleProjectorSelection(projector)"
-          >
+          <tr v-for="(projector, index) in projectorsList" :key="index"
+            :class="{ 'table-info': isProjectorSelected(projector) }" class="clickable-row"
+            @click="toggleProjectorSelection(projector)">
 
             <td>{{ projector.classroom }}</td>
             <td>{{ projector.floorname }}</td>
             <td>{{ projector.model }}</td>
             <td>
               <div class="form-check form-switch ms-4">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  :checked="isProjectorSelected(projector)"
-                />
+                <input class="form-check-input" type="checkbox" role="switch"
+                  :checked="isProjectorSelected(projector)" />
               </div>
             </td>
           </tr>
@@ -430,10 +423,7 @@ const deleteAllProjectors = () => {
       </table>
     </div>
     <!-- IN CAS THERE ARE NO RECORDS -->
-    <table
-      v-else
-      class="table table-sm table-hover border border-1 border-dark text-center align-middle"
-    >
+    <table v-else class="table table-sm table-hover border border-1 border-dark text-center align-middle">
       <thead>
         <tr>
           <td col-span="4"><strong>No se han encontrado registros de proyector.</strong></td>
@@ -466,26 +456,30 @@ const deleteAllProjectors = () => {
 
       <p class="pt-3 text-black">Total registros recuperados: {{ totalElements }}</p>
 
-              <!-- ALERT BANNERS FOR OPERATION RESULTT -->
-              <div class="pt-3"> 
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
-                {{ props.responseData }}
-            </div>
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
-                {{ props.responseData }}
-            </div>
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
-                {{ props.responseData }}
-            </div>
-            <div v-if="props.responseType === CONSTANTS.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
-                {{ props.responseData }}
-            </div>
-            <div v-if="props.dataLoading" class="alert alert-info ms-3 me-3 p-3 text-center" role="alert">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
+      <!-- ALERT BANNERS FOR OPERATION RESULTT -->
+      <div class="pt-3">
+        <div v-if="props.responseType === constants.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3"
+          role="alert">
+          {{ props.responseData }}
         </div>
+        <div v-if="props.responseType === constants.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3"
+          role="alert">
+          {{ props.responseData }}
+        </div>
+        <div v-if="props.responseType === constants.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3"
+          role="alert">
+          {{ props.responseData }}
+        </div>
+        <div v-if="props.responseType === constants.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3"
+          role="alert">
+          {{ props.responseData }}
+        </div>
+        <div v-if="props.dataLoading" class="alert alert-info ms-3 me-3 p-3 text-center" role="alert">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -502,24 +496,25 @@ const deleteAllProjectors = () => {
   background-color: #0056b3 !important;
 }
 
-.btn-custom:hover{
+.btn-custom:hover {
   color: white;
   background-color: red !important;
 }
 
-.btn-warn:hover{
+.btn-warn:hover {
   color: black;
   background-color: yellow !important;
 }
 
-.popup-shadow:hover{
+.popup-shadow:hover {
   box-shadow: 4px 4px 4px 0px rgb(63, 94, 104);
 }
 
-.custom-danger:hover{
+.custom-danger:hover {
   color: rgb(255, 255, 255);
   background-color: rgb(255, 0, 0) !important;
 }
+
 /* Make rows clickable */
 .clickable-row {
   cursor: pointer;

@@ -3,10 +3,14 @@ import { onMounted, ref, watch, computed } from 'vue';
 import axios from 'axios';
 import MassiveControlTable from '@/components/projectors/RemoteControlTable.vue';
 import FormBox from '@/components/projectors/FormBox.vue';
-import API from '@/utils/config';
-import CONSTANTS from '@/utils/constants';
+import constants from '@/utils/constants';
 import { Modal } from 'bootstrap';
+import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
+// Variables para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
 
 // Load projector list when component is mounted
 onMounted(() => {
@@ -17,7 +21,6 @@ onMounted(() => {
 });
 
 // ----------------- MODAL FOR ACTIONS -----------------
-
 const modalMessage = ref('');
 const modalTitle = ref('');
 let modalInstance = null;
@@ -52,14 +55,18 @@ const disableButtonTemporarily = () => {
 };
 
 // ----------------- PROJECTOR ACTIONS -----------------
-
 const actionsList = ref([]);
 
 const loadActionsList = async () => {
     try {
+
         console.log('Fetching actions list.');
 
-        const response = await axios.get(API.ACTIONS);
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.get(constants.ACTIONS, {
+            headers: { 'Authorization': `Bearer ${tokenPropio}` },
+        });
 
         actionsList.value = response.data;
 
@@ -123,7 +130,9 @@ const loadProjectorList = async () => {
             model = null
         }
 
-        const response = await axios.get(API.PROJECTORS, {
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.get(constants.PROJECTORS, {
             params: {
                 criteria: orderCriteria,
                 page: page,
@@ -131,6 +140,9 @@ const loadProjectorList = async () => {
                 classroom: classroom,
                 floor: floor,
                 model: model
+            },
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`,
             }
         });
 
@@ -171,11 +183,12 @@ const sendServerEventBatch = async (actionParam) => {
         responseDataCMD.value = null;
 
         if (selectedProjectorsList.value.length === 0) {
-            //responseTypeCMD.value = "INFO";
-            //responseDataCMD.value = "Seleccione almenos un proyector.";
             showModal("INFO", "Seleccione almenos un proyector.");
             return;
         }
+
+        // recuperacción del token.
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
         console.log(selectedProjectorsList.value);
         console.log('Sending server event batch with projectors:', selectedProjectorsList);
@@ -186,7 +199,15 @@ const sendServerEventBatch = async (actionParam) => {
             projectorList: selectedProjectorsList.value
         }
 
-        const response = await axios.post(API.EVENTS_BATCH, requestBody);
+        const response = await axios.post(
+            constants.EVENTS_BATCH, 
+            requestBody, 
+            {
+                headers: {
+                'Authorization': `Bearer ${tokenPropio}`,
+                }
+            }
+        );
 
         //responseTypeCMD.value = response.data.status;
         //responseDataCMD.value = response.data.message;
@@ -195,7 +216,7 @@ const sendServerEventBatch = async (actionParam) => {
         showModal(response.data.status, response.data.message);
 
     } catch (error) {
-        responseTypeCMD.value = CONSTANTS.RESPONSE_STATUS_ERROR;
+        responseTypeCMD.value = constants.RESPONSE_STATUS_ERROR;
 
         console.error('Error while sending server event batch', error);
         if (error.response) {
@@ -250,7 +271,6 @@ const alertClass = computed(() => {
 <template>
     <div style="width: 100%;" :style="gradientStyle" class="p-0">
 
-
         <!-- Bootstrap Modal -->
         <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -259,7 +279,7 @@ const alertClass = computed(() => {
                         <h5 class="modal-title text-center">{{ modalTitle }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body text-center">
+                    <div class="modal-body text-center text-black">
                         {{ modalMessage }}
                     </div>
                     <div class="modal-footer justify-content-center">
@@ -268,7 +288,6 @@ const alertClass = computed(() => {
                 </div>
             </div>
         </div>
-
 
         <div class="row d-flex flex-grow-1 justify-content-center p-3">
             <div class="col-12 col-md-10 col-lg-8 p-0">
@@ -311,11 +330,11 @@ const alertClass = computed(() => {
                                             <div class="d-flex flex-wrap justify-content-center gap-3">
                                                 <div v-for="(action, index) in actionsList" :key="index"
                                                     class="col-auto">
-                                                    <div class="card-body p-2">
-                                                        <div class="border border-dark p-3 rounded"
+                                                    <div class="card-body p-0">
+                                                        <div class="border border-dark p-2 pt-0 rounded"
                                                             :disabled="isButtonDisabled"
                                                             style="background-color: aliceblue;">
-                                                            <h5 class="card-title pb-2 text-center">{{ action.actionName
+                                                            <h5 class="card-title pb-2 pt-0 text-center text-black">{{ action.actionName
                                                             }}</h5>
                                                             <button @click="sendServerEventBatch(action)"
                                                                 :disabled="isButtonDisabled"

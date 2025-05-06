@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import axios from "axios";
-import API from "@/utils/config";
 import SelectableActionTable from "@/components/projectors/SelectableActionTable.vue";
 import SelectableCommandTable from "@/components/projectors/SelectableCommandTable.vue";
 import SelectableProjectorTable from "@/components/projectors/SelectableProjectorTable.vue";
@@ -32,115 +31,23 @@ const completedEvents = ref(0);
 const deliveredEvents = ref(0);
 const pendingEvents = ref(0);
 
-const fetchProjectorOverView = async () => {
-    console.log("Fetching projector overview.");
-    try {
-        const response = await axios.get(API.PROJECTOR_OVERVIEW);
 
-        numberOfModels.value = response.data.numberOfModels || 0;
-        numberOfActions.value = response.data.numberOfActions || 0;
-        numberOfCommands.value = response.data.numberOfCommands || 0;
-        numberOfProjectors.value = response.data.numberOfProjectors || 0;
-        numberOfFloors.value = response.data.numberOfFloors || 0;
-        numberOfClassrooms.value = response.data.numberOfClassrooms || 0;
-    } catch (error) {
-        console.error("Error fetching projector overview:", error);
-        //alert("Hubo un error al obtener los datos. Intenta de nuevo.");
-    }
-};
-
-const fetchEventsOverView = async () => {
-    console.log("Fetching events overview.");
-    try {
-        const response = await axios.get(API.EVENTS_OVERVIEW);
-
-        errorEvents.value = response.data.errorEvents || 0;
-        canceledEvents.value = response.data.canceledEvents || 0;
-        pendingEvents.value = response.data.pendingEvents || 0;
-        deliveredEvents.value = response.data.deliveredEvents || 0;
-        completedEvents.value = response.data.completedEvents || 0;
-    } catch (error) {
-
-        if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-        }
-        else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
-            console.error("No response received from the server:", error.request);
-        }
-        else {
-            // Other errors (misconfigured request, axios setup issues)
-            console.error("Request configuration error:", error.message);
-        }
-    }
-};
-
-const reloadPageLists = async () => {
-    fetchActionsPage();
-    fetchCommandsPage();
-    fetchProjectorOverView();
-    fetchEventsOverView();
-    fetchProjectorModels();
-    loadProjectorList();
-}
-
-onMounted(() => {
-
-    reloadPageLists();
-
-    // Initialize all tooltips on the page
-    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-    tooltipTriggerList.forEach((tooltipTriggerEl) => {
-        new bootstrap.Tooltip(tooltipTriggerEl, {
-            customClass: 'custom-tooltip'
-        });
-    });
-
-});
-
-
+// Variables para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
 
 // ---------------------------- PARSE CSV FILES ----------------------------
 
 // Selected file reference.
 const commandsCsvInput = ref(null);
 const projectorsCsvInput = ref(null);
-
-
-// Consts to handle server response.
 const responseTypeCSV = ref(null);
 const responseTypeAltCSV = ref(null);
 const responseDataCSV = ref(null);
 const responseDataAltCSV = ref(null);
-
-
 const multifileLoading = ref(false);
 
-// aqui
-// Variables para el toast
-const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
-
-const enviarFicheros = async (toastMessage, toastColor, isToastOpen, formData) =>
-{
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-
-    return await fetch(API.PARSE_MULTIFILE,
-            {
-                method: 'POST',
-                headers:
-                {
-                    'Accept': 'application/json',
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
-                },
-                body: formData, // Enviar el FormData directamente
-            }).then(res => res.json());
-};
-
-// Function to call the endpoint for parsing multiple files.
 const parseFiles = async () => {
 
     multifileLoading.value = true;
@@ -172,11 +79,11 @@ const parseFiles = async () => {
 
     try {
 
-        console.log(API.PARSE_MULTIFILE);
+        console.log(constants.PARSE_MULTIFILE);
 
         const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-        const response = await fetch(API.PARSE_MULTIFILE,
+        const response = await fetch(constants.PARSE_MULTIFILE,
             {
                 method: 'POST',
                 headers:
@@ -197,7 +104,7 @@ const parseFiles = async () => {
         // Log the server response
         console.log('Server response:', response.data);
 
-    
+
         // Update the UI with the response data
         responseTypeCSV.value = respuesta.status1;
         responseTypeAltCSV.value = respuesta.status2;
@@ -209,6 +116,7 @@ const parseFiles = async () => {
 
         // Reload data in the forms
         reloadPageLists();
+
         multifileLoading.value = false;
 
     }
@@ -238,14 +146,194 @@ const parseFiles = async () => {
 
 // -------------------------- END PARSE CSV FILES ------------------
 
+// ------------------------- OVERVIEW INFO -------------------------
+// Funcion que rellena los valores de la visión general de eventos.
+const fetchEventsOverView = async () => {
+    try {
+
+        console.log("Recuperando overview eventos.");
+
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await fetch(constants.EVENTS_OVERVIEW,
+            {
+                method: 'GET',
+                headers:
+                {
+                    'Authorization': `Bearer ${tokenPropio}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            const errorString = 'Error al obtener el overview de eventos.';
+            crearToast(toastMessage, toastColor, isToastOpen, 'danger', errorString);
+            throw new Error(errorString);
+        }
+
+        const respuesta = await response.json();
+
+        errorEvents.value = respuesta.errorEvents || 0;
+        canceledEvents.value = respuesta.canceledEvents || 0;
+        pendingEvents.value = respuesta.pendingEvents || 0;
+        deliveredEvents.value = respuesta.deliveredEvents || 0;
+        completedEvents.value = respuesta.completedEvents || 0;
+
+    } catch (error) {
+
+        if (error.response) {
+            // Server responded with an error status (e.g., 400, 404, 500)
+            console.error("Server error:", error.response.status, error.response.data);
+        }
+        else if (error.request) {
+            // No response from server (network issue, server down, timeout, CORS issue)
+            console.error("No response received from the server:", error.request);
+        }
+        else {
+            // Other errors (misconfigured request, axios setup issues)
+            console.error("Request configuration error:", error.message);
+        }
+    }
+}
+
+// Funcion que rellena los valores de la visión general de registros.
+const fetchProjectorOverView = async () => {
+    try {
+
+        console.log("Recuperando overview eventos.");
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await fetch(constants.PROJECTOR_OVERVIEW,
+            {
+                method: 'GET',
+                headers:
+                {
+                    'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
+                }
+            }
+        )
+        if (!response.ok) {
+            const errorString = 'Error al obtener el overview de proyectores.';
+            crearToast(toastMessage, toastColor, isToastOpen, 'danger', errorString);
+            throw new Error(errorString);
+        }
+
+        const respuesta = await response.json();
+
+        numberOfModels.value = respuesta.numberOfModels || 0;
+        numberOfActions.value = respuesta.numberOfActions || 0;
+        numberOfCommands.value = respuesta.numberOfCommands || 0;
+        numberOfProjectors.value = respuesta.numberOfProjectors || 0;
+        numberOfFloors.value = respuesta.numberOfFloors || 0;
+        numberOfClassrooms.value = respuesta.numberOfClassrooms || 0;
+
+    } catch (error) {
+        console.error("Error fetching projector overview:", error);
+        //alert("Hubo un error al obtener los datos. Intenta de nuevo.");
+    }
+};
+// ----------------------- END OVERVIEW INFO -----------------------
+
+// -------------------------- PROJECTORS ---------------------------
+
+const loadProjectorList = async () => {
+    try {
+
+        console.log("Recuperando listado proyectores registrados.");
+
+        // Parametros de filtrado.
+        const orderCriteria = filterObject.value.orderCriteriaF;
+        const page = filterObject.value.pageNumberF;
+        const size = filterObject.value.pageSizeF;
+        let classroom = filterObject.value.selectedClassroomF;
+        let floor = filterObject.value.selectedFloorF;
+        let model = filterObject.value.selectedModelF;
+
+        // Default checks
+        if (classroom === "default") classroom = null;
+        if (floor === "default") floor = null;
+        if (model === "default") model = null;
+
+        // recuperacción del token.
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+
+        const response = await axios.get(constants.PROJECTORS, {
+            params: {
+                criteria: orderCriteria,
+                page: page,
+                size: size,
+                classroom: classroom,
+                floor: floor,
+                model: model,
+            },
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`,
+            }
+        });
+
+        pageObjectP.value = response.data;
+
+    } catch (error) {
+        responseTypeDelP.value = constants.RESPONSE_STATUS_ERROR;
+
+        if (error.response) {
+            // Server responded with an error status (e.g., 400, 404, 500)
+            console.error("Server error:", error.response.status, error.response.data);
+            responseDataDelP.value = error.response.data.message || "Error while retrieving projectors list.";
+        }
+        else if (error.request) {
+            // No response from server (network issue, server down, timeout, CORS issue)
+            console.error("No response received from the server:", error.request);
+            responseDataDelP.value = "The server is not responding. Please check your connection and try again.";
+        }
+        else {
+            // Other errors (misconfigured request, axios setup issues)
+            console.error("Request configuration error:", error.message);
+            responseDataDelP.value = "An unexpected error occurred. Please try again.";
+        }
+    }
+};
+
+// ------------------------ END PROJECTORS -------------------------
+
+
+
+const reloadPageLists = async () => {
+    fetchActionsPage();
+    fetchCommandsPage();
+    fetchProjectorOverView(); // done
+    fetchEventsOverView(); // done
+    fetchProjectorModels();
+    loadProjectorList();
+}
+
+onMounted(() => {
+
+    fetchActionsPage();
+    fetchCommandsPage();
+    fetchProjectorOverView(); // done
+    fetchEventsOverView(); // done
+    fetchProjectorModels();
+    loadProjectorList();
+
+    // Initialize all tooltips on the page
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipTriggerList.forEach((tooltipTriggerEl) => {
+        new bootstrap.Tooltip(tooltipTriggerEl, {
+            customClass: 'custom-tooltip'
+        });
+    });
+
+});
+
 
 
 // ----------------- PROJECTOR ACTIONS -----------------
 
-
-
 // ----------------- PROJECTOR COMMANDS -----------------
-
 
 // ----------------- PROJECTORS TABLE -----------------
 
@@ -268,60 +356,6 @@ const updateFilter = (newFilterObject) => {
     loadProjectorList();
 };
 
-const loadProjectorList = async () => {
-    try {
-        const orderCriteria = filterObject.value.orderCriteriaF;
-        const page = filterObject.value.pageNumberF;
-        const size = filterObject.value.pageSizeF;
-        let classroom = filterObject.value.selectedClassroomF;
-        let floor = filterObject.value.selectedFloorF;
-        let model = filterObject.value.selectedModelF;
-
-        if (classroom === "default") {
-            classroom = null;
-        }
-
-        if (floor === "default") {
-            floor = null;
-        }
-
-        if (model === "default") {
-            model = null;
-        }
-
-        const response = await axios.get(API.PROJECTORS, {
-            params: {
-                criteria: orderCriteria,
-                page: page,
-                size: size,
-                classroom: classroom,
-                floor: floor,
-                model: model,
-            },
-        });
-
-        pageObjectP.value = response.data;
-    } catch (error) {
-        responseTypeDelP.value = constants.RESPONSE_STATUS_ERROR;
-
-        if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-            responseDataDelP.value = error.response.data.message || "Error while retrieving projectors list.";
-        }
-        else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
-            console.error("No response received from the server:", error.request);
-            responseDataDelP.value = "The server is not responding. Please check your connection and try again.";
-        }
-        else {
-            // Other errors (misconfigured request, axios setup issues)
-            console.error("Request configuration error:", error.message);
-            responseDataDelP.value = "An unexpected error occurred. Please try again.";
-        }
-    }
-};
-
 const responseTypeDelP = ref();
 const responseDataDelP = ref();
 
@@ -335,7 +369,6 @@ const hasSelectedProjectors = computed(() => selectedProjectors.value.length > 0
 watch(selectedProjectors, (newVal) => {
     console.log("Selected projectors updated:", newVal);
 });
-
 
 const removeSelectedProjectorsRequest = async () => {
     console.log("Delete projectors request received.");
@@ -351,11 +384,16 @@ const removeSelectedProjectorsRequest = async () => {
 
         console.log("request selectedProjectorsList:" + selectedProjectorsList);
 
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
         // Properly configure the DELETE request body
         const response = await axios({
             method: "delete",
-            url: API.PROJECTORS,
-            data: selectedProjectorsList, // Pass the data here
+            url: constants.PROJECTORS,
+            data: selectedProjectorsList,
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`,
+            }
         });
 
         // info for alert component.
@@ -365,19 +403,21 @@ const removeSelectedProjectorsRequest = async () => {
 
         // reload table
         reloadPageLists();
+
         // Cierra el modal después de eliminar
-        await delay(250); // Wait for 2 seconds
+        await delay(250); // Wait for 0.25 seconds
         deleteSelectedModalInstance.hide();
-        await delay(250); // Wait for 2 seconds
+        await delay(250); // Wait for 0.25 seconds
         // empty selected projectors list (gone)
         selectedProjectors.value = [];
         deleteProjectorsLoading.value = false;
 
-
         console.log("Projectors removed successfully.");
     } catch (error) {
         console.error("Error while removing projectors", error);
+        deleteSelectedModalInstance.hide();
     }
+    
 };
 
 const deleteProjectorsLoading = ref(false);
@@ -391,18 +431,66 @@ const removeAllProjectorsRequest = async () => {
     console.log("Delete ALL projectors request received.");
 
     try {
-        console.log("request to delete all projectors received");
-        // selecciona todo
-        selectedProjectors.value = pageObjectP.value.content;
-        // invoca elimina seleccionados.
-        removeSelectedProjectorsRequest();
-        await delay(250); // Wait for 2 seconds
-        deleteAllModalInstance.hide(); // Cierra el modal después de eliminar
+
+        deleteProjectorsLoading.value = true;
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        // Properly configure the DELETE request body
+        const response = await axios({
+            method: "delete",
+            url: constants.PROJECTORS_ALL,
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`,
+            }
+        });
+
+        // info for alert component.
+        responseTypeDelP.value = response.data.status;
+        responseDataDelP.value = response.data.message;
 
         console.log("Projectors removed successfully.");
-    } catch (error) {
+
+        // reload table
+        reloadPageLists();
+
+        // Cierra el modal después de eliminar
+        await delay(250); // Wait for 0.25 seconds
+        deleteAllModalInstance.hide();
+        await delay(250); // Wait for 0.25 seconds
+        // empty selected projectors list (gone)
+        selectedProjectors.value = [];
         deleteProjectorsLoading.value = false;
-        console.error("Error while removing projectors", error);
+
+        await delay(250); // Wait for 0.25 seconds
+        deleteAllModalInstance.hide();
+        await delay(250); // Wait for 0.25 seconds
+
+    } catch (error) {
+
+        deleteProjectorsLoading.value = false;
+
+        await delay(250); // Wait for 0.25 seconds
+        deleteAllModalInstance.hide();
+        await delay(250); // Wait for 0.25 seconds
+
+        responseDataDelP.value = constants.RESPONSE_STATUS_ERROR;
+
+        console.error('Error while sending remove request', error);
+        if (error.response) {
+            console.error('Error code:', error.response.status);
+            console.error('Server message:', error.response.data.message);
+            responseTypeDelP.value = error.response.data.message;
+
+        } else if (error.request) {
+            responseDataDelP.value = error.request;
+            console.error('No response received from the server', error.request);
+        } else {
+            responseDataDelP.value = error.message;
+            console.error('Request configuration error', error.message);
+        }
+
+        
     }
 };
 
@@ -411,19 +499,25 @@ const removeAllProjectorsRequest = async () => {
 // ----------------- END PROJECTORS TABLE -----------------
 
 // Stores the list of projectors for the table.
+
 const projectorModels = ref([]);
-const selectedModel = ref("default");
+//const selectedModel = ref("default");
 
 const fetchProjectorModels = async () => {
+
     console.log("Fetching projector models");
 
     try {
-        const response = await axios.get(API.MODELS);
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.get(constants.MODELS, {
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`,
+            }
+        });
 
         projectorModels.value = response.data;
-
-        selectedModel.value = "default";
-
 
     } catch (error) {
         responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
@@ -445,6 +539,7 @@ const fetchProjectorModels = async () => {
         }
     }
 };
+
 
 
 // --------------  modal eliminar todos
@@ -490,9 +585,14 @@ let deleteActionModalInstance = null;
 
 // Retreives an actions page from the server.
 const fetchActionsPage = async (page = 0, size = 5) => {
+    console.log("Recuperando pagina acciones.");
     try {
-        const response = await axios.post(API.ACTIONS_PAGE, null, {
-            params: { page, size },
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.post(constants.ACTIONS_PAGE, null, {
+            params: { page, size }, // Query parameters
+            headers: { 'Authorization': `Bearer ${tokenPropio}` }, // Authorization header
         });
 
         actionsPageObject.value = response.data;
@@ -518,7 +618,6 @@ const fetchActionsPage = async (page = 0, size = 5) => {
     }
 };
 
-
 // Function to show the confirmation modal for actions.
 const showDeleteActionModal = () => {
 
@@ -541,11 +640,16 @@ const removeActionsRequest = async () => {
 
         console.log("request selectedActions: " + selectedActions.length);
 
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
         // Properly configure the DELETE request
         const response = await axios({
             method: "delete",
-            url: API.ACTIONS,
+            url: constants.ACTIONS,
             data: selectedActions, // Pass data in the request body
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`
+            }
         });
 
         // Store response data to display an alert with the result
@@ -610,25 +714,24 @@ const responseDataDelC = ref();
 
 let deleteCommandModalInstance = null;
 
-
-const showDeleteCommandModal = async () => {
-    if (!deleteCommandModalInstance) {
-        deleteCommandModalInstance = new bootstrap.Modal(document.getElementById('deleteCommandConfirmationModal'));
-    }
-    deleteCommandModalInstance.show();
-}
-
-
-
 const fetchCommandsPage = async (page = 0, size = 5, modelName, action) => {
     try {
+
         console.log("Fetching commands page", page, size, modelName, action);
-        const response = await axios.post(API.COMMANDS_PAGE, null, {
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.post(constants.COMMANDS_PAGE, null, {
             params: { page, size, modelName, action },
+            headers:
+            {
+                'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
+            },
         });
 
         commandsPageObject.value = response.data;
         console.log("Commands page data:", response.data);
+
     } catch (error) {
         responseTypeDelP.value = constants.RESPONSE_STATUS_ERROR;
 
@@ -650,16 +753,33 @@ const fetchCommandsPage = async (page = 0, size = 5, modelName, action) => {
     }
 };
 
-const deleteSelectedCommands = async () => {
-    if (!selectedCommandsList.value || selectedCommandsList.value.length === 0) {
-        console.warn("No commands selected for deletion");
-        return;
+
+const showDeleteCommandModal = async () => {
+    if (!deleteCommandModalInstance) {
+        deleteCommandModalInstance = new bootstrap.Modal(document.getElementById('deleteCommandConfirmationModal'));
     }
+    deleteCommandModalInstance.show();
+}
+
+const deleteSelectedCommands = async () => {
+
+    console.log("Solicitud de borrado de comandos recibida.");
 
     try {
+
+        if (!selectedCommandsList.value || selectedCommandsList.value.length === 0) {
+            console.warn("No commands selected for deletion");
+            return;
+        }
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
         deleteOperationIsLoading.value = true;
-        const response = await axios.delete(API.COMMANDS, {
+        const response = await axios.delete(constants.COMMANDS, {
             data: selectedCommandsList.value,
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`
+            }
         });
 
         responseDataDelC.value = response.data.message;
@@ -715,14 +835,14 @@ const deleteSelectedCommands = async () => {
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
-                        <div v-if="!deleteOperationIsLoading" class="modal-body">
+                        <div v-if="!deleteOperationIsLoading" class="modal-body text-black text-black">
                             ¿De verdad deseas eliminar las <strong>acciones seleccionadas</strong>?<br />
                             Registros seleccionados: <span>{{ selectedActionsList.length }}</span><br />
                             <span style="color: red;">Los comandos y eventos asociados a estas acciones serán
                                 automaticamente
                                 eliminados.<br /><strong>Esta acción no se puede deshacer.</strong></span>
                         </div>
-                        <div v-if="deleteOperationIsLoading" class="modal-body">
+                        <div v-if="deleteOperationIsLoading" class="modal-body text-black">
                             <div class="d-flex justify-content-center">
                                 <div class="spinner-border" role="status">
                                     <span class="sr-only"></span>
@@ -749,7 +869,7 @@ const deleteSelectedCommands = async () => {
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body text-black">
                             Seleccione almenos una acción.
                         </div>
                         <div class="modal-footer">
@@ -771,14 +891,14 @@ const deleteSelectedCommands = async () => {
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
-                        <div v-if="!deleteOperationIsLoading" class="modal-body">
+                        <div v-if="!deleteOperationIsLoading" class="modal-body text-black">
                             ¿De verdad deseas eliminar los <strong>comandos seleccionados</strong>?<br />
                             Registros seleccionados: <span>{{ selectedCommandsList.length }}</span><br />
                             <span style="color: red;">Los eventos asociados a estos comandos serán automaticamente
                                 eliminados.<br />
                                 <strong>Esta acción no se puede deshacer.</strong></span>
                         </div>
-                        <div v-if="deleteOperationIsLoading" class="modal-body">
+                        <div v-if="deleteOperationIsLoading" class="modal-body text-black">
                             <div class="d-flex justify-content-center">
                                 <div class="spinner-border" role="status">
                                     <span class="sr-only"></span>
@@ -803,7 +923,7 @@ const deleteSelectedCommands = async () => {
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body text-black">
                             Seleccione almenos un comando.
                         </div>
                         <div class="modal-footer">
@@ -815,7 +935,6 @@ const deleteSelectedCommands = async () => {
         </div>
         <!-- END DELETE COMMANDS CONFIRMATION MODAL -->
 
-
         <!-- Modal de Confirmación todos los registros. -->
         <div class="modal fade" id="deleteAllConfirmModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -824,14 +943,14 @@ const deleteSelectedCommands = async () => {
                         <h5 class="modal-title">Confirmar Eliminación</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
-                    <div v-if="!deleteProjectorsLoading" class="modal-body">
+                    <div v-if="!deleteProjectorsLoading" class="modal-body text-black">
                         ¿De verdad deseas eliminar <strong>todos los proyectores</strong>? <br /> Registros
                         a eliminar: <span>{{computed(() => pageObjectP?.totalElements || 0)}}</span><br />
                         <span style="color: red;">Los eventos asociados a estos proyectores serán automaticamente
                             eliminados.<br />
                             <strong>Esta acción no se puede deshacer.</strong></span>
                     </div>
-                    <div v-if="deleteProjectorsLoading" class="modal-body">
+                    <div v-if="deleteProjectorsLoading" class="modal-body text-black">
                         <div class="d-flex justify-content-center">
                             <div class="spinner-border" role="status">
                                 <span class="sr-only"></span>
@@ -841,7 +960,7 @@ const deleteSelectedCommands = async () => {
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="button" class="btn btn-danger"
-                            @click="removeAllProjectorsRequest(selectedProjectorsList)">Eliminar</button>
+                            @click="removeAllProjectorsRequest()">Eliminar</button>
                     </div>
                 </div>
             </div>
@@ -857,14 +976,14 @@ const deleteSelectedCommands = async () => {
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
-                        <div v-if="deleteProjectorsLoading" class="modal-body">
+                        <div v-if="deleteProjectorsLoading" class="modal-body text-black">
                             <div class="d-flex justify-content-center">
                                 <div class="spinner-border" role="status">
                                     <span class="sr-only"></span>
                                 </div>
                             </div>
                         </div>
-                        <div v-if="!deleteProjectorsLoading" class="modal-body">
+                        <div v-if="!deleteProjectorsLoading" class="modal-body text-black">
                             <!-- Muestra la cantidad de proyectores seleccionados -->
                             ¿De verdad deseas eliminar <strong>los proyectores seleccionados</strong>?<br /> Registros
                             seleccionados:
@@ -885,7 +1004,7 @@ const deleteSelectedCommands = async () => {
                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                 aria-label="Cerrar"></button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body text-black">
                             Seleccione almenos un proyector.
                         </div>
                         <div class="modal-footer">
@@ -1054,6 +1173,16 @@ const deleteSelectedCommands = async () => {
 </template>
 
 <style>
+.modal {
+    z-index: 1050 !important;
+    /* Default value for Bootstrap modal */
+}
+
+.modal-backdrop {
+    z-index: -1 !important;
+    /* Default value for backdrop */
+}
+
 .bg-lightg {
     background-color: #dbe7e4;
 }

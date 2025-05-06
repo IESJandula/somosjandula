@@ -1,12 +1,17 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import axios from 'axios';
-import API from '@/utils/config';
 import ComboBoxClassroom from "@/components/projectors/ComboBoxClassroom.vue";
 import ComboBoxFloor from "@/components/projectors/ComboBoxFloor.vue";
 import ComboBoxModel from "@/components/projectors/ComboBoxModel.vue";
 import ComboBoxState from "@/components/projectors/ComboBoxState.vue";
 import constants from "@/utils/constants";
+import { obtenerTokenJWTValido } from '@/services/firebaseService';
+
+// Variables para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
 
 // Define the filter object.
 const filterModelName = ref('default');
@@ -35,13 +40,23 @@ onMounted(() => {
     fetchEventStates();
 });
 
+const dateArrayToDate = (dateArray) => 
+{  
+    if (!Array.isArray(dateArray) || dateArray.length < 6) return null;
 
-const formatDate = (dateTime) => {
-    return new Date(dateTime).toLocaleDateString();
+    const [year, month, day, hour, minute, second, microsecond = 0] = dateArray;
+
+    const date = new Date(year, month - 1, day, hour, minute, second, Math.floor(microsecond / 1000));
+
+    return date;
+}
+
+const formatDate = (date) => {
+    return dateArrayToDate(date).toLocaleDateString(); // O usa .toLocaleDateString() si solo quieres la fecha
 };
 
-const formatTime = (dateTime) => {
-    return new Date(dateTime).toLocaleTimeString();
+const formatTime = (date) => {
+    return dateArrayToDate(date).toLocaleTimeString();
 };
 
 const getStatusClass = (status) => {
@@ -76,7 +91,14 @@ const eventStatesList = ref([]);
 const fetchFloorsList = async () => {
     console.log("Loading floors list.");
     try {
-        const response = await axios.get(API.FLOORS);
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.get(constants.FLOORS, {
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`
+            }
+        });
+
         floorsList.value = response.data;
         console.log("Listado plantas obtenido.\n" + response.data);
     }
@@ -91,11 +113,16 @@ const fetchfilterClassroomNameClassrooms = async (floorParam) => {
 
         console.log('loading classrooms for ' + floorParam);
 
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
         // Ensure floor is selected
         if (floorParam.value === 'default') return;
 
-        const response = await axios.get(API.CLASSROOMS, {
-            params: { floor: floorParam }
+        const response = await axios.get(constants.CLASSROOMS, {
+            params: { floor: floorParam },
+            headers: {
+                'Authorization': `Bearer ${tokenPropio}`
+            }
         });
 
         // List of the classrooms for the selected floor.
@@ -115,7 +142,16 @@ const fetchProjectorModels = async () => {
     console.log('Fetching projector models');
 
     try {
-        const response = await axios.get(API.MODELS);
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.get(constants.MODELS,
+            {
+                headers: {
+                'Authorization': `Bearer ${tokenPropio}`
+            }
+            }
+        );
 
         projectorModels.value = response.data;
 
@@ -132,7 +168,16 @@ const fetchEventStates = async () => {
     console.log('Fetching event states');
 
     try {
-        const response = await axios.get(API.EVENT_STATES);
+
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+        const response = await axios.get(constants.EVENT_STATES,
+            {
+                headers: {
+                'Authorization': `Bearer ${tokenPropio}`
+                }
+            }
+        );
 
         eventStatesList.value = response.data;
 
@@ -188,11 +233,18 @@ const fetchEvents = async () => {
     console.log("Fetching events with filter:", requestBody);
     try {
 
-        const response = await axios.post(API.SERVER_EVENT, requestBody, {
+        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+
+        const response = await axios.post(constants.SERVER_EVENT, requestBody, {
             params: {
                 page: currentPage.value,
                 size: pageSize.value
-            }
+            },
+            headers:
+                {
+                    'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
+                },
         });
 
         // Log the entire response to verify its structure
@@ -375,8 +427,11 @@ const gradientStyle = computed(() => ({
                             <tbody class="table-group-divider small">
                                 <tr v-for="event in serverEventsList" :key="event.eventId"
                                     :class="getStatusClass(event.actionStatus)">
-                                    <td class="align-middle w-auto text-nowrap">{{ formatDate(event.dateTime) }}<br />{{
-                                        formatTime(event.dateTime) }}</td>
+                                    <td class="align-middle w-auto text-nowrap">
+                                        {{ formatDate(event.dateTime) }}
+                                        <br/>
+                                        {{ formatTime(event.dateTime) }}
+                                    </td>
                                     <td class="align-middle w-auto">{{ event.user }}</td>
                                     <td class="align-middle w-auto text-nowrap">{{ event.action }}</td>
                                     <td class="align-middle w-auto text-nowrap">{{ event.actionStatus }}</td>
