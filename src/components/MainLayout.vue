@@ -71,6 +71,7 @@
             <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por asignatura</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Asignaturas y departamentos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/administracion')">7. Administración</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/generadorHorarios')">8. Generador de horarios</ion-item>
           </ion-list>
         </ion-list>

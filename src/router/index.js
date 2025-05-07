@@ -22,6 +22,7 @@ import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.
 import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
 import H_GeneradorHorarios from '@/views/school_manager/H_GeneradorHorarios.vue';
 import G_EleccionDeHorarios from '@/views/school_manager/G_EleccionDeHorarios.vue';
+import I_Administracion from '@/views/school_manager/I_Administracion.vue';
 
 const routes = [
   {
@@ -184,6 +185,14 @@ const routes = [
           role: 'DIRECCION'
         },
       },
+      {
+        path: 'school_manager/administracion',
+        component: I_Administracion,
+        name: 'I_Administracion',
+        meta: {
+          role: 'DIRECCION'
+        },
+      }
     ],
   },
 ];
