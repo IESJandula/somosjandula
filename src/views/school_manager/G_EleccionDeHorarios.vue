@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
+import { useConstanteSolicitudes } from '@/services/useConstanteSolicitudes.js'
 import {
   asignarAsignatura,
   obtenerAsignaturas,
@@ -41,6 +42,23 @@ const toastColor = ref('success');
 // Nueva variable reactiva para el mensaje de actualización
 let mensajeActualizacion = "";
 let mensajeColor = "";
+
+//FUNCION PARA DESHABILITAR EN FUNCION DE LA CONSTANTE DE LA VENTANA DE ADMINISTRACION
+async function antesDe(actionFn) {
+  await cargar()
+  console.log('isDeshabilitada=', isDeshabilitada.value)
+  if (isDeshabilitada.value) {
+    crearToast(
+        toastMessage, toastColor, isToastOpen,
+        'warning',
+        'La ventana está deshabilitada por el administrador'
+    )
+    return
+  }
+  return actionFn()
+}
+
+const { isDeshabilitada, cargar } = useConstanteSolicitudes()
 
 const toggle = () => {
   isOn.value = !isOn.value
@@ -419,7 +437,22 @@ const guardarTodo = async () => {
   }
 }
 
+const handleAsignarAsignatura = () => antesDe(() => asignacionDeAsignaturas())
+const handleAsignarReduccion = () => antesDe(() => asignarReduccion())
+const handleGuardarSolicitud = (index) => antesDe(() => guardarSolicitud(index))
+const handleEliminarSolicitud = (index) => antesDe(() => eliminarSolicitud(index))
+const handleActualizarObservaciones = () => antesDe(() => actualizarObservacion())
+const handleGuardarTodo = () => antesDe(() => guardarTodo())
+
 onMounted(async () => {
+  await cargar();
+  if (isDeshabilitada.value) {
+    crearToast(
+        toastMessage, toastColor, isToastOpen,
+        'warning',
+        'La ventana está deshabilitada por el administrador'
+    )
+  }
   await verificarRoles();
   await obtenerEmailUsuarioActual();
   await obtenerProfesor();
@@ -468,7 +501,7 @@ onMounted(async () => {
                 {{ asignatura.grupo }}
               </option>
             </select>
-            <button class="btn-asignar" @click="asignacionDeAsignaturas">Asignar</button>
+            <button class="btn-asignar" :disabled="isDeshabilitada" @click="handleAsignarAsignatura">Asignar</button>
           </div>
           <div class="dropdowns">
             <label for="reduccion-select">Reducción:</label>
@@ -479,7 +512,7 @@ onMounted(async () => {
                 {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
               </option>
             </select>
-            <button class="btn-asignar" @click="asignarReduccion">Asignar</button>
+            <button class="btn-asignar" :disabled="isDeshabilitada" @click="handleAsignarReduccion">Asignar</button>
           </div>
         </div>
       </div>
@@ -544,7 +577,7 @@ onMounted(async () => {
       </div>
       <ion-input type="text" v-model="otrasObservacionesSeleccionado" placeholder="Observaciones" class="form-input" />
       <!-- Botón para guardar las observaciónes -->
-      <button @click="actualizarObservacion()" class="btn-actualizar">Actualizar observaciones</button>
+      <button @click="handleActualizarObservaciones()" :disabled="isDeshabilitada" class="btn-actualizar">Actualizar observaciones</button>
     </div>
     <!-- Tabla con todas las asignaturas y reducciones elegidas por el profesor -->
     <div class="card-solicitudes">
@@ -566,7 +599,7 @@ onMounted(async () => {
           <tbody>
             <tr v-for="(asignaturaReduccion, index) in listaAsignaturasReducciones" :key="index">
               <td class="columna">
-                <button @click="eliminarSolicitud(index)" class="btn-eliminar">&times;</button>
+                <button @click="handleEliminarSolicitud(index)" :disabled="isDeshabilitada" class="btn-eliminar">&times;</button>
               </td>
               <td class="columna">{{ asignaturaReduccion.tipo }}</td>
               <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.nombreAsignatura :
@@ -600,13 +633,13 @@ onMounted(async () => {
                 <span v-else>-</span>
               </td>
               <td class="columna">
-                <button @click="guardarSolicitud(index)" class="btn">Guardar</button>
+                <button @click="handleGuardarSolicitud(index)" :disabled="isDeshabilitada" class="btn">Guardar</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <button v-if="listaAsignaturasReducciones.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar
+      <button v-if="listaAsignaturasReducciones.length > 0" :disabled="isDeshabilitada" class="btn-guardar-todo" @click="handleGuardarTodo">Guardar
         todo</button>
     </div>
   </div>
