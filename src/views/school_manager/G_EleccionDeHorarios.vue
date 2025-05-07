@@ -72,6 +72,7 @@ const obtenerProfesor = async () => {
     profesorSeleccionado.value = '';
 
     await obtenerSolicitud();
+    await obtenerListaAsignaturas();
 
   } catch (error) {
     mensajeActualizacion = 'Error al cargar los profesores.';
@@ -83,7 +84,11 @@ const obtenerProfesor = async () => {
 
 const obtenerListaAsignaturas = async () => {
   try {
-    const data = await obtenerAsignaturas(profesorSeleccionado.value.departamento, toastMessage, toastColor, isToastOpen);
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
+    const data = await obtenerAsignaturas(emailDestino, toastMessage, toastColor, isToastOpen);
     listaAsignaturas.value = data;
   } catch (error) {
     console.error(error);
@@ -92,7 +97,7 @@ const obtenerListaAsignaturas = async () => {
 
 const asignacionDeAsignaturas = async () => {
   try {
-    console.log(profesorSeleccionado.value);
+
     if (profesorSeleccionado.value !== '') {
       await asignarAsignatura(
         asignaturaSeleccionada.value.nombre,
@@ -104,6 +109,28 @@ const asignacionDeAsignaturas = async () => {
         toastMessage, toastColor, isToastOpen);
     }
     else {
+      // Primero obtener la lista completa de profesores y sus asignaturas
+      const todosLosProfesores = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
+
+      // Buscar si la asignatura ya está asignada a algún profesor
+      for (const profesor of todosLosProfesores) {
+        const solicitudes = await obtenerSolicitudes(profesor.email, toastMessage, toastColor, isToastOpen);
+
+        const asignaturaExistente = solicitudes.asigunaturas.find(item =>
+          item.nombreAsignatura === asignaturaSeleccionada.value.nombre &&
+          item.curso === asignaturaSeleccionada.value.curso &&
+          item.etapa === asignaturaSeleccionada.value.etapa &&
+          item.grupo === asignaturaSeleccionada.value.grupo
+        );
+
+        if (asignaturaExistente) {
+          mensajeActualizacion = `Esta asignatura ya está asignada al profesor ${profesor.nombre} ${profesor.apellidos}`;
+          mensajeColor = "danger";
+          crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+          return;
+        }
+      }
+
       await asignarAsignatura(
         asignaturaSeleccionada.value.nombre,
         asignaturaSeleccionada.value.horas,
@@ -236,7 +263,9 @@ const obtenerSolicitud = async () => {
       ...solicitudes.asigunaturas.map(a => ({
         ...a,
         horasMax: a.horasAsignatura,              //Maximo original
-        horasSeleccionadas: a.horasAsignatura     //Las horas que se quieren
+        horasSeleccionadas: a.cupoHorasAsignatura,    //Las horas que se quieren
+        grupoOriginal: a.grupo,                   // Grupo original
+        grupoSeleccionado: a.grupo                // Grupo que se quiere cambiar
       })),
       ...solicitudes.reduccionAsignadas
     ];
@@ -298,7 +327,7 @@ const eliminarSolicitud = async (index) => {
     const data = {
       email: emailDestino,
       nombreAsignatura: solicitud.nombreAsignatura,
-      horasAsignatura: solicitud.horasAsignatura,
+      horasAsignatura: solicitud.horasSeleccionadas,
       curso: solicitud.curso,
       etapa: solicitud.etapa,
       grupo: solicitud.grupo,
@@ -333,10 +362,11 @@ const guardarSolicitud = async (index) => {
     data = {
       email: emailDestino,
       nombreAsignatura: solicitud.nombreAsignatura,
-      horasAsignatura: solicitud.horasAsignatura,
+      horasAsignatura: solicitud.horasSeleccionadas,
       curso: solicitud.curso,
       etapa: solicitud.etapa,
-      grupo: solicitud.grupo,
+      grupoAntiguo: solicitud.grupoOriginal,
+      grupoNuevo: solicitud.grupoSeleccionado,
       nombreReduccion: solicitud.nombreReduccion,
       horasReduccion: solicitud.horasReduccion,
     };
@@ -365,10 +395,11 @@ const guardarTodo = async () => {
     const data = {
       email: emailDestino,
       nombreAsignatura: solicitud.nombreAsignatura,
-      horasAsignatura: solicitud.horasAsignatura,
+      horasAsignatura: solicitud.horasSeleccionadas,
       curso: solicitud.curso,
       etapa: solicitud.etapa,
-      grupo: solicitud.grupo,
+      grupoAntiguo: solicitud.grupoOriginal,
+      grupoNuevo: solicitud.grupoSeleccionado,
       nombreReduccion: solicitud.nombreReduccion,
       horasReduccion: solicitud.horasReduccion,
     };
@@ -392,10 +423,12 @@ onMounted(async () => {
   await verificarRoles();
   await obtenerEmailUsuarioActual();
   await obtenerProfesor();
-  await obtenerListaAsignaturas();
   await obtenerListaReducciones();
   await obtenerDiaTramoTipoHorario();
-  await obtenerSolicitud();
+  if (!(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
+    await obtenerListaAsignaturas();
+    await obtenerSolicitud();
+  }
 });
 
 </script>
@@ -414,7 +447,10 @@ onMounted(async () => {
             for="profesor-select">Profesor:
           </label>
           <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
-            id="profesor-select" v-model="profesorSeleccionado" @change="obtenerSolicitud" class="dropdown-select">
+            id="profesor-select" v-model="profesorSeleccionado" @change="async () => {
+              await obtenerSolicitud();
+              await obtenerListaAsignaturas();
+            }" class="dropdown-select">
             <option value="">Selecciona un profesor</option>
             <option v-for="profesor in listaProfesores" :key="profesor" :value="profesor">
               {{ profesor.nombre }} {{ profesor.apellidos }}
@@ -543,7 +579,7 @@ onMounted(async () => {
                       <option v-for="n in asignaturaReduccion.horasMax" :key="n" :value="n">{{ n }}</option>
                     </select>
                   </span>
-                  <span v-else>{{ asignaturaReduccion.horasAsignatura }}</span>
+                  <span v-else>{{ asignaturaReduccion.horasSeleccionadas }}</span>
                 </span>
                 <span v-else>{{ asignaturaReduccion.horasReduccion }}</span>
               </td>
@@ -552,7 +588,7 @@ onMounted(async () => {
               <td class="columna">
                 <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
                   <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-                    <select id="grupo-select" v-model="asignaturaReduccion.grupo"
+                    <select id="grupo-select" v-model="asignaturaReduccion.grupoSeleccionado"
                       @change="obtenerGrupoDeAsignatura(index)" class="dropdown-select-solicitudes">
                       <option v-for="grupo in listaGrupos[index]" :key="grupo" :value="grupo.grupo">
                         {{ grupo.grupo }}

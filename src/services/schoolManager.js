@@ -1154,7 +1154,7 @@ export const borrarReduccionesProfesores = async (email, reduccion, horas, toast
   }
 
 /****************************** Eleccion de horarios ******************************/
-export const obtenerAsignaturas = async (toastMessage, toastColor, isToastOpen) =>
+export const obtenerAsignaturas = async (email, toastMessage, toastColor, isToastOpen) =>
   {
     try
     {
@@ -1166,7 +1166,8 @@ export const obtenerAsignaturas = async (toastMessage, toastColor, isToastOpen) 
             method: 'GET',
             headers:
                 {
-                  'Authorization': `Bearer ${tokenPropio}`
+                  'Authorization': `Bearer ${tokenPropio}`,
+                  'email': email
                 },
   
           });
@@ -1397,7 +1398,8 @@ export const guardarSolicitudes = async (data, toastMessage, toastColor, isToast
                   'horasAsignatura': data.horasAsignatura || '',
                   'curso': data.curso || '',
                   'etapa': data.etapa || '',
-                  'grupo': data.grupo || '',
+                  'grupoAntiguo': data.grupoAntiguo || '',
+                  'grupoNuevo': data.grupoNuevo || '',
                   'nombreReduccion': data.nombreReduccion || '',
                   'horasReduccion': data.horasReduccion || ''
                 },
