@@ -22,5 +22,5 @@ export function useConstanteSolicitudes() {
         }
     }
 
-    return { isDeshabilitada, cargar }
+    return { isDeshabilitada, cargar, constantes }
 }

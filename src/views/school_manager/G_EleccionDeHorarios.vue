@@ -58,7 +58,7 @@ async function antesDe(actionFn) {
   return actionFn()
 }
 
-const { isDeshabilitada, cargar } = useConstanteSolicitudes()
+const { isDeshabilitada, cargar, constantes } = useConstanteSolicitudes()
 
 const toggle = () => {
   isOn.value = !isOn.value
@@ -450,7 +450,7 @@ onMounted(async () => {
     crearToast(
         toastMessage, toastColor, isToastOpen,
         'warning',
-        'La ventana está deshabilitada por el administrador'
+        'La ventana está deshabilitada por el administrador. Motivo: ' + constantes.value[0].valor
     )
   }
   await verificarRoles();
