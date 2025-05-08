@@ -48,17 +48,12 @@ async function antesDe(actionFn) {
   await cargar()
   console.log('isDeshabilitada=', isDeshabilitada.value)
   if (isDeshabilitada.value) {
-    crearToast(
-        toastMessage, toastColor, isToastOpen,
-        'warning',
-        'La ventana está deshabilitada por el administrador'
-    )
     return
   }
   return actionFn()
 }
 
-const { isDeshabilitada, cargar, constantes } = useConstanteSolicitudes()
+const { isDeshabilitada, cargar } = useConstanteSolicitudes()
 
 const toggle = () => {
   isOn.value = !isOn.value
@@ -446,13 +441,6 @@ const handleGuardarTodo = () => antesDe(() => guardarTodo())
 
 onMounted(async () => {
   await cargar();
-  if (isDeshabilitada.value) {
-    crearToast(
-        toastMessage, toastColor, isToastOpen,
-        'warning',
-        'La ventana está deshabilitada por el administrador. Motivo: ' + constantes.value[0].valor
-    )
-  }
   await verificarRoles();
   await obtenerEmailUsuarioActual();
   await obtenerProfesor();
@@ -468,6 +456,7 @@ onMounted(async () => {
 
 <template>
   <h1 class="t-1">Elección de horarios</h1>
+  <div v-if="isDeshabilitada" class="constante">¡No puedes elegir más asignaturas o reducciones!</div>
   <div class="top-section">
     <!-- Tarjeta para asignar las asignaturas, las reducciones y indicar observaciones personales -->
     <div class="card-asignaturas-reducciones">
@@ -593,7 +582,7 @@ onMounted(async () => {
               <th class="columna">Curso</th>
               <th class="columna">Etapa</th>
               <th class="columna">Grupo</th>
-              <th class="columna">Acción</th>
+              <th v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" class="columna">Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -632,14 +621,14 @@ onMounted(async () => {
                 </span>
                 <span v-else>-</span>
               </td>
-              <td class="columna">
+              <td v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" class="columna">
                 <button @click="handleGuardarSolicitud(index)" :disabled="isDeshabilitada" class="btn">Guardar</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <button v-if="listaAsignaturasReducciones.length > 0" :disabled="isDeshabilitada" class="btn-guardar-todo" @click="handleGuardarTodo">Guardar
+      <button v-if="(listaAsignaturasReducciones.length > 0) && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))" :disabled="isDeshabilitada" class="btn-guardar-todo" @click="handleGuardarTodo">Guardar
         todo</button>
     </div>
   </div>
@@ -654,6 +643,14 @@ onMounted(async () => {
   font-weight: 700;
   margin-bottom: 1.5rem;
   text-align: center;
+}
+
+.constante {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: #EF4444;
 }
 
 .top-section {
