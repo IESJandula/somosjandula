@@ -1351,108 +1351,65 @@ export const actualizarObservaciones = async (conciliacion, trabajarPrimeraHora,
   }
 
 export const obtenerSolicitudes = async (email, toastMessage, toastColor, isToastOpen) =>
-  {
-    try
-    {
-  
-      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-  
-      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/solicitudes',
-          {
-            method: 'GET',
-            headers:
-                {
-                  'Authorization': `Bearer ${tokenPropio}`,
-                  'email': email
-                },
-  
-          });
-      if(!response.ok)
+  {  
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const respone = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/solicitudes',
       {
-        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-      }
-      return await response.json();
-  
-    }
-    catch (error)
-    {
-      console.log('Error al obtener las reducciones asignadas: ', error);
-    }
+        method: 'GET',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': email
+        },
+      });
+
+      return await respone.json();
   }
 
 export const guardarSolicitudes = async (data, toastMessage, toastColor, isToastOpen) =>
   {
-    try
-    {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-  
-      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/solicitudes',
-          {
-            method: 'PUT',
-            headers:
-                {
-                  'Authorization': `Bearer ${tokenPropio}`,
-                  'email': data.email,
-                  'nombreAsignatura': data.nombreAsignatura || '',
-                  'horasAsignatura': data.horasAsignatura || '',
-                  'curso': data.curso || '',
-                  'etapa': data.etapa || '',
-                  'grupoAntiguo': data.grupoAntiguo || '',
-                  'grupoNuevo': data.grupoNuevo || '',
-                  'nombreReduccion': data.nombreReduccion || '',
-                  'horasReduccion': data.horasReduccion || ''
-                },
-  
-          });
-      if(!response.ok)
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/solicitudes',
       {
-        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-      }
-      return await response.json();
-  
-    }
-    catch (error)
-    {
-      console.log('Error al obtener las reducciones asignadas: ', error);
-    }
+        method: 'PUT',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': data.email,
+          'nombreAsignatura': data.nombreAsignatura || '',
+          'horasAsignatura': data.horasAsignatura || '',
+          'curso': data.curso || '',
+          'etapa': data.etapa || '',
+          'grupoAntiguo': data.grupoAntiguo || '',
+          'grupoNuevo': data.grupoNuevo || '',
+          'nombreReduccion': data.nombreReduccion || '',
+          'horasReduccion': data.horasReduccion || ''
+        },
+      });
   }
 
 export const eliminarSolicitudes = async (data, toastMessage, toastColor, isToastOpen) =>
   {
-    try
-    {
-  
-      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-  
-      const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/solicitudes',
-          {
-            method: 'DELETE',
-            headers:
-                {
-                  'Authorization': `Bearer ${tokenPropio}`,
-                  'email': data.email,
-                  'nombreAsignatura': data.nombreAsignatura || '',
-                  'horasAsignatura': data.horasAsignatura || '',
-                  'curso': data.curso || '',
-                  'etapa': data.etapa || '',
-                  'grupo': data.grupo || '',
-                  'nombreReduccion': data.nombreReduccion || '',
-                  'horasReduccion': data.horasReduccion || ''
-                },
-  
-          });
-      if(!response.ok)
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/solicitudes',
       {
-        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-      }
-      return await response.json();
-  
-    }
-    catch (error)
-    {
-      console.log('Error al obtener las reducciones asignadas: ', error);
-    }
+        method: 'DELETE',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': data.email,
+          'nombreAsignatura': data.nombreAsignatura || '',
+          'horasAsignatura': data.horasAsignatura || '',
+          'curso': data.curso || '',
+          'etapa': data.etapa || '',
+          'grupo': data.grupo || '',
+          'nombreReduccion': data.nombreReduccion || '',
+          'horasReduccion': data.horasReduccion || ''
+        },
+      });
   }
 
 /****************************** Generador de Horarios ******************************/

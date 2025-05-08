@@ -3,7 +3,6 @@ import { computed, onMounted, ref } from 'vue';
 import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
-import { useConstanteSolicitudes } from '@/services/useConstanteSolicitudes.js'
 import {
   asignarAsignatura,
   obtenerAsignaturas,
@@ -17,6 +16,8 @@ import {
   guardarSolicitudes,
   actualizarObservaciones
 } from "@/services/schoolManager.js";
+import { obtenerConstantes } from '@/services/constantes'
+import { schoolmanagerApiUrl } from "@/environment/apiUrls.ts";
 
 const rolesUsuario = ref([]);
 const profesorSeleccionado = ref('');
@@ -35,6 +36,8 @@ const emailUsuarioActual = ref(null);
 const trabajarPrimeraHoraSeleccionado = ref(false);
 const otrasObservacionesSeleccionado = ref('');
 const listaGrupos = ref([]);
+const constantes = ref([]);
+const valorConstante = ref(false)
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -44,16 +47,20 @@ let mensajeActualizacion = "";
 let mensajeColor = "";
 
 //FUNCION PARA DESHABILITAR EN FUNCION DE LA CONSTANTE DE LA VENTANA DE ADMINISTRACION
-async function antesDe(actionFn) {
-  await cargar()
-  console.log('isDeshabilitada=', isDeshabilitada.value)
-  if (isDeshabilitada.value) {
-    return
-  }
-  return actionFn()
-}
+const verificarConstantes = async () => {
+  try {
+    constantes.value = await obtenerConstantes(schoolmanagerApiUrl + '/schoolManager/constants', toastMessage, toastColor, isToastOpen);
 
-const { isDeshabilitada, cargar } = useConstanteSolicitudes()
+    const solicitudesDeshabilitada = constantes.value.find(c => c.clave === 'Selección horarios por claustro');
+    valorConstante.value = solicitudesDeshabilitada.valor !== '';
+  }
+  catch (error) {
+    mensajeActualizacion = 'Error al obtener constantes';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    throw new Error(error.message);
+  }
+}
 
 const toggle = () => {
   isOn.value = !isOn.value
@@ -110,6 +117,8 @@ const obtenerListaAsignaturas = async () => {
 
 const asignacionDeAsignaturas = async () => {
   try {
+
+    await verificarConstantes();
 
     if (profesorSeleccionado.value !== '') {
       await asignarAsignatura(
@@ -185,6 +194,9 @@ const obtenerListaReducciones = async () => {
 
 const asignarReduccion = async () => {
   try {
+
+    await verificarConstantes();
+
     if (profesorSeleccionado.value !== '') {
       await asignarReducciones(
         profesorSeleccionado.value.email,
@@ -232,6 +244,9 @@ const trabajarPrimeraHora = computed(() => {
 
 const actualizarObservacion = async () => {
   try {
+
+    await verificarConstantes();
+
     // Array con los tramos horarios seleccionados
     const tramos = [
       tramoHorarioSeleccionado.value,
@@ -261,15 +276,14 @@ const obtenerSolicitud = async () => {
   try {
 
     let solicitudes = null;
-    if (profesorSeleccionado.value !== undefined) {
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
 
-      solicitudes = await obtenerSolicitudes(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
+    const response = await obtenerSolicitudes(emailDestino, toastMessage, toastColor, isToastOpen);
 
-    }
-    if (rolesUsuario.value.includes('PROFESOR') && !(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
-      solicitudes = await obtenerSolicitudes(emailUsuarioActual.value, toastMessage, toastColor, isToastOpen);
-    }
-
+    solicitudes = response;
+    
     listaGrupos.value = [];
 
     listaAsignaturasReducciones.value = [
@@ -289,6 +303,18 @@ const obtenerSolicitud = async () => {
         await obtenerGrupoDeAsignatura(i);
       }
     }
+
+    if(response.ok){
+      mensajeActualizacion = 'Solicitudes obtenidas correctamente'
+      mensajeColor = 'success'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    }
+    else{
+      const errorData = await response.json();
+      mensajeColor = 'danger'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message)
+    }
+
   }
   catch (error) {
     mensajeActualizacion = 'Error al obtener solicitudes'
@@ -330,6 +356,9 @@ const obtenerGrupoDeAsignatura = async (index) => {
 
 const eliminarSolicitud = async (index) => {
   try {
+
+    await verificarConstantes();
+
     const solicitud = listaAsignaturasReducciones.value[index];
     console.log(solicitud);
 
@@ -365,6 +394,8 @@ const eliminarSolicitud = async (index) => {
 const guardarSolicitud = async (index) => {
   try {
 
+    await verificarConstantes();
+
     const solicitud = listaAsignaturasReducciones.value[index];
 
     let data = null;
@@ -399,6 +430,8 @@ const guardarSolicitud = async (index) => {
 
 const guardarTodo = async () => {
 
+  await verificarConstantes();
+
   const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
     ? profesorSeleccionado.value.email
     : emailUsuarioActual.value;
@@ -432,15 +465,8 @@ const guardarTodo = async () => {
   }
 }
 
-const handleAsignarAsignatura = () => antesDe(() => asignacionDeAsignaturas())
-const handleAsignarReduccion = () => antesDe(() => asignarReduccion())
-const handleGuardarSolicitud = (index) => antesDe(() => guardarSolicitud(index))
-const handleEliminarSolicitud = (index) => antesDe(() => eliminarSolicitud(index))
-const handleActualizarObservaciones = () => antesDe(() => actualizarObservacion())
-const handleGuardarTodo = () => antesDe(() => guardarTodo())
-
 onMounted(async () => {
-  await cargar();
+  await verificarConstantes();
   await verificarRoles();
   await obtenerEmailUsuarioActual();
   await obtenerProfesor();
@@ -456,7 +482,7 @@ onMounted(async () => {
 
 <template>
   <h1 class="t-1">Elección de horarios</h1>
-  <div v-if="isDeshabilitada" class="constante">¡No puedes elegir más asignaturas o reducciones!</div>
+  <div v-if="valorConstante" class="constante">¡No puedes elegir más asignaturas o reducciones!</div>
   <div class="top-section">
     <!-- Tarjeta para asignar las asignaturas, las reducciones y indicar observaciones personales -->
     <div class="card-asignaturas-reducciones">
@@ -490,7 +516,7 @@ onMounted(async () => {
                 {{ asignatura.grupo }}
               </option>
             </select>
-            <button class="btn-asignar" :disabled="isDeshabilitada" @click="handleAsignarAsignatura">Asignar</button>
+            <button class="btn-asignar" :disabled="valorConstante" @click="asignacionDeAsignaturas">Asignar</button>
           </div>
           <div class="dropdowns">
             <label for="reduccion-select">Reducción:</label>
@@ -501,7 +527,7 @@ onMounted(async () => {
                 {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
               </option>
             </select>
-            <button class="btn-asignar" :disabled="isDeshabilitada" @click="handleAsignarReduccion">Asignar</button>
+            <button class="btn-asignar" :disabled="valorConstante" @click="asignarReduccion">Asignar</button>
           </div>
         </div>
       </div>
@@ -566,7 +592,7 @@ onMounted(async () => {
       </div>
       <ion-input type="text" v-model="otrasObservacionesSeleccionado" placeholder="Observaciones" class="form-input" />
       <!-- Botón para guardar las observaciónes -->
-      <button @click="handleActualizarObservaciones()" :disabled="isDeshabilitada" class="btn-actualizar">Actualizar observaciones</button>
+      <button @click="actualizarObservacion()" :disabled="valorConstante" class="btn-actualizar">Actualizar observaciones</button>
     </div>
     <!-- Tabla con todas las asignaturas y reducciones elegidas por el profesor -->
     <div class="card-solicitudes">
@@ -588,7 +614,7 @@ onMounted(async () => {
           <tbody>
             <tr v-for="(asignaturaReduccion, index) in listaAsignaturasReducciones" :key="index">
               <td class="columna">
-                <button @click="handleEliminarSolicitud(index)" :disabled="isDeshabilitada" class="btn-eliminar">&times;</button>
+                <button @click="eliminarSolicitud(index)" :disabled="valorConstante" class="btn-eliminar">&times;</button>
               </td>
               <td class="columna">{{ asignaturaReduccion.tipo }}</td>
               <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.nombreAsignatura :
@@ -622,13 +648,13 @@ onMounted(async () => {
                 <span v-else>-</span>
               </td>
               <td v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" class="columna">
-                <button @click="handleGuardarSolicitud(index)" :disabled="isDeshabilitada" class="btn">Guardar</button>
+                <button @click="guardarSolicitud(index)" :disabled="valorConstante" class="btn">Guardar</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <button v-if="(listaAsignaturasReducciones.length > 0) && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))" :disabled="isDeshabilitada" class="btn-guardar-todo" @click="handleGuardarTodo">Guardar
+      <button v-if="(listaAsignaturasReducciones.length > 0) && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))" :disabled="valorConstante" class="btn-guardar-todo" @click="guardarTodo">Guardar
         todo</button>
     </div>
   </div>
