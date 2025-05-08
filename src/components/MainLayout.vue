@@ -65,13 +65,13 @@
               :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/administracion')">0. Administrar</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">1. Carga de matrículas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">2. Asignaturas y bloques</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">3. Creación de grupos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por asignatura</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Asignaturas y departamentos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/administracion')">7. Administración</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/generadorHorarios')">8. Generador de horarios</ion-item>
           </ion-list>
         </ion-list>
