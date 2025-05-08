@@ -115,6 +115,14 @@ const enviarDato = async () => {
     }
     const cursoInt = parseInt(curso);
 
+    if(listadoAlumnosSeleccionados.value.length === 0) {
+      // Si no se han seleccionado alumnos, avisas o retornas
+      mensajeActualizacion = "Debes seleccionar al menos un alumno antes de añadirlo al grupo.";
+      mensajeColor = "warning";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+
     await asignarAlumnos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
 
     mensajeActualizacion = "Alumnos añadidos correctamente.";
@@ -339,7 +347,7 @@ onMounted(async () => {
 .card-upload-table {
   flex: 1 1 30%;
   min-width: 300px;
-  max-width: 490px;
+  max-width: 550px;
   min-height: 502px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
@@ -348,6 +356,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  align-items: center;
   overflow-y: auto;
   overflow-x: auto;
     height: 380px;
@@ -404,6 +413,7 @@ label:hover {
   margin-bottom: 1rem;
   width: 50%;
   min-width: 300px;
+  min-height: 162px;
   border-radius: 10px;
 }
 
@@ -484,7 +494,6 @@ label:hover {
   .tablaAlumnos{
     margin-left: 0%;
   }
-
 }
 
 /* Media queries para hacer que la tarjeta sea más responsive */

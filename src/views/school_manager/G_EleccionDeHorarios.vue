@@ -37,7 +37,8 @@ const trabajarPrimeraHoraSeleccionado = ref(false);
 const otrasObservacionesSeleccionado = ref('');
 const listaGrupos = ref([]);
 const constantes = ref([]);
-const valorConstante = ref(false)
+const isDesabilitado = ref(false)
+const valorConstante = ref('')
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -52,7 +53,9 @@ const verificarConstantes = async () => {
     constantes.value = await obtenerConstantes(schoolmanagerApiUrl + '/schoolManager/constants', toastMessage, toastColor, isToastOpen);
 
     const solicitudesDeshabilitada = constantes.value.find(c => c.clave === 'Selección horarios por claustro');
-    valorConstante.value = solicitudesDeshabilitada.valor !== '';
+    valorConstante.value = solicitudesDeshabilitada.valor;
+    isDesabilitado.value = solicitudesDeshabilitada.valor !== '';
+
   }
   catch (error) {
     mensajeActualizacion = 'Error al obtener constantes';
@@ -239,7 +242,7 @@ const obtenerDiaTramoTipoHorario = async () => {
 };
 
 const trabajarPrimeraHora = computed(() => {
-  return trabajarPrimeraHoraSeleccionado.value === 'Opción 1';
+  return trabajarPrimeraHoraSeleccionado.value;
 });
 
 const actualizarObservacion = async () => {
@@ -271,6 +274,12 @@ const actualizarObservacion = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
 }
+
+const totalHorasAsignaturas = computed(() => {
+  return listaAsignaturasReducciones.value
+    .filter(item => item.tipo === 'Asignatura')
+    .reduce((total, asignatura) => total + Number(asignatura.horasSeleccionadas), 0);
+});
 
 const obtenerSolicitud = async () => {
   try {
@@ -482,7 +491,7 @@ onMounted(async () => {
 
 <template>
   <h1 class="t-1">Elección de horarios</h1>
-  <div v-if="valorConstante" class="constante">¡No puedes elegir más asignaturas o reducciones!</div>
+  <div v-if="isDesabilitado" class="constante">{{ valorConstante }}</div>
   <div class="top-section">
     <!-- Tarjeta para asignar las asignaturas, las reducciones y indicar observaciones personales -->
     <div class="card-asignaturas-reducciones">
@@ -516,7 +525,7 @@ onMounted(async () => {
                 {{ asignatura.grupo }}
               </option>
             </select>
-            <button class="btn-asignar" :disabled="valorConstante" @click="asignacionDeAsignaturas">Asignar</button>
+            <button class="btn-asignar" :disabled="isDesabilitado" @click="asignacionDeAsignaturas">Asignar</button>
           </div>
           <div class="dropdowns">
             <label for="reduccion-select">Reducción:</label>
@@ -527,7 +536,7 @@ onMounted(async () => {
                 {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
               </option>
             </select>
-            <button class="btn-asignar" :disabled="valorConstante" @click="asignarReduccion">Asignar</button>
+            <button class="btn-asignar" :disabled="isDesabilitado" @click="asignarReduccion">Asignar</button>
           </div>
         </div>
       </div>
@@ -544,11 +553,11 @@ onMounted(async () => {
       <!-- Botón radio -->
       <div class="t-4">Independientemente de la respuesta anterior, elige la opción que desearías:</div>
       <div class="t-5">
-        <input type="radio" id="opcion1" name="opcion" :value="true" v-model="trabajarPrimeraHoraSeleccionado">
+        <input type="radio" id="opcion1" name="opcion" :value="false" v-model="trabajarPrimeraHoraSeleccionado">
         <label for="opcion1"> No tener clase a primera hora</label>
       </div>
       <div class="t-5">
-        <input type="radio" id="opcion2" name="opcion" :value="false" v-model="trabajarPrimeraHoraSeleccionado">
+        <input type="radio" id="opcion2" name="opcion" :value="true" v-model="trabajarPrimeraHoraSeleccionado">
         <label for="opcion2"> No tener clase a ultima hora</label>
       </div>
       <hr class="separator-line" />
@@ -592,11 +601,11 @@ onMounted(async () => {
       </div>
       <ion-input type="text" v-model="otrasObservacionesSeleccionado" placeholder="Observaciones" class="form-input" />
       <!-- Botón para guardar las observaciónes -->
-      <button @click="actualizarObservacion()" :disabled="valorConstante" class="btn-actualizar">Actualizar observaciones</button>
+      <button @click="actualizarObservacion()" :disabled="isDesabilitado" class="btn-actualizar">Actualizar observaciones</button>
     </div>
     <!-- Tabla con todas las asignaturas y reducciones elegidas por el profesor -->
     <div class="card-solicitudes">
-      <div class="t-2">Tus solicitudes</div>
+      <div class="t-2">Tus solicitudes ({{ totalHorasAsignaturas }} horas)</div>
       <div class="table-wrapper">
         <table>
           <thead>
@@ -614,7 +623,7 @@ onMounted(async () => {
           <tbody>
             <tr v-for="(asignaturaReduccion, index) in listaAsignaturasReducciones" :key="index">
               <td class="columna">
-                <button @click="eliminarSolicitud(index)" :disabled="valorConstante" class="btn-eliminar">&times;</button>
+                <button @click="eliminarSolicitud(index)" :disabled="isDesabilitado" class="btn-eliminar">&times;</button>
               </td>
               <td class="columna">{{ asignaturaReduccion.tipo }}</td>
               <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.nombreAsignatura :
@@ -648,13 +657,13 @@ onMounted(async () => {
                 <span v-else>-</span>
               </td>
               <td v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" class="columna">
-                <button @click="guardarSolicitud(index)" :disabled="valorConstante" class="btn">Guardar</button>
+                <button @click="guardarSolicitud(index)" :disabled="isDesabilitado" class="btn">Guardar</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <button v-if="(listaAsignaturasReducciones.length > 0) && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))" :disabled="valorConstante" class="btn-guardar-todo" @click="guardarTodo">Guardar
+      <button v-if="(listaAsignaturasReducciones.length > 0) && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))" :disabled="isDesabilitado" class="btn-guardar-todo" @click="guardarTodo">Guardar
         todo</button>
     </div>
   </div>
@@ -740,6 +749,11 @@ onMounted(async () => {
   font-size: 1.1rem;
   align-self: center;
   margin-top: 1rem;
+}
+
+.btn-asignar:disabled {
+  background-color: #7fa9f4;
+  cursor: not-allowed;
 }
 
 /* Botón sitch de si o no */
@@ -903,6 +917,11 @@ onMounted(async () => {
   margin-right: 15px;
 }
 
+.btn-actualizar:disabled {
+  background-color: #7fa9f4;
+  cursor: not-allowed;
+}
+
 .card-solicitudes {
   min-width: 750px;
   min-height: 859px;
@@ -945,6 +964,10 @@ table {
   background-color: transparent;
   line-height: 1;
   border: none;
+}
+
+.btn-eliminar:hover {
+  cursor: not-allowed;
 }
 
 .dropdown-group {
@@ -1066,7 +1089,7 @@ table {
   .btn-guardar-todo {
     position: sticky;
     top: 0;
-    left: 0;
+    left: 160px;
   }
 
   .dropdowns {

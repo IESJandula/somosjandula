@@ -37,9 +37,7 @@ const comprobarBoton = () => {
   if( archivoSeleccionado.value && seleccionado.value  && validarCSV(file.value)) {
     boton.disabled = false;
     buttonText.value = "Enviar";
-    boton.style.backgroundColor = "#4782eb";
   } else {
-    boton.style.backgroundColor = "#7fa9f4";
     buttonText.value = "Rellenar campos para enviar";
     boton.disabled = true;
   }
@@ -415,7 +413,7 @@ onMounted(async () => {
               <option v-for="cursoEtapa in cursosEtapas"
                 :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
                 :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-                {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
+                {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
               </option>
             </select>
           </div>
@@ -460,7 +458,7 @@ onMounted(async () => {
             <option v-for="cursoEtapa in cursosEtapas"
               :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
               :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-              {{ cursoEtapa.idCursoEtapa.curso }} - {{ cursoEtapa.idCursoEtapa.etapa }}
+              {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
             </option>
           </select>
           <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
@@ -564,6 +562,11 @@ onMounted(async () => {
   background-color: #4782eb;
   color: #FFFFFF;
   font-size: 1.1rem;
+}
+
+.btn:disabled {
+  background-color: #7fa9f4;
+  cursor: not-allowed;
 }
 
 .btn-csv {
