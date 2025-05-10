@@ -7,7 +7,7 @@ import {
   asignarAsignatura,
   obtenerAsignaturas,
   obtenerGruposDeAsignaturas,
-  obtenerProfesores,
+  obtenerProfesoresHorarios,
   obtenerReducciones,
   asignarReducciones,
   obtenerDiasTramosTipoHorario,
@@ -101,7 +101,7 @@ const obtenerProfesor = async () => {
 
   try {
 
-    const data = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
+    const data = await obtenerProfesoresHorarios(toastMessage, toastColor, isToastOpen);
     listaProfesores.value = data;
 
     profesorSeleccionado.value = '';
@@ -151,7 +151,7 @@ const asignacionDeAsignaturas = async () => {
     }
     else {
       // Primero obtener la lista completa de profesores y sus asignaturas
-      const todosLosProfesores = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
+      const todosLosProfesores = await obtenerProfesoresHorarios(toastMessage, toastColor, isToastOpen);
 
       // Buscar si la asignatura ya está asignada a algún profesor
       for (const profesor of todosLosProfesores) {
@@ -310,13 +310,20 @@ const obtenerSolicitud = async () => {
     listaGrupos.value = [];
 
     listaAsignaturasReducciones.value = [
-      ...solicitudes.asigunaturas.map(a => ({
+      ...solicitudes.asigunaturas.map(a => {
+        const esAdmin = rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR');
+        return {
         ...a,
-        horasMax: a.horasAsignatura,              //Maximo original
+        horasMax: a.horasAsignatura,                  //Maximo original
         horasSeleccionadas: a.cupoHorasAsignatura,    //Las horas que se quieren
-        grupoOriginal: a.grupo,                   // Grupo original
-        grupoSeleccionado: a.grupo                // Grupo que se quiere cambiar
-      })),
+        grupoOriginal: a.grupo,                       // Grupo original
+        // Si es admin o dirección y la asignatura ya está asignada, mostrará el grupo actual
+        // Si no, dejará vacío el grupo seleccionado
+        grupoSeleccionado: esAdmin 
+            ? (a.asignadoDireccion ? a.grupo : '')
+            : a.grupo                                 // Grupo que se quiere cambiar
+        };
+      }),
       ...solicitudes.reduccionAsignadas
     ];
     console.log(listaAsignaturasReducciones.value);
@@ -409,6 +416,13 @@ const guardarSolicitud = async (index) => {
 
     const solicitud = listaAsignaturasReducciones.value[index];
 
+    if (listaAsignaturasReducciones.value[index].grupoSeleccionado === '') {
+      mensajeActualizacion = 'Tienes que elegir el grupo antes de guardar'
+      mensajeColor = 'warning'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      return
+    }
+    
     let data = null;
     const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
       ? profesorSeleccionado.value.email
@@ -422,8 +436,6 @@ const guardarSolicitud = async (index) => {
       etapa: solicitud.etapa,
       grupoAntiguo: solicitud.grupoOriginal,
       grupoNuevo: solicitud.grupoSeleccionado,
-      nombreReduccion: solicitud.nombreReduccion,
-      horasReduccion: solicitud.horasReduccion,
     };
 
     await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
@@ -451,6 +463,14 @@ const guardarTodo = async () => {
 
   for (let index = 0; index < listaAsignaturasReducciones.value.length; index++) {
     const solicitud = listaAsignaturasReducciones.value[index];
+
+    if (listaAsignaturasReducciones.value[index].grupoSeleccionado === '') {
+      mensajeActualizacion = 'Tienes que elegir el grupo antes de guardar'
+      mensajeColor = 'warning'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      return
+    }
+
     const data = {
       email: emailDestino,
       nombreAsignatura: solicitud.nombreAsignatura,
@@ -459,8 +479,6 @@ const guardarTodo = async () => {
       etapa: solicitud.etapa,
       grupoAntiguo: solicitud.grupoOriginal,
       grupoNuevo: solicitud.grupoSeleccionado,
-      nombreReduccion: solicitud.nombreReduccion,
-      horasReduccion: solicitud.horasReduccion,
     };
 
     try {
@@ -483,7 +501,9 @@ const guardarTodo = async () => {
 onMounted(async () => {
   await verificarRoles();
   await obtenerEmailUsuarioActual();
-  await obtenerProfesor();
+  if (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR')) {
+    await obtenerProfesor();
+  }
   await verificarConstantes();
   await obtenerListaReducciones();
   await obtenerDiaTramoTipoHorario();
@@ -515,7 +535,9 @@ onMounted(async () => {
               await obtenerListaAsignaturas();
             }" class="dropdown-select">
             <option value="">Selecciona un profesor</option>
-            <option v-for="profesor in listaProfesores" :key="profesor" :value="profesor">
+            <option v-for="profesor in listaProfesores" 
+              :key="profesor" 
+              :value="profesor">
               {{ profesor.nombre }} {{ profesor.apellidos }}
             </option>
           </select>
@@ -526,7 +548,9 @@ onMounted(async () => {
             <label for="asignatura-select">Asignatura:</label>
             <select id="asignatura-select" v-model="asignaturaSeleccionada" class="dropdown-select">
               <option value="" disabled hidden>Selecciona una asignatura</option>
-              <option v-for="asignatura in listaAsignaturas" :key="asignatura" :value="asignatura">
+              <option v-for="asignatura in listaAsignaturas" 
+                :key="asignatura" 
+                :value="asignatura">
                 {{ asignatura.nombre }} ({{ asignatura.horas }} horas) - {{ asignatura.curso }} {{ asignatura.etapa }}
               </option>
             </select>
@@ -537,7 +561,9 @@ onMounted(async () => {
             <select id="reduccion-select" v-model="reduccionSeleccionada" @change="obtenerSolicitud"
               class="dropdown-select">
               <option value="" disabled hidden>Selecciona una reducción</option>
-              <option v-for="reduccion in listaReducciones" :key="reduccion.id" :value="reduccion">
+              <option v-for="reduccion in listaReducciones" 
+                :key="reduccion.id" 
+                :value="reduccion">
                 {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
               </option>
             </select>
@@ -573,7 +599,9 @@ onMounted(async () => {
         <div>
           <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado" class="dropdown-select-hours">
             <option value="">Elige una hora</option>
-            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" :key="tramoHorario" :value="tramoHorario">
+            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" 
+              :key="tramoHorario" 
+              :value="tramoHorario">
               {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
             </option>
           </select>
@@ -581,7 +609,9 @@ onMounted(async () => {
         <div>
           <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado2" class="dropdown-select-hours">
             <option value="" disabled hidden>Elige una hora</option>
-            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" :key="tramoHorario" :value="tramoHorario">
+            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" 
+              :key="tramoHorario" 
+              :value="tramoHorario">
               {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
             </option>
           </select>
@@ -589,7 +619,9 @@ onMounted(async () => {
         <div>
           <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado3" class="dropdown-select-hours">
             <option value="" disabled hidden>Elige una hora</option>
-            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" :key="tramoHorario" :value="tramoHorario">
+            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" 
+              :key="tramoHorario" 
+              :value="tramoHorario">
               {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
             </option>
           </select>
@@ -638,7 +670,11 @@ onMounted(async () => {
                   <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
                     <select v-model="asignaturaReduccion.horasSeleccionadas" class="dropdown-select-solicitudes">
                       <option value="" disabled hidden>Selecciona horas</option>
-                      <option v-for="n in asignaturaReduccion.horasMax" :key="n" :value="n">{{ n }}</option>
+                      <option v-for="hora in asignaturaReduccion.horasMax" 
+                        :key="hora" 
+                        :value="hora">
+                        {{ hora }}
+                      </option>
                     </select>
                   </span>
                   <span v-else>{{ asignaturaReduccion.horasSeleccionadas }}</span>
@@ -650,14 +686,19 @@ onMounted(async () => {
               <td class="columna">
                 <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
                   <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-                    <select id="grupo-select" v-model="asignaturaReduccion.grupoSeleccionado"
-                      @change="obtenerGrupoDeAsignatura(index)" class="dropdown-select-solicitudes">
-                      <option v-for="grupo in listaGrupos[index]" :key="grupo" :value="grupo.grupo">
+                    <select 
+                      id="grupo-select" 
+                      v-model="asignaturaReduccion.grupoSeleccionado"
+                      @change="obtenerGrupoDeAsignatura(index)" 
+                      class="dropdown-select-solicitudes">
+                      <option v-for="grupo in listaGrupos[index]" 
+                        :key="grupo" 
+                        :value="grupo.grupo">
                         {{ grupo.grupo }}
                       </option>
                     </select>
                   </span>
-                  <span v-else>-</span>
+                  <span v-else>{{ asignaturaReduccion.asignadoDireccion === true ? asignaturaReduccion.grupo : '-' }}</span>
                 </span>
                 <span v-else>-</span>
               </td>
@@ -876,8 +917,9 @@ onMounted(async () => {
   left: 50%;
   transform: translateX(-50%);
   transition: opacity 0.3s;
-  white-space: nowrap;
-  margin-left: 10rem;
+  white-space: normal;
+  margin-left: 0;
+  width: 200px;
 }
 
 .tooltip::after {
@@ -1082,6 +1124,13 @@ table {
     margin-right: 5px;
     padding-right: 25px;
   }
+  
+  .tooltip {
+    width: 250px;
+    font-size: 0.9rem;
+    padding: 4px 8px;
+    left: -70px;
+  }
 }
 
 @media (max-width: 500px) {
@@ -1117,6 +1166,15 @@ table {
     min-height: 100%;
     margin-right: 5px;
     padding-right: 25px;
+  }
+
+  .tooltip {
+    font-size: 0.8rem;
+    max-width: 200px;
+    margin-right: 2rem;
+    padding: 3px 6px;
+    bottom: 120%;
+    left: -70px;
   }
 }
 </style>
