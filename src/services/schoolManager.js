@@ -381,7 +381,6 @@ export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toas
     }
 }
 
-
 export const eliminarBloques = async (curso, etapa, nombre, toastMessage, toastColor, isToastOpen) => 
   {
     try
@@ -411,6 +410,25 @@ export const eliminarBloques = async (curso, etapa, nombre, toastMessage, toastC
       console.log('Error al eliminar el bloque: ', error);
     }
 }
+
+export const asignaturasSinDocencia = async (nombreAsignatura, sinDocencia, toastMessage, toastColor, isToastOpen) =>
+{
+  
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYBloques/sinDocencia', 
+    {
+      method: 'PUT',
+      headers: 
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        'Content-Type': 'application/json',
+        'nombreAsignatura': nombreAsignatura,
+        'sinDocencia': sinDocencia
+      },
+    });
+}
+
 export const mostrarHoras = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
   {
     try

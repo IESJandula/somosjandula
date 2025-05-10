@@ -2,7 +2,7 @@
 import { ref, watch} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { crearToast } from '@/utils/toast.js';
-import { cargarAsignaturas, crearBloques, eliminarBloques, mostrarHoras, asignarHoras } from '@/services/schoolManager.js'
+import { cargarAsignaturas, crearBloques, eliminarBloques, asignaturasSinDocencia, mostrarHoras, asignarHoras } from '@/services/schoolManager.js'
 import { IonToast, IonCard, IonInput, IonButton, IonCardContent, IonCardHeader, IonCardTitle } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
@@ -119,8 +119,6 @@ const crearBloque = async () => {
   }
 };
 
-
-
 const eliminarBloque = async (asignatura) => {
   loading.value = true;
   try {
@@ -145,6 +143,36 @@ const eliminarBloque = async (asignatura) => {
     console.error(error);
   } finally {
     loading.value = false;
+  }
+};
+
+const asignaturaSinDocencia = async (asignatura) => {
+  try {
+
+    // Invertimos el valor actual de sinDocencia
+    const nuevoValor = !asignatura.sinDocencia;
+    
+     await asignaturasSinDocencia(
+      asignatura.nombre,
+      nuevoValor,
+      toastMessage, 
+      toastColor, 
+      isToastOpen
+    );
+
+    // Actualizamos el valor en la asignatura
+    asignatura.sinDocencia = nuevoValor;
+
+    mensajeActualizacion = `Asignatura ${asignatura.nombre} ${nuevoValor ? 'marcada' : 'desmarcada'} como sin docencia`;
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+  } catch (error) {
+    mensajeActualizacion = "Error al actualizar el estado de sin docencia";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    // Revertimos el cambio en caso de error
+    asignatura.sinDocencia = !nuevoValor;
   }
 };
 
@@ -278,6 +306,7 @@ async () =>{
               <th class="th">Selecciona para crear un bloque</th>
               <th class="th">Nombre</th>
               <th class="td-bloque">Bloque</th>
+              <th class="th">Asignaturas sin docencia</th>
               <th class="th">Horas</th>
               <th class="th">Acciones</th>
             </tr>
@@ -295,6 +324,13 @@ async () =>{
                   <button @click="eliminarBloque(asignatura)" class="btn-x">X</button>
                 </div>
                 <div v-else class="m-7">Sin bloque</div>
+              </td>
+              <td class="th p-4">
+                <input 
+                type="checkbox" 
+                v-model="asignatura.sinDocencia" 
+                @click="asignaturaSinDocencia(asignatura)"
+                />
               </td>
               <td class="p-4 th">
               <ion-input type="number" v-model.number="horasPorAsignatura[asignatura.nombre]"

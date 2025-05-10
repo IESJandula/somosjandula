@@ -34,6 +34,9 @@ export declare function crearBloques(toastMessage: Ref<string>,
 export declare function eliminarBloques(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignaturasSinDocencia(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 export declare function mostrarHoras(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;

@@ -50,11 +50,23 @@ let mensajeColor = "";
 //FUNCION PARA DESHABILITAR EN FUNCION DE LA CONSTANTE DE LA VENTANA DE ADMINISTRACION
 const verificarConstantes = async () => {
   try {
-    constantes.value = await obtenerConstantes(schoolmanagerApiUrl + '/schoolManager/constants', toastMessage, toastColor, isToastOpen);
+    constantes.value = await obtenerConstantes(schoolmanagerApiUrl + '/schoolManager/constants');
 
     const solicitudesDeshabilitada = constantes.value.find(c => c.clave === 'Selección horarios por claustro');
     valorConstante.value = solicitudesDeshabilitada.valor;
-    isDesabilitado.value = solicitudesDeshabilitada.valor !== '';
+
+    // Deshabilitar solo si no es dirección/admin y hay valor en la constante
+    if (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR')) {
+      isDesabilitado.value = false; // Nunca se deshabilita para dirección/admin
+    } else {
+      isDesabilitado.value = solicitudesDeshabilitada.valor !== ''; // Se deshabilita para otros si hay valor
+    }
+
+    console.log('Estado de permisos:', {
+      roles: rolesUsuario.value,
+      valorConstante: valorConstante.value,
+      isDesabilitado: isDesabilitado.value
+    });
 
   }
   catch (error) {
@@ -123,6 +135,10 @@ const asignacionDeAsignaturas = async () => {
 
     await verificarConstantes();
 
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
     if (profesorSeleccionado.value !== '') {
       await asignarAsignatura(
         asignaturaSeleccionada.value.nombre,
@@ -130,7 +146,7 @@ const asignacionDeAsignaturas = async () => {
         asignaturaSeleccionada.value.curso,
         asignaturaSeleccionada.value.etapa,
         asignaturaSeleccionada.value.grupo,
-        profesorSeleccionado.value.email,
+        emailDestino,
         toastMessage, toastColor, isToastOpen);
     }
     else {
@@ -162,7 +178,7 @@ const asignacionDeAsignaturas = async () => {
         asignaturaSeleccionada.value.curso,
         asignaturaSeleccionada.value.etapa,
         asignaturaSeleccionada.value.grupo,
-        emailUsuarioActual.value,
+        emailDestino,
         toastMessage, toastColor, isToastOpen);
     }
 
@@ -289,10 +305,8 @@ const obtenerSolicitud = async () => {
       ? profesorSeleccionado.value.email
       : emailUsuarioActual.value;
 
-    const response = await obtenerSolicitudes(emailDestino, toastMessage, toastColor, isToastOpen);
+    solicitudes = await obtenerSolicitudes(emailDestino, toastMessage, toastColor, isToastOpen);
 
-    solicitudes = response;
-    
     listaGrupos.value = [];
 
     listaAsignaturasReducciones.value = [
@@ -312,18 +326,6 @@ const obtenerSolicitud = async () => {
         await obtenerGrupoDeAsignatura(i);
       }
     }
-
-    if(response.ok){
-      mensajeActualizacion = 'Solicitudes obtenidas correctamente'
-      mensajeColor = 'success'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-    }
-    else{
-      const errorData = await response.json();
-      mensajeColor = 'danger'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message)
-    }
-
   }
   catch (error) {
     mensajeActualizacion = 'Error al obtener solicitudes'
@@ -426,6 +428,8 @@ const guardarSolicitud = async (index) => {
 
     await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
+    solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
+
     mensajeActualizacion = 'Solicitud guardada correctamente'
     mensajeColor = 'success'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -462,6 +466,8 @@ const guardarTodo = async () => {
     try {
       await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
+      solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
+
       mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
       mensajeColor = 'success'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -475,10 +481,10 @@ const guardarTodo = async () => {
 }
 
 onMounted(async () => {
-  await verificarConstantes();
   await verificarRoles();
   await obtenerEmailUsuarioActual();
   await obtenerProfesor();
+  await verificarConstantes();
   await obtenerListaReducciones();
   await obtenerDiaTramoTipoHorario();
   if (!(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
@@ -522,7 +528,6 @@ onMounted(async () => {
               <option value="" disabled hidden>Selecciona una asignatura</option>
               <option v-for="asignatura in listaAsignaturas" :key="asignatura" :value="asignatura">
                 {{ asignatura.nombre }} ({{ asignatura.horas }} horas) - {{ asignatura.curso }} {{ asignatura.etapa }}
-                {{ asignatura.grupo }}
               </option>
             </select>
             <button class="btn-asignar" :disabled="isDesabilitado" @click="asignacionDeAsignaturas">Asignar</button>
@@ -966,7 +971,7 @@ table {
   border: none;
 }
 
-.btn-eliminar:hover {
+.btn-eliminar:disabled {
   cursor: not-allowed;
 }
 
