@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
@@ -257,14 +257,64 @@ const obtenerDiaTramoTipoHorario = async () => {
   }
 };
 
-const trabajarPrimeraHora = computed(() => {
-  return trabajarPrimeraHoraSeleccionado.value;
+// Filtramos las opciones que van a estar disponibles vasadas en las selecciones
+const tramosFiltrados1 = computed(() => {
+  return listaTramoHorarioSeleccionado.value.filter(tramo => 
+    tramo !== tramoHorarioSeleccionado2.value && 
+    tramo !== tramoHorarioSeleccionado3.value
+  );
+});
+
+const tramosFiltrados2 = computed(() => {
+  return listaTramoHorarioSeleccionado.value.filter(tramo => 
+    tramo !== tramoHorarioSeleccionado.value && 
+    tramo !== tramoHorarioSeleccionado3.value
+  );
+});
+
+const tramosFiltrados3 = computed(() => {
+  return listaTramoHorarioSeleccionado.value.filter(tramo => 
+    tramo !== tramoHorarioSeleccionado.value && 
+    tramo !== tramoHorarioSeleccionado2.value
+  );
+});
+
+// Resetea los tramos horarios seleccionados si se selecciona el mismo
+watch(tramoHorarioSeleccionado, (newValue) => {
+  if (newValue === tramoHorarioSeleccionado2.value) {
+    tramoHorarioSeleccionado2.value = '';
+  }
+  if (newValue === tramoHorarioSeleccionado3.value) {
+    tramoHorarioSeleccionado3.value = '';
+  }
+});
+
+watch(tramoHorarioSeleccionado2, (newValue) => {
+  if (newValue === tramoHorarioSeleccionado.value) {
+    tramoHorarioSeleccionado.value = '';
+  }
+  if (newValue === tramoHorarioSeleccionado3.value) {
+    tramoHorarioSeleccionado3.value = '';
+  }
+});
+
+watch(tramoHorarioSeleccionado3, (newValue) => {
+  if (newValue === tramoHorarioSeleccionado.value) {
+    tramoHorarioSeleccionado.value = '';
+  }
+  if (newValue === tramoHorarioSeleccionado2.value) {
+    tramoHorarioSeleccionado2.value = '';
+  }
 });
 
 const actualizarObservacion = async () => {
   try {
 
     await verificarConstantes();
+
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
 
     // Array con los tramos horarios seleccionados
     const tramos = [
@@ -273,11 +323,18 @@ const actualizarObservacion = async () => {
       tramoHorarioSeleccionado3.value,
     ];
 
+    if (tramos.some(tramo => tramo === '')) {
+      mensajeActualizacion = 'Tienes que elegir todos los tramos horarios'
+      mensajeColor = 'warning'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      return
+    }
+
     // Iteramos sobre los tramos y envíamos una solicitud por cada uno
     for (const tramo of tramos) {
       if (tramo) {
         // Llama al método para enviar los datos al backend
-        await actualizarObservaciones(isOn.value, trabajarPrimeraHora.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailUsuarioActual.value,
+        await actualizarObservaciones(isOn.value, trabajarPrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailDestino,
           toastMessage, toastColor, isToastOpen);
       }
     }
@@ -593,13 +650,12 @@ onMounted(async () => {
       </div>
       <hr class="separator-line" />
       <!-- Dropdowns -->
-      <div class="t-6">Elige tres horas que te gustaría no tener clase, exceptuando la última del viernes y la primera
-        del lunes:</div>
+      <div class="t-6">Elige tres horas que te gustaría no tener clase, exceptuando la última del viernes y la primera del lunes:</div>
       <div class="top-content">
         <div>
-          <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado" class="dropdown-select-hours">
+          <select id="tramoHorario-select-1" v-model="tramoHorarioSeleccionado" class="dropdown-select-hours">
             <option value="">Elige una hora</option>
-            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" 
+            <option v-for="tramoHorario in tramosFiltrados1" 
               :key="tramoHorario" 
               :value="tramoHorario">
               {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
@@ -607,9 +663,9 @@ onMounted(async () => {
           </select>
         </div>
         <div>
-          <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado2" class="dropdown-select-hours">
+          <select id="tramoHorario-select-2" v-model="tramoHorarioSeleccionado2" class="dropdown-select-hours">
             <option value="" disabled hidden>Elige una hora</option>
-            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" 
+            <option v-for="tramoHorario in tramosFiltrados2" 
               :key="tramoHorario" 
               :value="tramoHorario">
               {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
@@ -617,9 +673,9 @@ onMounted(async () => {
           </select>
         </div>
         <div>
-          <select id="tramoHorario-select" v-model="tramoHorarioSeleccionado3" class="dropdown-select-hours">
+          <select id="tramoHorario-select-3" v-model="tramoHorarioSeleccionado3" class="dropdown-select-hours">
             <option value="" disabled hidden>Elige una hora</option>
-            <option v-for="tramoHorario in listaTramoHorarioSeleccionado" 
+            <option v-for="tramoHorario in tramosFiltrados3" 
               :key="tramoHorario" 
               :value="tramoHorario">
               {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
