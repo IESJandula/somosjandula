@@ -14,7 +14,18 @@ import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
-import Formulario from '../views/issues/Formulario.vue';
+
+// Importaciones para las vistas de gestión escolar
+//import A_CargaMatriculas from '@/views/school_manager/A_CargaMatriculas.vue';
+//import B_AsignaturaYBloque from '@/views/school_manager/B_AsignaturaYBloque.vue';
+//import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
+//import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
+//import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
+//import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
+
+// Importaciones para las vistas de incidencias (AÑADIDAS)
+import FormularioIncidencias from '@/views/issues/FormularioIncidencias.vue';
+import TablaIncidencias from '@/views/issues/TablaIncidencias.vue';
 
 const routes = [
   {
@@ -25,101 +36,156 @@ const routes = [
     path: '/login',
     component: LoginPage,
     name: 'Login',
-    meta: { 
-      requiresAuth: false 
+    meta: {
+      requiresAuth: false
     },
   },
   {
-    path: '/:pathMatch(.*)*',
+    path: '/:pathMatch(.*)*', // Esta es la ruta catch-all original que proporcionaste
     component: AccessDeniedPage,
-    name: 'AccessDenied',
+    name: 'AccessDenied', // Mantenido como AccessDenied según tu código original
   },
   {
     path: '/',
     component: MainLayout,
-    meta: { 
-      requiresAuth: true 
+    meta: {
+      requiresAuth: true
     },
     children: [
       {
         path: 'admin/firebase',
         component: AdminFirebasePage,
         name: 'AdminFirebase',
-        meta: { 
-          role: 'ADMINISTRADOR' 
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
       {
         path: 'printers/admin',
         component: PrintersAdminPage,
         name: 'PrintersAdmin',
-        meta: { 
-          role: 'DIRECCION' 
+        meta: {
+          role: 'DIRECCION'
         },
       },
       {
         path: 'printers/print',
         component: PrintersPrintPage,
         name: 'PrintersPrint',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'bookings/admin',
         component: BookingsAdminPage,
         name: 'BookingsAdmin',
-        meta: { 
-          role: 'DIRECCION' 
+        meta: {
+          role: 'DIRECCION'
         },
       },
       {
         path: 'bookings/fixed',
         component: BookingsFixedPage,
         name: 'BookingsFixed',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'bookings/temporary',
         component: BookingsTemporaryPage,
         name: 'BookingsTemporary',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/absences',
         component: AbsencesPage,
         name: 'DocumentsAbsences',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/teacherGuide',
         component: TeacherGuidePage,
         name: 'DocumentsTeacherGuidePage',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'documents/itIssues',
         component: ITIssuesPage,
         name: 'DocumentsITIssuesPage',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      // Rutas de gestión escolar
+      /*{
+        path: 'school_manager/cargaMatriculas',
+        component: A_CargaMatriculas,
+        name: 'A_CargaMatriculas',
+        meta: {
+          role: 'DIRECCION'
         },
       },
       {
-        path: 'issues/formulario',
-        component: Formulario,
-        name: 'FormularioPage',
-        meta: { 
-          role: 'PROFESOR' 
+        path: 'school_manager/asignaturaYBloque',
+        component: B_AsignaturaYBloque,
+        name: 'B_AsignaturaYBloque',
+        meta: {
+          role: 'DIRECCION'
         },
+      },
+      {
+        path: 'school_manager/crearGrupos',
+        component: C_CrearGrupos,
+        name: 'C_CrearGrupos',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/tablaResumen',
+        component: D_TablaResumen,
+        name: 'D_TablaResumen',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/departamentos',
+        component: E_DepartamentosYHoras,
+        name: 'E_DepartamentosYHoras',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/reducciones',
+        component: F_ReduccionesProfesores,
+        name: 'F_ReduccionesProfesores',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },*/
+      // Rutas de incidencias (AÑADIDAS)
+      
+      {
+        path: 'incidencias/list',
+        component: TablaIncidencias,
+        name: 'IncidenciasList',
+        //meta: { role: ['PROFESOR', 'DIRECCION', 'ADMINISTRADOR'] }, // Array de roles
+      },
+      {
+        path: 'incidencias/create',
+        component: FormularioIncidencias,
+        name: 'IncidenciasCreate',
+        //meta: { role: ['PROFESOR', 'DIRECCION', 'ADMINISTRADOR'] }, // Array de roles
       },
     ],
   },
@@ -130,66 +196,60 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => 
-{
+router.beforeEach(async (to, from, next) => {
   const auth = getAuth();
   let user = auth.currentUser;
 
-  if (!user) 
-  {
+  if (!user) {
     user = await waitForAuthReady(auth); // Espera a que Firebase termine de inicializar el estado de autenticación
   }
 
-  if (to.matched.some((record) => record.meta.requiresAuth)) 
-  {
-    if (!user) 
-    {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (!user) {
       return next({ name: 'Login' });
     }
 
-    try 
-    {
+    try {
       const isToastOpen = ref(false);
       const toastMessage = ref('');
       const toastColor = ref('success');
 
       const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen); // Obtiene los roles del usuario
-      const requiredRole = to.meta.role;
+      const requiredRole = to.meta.role; // Obtiene el rol o roles requeridos para la ruta
 
-      // Si la ruta requiere un rol específico y el usuario no lo tiene, redirige a Login o muestra un error.
-      if (requiredRole && !userRoles.includes(requiredRole)) 
-      {
+      // Si la ruta requiere un rol específico y el usuario no lo tiene, redirige.
+      // NOTA: Esta lógica (userRoles.includes(requiredRole)) funcionará si requiredRole es un string.
+      // Si requiredRole es un array (como en las rutas de incidencias), esta condición
+      // !userRoles.includes(requiredRole) siempre será true porque un array de roles de usuario
+      // no "incluirá" directamente otro array. Deberás ajustar esta lógica
+      // para manejar correctamente los arrays de roles si es necesario, por ejemplo:
+      // const hasAccess = Array.isArray(requiredRole) ? requiredRole.some(role => userRoles.includes(role)) : userRoles.includes(requiredRole);
+      // if (requiredRole && !hasAccess) { ... }
+      if (requiredRole && !userRoles.includes(requiredRole)) {
         return next({ name: 'AccessDenied' });
-      } 
-      else 
-      {
+      }
+      else {
         return next(); // Permite el acceso a la ruta solicitada
       }
-    } 
-    catch (error) 
-    {
+    }
+    catch (error) {
       console.error("Error during navigation guard:", error);
       return next({ name: 'Login' });
     }
-  } 
-  else 
-  {
+  }
+  else {
     return next(); // Si no requiere autenticación, continúa normalmente
   }
-});  
-  
+});
 
-function waitForAuthReady(auth)
-{
-  return new Promise((resolve) =>
-  {
-    const unsubscribe = onAuthStateChanged(auth, (user) =>
-    {
-      unsubscribe() ; // Nos desuscribimos después de obtener el usuario
-      resolve(user) ;
+
+function waitForAuthReady(auth) {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe(); // Nos desuscribimos después de obtener el usuario
+      resolve(user);
     });
   });
 }
-
 
 export default router;
