@@ -12,7 +12,7 @@
 
     <div class="date-picker-container">
       <label class="label-datepicker" for="start">Selecciona una fecha</label>
-      <Datepicker v-model="fechaActual" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false"
+      <Datepicker v-model="fechaActual" :auto-apply="true" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false"
         :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso"
         @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es"
         input-class="datepicker-input-custom" menu-class="datepicker-menu-custom" />
@@ -168,7 +168,7 @@
             cantidadSeleccionada)) }} alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
           permitido: 1 Alumno</span>
-          
+
         <button
           v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal && motivoCurso && (fechaActual < fechaSeleccionada)"
           @click="saveChanges">Reservar</button>
