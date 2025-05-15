@@ -6,6 +6,7 @@ import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumn
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
+const filtroSeleccionadoString = ref('');
 const grupoSeleccionado = ref('');
 const infoGrupos = ref([]);
 const listadoAlumnosSeleccionados = ref([]);
@@ -21,6 +22,7 @@ let mensajeColor = "";
 
 const actualizarSelect = (parametro) => {
     filtroSeleccionado.value = parametro;
+    filtroSeleccionadoString.value = `${parametro.curso}-${parametro.etapa}`;
     infoGrupos.value = [];
     grupoSeleccionado.value = '';
     alumnosPorGrupo.value = {};
@@ -282,7 +284,11 @@ onMounted(async () => {
   <h1 class="m-2">Creación de grupos</h1>
   <div class="top-section">
     <div class="card-upload-alumnos">
-      <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1"/>
+      <FilterCursoEtapa 
+        v-model="filtroSeleccionadoString"
+        @actualizar-select="actualizarSelect" 
+        class="m-1"
+      />
       <span style="display: flex; gap: 10px;">
         <button @click="seleccionarTodo" class="btn">Seleccionar todo</button>
         <button @click="deseleccionarTodo" class="btn">Quitar todo</button>

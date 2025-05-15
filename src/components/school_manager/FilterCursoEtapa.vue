@@ -1,6 +1,6 @@
 <script setup>
 // Importa las funciones necesarias de Vue y Axios
-import { onMounted, ref, defineEmits } from 'vue';
+import { onMounted, ref, defineEmits, computed, defineProps } from 'vue';
 import { cargarCursosEtapas } from '@/services/schoolManager.js'
 import { crearToast } from '@/utils/toast.js';
 import { IonToast } from "@ionic/vue";
@@ -12,10 +12,24 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 
 // Define un emisor para comunicar eventos al componente padre
-const emit = defineEmits(['actualizar-select']);
+const emit = defineEmits(['actualizar-select', 'update:modelValue']);
 
-// Declara una variable reactiva que almacena el valor seleccionado en el dropdown
-const seleccionado = ref('');
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: ''
+  }
+});
+
+// Modificar la variable seleccionado para usar v-model
+const seleccionado = computed({
+  get() {
+    return props.modelValue || '';
+  },
+  set(value) {
+    emit('update:modelValue', value);
+  }
+});
 
 // Función asíncrona para cargar los datos de cursos y etapas desde el servidor
 const cargarCursosEtapa = async () => {

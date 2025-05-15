@@ -7,6 +7,7 @@ import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
+const filtroSeleccionadoString = ref('');
 const asignaturas = ref([]);
 const infoGrupos = ref([]);
 const loading = ref(false);
@@ -36,6 +37,7 @@ const calcularTotal = (alumnosPorGrupo) => {
  */
 const actualizarSelect = (seleccionado) => {
   filtroSeleccionado.value = seleccionado;
+  filtroSeleccionadoString.value = `${seleccionado.curso}-${seleccionado.etapa}`;
   cargarAsignatura();
 };
 
@@ -132,7 +134,11 @@ onMounted(() => {
   <div class="container">
     <h1 class="m-4">Resumen por asignaturas</h1>
     <!-- Desplegable para elegir curso y etapa -->
-    <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
+    <FilterCursoEtapa 
+      v-model="filtroSeleccionadoString"
+      @actualizar-select="actualizarSelect" 
+      class="m-1" 
+    />
     <!-- Tarjeta que contiene la tabla -->
     <ion-card class="m-6">
       <ion-card-header>

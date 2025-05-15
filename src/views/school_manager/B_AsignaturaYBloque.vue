@@ -21,10 +21,13 @@ const toastColor = ref('success');
 // Nueva variable reactiva para el mensaje de actualización
 let mensajeActualizacion = "";
 let mensajeColor = "";
+// Agregar esta variable reactiva
+const filtroSeleccionadoString = ref('');
 
 
 const actualizarSelect = (seleccionado) => {
     filtroSeleccionado.value = seleccionado;
+    filtroSeleccionadoString.value = `${seleccionado.curso}-${seleccionado.etapa}`;
     console.log("Filtro actualizado:", seleccionado);
 };
 
@@ -328,7 +331,11 @@ async () =>{
 <template>
   <div class="container">
     <h1 class="m-4">Asignaturas y bloques</h1>
-    <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1"/>
+    <FilterCursoEtapa 
+      v-model="filtroSeleccionadoString"
+      @actualizar-select="actualizarSelect" 
+      class="m-1"
+    />
 
     <!-- Tarjeta que contiene la tabla de asignaturas -->
     <ion-card class="m-6">

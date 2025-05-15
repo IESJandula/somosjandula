@@ -7,6 +7,7 @@ import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
+const filtroSeleccionadoString = ref('');
 const cursoSeleccionado = ref('');
 const archivoSeleccionado= ref(false)
 const file = ref(null);
@@ -115,6 +116,17 @@ const subirFichero = async () => {
         crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
       }
 
+      // Limpiar el archivo seleccionado
+      const fileUploadComponent = fileUploadRef.value;
+      fileUploadComponent.fileClear();
+
+      await cargarMatricula()
+      file.value = null;
+      archivoSeleccionado.value = false;
+      filtroSeleccionado.value = { curso: null, etapa: '' };
+      filtroSeleccionadoString.value = '';
+      comprobarBoton()
+
     } catch (error) {
       mensajeActualizacion = 'Error al subir el fichero';
       mensajeColor = 'danger';
@@ -125,13 +137,6 @@ const subirFichero = async () => {
     console.log("Desactivando spinner...");
     isLoading.value = false; // Desactivar el estado de carga
   }
-    const fileUploadComponent = fileUploadRef.value;
-    fileUploadComponent.fileClear();
-
-    await cargarMatricula()
-    file.value = null;
-    archivoSeleccionado.value = false;
-    comprobarBoton()
 };
 
 // Actualizar la selección del filtro
@@ -183,6 +188,7 @@ const borrarMatricula = async (cursoE) => {
     await cargarMatricula();
     cursoSeleccionado.value = "" // Limpiar el curso seleccionado
     datosMatriculas.value = [] // Limpiar los datos de matrículas
+  
 
   } catch (error) {
     mensajeActualizacion = "Error al borrar el curso";
@@ -417,7 +423,6 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
 );
 
 onMounted(async () => {
-  await cargarCursosEtapa();
   await cargarMatricula();
   comprobarBoton();
   
@@ -432,7 +437,7 @@ onMounted(async () => {
         <div class="container">
           <!-- Selector de curso y etapa -->
            <div class="m-3">Filtrar por curso y etapa</div>
-          <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1"/>
+          <FilterCursoEtapa v-model="filtroSeleccionadoString" @actualizar-select="actualizarSelect" class="m-1"/>
   
           <!-- Subida de ficheros -->
           <div class="section">
