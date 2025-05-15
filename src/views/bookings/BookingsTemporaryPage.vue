@@ -168,8 +168,9 @@
             cantidadSeleccionada)) }} alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
           permitido: 1 Alumno</span>
+          
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal && motivoCurso"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal && motivoCurso && (fechaActual < fechaSeleccionada)"
           @click="saveChanges">Reservar</button>
         <button
           v-else-if="motivoCurso && numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
@@ -402,7 +403,7 @@ const decrementarSemana = () => {
     semana.value = getWeek(new Date(new Date().getFullYear() - 1, 11, 31 - 7));
   }
   incrementarFecha();
-  validarFecha(); // Añadir validación de fecha
+  validarFecha();
   getReserva();
 }
 
@@ -415,7 +416,7 @@ const incrementarSemana = () => {
     semana.value = 1;
   }
   incrementarFecha();
-  validarFecha(); // Añadir validación de fecha
+  validarFecha();
   getReserva();
 }
 
@@ -502,7 +503,7 @@ const verificarConstantes = async () => {
     constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
     const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas temporales');
-    valorMaxDays.value = constantes.value.find(c => c.clave === 'Máximo vista calendario en días').valor;
+    valorMaxDays.value = constantes.value.find(c => c.clave === 'Máximo vista calendario en días').valor - 1;
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
