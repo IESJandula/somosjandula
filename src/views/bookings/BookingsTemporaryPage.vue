@@ -157,7 +157,7 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <Datepicker v-model="fechaSeleccionada" :disabled-dates="disableWeekends" :enable-time-picker="false"
+          <Datepicker v-model="fechaSeleccionada" :auto-apply = "true" :disabled-dates="disableWeekends" :enable-time-picker="false"
             :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
             :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso" @update:model-value="handleDateChange"
             :input-class="{ 'placeholder-date': !fechaSeleccionada }" />
@@ -335,16 +335,26 @@ const actualizarSemana = (fecha) => {
 
 function handleDateChange(date) {
   const selectedDate = new Date(date);
-  const monday = startOfWeek(selectedDate, { weekStartsOn: 1 });
-  const week = [];
-  for (let i = 0; i < 7; i++) {
-    week.push(addDays(monday, i));
-  }
-  semanaSeleccionada.value = week;
+  const today = new Date();
+  const daysToHighlight = [];
 
-  fechaModal({ target: { value: date } })
-  comprobarDisponibilidad()
+  if (selectedDate < today) {
+    semanaSeleccionada.value = [];
+    return;
+  }
+
+  const current = new Date(today);
+  while (current <= selectedDate) {
+    daysToHighlight.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+
+  semanaSeleccionada.value = daysToHighlight;
+  fechaModal({ target: { value: date } });
+  comprobarDisponibilidad();
 }
+
+
 
 const resetearSemana = () => {
   semana.value = reseteoFecha.value;
