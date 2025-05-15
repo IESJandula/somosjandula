@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { cargarAsignaturasUnicas, obtenerNumAlumnosAsignatura, obtenerInfoGrupos } from '@/services/schoolManager.js';
+import { cargarAsignaturasUnicas, obtenerCantidadAlumnosEnGrupoPorAsignatura, obtenerGrupos } from '@/services/schoolManager.js';
 import { IonToast, IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 
@@ -52,24 +52,24 @@ const cargarAsignatura = async () => {
   loading.value = true;
   try {
 
-    const data = await cargarAsignaturasUnicas(
+    const response = await cargarAsignaturasUnicas(
         filtroSeleccionado.value.curso,
         filtroSeleccionado.value.etapa,
         toastMessage,
         toastColor,
         isToastOpen
     );
-    asignaturas.value = Array.isArray(data) ? data : [];
 
-    // Aqui falta el endpoint de cargar los grupos de la asignatura asi que de mientras a fuego, podria ponerlo pero tengo sueño
-    infoGrupos.value = await obtenerInfoGrupos(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa,) || [];
+    asignaturas.value = Array.isArray(response) ? response : [];
+
+    // Carga los grupos para el curso y etapa seleccionados.
+    await obtenerGrupo();
 
     // Para cada asignatura, se saca el número de alumnos para cada grupo.
     await cargarNumeroAlumnosPorGrupo();
   } catch (error) {
-    mensajeActualizacion = "Error al cargar asignaturas. Inténtelo de nuevo.";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   } finally {
     loading.value = false;
@@ -89,7 +89,7 @@ const cargarNumeroAlumnosPorGrupo = async () => {
       try {
         const cursoInt = parseInt(filtroSeleccionado.value.curso, 10);
 
-        const response = await obtenerNumAlumnosAsignatura(
+        const response = await obtenerCantidadAlumnosEnGrupoPorAsignatura(
             cursoInt,
             filtroSeleccionado.value.etapa,
             infoGrupo.grupo,
@@ -97,14 +97,29 @@ const cargarNumeroAlumnosPorGrupo = async () => {
         );
         const numero = parseInt(response,10);
         asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = isNaN(numero) ? 0 : numero;
+
       } catch (error) {
         mensajeActualizacion = `Error al obtener alumnos para ${asignatura.nombre} - Grupo ${infoGrupo.grupo}:`;
         mensajeColor = "danger";
-        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Error al cargar alumnos por grupo. Inténtelo de nuevo.");
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
         console.error(error);
         asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] = 0;
       }
     }
+  }
+};
+
+const obtenerGrupo = async () => {
+  try {
+   
+    const response = await obtenerGrupos(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
+
+    infoGrupos.value = response
+    
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
   }
 };
 

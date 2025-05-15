@@ -4,17 +4,17 @@ import { IonToast, IonInput } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import {
-  asignarAsignatura,
-  obtenerAsignaturas,
-  obtenerGruposDeAsignaturas,
   obtenerProfesoresHorarios,
+  obtenerAsignaturas,
+  asignarAsignatura,
   obtenerReducciones,
   asignarReducciones,
   obtenerDiasTramosTipoHorario,
+  actualizarObservaciones,
   obtenerSolicitudes,
   eliminarSolicitudes,
   guardarSolicitudes,
-  actualizarObservaciones
+  obtenerGruposDeAsignaturas
 } from "@/services/schoolManager.js";
 import { obtenerConstantes } from '@/services/constantes'
 import { schoolmanagerApiUrl } from "@/environment/apiUrls.ts";
@@ -101,18 +101,15 @@ const obtenerProfesor = async () => {
 
   try {
 
-    const data = await obtenerProfesoresHorarios(toastMessage, toastColor, isToastOpen);
-    listaProfesores.value = data;
+    const response = await obtenerProfesoresHorarios(toastMessage, toastColor, isToastOpen);
+    listaProfesores.value = response;
+    console.log("listaProfesores", listaProfesores.value);
 
     profesorSeleccionado.value = '';
 
-    await obtenerSolicitud();
-    await obtenerListaAsignaturas();
-
   } catch (error) {
-    mensajeActualizacion = 'Error al cargar los profesores.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -123,9 +120,13 @@ const obtenerListaAsignaturas = async () => {
       ? profesorSeleccionado.value.email
       : emailUsuarioActual.value;
 
-    const data = await obtenerAsignaturas(emailDestino, toastMessage, toastColor, isToastOpen);
-    listaAsignaturas.value = data;
+    const response = await obtenerAsignaturas(emailDestino, toastMessage, toastColor, isToastOpen);
+    listaAsignaturas.value = response;
+    console.log("listaAsignaturas", listaAsignaturas.value);
+
   } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -139,8 +140,18 @@ const asignacionDeAsignaturas = async () => {
       ? profesorSeleccionado.value.email
       : emailUsuarioActual.value;
 
+    // Validar que se haya seleccionado una asignatura
+    if (!asignaturaSeleccionada.value) {
+      mensajeActualizacion = 'Debes seleccionar una asignatura';
+      mensajeColor = 'warning';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+
+    let response = null;
+
     if (profesorSeleccionado.value !== '') {
-      await asignarAsignatura(
+      response = await asignarAsignatura(
         asignaturaSeleccionada.value.nombre,
         asignaturaSeleccionada.value.horas,
         asignaturaSeleccionada.value.curso,
@@ -184,11 +195,19 @@ const asignacionDeAsignaturas = async () => {
 
     await obtenerSolicitud();
 
-    mensajeActualizacion = "Asignación de asignatura realizada correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if(response.ok) {
+      mensajeActualizacion = "Asignatura asignada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+    
   } catch (error) {
-    mensajeActualizacion = 'Error al cargar las reducciones.';
+    mensajeActualizacion = 'Error al cargar las asignaturas.';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     console.error(error);
@@ -199,14 +218,12 @@ const obtenerListaReducciones = async () => {
 
   try {
 
-    const data = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
-    listaReducciones.value = data;
-    console.log(listaReducciones.value)
+    const response = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
+    listaReducciones.value = response;
 
   } catch (error) {
-    mensajeActualizacion = 'Error al cargar las reducciones.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -216,26 +233,35 @@ const asignarReduccion = async () => {
 
     await verificarConstantes();
 
-    if (profesorSeleccionado.value !== '') {
-      await asignarReducciones(
-        profesorSeleccionado.value.email,
-        reduccionSeleccionada.value.nombre,
-        reduccionSeleccionada.value.horas,
-        toastMessage, toastColor, isToastOpen);
-    }
-    else {
-      await asignarReducciones(
-        emailUsuarioActual.value,
-        reduccionSeleccionada.value.nombre,
-        reduccionSeleccionada.value.horas,
-        toastMessage, toastColor, isToastOpen);
-    }
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
 
+      if (!reduccionSeleccionada.value) {
+        mensajeActualizacion = 'Debes seleccionar una reducción';
+        mensajeColor = 'warning';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+        return;
+      }
+
+    const response = await asignarReducciones(
+      emailDestino,
+      reduccionSeleccionada.value.nombre,
+      reduccionSeleccionada.value.horas,
+      toastMessage, toastColor, isToastOpen);
+    
     await obtenerSolicitud();
 
-    mensajeActualizacion = "Asignación de reducción realizada correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if(response.ok) {
+      mensajeActualizacion = "Reducción asignada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
   } catch (error) {
     mensajeActualizacion = 'Error al cargar las reducciones.';
     mensajeColor = 'danger';
@@ -247,12 +273,12 @@ const asignarReduccion = async () => {
 const obtenerDiaTramoTipoHorario = async () => {
   try {
 
-    listaTramoHorarioSeleccionado.value = await obtenerDiasTramosTipoHorario(tramoHorarioSeleccionado.value, toastMessage, toastColor, isToastOpen);
+    const response = await obtenerDiasTramosTipoHorario(tramoHorarioSeleccionado.value, toastMessage, toastColor, isToastOpen);
+    listaTramoHorarioSeleccionado.value = response;
 
   } catch (error) {
-    mensajeActualizacion = 'Error al cargar los tramos horarios.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -330,17 +356,27 @@ const actualizarObservacion = async () => {
       return
     }
 
+    let response = null;
+
     // Iteramos sobre los tramos y envíamos una solicitud por cada uno
     for (const tramo of tramos) {
       if (tramo) {
         // Llama al método para enviar los datos al backend
-        await actualizarObservaciones(isOn.value, trabajarPrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailDestino,
+        response = await actualizarObservaciones(isOn.value, trabajarPrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailDestino,
           toastMessage, toastColor, isToastOpen);
       }
     }
-    mensajeActualizacion = 'Observaciones actualizadas correctamente'
-    mensajeColor = 'success'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+
+    if(response.ok) {
+      mensajeActualizacion = "Observaciones actualizadas correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
   } catch (error) {
     mensajeActualizacion = 'Error al actualizar las observaciones'
     mensajeColor = 'danger'
@@ -357,12 +393,13 @@ const totalHorasAsignaturas = computed(() => {
 const obtenerSolicitud = async () => {
   try {
 
-    let solicitudes = null;
+    let response = null;
     const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
-      ? profesorSeleccionado.value.email
-      : emailUsuarioActual.value;
-
-    solicitudes = await obtenerSolicitudes(emailDestino, toastMessage, toastColor, isToastOpen);
+    ? profesorSeleccionado.value.email
+    : emailUsuarioActual.value;
+    
+    response = await obtenerSolicitudes(emailDestino, toastMessage, toastColor, isToastOpen);
+    const solicitudes = response;
 
     listaGrupos.value = [];
 
@@ -392,42 +429,10 @@ const obtenerSolicitud = async () => {
     }
   }
   catch (error) {
-    mensajeActualizacion = 'Error al obtener solicitudes'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
 }
-
-const obtenerGrupoDeAsignatura = async (index) => {
-  try {
-    const asignatura = listaAsignaturasReducciones.value[index];
-
-    if (asignatura.tipo !== 'Asignatura') return;
-
-    const grupos = await obtenerGruposDeAsignaturas(
-      asignatura.nombreAsignatura,
-      asignatura.horasAsignatura,
-      asignatura.curso,
-      asignatura.etapa,
-      toastMessage,
-      toastColor,
-      isToastOpen
-    );
-
-    // Inicializa el array si no existe
-    if (!listaGrupos.value[index]) {
-      listaGrupos.value[index] = [];
-    }
-
-    // Asigna los grupos directamente
-    listaGrupos.value[index] = grupos;
-
-    console.log('Grupos obtenidos:', grupos);
-
-  } catch (error) {
-    console.error(error);
-  }
-};
 
 const eliminarSolicitud = async (index) => {
   try {
@@ -451,13 +456,20 @@ const eliminarSolicitud = async (index) => {
       nombreReduccion: solicitud.nombreReduccion,
       horasReduccion: solicitud.horasReduccion,
     };
-    await eliminarSolicitudes(data, toastMessage, toastColor, isToastOpen);
+    const response = await eliminarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
     // Elimina la solicitud de la lista
     listaAsignaturasReducciones.value.splice(index, 1);
-    mensajeActualizacion = 'Solicitud eliminada correctamente'
-    mensajeColor = 'success'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    if (response.ok) {
+      mensajeActualizacion = "Solicitud eliminada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
   }
   catch (error) {
     mensajeActualizacion = 'Error al eliminar solicitud'
@@ -495,13 +507,20 @@ const guardarSolicitud = async (index) => {
       grupoNuevo: solicitud.grupoSeleccionado,
     };
 
-    await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
+    const response = await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
     solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
 
-    mensajeActualizacion = 'Solicitud guardada correctamente'
-    mensajeColor = 'success'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    if (response.ok) {
+      mensajeActualizacion = "Solicitud guardada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
   }
   catch (error) {
     mensajeActualizacion = 'Error al guardar solicitud'
@@ -539,13 +558,20 @@ const guardarTodo = async () => {
     };
 
     try {
-      await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
+      const response = await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
       solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
 
-      mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
-      mensajeColor = 'success'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      if (response.ok) {
+        mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
+        mensajeColor = "success";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      } else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }
+
     }
     catch (error) {
       mensajeActualizacion = 'Error al guardar todas las solicitudes'
@@ -554,6 +580,37 @@ const guardarTodo = async () => {
     }
   }
 }
+
+const obtenerGrupoDeAsignatura = async (index) => {
+  try {
+    const asignatura = listaAsignaturasReducciones.value[index];
+
+    if (asignatura.tipo !== 'Asignatura') return;
+
+    const response = await obtenerGruposDeAsignaturas(
+      asignatura.nombreAsignatura,
+      asignatura.horasAsignatura,
+      asignatura.curso,
+      asignatura.etapa,
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
+    // Inicializa el array si no existe
+    if (!listaGrupos.value[index]) {
+      listaGrupos.value[index] = [];
+    }
+
+    // Asigna los grupos directamente
+    listaGrupos.value[index] = response;
+
+  } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
+};
 
 onMounted(async () => {
   await verificarRoles();
@@ -569,6 +626,17 @@ onMounted(async () => {
     await obtenerSolicitud();
   }
 });
+
+watch(profesorSeleccionado, async (nuevoProfesor) => {
+  if (
+    nuevoProfesor &&
+    (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+  ) {
+    await obtenerListaAsignaturas();
+    await obtenerSolicitud();
+  }
+});
+
 
 </script>
 

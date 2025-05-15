@@ -20,21 +20,6 @@ const toastColor = ref('success');
 let mensajeActualizacion = "";
 let mensajeColor = "";
 
-const cargarReduccion = async () => {
-  try {
-
-    const data = await cargarReducciones(toastMessage, toastColor, isToastOpen);
-    listaReducciones.value = data;
-    decideDireccion.value = false;
-    
-  } catch (error) {
-    mensajeActualizacion = 'Error al cargar las reducciones.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
 const crearReduccion = async (nombreRe, horasRe, decideDireccionRe) => {
 
   try {
@@ -53,16 +38,38 @@ const crearReduccion = async (nombreRe, horasRe, decideDireccionRe) => {
       return;
     }
 
-    await crearReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha creado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    const response = await crearReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
+    
+    if (response.ok) {
+      mensajeActualizacion = "Reducción creada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
     cargarReduccion();
    
   } catch (error) {
     mensajeActualizacion = 'Error al crear la reducción.';
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const cargarReduccion = async () => {
+  try {
+
+    const response = await cargarReducciones(toastMessage, toastColor, isToastOpen);
+    listaReducciones.value = response;
+    decideDireccion.value = false;
+    
+  } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -86,19 +93,17 @@ const borrarReduccion = async(index) => {
     // Asegúrate de que las reducciones asignadas estén actualizadas
     await obtenerReduccionProfesor();
 
-    if(listaReduccionesAsignadas.value !== undefined){
-      if (listaReduccionesAsignadas.value.some(reduccion => reduccion.nombreReduccion === nombreRe)) {
-      mensajeActualizacion = 'No se puede eliminar la reducción porque está asignada a un profesor.';
-      mensajeColor = 'warning';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-      }
-    }
+    const response = await borrarReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
 
-    await borrarReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha eliminado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if(response.ok) {
+      mensajeActualizacion = "Reducción eliminada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
 
     await cargarReduccion();
 
@@ -114,15 +119,20 @@ const obtenerProfesor = async () => {
 
   try {
 
-    const data = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
-    listaProfesores.value = data;
+    const response = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
+    listaProfesores.value = response;
 
     profesorSeleccionado.value = '';
 
+    if(response.length < 0) {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
   } catch (error) {
-    mensajeActualizacion = 'Error al cargar los profesores.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -149,12 +159,19 @@ const asignarReduccion = async (profesor) => {
     const horas = reduccionSeleccionada.value.horas;
     const reduccion = reduccionSeleccionada.value.nombre;
 
-    await asignarReducciones(profesor.email, reduccion, horas, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha asignado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-
+    const response = await asignarReducciones(profesor.email, reduccion, horas, toastMessage, toastColor, isToastOpen);
+    
     await obtenerReduccionProfesor();
+    
+    if(response.ok) {
+      mensajeActualizacion = "Reducción asignada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
 
   } catch (error) {
     mensajeActualizacion = 'Error al asignar la reducción.';
@@ -168,15 +185,20 @@ const obtenerReduccionProfesor = async () => {
 
   try {
 
-    const data = await obtenerReduccionesProfesores(toastMessage, toastColor, isToastOpen);
-    listaReduccionesAsignadas.value = data;
+    const response = await obtenerReduccionesProfesores(toastMessage, toastColor, isToastOpen);
+    listaReduccionesAsignadas.value = response;
     profesorSeleccionado.value = '';
     reduccionSeleccionada.value = '';
 
+    if(response.length < 0) {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
   } catch (error) {
-    mensajeActualizacion = 'Error al cargar las reducciones asignadas.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -196,10 +218,18 @@ const borrarReduccionProfesor = async (index) => {
     const nombreRe = registro.nombreReduccion;
     const horasRe = registro.horas;
 
-    await borrarReduccionesProfesores(email, nombreRe, horasRe, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha eliminado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    const response = await borrarReduccionesProfesores(email, nombreRe, horasRe, toastMessage, toastColor, isToastOpen);
+
+    if(response.ok) {
+      mensajeActualizacion = "Reducción eliminada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
     await obtenerReduccionProfesor();
 
   } catch (error) {

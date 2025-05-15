@@ -2,6 +2,8 @@
 // Importa las funciones necesarias de Vue y Axios
 import { onMounted, ref, defineEmits } from 'vue';
 import { cargarCursosEtapas } from '@/services/schoolManager.js'
+import { crearToast } from '@/utils/toast.js';
+import { IonToast } from "@ionic/vue";
 
 // Declara una variable reactiva para almacenar los cursos y etapas obtenidos del servidor
 const cursosEtapas = ref([]);
@@ -18,10 +20,13 @@ const seleccionado = ref('');
 // Función asíncrona para cargar los datos de cursos y etapas desde el servidor
 const cargarCursosEtapa = async () => {
   try {
-    const data = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
-    cursosEtapas.value = data;
+    const response = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
+    cursosEtapas.value = response;
+
   } catch (error) {
-    console.error('Error al cargar cursos y etapas', error);
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
   }
 };
 
@@ -47,25 +52,33 @@ const actualizarSelect = () => {
 </script>
 
 <template>
-    <div>
-        <!-- Dropdown para seleccionar curso y etapa -->
-        <select 
-            v-model="seleccionado" 
-            @change="actualizarSelect" 
-            name="cursos-etapas" 
-            id="cursos-etapas" 
-            class="p-2">
-            <!-- Opción inicial por defecto -->
-            <option value="">Selecciona un curso</option>
-            <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
-            <option 
-                v-for="cursoEtapa in cursosEtapas" 
-                :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
-                :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-                {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
-            </option>
-        </select>
-    </div>
+  <div>
+    <!-- Dropdown para seleccionar curso y etapa -->
+    <select 
+        v-model="seleccionado" 
+        @change="actualizarSelect" 
+        name="cursos-etapas" 
+        id="cursos-etapas" 
+        class="p-2">
+        <!-- Opción inicial por defecto -->
+        <option value="">Selecciona un curso</option>
+        <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
+        <option 
+            v-for="cursoEtapa in cursosEtapas" 
+            :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
+            :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
+            {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
+        </option>
+    </select>
+    <ion-toast 
+      :is-open="isToastOpen" 
+      :message="toastMessage" 
+      :color="toastColor" 
+      duration="2000"
+      @did-dismiss="() => (isToastOpen = false)" 
+      position="top">
+    </ion-toast>
+  </div>
 </template>
 
 <style>

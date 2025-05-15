@@ -45,7 +45,6 @@ const actualizarBloquesConUnaAsignatura = () => {
     .map(([bloqueId]) => bloqueId);
 };
 
-
 const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturas.value = [];
@@ -56,11 +55,11 @@ const cargarAsignatura = async () => {
   loading.value = true;
 
   try {
-    const data = await cargarAsignaturas(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
+    const response = await cargarAsignaturas(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
     
-    asignaturas.value = data;
+    asignaturas.value = response;
 
-    asignaturas.value = Array.isArray(data) ? data : [];
+    asignaturas.value = Array.isArray(response) ? response : [];
     console.log(asignaturas.value.length);
   
     actualizarBloquesConUnaAsignatura(); // Actualiza los bloques con una asignatura
@@ -73,10 +72,10 @@ const cargarAsignatura = async () => {
       });
     });
     columnasGrupos.value = Array.from(gruposSet);
+
   } catch (error) {
-    mensajeActualizacion = "Error al cargar asignaturas. Inténtelo de nuevo.";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   } finally {
     loading.value = false;
@@ -96,7 +95,7 @@ const crearBloque = async () => {
 
   try {
     const nombresSeleccionados = asignaturasSeleccionadas.value.map(a => a.nombre);
-    await crearBloques(
+    const response = await crearBloques(
       filtroSeleccionado.value.curso, 
       filtroSeleccionado.value.etapa, 
       nombresSeleccionados, 
@@ -104,6 +103,16 @@ const crearBloque = async () => {
       toastColor, 
       isToastOpen);
 
+    if(response.ok) {
+      mensajeActualizacion = "Bloque creado correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
     
     asignaturasSeleccionadas.value = [];
     //Esta tambien pero quizas es necesario que lo haga para que cambie la casilla de bloque
@@ -122,7 +131,7 @@ const crearBloque = async () => {
 const eliminarBloque = async (asignatura) => {
   loading.value = true;
   try {
-    await eliminarBloques(
+    const response =  await eliminarBloques(
       filtroSeleccionado.value.curso, 
       filtroSeleccionado.value.etapa, 
       asignatura.nombre, 
@@ -130,6 +139,17 @@ const eliminarBloque = async (asignatura) => {
       toastMessage, 
       toastColor, 
       isToastOpen);
+
+    if(response.ok) {
+      mensajeActualizacion = `Bloque ${asignatura.bloqueId} eliminado correctamente correctamente.`;
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
       
     asignatura.bloqueId = null;
     cargarAsignatura();
@@ -152,7 +172,7 @@ const asignaturaSinDocencia = async (asignatura) => {
     // Invertimos el valor actual de sinDocencia
     const nuevoValor = !asignatura.sinDocencia;
     
-     await asignaturasSinDocencia(
+    const response = await asignaturasSinDocencia(
       asignatura.nombre,
       nuevoValor,
       toastMessage, 
@@ -160,12 +180,19 @@ const asignaturaSinDocencia = async (asignatura) => {
       isToastOpen
     );
 
+    if(response.ok) {
+      mensajeActualizacion = `Asignatura ${asignatura.nombre} ${nuevoValor ? 'marcada' : 'desmarcada'} como sin docencia`;
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
     // Actualizamos el valor en la asignatura
     asignatura.sinDocencia = nuevoValor;
-
-    mensajeActualizacion = `Asignatura ${asignatura.nombre} ${nuevoValor ? 'marcada' : 'desmarcada'} como sin docencia`;
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
 
   } catch (error) {
     mensajeActualizacion = "Error al actualizar el estado de sin docencia";
@@ -176,7 +203,7 @@ const asignaturaSinDocencia = async (asignatura) => {
   }
 };
 
-const mostrarHora = async () =>{
+const mostrarHora = async () => {
 
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturasConHoras.value = [];
@@ -187,10 +214,10 @@ const mostrarHora = async () =>{
 
   try {
     // Llamada al servicio que obtiene las horas
-    const data = await mostrarHoras(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
-    console.log(data);
+    const response = await mostrarHoras(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
+    console.log(response);
 
-    asignaturasConHoras.value =Array.isArray(data) ? data : []; // Guarda los resultados
+    asignaturasConHoras.value =Array.isArray(response) ? response : []; // Guarda los resultados
 
     console.log(asignaturasConHoras.value)
     // Inicializa el objeto de horasPorAsignatura
@@ -200,9 +227,8 @@ const mostrarHora = async () =>{
     }, {});
 
   } catch (error) {
-    mensajeActualizacion = "Error al cargar las horas. Inténtelo de nuevo.";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   } finally {
     loading.value = false;
@@ -218,7 +244,7 @@ const guardarHoras = async (nombreAsignatura) => {
   }
 
   try {
-    await asignarHoras(
+    const response = await asignarHoras(
       filtroSeleccionado.value.curso,
       filtroSeleccionado.value.etapa,
       nombreAsignatura,
@@ -227,9 +253,17 @@ const guardarHoras = async (nombreAsignatura) => {
       toastColor, 
       isToastOpen
     );
-    mensajeActualizacion = `Has actualizado las horas de ${nombreAsignatura}.`;
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+    if(response.ok) {
+      mensajeActualizacion = `Has actualizado las horas de ${nombreAsignatura}.`;
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
 
   } catch (error) {
     mensajeActualizacion = "Error al actualizar las horas.";
@@ -254,13 +288,24 @@ const guardarTodasHoras = async () => {
   isProcessing.value = true;
 
   try {
+
+    let response = null;
+
     for (const [nombre, horas] of asignaturasAActualizar) {
-      await guardarHoras(nombre, horas );
+      response = await guardarHoras(nombre, horas );
     }
 
-    mensajeActualizacion = "Todas las asignaturas se actualizaron correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if(response.ok) {
+      mensajeActualizacion = "Todas las asignaturas se actualizaron correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
   } catch (error) {
     mensajeActualizacion = "Error al actualizar las horas.";
     mensajeColor = "danger";

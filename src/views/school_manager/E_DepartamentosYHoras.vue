@@ -25,22 +25,52 @@ let mensajeColor = "";
 
 const obtenerDepartamento = async () => {
   try {
-    const data = await obtenerDepartamentos(toastMessage, toastColor, isToastOpen);
-    departamentos.value = data;
+    const response = await obtenerDepartamentos(toastMessage, toastColor, isToastOpen);
+    departamentos.value = response;
+
   } catch (error) {
-    mensajeActualizacion = "Error al cargar departamentos";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
 
-const obtenerCursoYEtapa = async () => {
+const asignarProfesorADepartamento = async (nombreDepartamento) => {
+ 
+  if (nombreDepartamento === '') {
+    mensajeActualizacion = "Por favor, selecciona un departamento."; 
+    mensajeColor = "warning";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+  
+  if (plantillaPorAsignatura.value === '') {
+    mensajeActualizacion = "La plantilla no puede estar vacía.";
+    mensajeColor = "warning";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
   try {
-    const data = await obtenerCursosEtapasGrupos(toastMessage, toastColor, isToastOpen);
-    cursosYetapas.value = data;
+    const response = await asignarProfesoresADepartamentos(nombreDepartamento, plantillaPorAsignatura.value, toastMessage, toastColor, isToastOpen);
+    departamentos.value = response;
+
+    if(response.ok) {
+      mensajeActualizacion = "Profesor asignado correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+    await obtenerDepartamento();
+    await obtenerDatosDepartamentoConAsignatura();
+
   } catch (error) {
-    mensajeActualizacion = "Error al cargar cursos y etapas";
+    mensajeActualizacion = "Error al asignar profesor al departamento";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     console.error(error);
@@ -49,10 +79,12 @@ const obtenerCursoYEtapa = async () => {
 
 const obtenerDatosDepartamentoConAsignatura = async () => {
   try {
-    const data = await obtenerDatosDepartamentosConAsignaturas(
+    const response = await obtenerDatosDepartamentosConAsignaturas(
         toastMessage, toastColor, isToastOpen
     );
-    listaDepartamentosIterable.value = data;
+
+    listaDepartamentosIterable.value = response;
+    console.log("listaDepartamentosIterable", listaDepartamentosIterable.value);
 
     // Aseguramos que desfase sea numérico
     listaDepartamentosIterable.value.forEach(d =>
@@ -85,6 +117,22 @@ const obtenerDatosDepartamentoConAsignatura = async () => {
     });
 
   } catch (error) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
+};
+
+const obtenerCursoEtapaGrupo = async () => {
+
+  try {
+
+    const response = await obtenerCursosEtapasGrupos(toastMessage, toastColor, isToastOpen);
+    cursosYetapas.value = response;
+
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -93,7 +141,7 @@ const obtenerDatosDepartamentoConAsignatura = async () => {
 const obtenerAsignaturas = async () => {
   if (cursosYetapasSeleccionado.value) {
     try {
-      const data = await obtenerAsignaturasPorCursoEtapaGrupo(
+      const response = await obtenerAsignaturasPorCursoEtapaGrupo(
         cursosYetapasSeleccionado.value.curso,
         cursosYetapasSeleccionado.value.etapa,
         cursosYetapasSeleccionado.value.grupo,
@@ -101,8 +149,11 @@ const obtenerAsignaturas = async () => {
         toastColor,
         isToastOpen
       );
-      asignaturas.value = data;
+      asignaturas.value = response;
+
     } catch (error) {
+      mensajeColor = "danger";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
       console.error(error);
     }
   } else {
@@ -113,17 +164,17 @@ const obtenerAsignaturas = async () => {
 //Todas las asignaturas
 const obtenerAsignaturasCompletas = async () => {
   try {
-    const todasLasAsignaturas = await obtenerTodasLasAsignaturas();
+    const response = await obtenerTodasLasAsignaturas(toastMessage, toastColor, isToastOpen);
 
-    listaAsignaturasDepartamentos.value = todasLasAsignaturas.filter(asignatura => {
+    listaAsignaturasDepartamentos.value = response.filter(asignatura => {
       const receptor = asignatura.departamentoReceptor?.trim();
       const propietario = asignatura.departamentoPropietario?.trim();
       return receptor && receptor.length > 0 || propietario && propietario.length > 0;
     });
+    
   } catch (error) {
-    mensajeActualizacion = "Error al cargar todas las asignaturas";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
@@ -131,6 +182,56 @@ const obtenerAsignaturasCompletas = async () => {
 const actualizarCurso = (parametro) => {
   cursosYetapasSeleccionado.value = parametro;
   obtenerAsignaturas()
+};
+
+const eliminarAsignaturaDepartamento = async (index) => {
+  const registro = listaAsignaturasDepartamentos.value[index];
+  if (!registro) {
+    mensajeActualizacion = "Registro no encontrado";
+    mensajeColor = "warning";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
+  const curso = registro.curso;
+  const etapa = registro.etapa;
+  const grupo = registro.grupo;
+  const nombre = registro.nombre;
+
+  try {
+
+    const response = await quitarAsignaturasDeDepartamentos(
+      curso,
+      etapa,
+      grupo,
+      nombre,
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
+    if(response.ok) {
+      mensajeActualizacion = "Asignatura desasignada correctamente";
+      mensajeColor = "success"; 
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+    await obtenerAsignaturasCompletas();
+    await obtenerAsignaturas();
+    await obtenerDatosDepartamentoConAsignatura();
+    await obtenerDepartamento();
+
+  } catch (error) {
+    mensajeActualizacion = "Error al desasignar la asignatura del departamento";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
 };
 
 const asignarDepPropietario = async () => {
@@ -151,10 +252,12 @@ const asignarDepPropietario = async () => {
       return;
     }
 
+    let response = null;
+
     for (const asignatura of asignaturaSeleccionada.value)
     {
       const nombreAsignatura = asignatura.nombreAsignaturas;
-      await asignarAsignaturasADepartamentos(
+      response = await asignarAsignaturasADepartamentos(
         cursosYetapasSeleccionado.value.curso,
         cursosYetapasSeleccionado.value.etapa,
         cursosYetapasSeleccionado.value.grupo,
@@ -166,14 +269,23 @@ const asignarDepPropietario = async () => {
         isToastOpen
       );
     }
-    mensajeActualizacion = "Asignación realizada correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+    if(response.ok) {
+      mensajeActualizacion = "Asignación realizada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
 
     asignaturaSeleccionada.value = [];
     await obtenerAsignaturas()
     await obtenerAsignaturasCompletas()
     await obtenerDatosDepartamentoConAsignatura()
+    
   } catch (error) {
     mensajeActualizacion = "Error al asignar departamentos a las asignaturas";
     mensajeColor = "danger";
@@ -182,86 +294,9 @@ const asignarDepPropietario = async () => {
   }
 }
 
-const eliminarAsignaturaDepartamento = async (index) => {
-  const registro = listaAsignaturasDepartamentos.value[index];
-  if (!registro) {
-    mensajeActualizacion = "Registro no encontrado";
-    mensajeColor = "warning";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    return;
-  }
-
-  const curso = registro.curso;
-  const etapa = registro.etapa;
-  const grupo = registro.grupo;
-  const nombre = registro.nombre;
-
-  try {
-    await quitarAsignaturasDeDepartamentos(
-      curso,
-      etapa,
-      grupo,
-      nombre,
-      toastMessage,
-      toastColor,
-      isToastOpen
-    );
-
-    await obtenerAsignaturasCompletas();
-    await obtenerAsignaturas();
-    await obtenerDatosDepartamentoConAsignatura();
-    await obtenerDepartamento();
-    mensajeActualizacion = "Asignatura desasignada correctamente";
-    mensajeColor = "success"; 
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-
-  } catch (error) {
-    mensajeActualizacion = "Error al desasignar la asignatura del departamento";
-    mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-
-const asignarProfesorADepartamento = async (nombreDepartamento) => {
- 
-  if (nombreDepartamento === '') {
-    mensajeActualizacion = "Por favor, selecciona un departamento."; 
-    mensajeColor = "warning";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    return;
-  }
-  
-  if (plantillaPorAsignatura.value === '') {
-    mensajeActualizacion = "La plantilla no puede estar vacía.";
-    mensajeColor = "warning";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    return;
-  }
-
-  try {
-    const data = await asignarProfesoresADepartamentos(nombreDepartamento, plantillaPorAsignatura.value, toastMessage, toastColor, isToastOpen);
-    departamentos.value = data;
-
-    mensajeActualizacion = "Profesor asignado correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-
-    await obtenerDepartamento();
-    await obtenerDatosDepartamentoConAsignatura();
-
-  } catch (error) {
-    mensajeActualizacion = "Error al asignar profesor al departamento";
-    mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
 onMounted(async () => {
   await obtenerDepartamento();
-  await obtenerCursoYEtapa();
+  await obtenerCursoEtapaGrupo();
   await obtenerAsignaturasCompletas();
   await obtenerDatosDepartamentoConAsignatura();
 });

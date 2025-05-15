@@ -1,13 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
-import { cargarCursosEtapas, subirFicheros, obtenerCursosCargados, borrarMatriculas, obtenerDatosMatriculas, matricularAsignaturasCsv, matricularAlumnosCsv, desmatricularAlumnosCsv } from '@/services/schoolManager.js'
+import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
+import { subirFicheros, cargarMatriculas, borrarMatriculas, obtenerDatosMatriculas, matricularAsignaturas, matricularAlumnos, desmatricularAlumnos } from '@/services/schoolManager.js'
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
-const cursosEtapas = ref([]);
-const emit = defineEmits(['actualizar-select']);
-const seleccionado = ref('');
+const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const cursoSeleccionado = ref('');
 const archivoSeleccionado= ref(false)
 const file = ref(null);
@@ -34,7 +33,7 @@ let mensajeColor = "";
 
 const comprobarBoton = () => {
   const boton = document.getElementById('enviar');
-  if( archivoSeleccionado.value && seleccionado.value  && validarCSV(file.value)) {
+  if (archivoSeleccionado.value && filtroSeleccionado.value.curso && filtroSeleccionado.value.etapa && validarCSV(file.value)) {
     boton.disabled = false;
     buttonText.value = "Enviar";
   } else {
@@ -91,20 +90,31 @@ const subirFichero = async () => {
   if (!file.value) return;
     try {
 
-      const [curso, etapa] = seleccionado.value.split('-');
-      if(seleccionado.value && cursosMapeados.value.includes(seleccionado.value)){
-        eliminarCursosCargados(seleccionado.value);
-        
+      if(filtroSeleccionado.value.curso && cursosMapeados.value.includes(`${filtroSeleccionado.value.curso}-${filtroSeleccionado.value.etapa}`)){
+        borrarMatricula(`${filtroSeleccionado.value.curso}-${filtroSeleccionado.value.etapa}`);
       }
 
       isLoading.value = true; // Activar el estado de carga
-      const data = await subirFicheros(file.value, curso, etapa, toastMessage, toastColor, isToastOpen);
-      console.log("Activando spinner...");
-      console.log("Fichero Cargado:", data);
+      const response = await subirFicheros(
+        file.value, 
+        filtroSeleccionado.value.curso, 
+        filtroSeleccionado.value.etapa, 
+        toastMessage, 
+        toastColor, 
+        isToastOpen
+      );
 
+      if(response.ok) {
       mensajeActualizacion = "Csv cargado con éxito";
       mensajeColor = "success";
-      crearToast( toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+      } else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }
+
     } catch (error) {
       mensajeActualizacion = 'Error al subir el fichero';
       mensajeColor = 'danger';
@@ -115,45 +125,26 @@ const subirFichero = async () => {
     console.log("Desactivando spinner...");
     isLoading.value = false; // Desactivar el estado de carga
   }
-    seleccionado.value = "";
     const fileUploadComponent = fileUploadRef.value;
     fileUploadComponent.fileClear();
 
-    await insertarCursosCargados()
+    await cargarMatricula()
     file.value = null;
     archivoSeleccionado.value = false;
     comprobarBoton()
 };
 
-const cargarCursosEtapa = async () => {
-  try {
-    const data = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
-    cursosEtapas.value = data;
-    comprobarBoton()
-  } catch (error) {
-    mensajeActualizacion = "Error al cargar cursos y etapas";
-    mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-
+// Actualizar la selección del filtro
 // Actualizar la selección y almacenar los valores en `filtroSeleccionado`
-const actualizarSelect = () => {
-  if (seleccionado.value) {
-    const [curso, etapa] = seleccionado.value.split('-');
-    emit('actualizar-select', { curso: parseInt(curso), etapa });
-    console.log("Evento emitido:", { curso: parseInt(curso), etapa });
+const actualizarSelect = (seleccionado) => {
+    filtroSeleccionado.value = seleccionado;
+    console.log("Filtro actualizado:", seleccionado);
     comprobarBoton();
-  } else {
-    emit('actualizar-select', { curso: null, etapa: '' });
-  }
 };
 
-const insertarCursosCargados = async () => {
+const cargarMatricula = async () => {
   try {
-    const data = await obtenerCursosCargados(isToastOpen, toastMessage, toastColor) || [];
+    const data = await cargarMatriculas(isToastOpen, toastMessage, toastColor) || [];
     if (data===undefined){
       cursosMapeados.value = ""
       mensajeActualizacion = "No hay datos";
@@ -166,22 +157,39 @@ const insertarCursosCargados = async () => {
       console.log(cursosMapeados.value);
     }
   } catch (error) {
-    mensajeActualizacion = "No se pudieron cargar los cursos y etapas";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
 
-const eliminarCursosCargados = async (cursoE) => {
-
-  const [curso, etapa] = cursoE.split('-');
-  const data = await borrarMatriculas(curso, etapa, isToastOpen, toastMessage, toastColor)
-  await insertarCursosCargados();
-  cursoSeleccionado.value = "" // Limpiar el curso seleccionado
-  datosMatriculas.value = [] // Limpiar los datos de matrículas
-  return console.log("Borrado con exito: " + data)
+const borrarMatricula = async (cursoE) => {
   
+  try {
+    const [curso, etapa] = cursoE.split('-');
+    
+    const response = await borrarMatriculas(curso, etapa, isToastOpen, toastMessage, toastColor)
+
+    if (response.ok) {
+      mensajeActualizacion = "Curso borrado con éxito";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+    await cargarMatricula();
+    cursoSeleccionado.value = "" // Limpiar el curso seleccionado
+    datosMatriculas.value = [] // Limpiar los datos de matrículas
+
+  } catch (error) {
+    mensajeActualizacion = "Error al borrar el curso";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
 }
 
 
@@ -190,14 +198,14 @@ const cargarDatosMatriculas = async () => {
 
   const [curso, etapa] = cursoSeleccionado.value.split('-');
   try {
-    const datos = await obtenerDatosMatriculas(parseInt(curso), etapa, isToastOpen, toastMessage, toastColor);
+    const response = await obtenerDatosMatriculas(parseInt(curso), etapa, isToastOpen, toastMessage, toastColor);
     
     // Obtener todas las asignaturas únicas
-    asignaturas.value = [...new Set(datos.map(m => m.asignatura))];
+    asignaturas.value = [...new Set(response.map(m => m.asignatura))];
 
     // Agrupar datos por estudiante
     const estudiantesMap = new Map();
-    datos.forEach(({ nombre, apellidos, asignatura, estadoMatricula }) => {
+    response.forEach(({ nombre, apellidos, asignatura, estadoMatricula }) => {
       const claveEstudiante = `${nombre} ${apellidos}`;
       if (!estudiantesMap.has(claveEstudiante)) {
         estudiantesMap.set(claveEstudiante, { nombre, apellidos, matriculas: {} });
@@ -207,17 +215,17 @@ const cargarDatosMatriculas = async () => {
 
     // Convertir el mapa en un array
     datosMatriculas.value = Array.from(estudiantesMap.values());
+
   } catch (error) {
     datosMatriculas.value = [];
     asignaturas.value = [];
-    mensajeActualizacion = "No se pudieron cargar los datos de matrículas";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
 
-const matricularAsignaturaCsv = async (index, mostrarToast = true) => {
+const matricularAsignaturasCsv = async (index, mostrarToast = true) => {
   try {
     const [curso, etapa] = cursoSeleccionado.value.split("-");
     const alumno = datosMatriculas.value[index].nombre;
@@ -235,7 +243,7 @@ const matricularAsignaturaCsv = async (index, mostrarToast = true) => {
 
     for (const [asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)) {
       if (estadosValidos.includes(estado)) {
-        await matricularAsignaturasCsv(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+        await matricularAsignaturas(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
       } else {
         const error = new Error(`El estado de la asignatura '${asignatura}' debe ser 'MATR', 'NO_MATR', 'SUPCA', 'CONV', 'APRO' o 'PEND'.`);
         if (mostrarToast) {
@@ -255,16 +263,15 @@ const matricularAsignaturaCsv = async (index, mostrarToast = true) => {
 
   } catch (error) {
     if (mostrarToast) {
-      mensajeActualizacion = error.message;
       mensajeColor = "danger";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     }
     throw error;
   }
 };
 
 
-const registrarNuevoAlumno = async (mostrarToast = true) => {
+const matricularAlumnosCsv = async () => {
   try {
     
     const [curso, etapa] = cursoSeleccionado.value.split("-");
@@ -286,15 +293,20 @@ const registrarNuevoAlumno = async (mostrarToast = true) => {
         return;
       }
       
-      await matricularAlumnosCsv(nombre, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+      const response = await matricularAlumnos(nombre, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+      
+      if (response.ok) {
+        mensajeActualizacion = "Alumno registrado con éxito";
+        mensajeColor = "success";
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      } 
+      else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }
     }
 
-    if (mostrarToast) {
-      mensajeActualizacion = "Alumno registrado con éxito";
-      mensajeColor = "success";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    }
-    
     // Agregar el nuevo alumno a la tabla
     datosMatriculas.value.push({ ...nuevoAlumno.value });
 
@@ -308,7 +320,7 @@ const registrarNuevoAlumno = async (mostrarToast = true) => {
   }
 };
 
-const desmatricularAlumnoCsv = async (index) => {
+const desmatricularAlumnosCsv = async (index) => {
   try {
 
     const [curso, etapa] = cursoSeleccionado.value.split("-");
@@ -319,14 +331,21 @@ const desmatricularAlumnoCsv = async (index) => {
 
     for(const[asignatura, estado] of Object.entries(datosMatriculas.value[index].matriculas)){
       
-      await desmatricularAlumnosCsv(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+      const response = await desmatricularAlumnos(alumno, apellidos, asignatura, curso, etapa, estado, isToastOpen, toastMessage, toastColor);
+      if(response.ok) {
+      mensajeActualizacion = "Alumno borrado con exito";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
     }
 
     datosMatriculas.value.splice(index, 1); // Eliminar el alumno de la lista
 
-    mensajeActualizacion = "Alumno borrado con exito";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
     mensajeActualizacion = "Error al borrar el alumno";
     mensajeColor = "danger";
@@ -358,7 +377,7 @@ const guardarTodo = async () => {
           }
         }
         // Guardar el nuevo alumno
-        await registrarNuevoAlumno(false);
+        await matricularAlumnosCsv(false);
       }
     }
 
@@ -366,7 +385,7 @@ const guardarTodo = async () => {
       // Procesar matrículas de todos los alumnos
       for (let i = 0; i < datosMatriculas.value.length; i++) {
         try {
-          await matricularAsignaturaCsv(i, false);
+          await matricularAsignaturasCsv(i, false);
         } catch (error) {
           mensajeError += `Error en ${datosMatriculas.value[i].nombre} ${datosMatriculas.value[i].apellidos}: ${error.message}\n`;
         }
@@ -390,10 +409,16 @@ const guardarTodo = async () => {
   }
 };
 
+watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etapa], 
+  async () => {
+    comprobarBoton();
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   await cargarCursosEtapa();
-  await insertarCursosCargados();
+  await cargarMatricula();
   comprobarBoton();
   
 });
@@ -406,17 +431,8 @@ onMounted(async () => {
       <div class="card-upload-csv">
         <div class="container">
           <!-- Selector de curso y etapa -->
-          <div class="dropdown">
-            <label class="m-1" for="cursos-etapas">Filtrar por curso y etapa</label>
-            <select v-model="seleccionado" @change="actualizarSelect" id="cursos-etapas" class="p-2">
-              <option value="">Selecciona un curso</option>
-              <option v-for="cursoEtapa in cursosEtapas"
-                :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
-                :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-                {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
-              </option>
-            </select>
-          </div>
+           <div class="m-3">Filtrar por curso y etapa</div>
+          <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1"/>
   
           <!-- Subida de ficheros -->
           <div class="section">
@@ -441,7 +457,7 @@ onMounted(async () => {
           <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
             <td class="th">{{ cursoE }}</td>
             <td class="th">
-              <button @click="eliminarCursosCargados(cursoE)" class="eliminar">&times;</button>
+              <button @click="borrarMatricula(cursoE)" class="eliminar">&times;</button>
             </td>
           </tr>
         </tbody>
@@ -452,15 +468,9 @@ onMounted(async () => {
     <div class="card-upload-data">
       <div class="centro">
         <h4 class="m-3">Datos del CSV cargado</h4>
+        <!-- Selector de curso y etapa -->
         <div class="dropdown-datos">
-          <select v-model="cursoSeleccionado" id="seleccionar-curso" class="p-2">
-            <option value="">Selecciona un curso</option>
-            <option v-for="cursoEtapa in cursosEtapas"
-              :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
-              :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-              {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
-            </option>
-          </select>
+          <FilterCursoEtapa @actualizar-select="(seleccionado) => cursoSeleccionado = `${seleccionado.curso}-${seleccionado.etapa}`" class="m-1"/>
           <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
         </div>
       </div>
@@ -481,7 +491,7 @@ onMounted(async () => {
            <tbody>
              <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
                <td class="columna">
-                 <button @click="desmatricularAlumnoCsv(index)" class="eliminar">&times;</button>
+                 <button @click="desmatricularAlumnosCsv(index)" class="eliminar">&times;</button>
                </td>
                <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
                <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
@@ -492,7 +502,7 @@ onMounted(async () => {
                    class="editable-cell">
                </td>
                <td class="columna">
-                 <button class="btn" @click="matricularAsignaturaCsv(index)">Guardar</button>
+                 <button class="btn" @click="matricularAsignaturasCsv(index)">Guardar</button>
                </td>
              </tr>
              <tr>
@@ -507,7 +517,7 @@ onMounted(async () => {
                  <input type="text" v-model="nuevoAlumno.matriculas[asignatura]">
                </td>
                <td class="columna">
-                 <button class="btn" @click="registrarNuevoAlumno">Registrar</button>
+                 <button class="btn" @click="matricularAlumnosCsv">Registrar</button>
                </td>
              </tr>
            </tbody>
@@ -543,6 +553,7 @@ onMounted(async () => {
 
 .m-1 {
   margin-bottom: 1rem;
+  margin-top: 1rem;
   font-size: 1.1rem;
   text-align: center;
 }
@@ -639,11 +650,6 @@ input {
   margin: 0 auto;
   width: 100%;
   padding: 0 20px;
-}
-
-.dropdown { 
-  display: flex;
-  flex-direction: column;
 }
 
 .dropdown-datos { 
@@ -779,7 +785,6 @@ table {
     max-width: 75%;
   }
   
-  .dropdown,
   .dropdown-datos { 
   display: flex;
   flex-direction: column;

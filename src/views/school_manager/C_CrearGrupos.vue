@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { crearToast } from '@/utils/toast.js';
-import { crearNuevosGrupos, obtenerInfoGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos, actualizarTurnoHorario } from '@/services/schoolManager.js'
+import { crearNuevosGrupos, obtenerGrupos, obtenerAlumnosConGrupos, obtenerAlumnosSinGrupos, asignarAlumnos, borrarAlumnos, actualizarTurnoHorario } from '@/services/schoolManager.js'
 import { IonToast } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
@@ -27,7 +27,7 @@ const actualizarSelect = (parametro) => {
     listadoAlumnosSinGrupo.value = [];
     
     obtenerGrupo(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa);
-    obtenerAlumno();
+    obtenerAlumnos();
 };
 
 const actualizarGrupo = (parametro) => {
@@ -37,11 +37,18 @@ const actualizarGrupo = (parametro) => {
 
 const crearNuevoGrupo = async (curso, etapa) => {
   try {
-    await crearNuevosGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
+    const response = await crearNuevosGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
 
-    mensajeActualizacion = "Grupo creado correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if(response.ok) {
+      mensajeActualizacion = "Grupo creado correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
 
     await obtenerGrupo(parseInt(curso, 10), etapa);
     actualizarGrupo('');
@@ -57,18 +64,17 @@ const crearNuevoGrupo = async (curso, etapa) => {
 const obtenerGrupo = async (curso, etapa) => {
   try {
     if (curso != null && etapa) {
-      infoGrupos.value = await obtenerInfoGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
-      await obtenerAlumno();
+      infoGrupos.value = await obtenerGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
+      await obtenerAlumnos();
     }
   } catch (error) {
-    mensajeActualizacion = "Error al cargar grupos.";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
 };
 
-const obtenerAlumno = async () => {
+const obtenerAlumnos = async () => {
   try {
     const { curso, etapa } = filtroSeleccionado.value;
 
@@ -95,14 +101,13 @@ const obtenerAlumno = async () => {
     }
   }
   catch (error) {
-    mensajeActualizacion = "Error al cargar alumnos.";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error( error);
   }
 };
 
-const enviarDato = async () => {
+const asignarAlumno = async () => {
   try {
     const { curso, etapa } = filtroSeleccionado.value;
     const grupo = grupoSeleccionado.value;
@@ -123,11 +128,18 @@ const enviarDato = async () => {
       return;
     }
 
-    await asignarAlumnos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
+    const response = await asignarAlumnos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
 
-    mensajeActualizacion = "Alumnos añadidos correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if(response.ok) {
+      mensajeActualizacion = "Alumnos añadidos correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
 
     const idsSeleccionados = listadoAlumnosSeleccionados.value.map(a => a.nombre + ' ' + a.apellidos);
     listadoAlumnosSinGrupo.value = listadoAlumnosSinGrupo.value.filter(
@@ -145,6 +157,7 @@ const enviarDato = async () => {
 
     // Limpiamos selección
     listadoAlumnosSeleccionados.value = [];
+
   } catch (error) {
     mensajeActualizacion = "Error al añadir alumnos.";
     mensajeColor = "danger";
@@ -155,11 +168,18 @@ const enviarDato = async () => {
 
 const borrarAlumno = async (alumno, grupo) => {
   try {
-    await borrarAlumnos({ ...alumno, grupo }, toastMessage, toastColor, isToastOpen);
+    const response = await borrarAlumnos({ ...alumno, grupo }, toastMessage, toastColor, isToastOpen);
 
-    mensajeActualizacion = "Alumno borrado correctamente.";
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    if(response.ok) {
+      mensajeActualizacion = "Alumno borrado correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+      } else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }
 
     console.log("Antes de borrar, grupo:", grupo, alumnosPorGrupo.value[grupo]);
 
@@ -194,11 +214,18 @@ const limpiarGrupo = async (grupo) => {
   try {
     const alumnosDeEsteGrupo = alumnosPorGrupo.value[grupo] || [];
     for (const alumno of alumnosDeEsteGrupo) {
-      await borrarAlumnos({ ...alumno, grupo }, toastMessage, toastColor, isToastOpen);
+      const response = await borrarAlumnos({ ...alumno, grupo }, toastMessage, toastColor, isToastOpen);
 
+      if(response.ok) {
       mensajeActualizacion = "Grupo limpiado correctamente.";
       mensajeColor = "success";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+      } else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }
 
       listadoAlumnosSinGrupo.value.push(alumno);
       listadoAlumnosSinGrupo.value.sort((a, b) => { //Primero filtra por nombre y después por apellido
@@ -255,7 +282,7 @@ onMounted(async () => {
   <h1 class="m-2">Creación de grupos</h1>
   <div class="top-section">
     <div class="card-upload-alumnos">
-      <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1" />
+      <FilterCursoEtapa @actualizar-select="actualizarSelect" class="m-1"/>
       <span style="display: flex; gap: 10px;">
         <button @click="seleccionarTodo" class="btn">Seleccionar todo</button>
         <button @click="deseleccionarTodo" class="btn">Quitar todo</button>
@@ -266,7 +293,6 @@ onMounted(async () => {
       </p>
       <ul class="listaAlumnos">
         <li class="pad" v-if="listadoAlumnosSinGrupo.length === 0">No hay alumnos disponibles.</li>
-
         <li v-for="alumno in listadoAlumnosSinGrupo" :key="alumno.id" class="p-2 m-1 transparente">
           <label>
             <input type="checkbox" :value="alumno" v-model="listadoAlumnosSeleccionados" />
@@ -279,7 +305,7 @@ onMounted(async () => {
         <option value="">Selecciona un grupo</option>
         <option v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" :value="infoGrupo.grupo">{{ infoGrupo.grupo }}</option>
       </select>
-      <button @click="enviarDato" class="btn">Añadir alumnos</button>
+      <button @click="asignarAlumno" class="btn">Añadir alumnos</button>
     </div>
     <div class="card-upload-table">
       <div  v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo">
@@ -291,8 +317,9 @@ onMounted(async () => {
             Total de alumnos: {{ alumnosPorGrupo[infoGrupo.grupo].length }}
             <label class="horario-checkbox">
               <input type="checkbox" 
-                     v-model="infoGrupo.horarioMatutino" 
-                     @change="actualizarTurno(infoGrupo)" /> Horario de mañana
+                v-model="infoGrupo.horarioMatutino" 
+                @change="actualizarTurno(infoGrupo)"/> 
+                Horario de mañana
             </label>
           </p>
           <div class="table-wrapper">
@@ -317,8 +344,14 @@ onMounted(async () => {
         </div>
       </div>
     </div>
-    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+    <ion-toast 
+      :is-open="isToastOpen" 
+      :message="toastMessage" 
+      :color="toastColor" 
+      duration="2000" 
+      @did-dismiss="() => (isToastOpen = false)" 
+      position="top">
+    </ion-toast>
   </div>
 </template>
 
