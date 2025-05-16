@@ -139,12 +139,15 @@ const subirFichero = async () => {
   }
 };
 
-// Actualizar la selección del filtro
 // Actualizar la selección y almacenar los valores en `filtroSeleccionado`
 const actualizarSelect = (seleccionado) => {
     filtroSeleccionado.value = seleccionado;
     console.log("Filtro actualizado:", seleccionado);
     comprobarBoton();
+};
+
+const actualizarSelectDatos = (seleccionado) => {
+  cursoSeleccionado.value = `${seleccionado.curso}-${seleccionado.etapa}`;
 };
 
 const cargarMatricula = async () => {
@@ -343,14 +346,14 @@ const desmatricularAlumnosCsv = async (index) => {
       mensajeColor = "success";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
       
-    } else {
-      const errorData = await response.json();
-      mensajeColor = 'danger';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      datosMatriculas.value.splice(index, 1); // Eliminar el alumno de la lista
+      
+      } else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }
     }
-    }
-
-    datosMatriculas.value.splice(index, 1); // Eliminar el alumno de la lista
 
   } catch (error) {
     mensajeActualizacion = "Error al borrar el alumno";
@@ -475,7 +478,10 @@ onMounted(async () => {
         <h4 class="m-3">Datos del CSV cargado</h4>
         <!-- Selector de curso y etapa -->
         <div class="dropdown-datos">
-          <FilterCursoEtapa @actualizar-select="(seleccionado) => cursoSeleccionado = `${seleccionado.curso}-${seleccionado.etapa}`" class="m-1"/>
+          <FilterCursoEtapa 
+          v-model="cursoSeleccionado"
+          @actualizar-select="actualizarSelectDatos" 
+          class="m-1"/>
           <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
         </div>
       </div>
