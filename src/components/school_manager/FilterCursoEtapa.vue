@@ -1,6 +1,6 @@
 <script setup>
 // Importa las funciones necesarias de Vue y Axios
-import { onMounted, ref, defineEmits, computed, defineProps } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { cargarCursosEtapas } from '@/services/schoolManager.js'
 import { crearToast } from '@/utils/toast.js';
 import { IonToast } from "@ionic/vue";

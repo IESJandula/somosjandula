@@ -295,7 +295,14 @@ const guardarTodasHoras = async () => {
     let response = null;
 
     for (const [nombre, horas] of asignaturasAActualizar) {
-      response = await guardarHoras(nombre, horas );
+      response = await asignarHoras(
+      filtroSeleccionado.value.curso,
+      filtroSeleccionado.value.etapa,
+      nombre,
+      horas,
+      toastMessage, 
+      toastColor, 
+      isToastOpen)
     }
 
     if(response.ok) {
