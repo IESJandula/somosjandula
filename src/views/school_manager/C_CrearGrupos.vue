@@ -39,6 +39,15 @@ const actualizarGrupo = (parametro) => {
 
 const crearNuevoGrupo = async (curso, etapa) => {
   try {
+
+    if (!curso || !etapa) {
+      // Si no se ha seleccionado curso o etapa, avisas o retornas
+      mensajeActualizacion = "Debes seleccionar un curso y una etapa antes de crear un grupo.";
+      mensajeColor = "warning";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+
     const response = await crearNuevosGrupos(curso, etapa, toastMessage, toastColor, isToastOpen);
 
     if(response.ok) {
