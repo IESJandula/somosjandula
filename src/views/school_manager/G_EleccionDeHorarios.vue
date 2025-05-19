@@ -826,8 +826,11 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
                 </span>
                 <span v-else>-</span>
               </td>
-              <td v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" class="columna">
-                <button @click="guardarSolicitud(index)" :disabled="isDesabilitado" class="btn">Guardar</button>
+              <td class="columna">
+                <span v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && asignaturaReduccion.tipo === 'Asignatura'">
+                  <button @click="guardarSolicitud(index)" :disabled="isDesabilitado" class="btn">Guardar</button>
+                </span>
+                <span v-else>-</span>
               </td>
             </tr>
           </tbody>
