@@ -188,8 +188,7 @@
         <table class="logs-table">
           <thead>
             <tr>
-              <th class="sticky-column">Registro</th>
-              <th>Fecha</th>
+              <th class="sticky-column">Fecha</th>
               <th>Usuario</th>
               <th>Acción</th>
               <th>Tipo</th>
@@ -200,8 +199,7 @@
           </thead>
           <tbody>
             <tr v-for="log in logsPaginados" :key="log.numRegistro">
-              <td class="sticky-column">{{ log.numRegistro }}</td>
-              <td>{{ log.fecha }}</td>
+              <td class="sticky-column">{{ log.fecha }}</td>
               <td>{{ log.usuario }}</td>
               <td>{{ log.accion }}</td>
               <td>{{ log.tipo }}</td>

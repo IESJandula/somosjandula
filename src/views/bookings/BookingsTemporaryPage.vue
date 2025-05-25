@@ -595,7 +595,9 @@ const saveChanges = async () => {
       getReserva(recursoSeleccionado);
     }
     else {
-      // Llamar a la API para guardar la reserva
+      if (profesorSeleccionado.value === '') {
+        profesorSeleccionado.value = emailUsuarioActual.value;
+      }
       await postReservaTemporary(
         isToastOpen,
         toastMessage,
@@ -616,7 +618,7 @@ const saveChanges = async () => {
       }
 
       reservas.value[currentDia.value.id][currentTramo.value.id] = {
-        email: correoProfesor.value, // Guardamos el email del profesor
+        email: correoProfesor.value,
         nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
         nalumnos: alumnos,
       };
@@ -637,7 +639,7 @@ const saveChanges = async () => {
 
   closeModal();
   motivoCurso.value = '';
-  getReserva(recursoSeleccionado); // Actualizar reservas después de guardar
+  getReserva(recursoSeleccionado);
 };
 
 
