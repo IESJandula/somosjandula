@@ -1,3 +1,116 @@
+<template>
+  <h1 class="t-1">Carga de Matrículas</h1>
+  <div class="top-container">
+    <div class="top-section">
+      <div class="card-upload-csv">
+        <div class="container">
+          <!-- Selector de curso y etapa -->
+           <div class="t-2">Filtrar por curso y etapa</div>
+          <FilterCursoEtapa 
+           v-model="filtroSeleccionadoString" 
+           @actualizar-select="actualizarSelect" 
+           selectClass="select-sm" 
+           class="texto-dropdown"/>
+  
+          <!-- Subida de ficheros -->
+          <div class="section">
+            <label class="t-3" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
+            <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
+            <button @click="subirFichero(); $event.target.blur()"  ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
+            <!-- Spinner de carga -->
+            <div v-if="isLoading" class="fondo-gris">
+              <div class="circulo"></div>
+            </div>
+          </div>
+          <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+          @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+        </div>
+      </div>
+  
+      <!-- Tabla con cursos y etapas que tienen datos -->
+      <div class="card-upload-table card-upload-csv">
+        <div class="t-2">Curso y Etapas cargados</div>
+        <table>
+        <tbody class="t-3">
+          <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
+            <td class="th">{{ cursoE }}</td>
+            <td class="th">
+              <button @click="borrarMatricula(cursoE)" class="eliminar">&times;</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>  
+    <!-- Tarjeta con los datos cargados del CSV -->
+    <div class="card-upload-data">
+      <div class="centro">
+        <div class="t-2">Datos del CSV cargado</div>
+        <!-- Selector de curso y etapa -->
+        <div class="dropdown-datos">
+          <FilterCursoEtapa 
+          v-model="cursoSeleccionado"
+          @actualizar-select="actualizarSelectDatos"
+          selectClass="select-sm" 
+          class="texto-dropdown"/>
+          <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
+        </div>
+      </div>
+      <!-- Tabla con los datos cargados del CSV -->
+       <div>
+         <table v-if="datosMatriculas.length">
+           <thead>
+             <tr>
+               <th class="columna">Eliminar</th>
+               <th class="columna">Nombre</th>
+               <th class="columna">Apellidos</th>
+               <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                 {{ asignatura }}
+               </th>
+               <th class="columna">Acción</th>
+             </tr>
+           </thead>
+           <tbody>
+             <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
+               <td class="columna">
+                 <button @click="desmatricularAlumnosCsv(index)" class="eliminar">&times;</button>
+               </td>
+               <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
+               <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
+               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                 <input 
+                   type="text" 
+                   v-model="estudiante.matriculas[asignatura]"
+                   class="editable-cell">
+               </td>
+               <td class="columna">
+                 <button class="btn-guardar-registrar" @click="matricularAsignaturasCsv(index)">Guardar</button>
+               </td>
+             </tr>
+             <tr>
+               <td class="columna"></td>
+               <td class="columna">
+                 <input type="text" v-model="nuevoAlumno.nombre">
+               </td>
+               <td class="columna">
+                 <input type="text" v-model="nuevoAlumno.apellidos">
+               </td>
+               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                 <input type="text" v-model="nuevoAlumno.matriculas[asignatura]">
+               </td>
+               <td class="columna">
+                 <button class="btn-guardar-registrar" @click="matricularAlumnosCsv">Registrar</button>
+               </td>
+             </tr>
+           </tbody>
+         </table>
+         <p v-else class="t-3">No hay datos cargados del CSV.</p>
+       </div>
+       <button v-if="datosMatriculas.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
+    </div>
+  </div>
+</template>
+
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
@@ -432,224 +545,13 @@ onMounted(async () => {
 });
 </script>
 
-<template>
-  <h1 class="m-2">Carga de Matrículas</h1>
-  <div class="top-container">
-    <div class="top-section">
-      <div class="card-upload-csv">
-        <div class="container">
-          <!-- Selector de curso y etapa -->
-           <div class="m-3">Filtrar por curso y etapa</div>
-          <FilterCursoEtapa v-model="filtroSeleccionadoString" @actualizar-select="actualizarSelect" class="m-1"/>
-  
-          <!-- Subida de ficheros -->
-          <div class="section">
-            <label class="m-1" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
-            <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
-            <button @click="subirFichero(); $event.target.blur()"  ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
-            <!-- Spinner de carga -->
-            <div v-if="isLoading" class="fondo-gris">
-              <div class="circulo"></div>
-            </div>
-          </div>
-          <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-          @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
-        </div>
-      </div>
-  
-      <!-- Tabla con cursos y etapas que tienen datos -->
-      <div class="card-upload-table card-upload-csv">
-        <h4 class="m-3 ">Curso y Etapas cargados</h4>
-        <table>
-        <tbody class="m-1">
-          <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
-            <td class="th">{{ cursoE }}</td>
-            <td class="th">
-              <button @click="borrarMatricula(cursoE)" class="eliminar">&times;</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      </div>
-    </div>  
-    <!-- Tarjeta con los datos cargados del CSV -->
-    <div class="card-upload-data">
-      <div class="centro">
-        <h4 class="m-3">Datos del CSV cargado</h4>
-        <!-- Selector de curso y etapa -->
-        <div class="dropdown-datos">
-          <FilterCursoEtapa 
-          v-model="cursoSeleccionado"
-          @actualizar-select="actualizarSelectDatos" 
-          class="m-1"/>
-          <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
-        </div>
-      </div>
-      <!-- Tabla con los datos cargados del CSV -->
-       <div>
-         <table v-if="datosMatriculas.length">
-           <thead>
-             <tr>
-               <th class="columna">Eliminar</th>
-               <th class="columna">Nombre</th>
-               <th class="columna">Apellidos</th>
-               <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                 {{ asignatura }}
-               </th>
-               <th class="columna">Acción</th>
-             </tr>
-           </thead>
-           <tbody>
-             <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
-               <td class="columna">
-                 <button @click="desmatricularAlumnosCsv(index)" class="eliminar">&times;</button>
-               </td>
-               <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
-               <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
-               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                 <input 
-                   type="text" 
-                   v-model="estudiante.matriculas[asignatura]"
-                   class="editable-cell">
-               </td>
-               <td class="columna">
-                 <button class="btn" @click="matricularAsignaturasCsv(index)">Guardar</button>
-               </td>
-             </tr>
-             <tr>
-               <td class="columna"></td>
-               <td class="columna">
-                 <input type="text" v-model="nuevoAlumno.nombre">
-               </td>
-               <td class="columna">
-                 <input type="text" v-model="nuevoAlumno.apellidos">
-               </td>
-               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                 <input type="text" v-model="nuevoAlumno.matriculas[asignatura]">
-               </td>
-               <td class="columna">
-                 <button class="btn" @click="matricularAlumnosCsv">Registrar</button>
-               </td>
-             </tr>
-           </tbody>
-         </table>
-         <p v-else>No hay datos cargados del CSV.</p>
-       </div>
-       <button v-if="datosMatriculas.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
-    </div>
-  </div>
-</template>
-
 <style scoped>
 /* Centrar el título */
-.m-2 {
+.t-1 {
   font-size: 2.2rem;
   font-weight: 700px; 
   margin-bottom: 1.5rem; 
   text-align: center;
-}
-
-.m-3 {
-  font-size: 1.3rem;
-  text-align: center;
-}
-
-/* Contenedor centrado */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.m-1 {
-  margin-bottom: 1rem;
-  margin-top: 1rem;
-  font-size: 1.1rem;
-  text-align: center;
-}
-
-.p-2 {
-  padding: 0.5rem;
-  border: 1px solid #D1D5DB; 
-  border-radius: 0.375rem; 
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-}
-
-.btn {
-  padding: 0.5rem;
-  border: 1px solid ;
-  border-radius: 0.375rem; 
-  background-color: #4782eb;
-  color: #FFFFFF;
-  font-size: 1.1rem;
-}
-
-.btn:disabled {
-  background-color: #7fa9f4;
-  cursor: not-allowed;
-}
-
-.btn-csv {
-  width: 170px;
-  padding: 0.5rem;
-  border: 1px solid ;
-  border-radius: 0.375rem; 
-  background-color: #4782eb;
-  color: #FFFFFF;
-  font-size: 1.1rem;
-  align-self: center;
-  margin-left: 20px;
-  margin-bottom: 20px;
-}
-.btn-guardar-todo {
-  width: 170px;
-  padding: 0.5rem;
-  border: 1px solid ;
-  border-radius: 0.375rem; 
-  background-color: #4782eb;
-  color: #FFFFFF;
-  font-size: 1.1rem;
-  margin-top: 15px;
-  margin-bottom: 5px;
-  position: sticky;
-  top: 0;
-  left: 850px;
-}
-
-.table-container {
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-button:disabled {
-  color: #FFFFFF;
-}
-
-input {
-    background: transparent;
-    border: none;
-    text-align: center;
-    width: 100%;
-    padding: 0;
-    outline: none;
-}
-
-.eliminar {
-  color: #EF4444;
-  font-size: 2rem; /* <-- Reducir tamaño */
-  background-color: transparent;
-  line-height: 1; /* <-- Ajuste para evitar desbordamiento */
-  border: none;
-}
-
-/* Secciones */
-.top-section {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
 }
 
 .top-container {
@@ -663,23 +565,13 @@ input {
   padding: 0 20px;
 }
 
-.dropdown-datos { 
+/* Secciones */
+.top-section {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
 }
-
-.centro {
-  justify-items: center;
-}
-
- .section { 
-  width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
- } 
 
 .card-upload-csv {
   flex: 1 1 30%;
@@ -695,52 +587,59 @@ input {
   align-items: center;
 }
 
-.card-upload-table {
-  justify-content: flex-start;
-  overflow: auto;
-    height: 380px;
-}
-
-.card-upload-data {
-  min-width: 1060px;
-  min-height: 500px;
-  max-width: 900px;
-  height: auto;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px;
-  padding: 10px;
+/* Contenedor centrado */
+.container {
   display: flex;
   flex-direction: column;
-  text-align: center;
-  margin-top: 0.5rem;
-  margin-bottom: 2rem;
-  overflow-y: auto;
-    max-width: 300px;
-  overflow-x: auto;
-    max-height: 300px;
-  font-size: 13px;
-}
-
-.th {
-  width: 100%;
-  border: 1px solid currentColor; 
-  padding: 0.5rem 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  align-items: center;
   text-align: center;
 }
-.columna {
-  border: 1px solid currentColor; 
-  padding-left: 0.5rem; 
-  padding-right: 0.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+
+.t-2 {
+  font-size: 1.3rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
 }
 
-table {
+.texto-dropdown {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.section { 
   width: 100%;
-  border-collapse: collapse;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 5px;
+ } 
+
+.t-3 {
+  margin-bottom: 0.7rem;
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.btn {
+  padding: 0.5rem;
+  border-radius: 0.375rem; 
+  background-color: #0054e9;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  margin-top: 0.8rem;
+}
+
+.btn:hover {
+  background-color: #1461eb;
+}
+
+.btn:disabled {
+  background-color: #7fa9f4;
+  cursor: not-allowed;
 }
 
 .fondo-gris {
@@ -775,6 +674,172 @@ table {
   }
 }
 
+.card-upload-table {
+  justify-content: flex-start;
+  overflow: auto;
+    height: 380px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  width: 100%;
+  border: 1px solid currentColor; 
+  padding: 0.5rem 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+.eliminar {
+  color: #EF4444;
+  font-size: 2rem; /* <-- Reducir tamaño */
+  background-color: transparent;
+  line-height: 1; /* <-- Ajuste para evitar desbordamiento */
+  border: none;
+}
+
+.card-upload-data {
+  min-width: 1060px;
+  min-height: 500px;
+  max-width: 900px;
+  height: auto;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  overflow-y: auto;
+    max-width: 300px;
+  overflow-x: auto;
+    max-height: 300px;
+  font-size: 13px;
+}
+
+.centro {
+  justify-items: center;
+}
+
+.dropdown-datos { 
+  display: flex;
+  flex-direction: row;
+}
+
+.btn-csv {
+  width: 170px;
+  padding: 0.5rem;
+  border-radius: 0.375rem; 
+  background-color: #0054e9;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  align-self: center;
+  margin-left: 20px;
+  margin-bottom: 30px;
+}
+
+.btn-csv:hover {
+  background-color: #1461eb;
+}
+
+.columna {
+  border: 1px solid currentColor; 
+  padding-left: 0.5rem; 
+  padding-right: 0.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.btn-guardar-registrar {
+  padding: 0.5rem;
+  border-radius: 0.375rem; 
+  background-color: #0054e9;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+}
+
+.btn-guardar-registrar:hover {
+  background-color: #1461eb;
+}
+
+input {
+    background: transparent;
+    border: none;
+    text-align: center;
+    width: 100%;
+    padding: 0;
+    outline: none;
+}
+
+.btn-guardar-todo {
+  width: 170px;
+  padding: 0.5rem;
+  border-radius: 0.375rem; 
+  background-color: #0054e9;
+  color: #FFFFFF;
+  font-size: 1.1rem;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  position: sticky;
+  top: 0;
+  left: 850px;
+}
+
+.btn-guardar-todo:hover {
+  background-color: #1461eb;
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .card-upload-csv, 
+  .card-upload-data {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+
+  .card-upload-table {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+
+  .btn,
+  .btn-csv,
+  .btn-guardar-registrar,
+  .btn-guardar-todo {
+    background-color: #4782eb;
+    color: #000000;
+  }
+
+  .btn:hover {
+    background-color: #3476eb;
+  }
+  
+  .btn:disabled {
+  color: #000000;
+  background-color: #7fa9f4;
+  }
+
+  .btn-csv:hover {
+    background-color: #3476eb;
+  }
+
+  .btn-guardar-registrar:hover {
+    background-color: #3476eb;
+  }
+
+  .btn-guardar-todo:hover {
+    background-color: #3476eb;
+  }
+}
+
 /* Media queries para hacer que la tarjeta sea más responsive */
 @media (max-width: 768px) {
   .top-section {
@@ -792,6 +857,7 @@ table {
   .card-upload-table {
     max-width: 400px;
   }
+
   .card-upload-data {
     max-width: 75%;
   }
@@ -800,6 +866,7 @@ table {
   display: flex;
   flex-direction: column;
   }
+  
   .btn-guardar-todo {
     position: sticky;
     top: 0;
@@ -808,7 +875,6 @@ table {
 }
 
 @media ((min-width: 768px) and (max-width: 1132px)) {
-  
   .card-upload-csv {
     min-width: 350px;
     min-height: 100%;
@@ -834,29 +900,6 @@ table {
     position: sticky;
     top: 0;
     left: calc(100% - 180px);
-  }
-}
-/* Modo oscuro */
-@media (prefers-color-scheme: dark) {
-  .card-upload-csv, 
-  .card-upload-data {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-  .card-upload-table {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-  .btn,
-  .btn-csv,
-  .btn-guardar-todo {
-    color: black;
-  }
-  
-  button:disabled {
-  color: #000000;
   }
 }
 </style>

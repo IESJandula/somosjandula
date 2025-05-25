@@ -1,3 +1,65 @@
+<template>
+  <div class="table-container">
+    <h1 class="t-1">Resumen por asignaturas</h1>
+    <!-- Desplegable para elegir curso y etapa -->
+    <FilterCursoEtapa 
+      v-model="filtroSeleccionadoString"
+      @actualizar-select="actualizarSelect" 
+      selectClass="select-sm"
+      class="texto-dropdown"/>
+    <!-- Tarjeta que contiene la tabla -->
+    <ion-card class="card-table">
+      <ion-card-header>
+        <ion-card-title class="t-2">
+          Tabla de grupos por asignatura
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div v-if="mensajeActualizacion" class="mensajeError">{{ mensajeActualizacion }}</div>
+        <div v-if="loading" class="cargar">Cargando datos...</div>
+        <div v-if="asignaturas.length > 0 && !loading">
+          <table class="table-asignaturas">
+            <thead>
+            <tr>
+              <th class="th">Asignatura</th>
+              <th class="th">Nº Horas</th>
+              <!-- Se calcula el total sumando los valores de cada grupo -->
+              <th class="th">Tot. Alumnos</th>
+              <!-- Cabeceras dinámicas para cada grupo -->
+              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th">
+                Grupo {{ infoGrupo.grupo }}
+              </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(asignatura) in asignaturas" :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`">
+              <td class="th">{{ asignatura.nombre }}</td>
+              <td class="th th-center">{{ asignatura.horas }}</td>
+              <!-- Se calcula el total al sumar los valores obtenidos en cada grupo -->
+              <td class="th th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
+              <td v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" class="th th-center">
+                {{ asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] || 0 }}
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else-if="!loading" class="t-3">
+          <p>No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    <ion-toast
+        :is-open="isToastOpen"
+        :message="toastMessage"
+        :color="toastColor"
+        duration="2000"
+        @did-dismiss="() => (isToastOpen = false)"
+        position="top">
+    </ion-toast>
+  </div>
+</template>
+
 <script setup>
 import {onMounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
@@ -130,89 +192,27 @@ onMounted(() => {
 });
 </script>
 
-<template>
-  <div class="container">
-    <h1 class="m-4">Resumen por asignaturas</h1>
-    <!-- Desplegable para elegir curso y etapa -->
-    <FilterCursoEtapa 
-      v-model="filtroSeleccionadoString"
-      @actualizar-select="actualizarSelect" 
-      class="m-1" 
-    />
-    <!-- Tarjeta que contiene la tabla -->
-    <ion-card class="m-6">
-      <ion-card-header>
-        <ion-card-title class="th-center">
-          Tabla de grupos por asignatura
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div v-if="mensajeActualizacion" class="mensajeError">{{ mensajeActualizacion }}</div>
-        <div v-if="loading" class="cargar">Cargando datos...</div>
-        <div v-if="asignaturas.length > 0 && !loading">
-          <table class="tablaAsignaturas">
-            <thead>
-            <tr>
-              <th class="th">Asignatura</th>
-              <th class="th">Nº Horas</th>
-              <!-- Se calcula el total sumando los valores de cada grupo -->
-              <th class="th">Tot. Alumnos</th>
-              <!-- Cabeceras dinámicas para cada grupo -->
-              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th">
-                Grupo {{ infoGrupo.grupo }}
-              </th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="(asignatura) in asignaturas" :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`">
-              <td class="th">{{ asignatura.nombre }}</td>
-              <td class="th th-center">{{ asignatura.horas }}</td>
-              <!-- Se calcula el total al sumar los valores obtenidos en cada grupo -->
-              <td class="th th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
-              <td v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" class="th th-center">
-                {{ asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] || 0 }}
-              </td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-        <div v-else-if="!loading" class="m-7">
-          <p class="cargar">No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
-        </div>
-      </ion-card-content>
-    </ion-card>
-    <ion-toast
-        :is-open="isToastOpen"
-        :message="toastMessage"
-        :color="toastColor"
-        duration="2000"
-        @did-dismiss="() => (isToastOpen = false)"
-        position="top">
-    </ion-toast>
-  </div>
-</template>
-
 <style scoped>
-.container {
+.table-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-grow: 1;
   align-items: center;
 }
-.m-4 {
-  font-size: 2rem;
+
+.t-1 {
+  font-size: 2.2rem;
   font-weight: 700;
-  text-align: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
-.m-1 {
-  font-size: 17px;
-  margin-top: 10px;
-  flex-grow: 1; 
+
+.texto-dropdown {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
 }
-.m-6 {
+
+.card-table {
   margin: 1.5rem;
   width: 100%;
   max-width: 56rem;
@@ -220,22 +220,32 @@ onMounted(() => {
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
 }
+
+.t-2 {
+  font-size: 1.3rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 .cargar {
   text-align: center;
-  margin: 1rem 0;
+  color: #6b7280;
 }
+
 .mensajeError {
   color: red;
-  text-align: center;
   margin-bottom: 1rem;
 }
-.tablaAsignaturas {
+
+.table-asignaturas {
   color: black;
   table-layout: auto;
   border-collapse: collapse;
   border: 1px solid currentColor;
   width: 100%;
 }
+
 .th {
   border: 1px solid currentColor;
   padding-left: 0.5rem; 
@@ -243,21 +253,28 @@ onMounted(() => {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
+
 .th-center {
   text-align: center;
 }
 
-@media (max-width: 768px) {
-  .tablaAsignaturas {
-    min-width: 200px;
+.t-3 {
+  text-align: center;
+  color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  .table-asignaturas {
+    color: #c4c6ca;
+  }
+  .t-3{
+    color: #c4c6ca;
   }
 }
-@media (prefers-color-scheme: dark) {
-  .tablaAsignaturas{
-    color: #c4c6ca;
-  }
-  .m-7{
-    color: #c4c6ca;
+
+@media (max-width: 768px) {
+  .table-asignaturas {
+    min-width: 200px;
   }
 }
 </style>

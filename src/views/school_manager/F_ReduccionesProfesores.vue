@@ -1,3 +1,125 @@
+<template>
+  <h1 class="t-1">Reducciones</h1>
+    <div class="top-section">
+      <!-- Tabla para crear las reducciones -->
+      <div class="card-crea-reduccion">
+        <div class="t-2">Crear reducción</div>
+        <div class="form-group">
+          <label class="form-label">Nombre:
+            <ion-input type="text" v-model="nombre" class="form-input"/>
+          </label>
+          <label class="form-label-numer">Horas:
+            <ion-input type="number" v-model.number="horas" min="0" max="50" step="1" class="form-input-numer"/>
+          </label>
+        </div>
+        <label class="form-label">
+          <input 
+            type="checkbox"
+            class="checkbox"
+            v-model="decideDireccion"/> Decide dirección
+        </label>
+        <!-- Aqui se guarda en la tabla de reducciones -->
+        <button @click="crearReduccion(nombre, horas, decideDireccion)" class="btn-guardar">Guardar</button>
+      </div>
+      <!-- Tabla con todas las reducciones que existen -->
+      <div class="card-cargar-reduccion">
+        <div class="t-2">Tabla de reducciones</div>
+        <table>
+         <thead>
+           <tr>
+             <th class="columna">Nombre</th>
+             <th class="columna">Horas</th>
+             <th class="columna">Asigna dirección</th>
+             <th class="columna">Acción</th>
+           </tr>
+         </thead>
+         <tbody>
+            <tr v-for="(reduccion, index) in listaReducciones" :key="index">
+              <td class="columna">{{ reduccion.nombre }}</td>
+              <td class="columna">{{ reduccion.horas }}</td>
+              <td class="columna">{{ reduccion.decideDireccion === true ? 'Si' : 'No' }}</td>
+              <td class="columna">
+                <button @click="borrarReduccion(index)" class="btn-eliminar">&times;</button>
+              </td>
+            </tr>
+         </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="top-section-dos">
+      <!-- Tabla para asignar las reducciones -->
+      <div class="card-crea-reduccion">
+        <div class="t-2">Asignar reducción</div>
+        <div class="dropdown-container">
+          <div class="dropdown-group">
+            <label  for="profesor-select">Profesor:</label>
+            <select 
+                id="profesor-select"
+                v-model="profesorSeleccionado" 
+                class="dropdown-select">
+                <option value="" disabled hidden>Selecciona un profesor</option>
+                <option 
+                    v-for="profesor in listaProfesores" 
+                    :key="profesor"
+                    :value="profesor">
+                    {{ profesor.nombre }} {{ profesor.apellidos }}
+                </option>
+            </select>
+          </div>
+            <div class="dropdown-group">
+              <label for="reduccion-select">Reducción:</label>
+              <select 
+                  id="reduccion-select"
+                  v-model="reduccionSeleccionada" 
+                  class="dropdown-select">
+                  <option value="" disabled hidden>Selecciona una reducción</option>
+                  <option 
+                      v-for="reduccion in listaReducciones" 
+                      :key="reduccion" 
+                      :value="reduccion">
+                      {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
+                  </option>
+              </select>
+            </div>
+        </div>
+        <!-- Aqui se guarda en la tabla de reducciones -->
+        <button @click="asignarReduccion(profesorSeleccionado)" class="btn-guardar">Asignar</button>
+      </div>
+      <!-- Tabla con todas las reducciones que existen -->
+      <div class="card-cargar-reduccion">
+        <div class="t-2">Reducciones asignadas</div>
+        <table>
+         <thead>
+           <tr>
+             <th class="columna">Profesor</th>
+             <th class="columna">Reducción</th>
+             <th class="columna">Horas</th>
+             <th class="columna">Acción</th>
+           </tr>
+         </thead>
+         <tbody>
+            <tr v-for="(reduccionAsignada, index) in listaReduccionesAsignadas" :key="index">
+              <td class="columna">{{ reduccionAsignada.nombre }} {{ reduccionAsignada.apellidos }}</td>
+              <td class="columna">{{ reduccionAsignada.nombreReduccion }}</td>
+              <td class="columna">{{ reduccionAsignada.horas }}</td>
+              <td class="columna">
+                <button @click="borrarReduccionProfesor(index)" class="btn-eliminar">&times;</button>
+              </td>
+            </tr>
+         </tbody>
+        </table>
+      </div>
+      <ion-toast
+        :is-open="isToastOpen"
+        :message="toastMessage"
+        :color="toastColor"
+        duration="2000"
+        @did-dismiss="() => (isToastOpen = false)"
+        position="top">
+    </ion-toast>
+    </div>
+</template>
+
 <script setup>
 import { onMounted, ref } from 'vue';
 import { IonInput, IonToast } from "@ionic/vue";
@@ -249,125 +371,6 @@ onMounted(async () => {
 
 </script>
 
-<template>
-  <h1 class="t-1">Reducciones</h1>
-    <div class="top-section">
-      <!-- Tabla para crear las reducciones -->
-      <div class="card-crea-reduccion">
-        <div class="t-2">Crear reducción</div>
-        <div class="form-group">
-          <label class="form-label">Nombre:
-            <ion-input type="text" v-model="nombre" class="form-input"/>
-          </label>
-          <label class="form-label-numer">Horas:
-            <ion-input type="number" v-model.number="horas" min="0" max="50" step="1" class="form-input-numer"/>
-          </label>
-        </div>
-        <label class="form-label">
-          <input type="checkbox" v-model="decideDireccion" /> Decide dirección
-        </label>
-        <!-- Aqui se guarda en la tabla de reducciones -->
-        <button @click="crearReduccion(nombre, horas, decideDireccion)" class="btn-guardar">Guardar</button>
-      </div>
-      <!-- Tabla con todas las reducciones que existen -->
-      <div class="card-cargar-reduccion">
-        <div class="t-2">Tabla de reducciones</div>
-        <table>
-         <thead>
-           <tr>
-             <th class="columna">Nombre</th>
-             <th class="columna">Horas</th>
-             <th class="columna">Asigna dirección</th>
-             <th class="columna">Acción</th>
-           </tr>
-         </thead>
-         <tbody>
-            <tr v-for="(reduccion, index) in listaReducciones" :key="index">
-              <td class="columna">{{ reduccion.nombre }}</td>
-              <td class="columna">{{ reduccion.horas }}</td>
-              <td class="columna">{{ reduccion.decideDireccion === true ? 'Si' : 'No' }}</td>
-              <td class="columna">
-                <button @click="borrarReduccion(index)" class="btn-eliminar">&times;</button>
-              </td>
-            </tr>
-         </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="top-section-dos">
-      <!-- Tabla para asignar las reducciones -->
-      <div class="card-crea-reduccion">
-        <div class="t-2">Asignar reducción</div>
-        <div class="dropdown-container">
-          <div class="dropdown-group">
-            <label  for="profesor-select">Profesor:</label>
-            <select 
-                id="profesor-select"
-                v-model="profesorSeleccionado" 
-                class="dropdown-select">
-                <option value="" disabled hidden>Selecciona un profesor</option>
-                <option 
-                    v-for="profesor in listaProfesores" 
-                    :key="profesor"
-                    :value="profesor">
-                    {{ profesor.nombre }} {{ profesor.apellidos }}
-                </option>
-            </select>
-          </div>
-            <div class="dropdown-group">
-              <label for="reduccion-select">Reducción:</label>
-              <select 
-                  id="reduccion-select"
-                  v-model="reduccionSeleccionada" 
-                  class="dropdown-select">
-                  <option value="" disabled hidden>Selecciona una reducción</option>
-                  <option 
-                      v-for="reduccion in listaReducciones" 
-                      :key="reduccion" 
-                      :value="reduccion">
-                      {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
-                  </option>
-              </select>
-            </div>
-        </div>
-        <!-- Aqui se guarda en la tabla de reducciones -->
-        <button @click="asignarReduccion(profesorSeleccionado)" class="btn-guardar">Asignar</button>
-      </div>
-      <!-- Tabla con todas las reducciones que existen -->
-      <div class="card-cargar-reduccion">
-        <div class="t-2">Reducciones asignadas</div>
-        <table>
-         <thead>
-           <tr>
-             <th class="columna">Profesor</th>
-             <th class="columna">Reducción</th>
-             <th class="columna">Horas</th>
-             <th class="columna">Acción</th>
-           </tr>
-         </thead>
-         <tbody>
-            <tr v-for="(reduccionAsignada, index) in listaReduccionesAsignadas" :key="index">
-              <td class="columna">{{ reduccionAsignada.nombre }} {{ reduccionAsignada.apellidos }}</td>
-              <td class="columna">{{ reduccionAsignada.nombreReduccion }}</td>
-              <td class="columna">{{ reduccionAsignada.horas }}</td>
-              <td class="columna">
-                <button @click="borrarReduccionProfesor(index)" class="btn-eliminar">&times;</button>
-              </td>
-            </tr>
-         </tbody>
-        </table>
-      </div>
-      <ion-toast
-        :is-open="isToastOpen"
-        :message="toastMessage"
-        :color="toastColor"
-        duration="2000"
-        @did-dismiss="() => (isToastOpen = false)"
-        position="top">
-    </ion-toast>
-    </div>
-</template>
-
 <style scoped>
 
 .t-1 {
@@ -376,26 +379,12 @@ onMounted(async () => {
   margin-bottom: 1.5rem;
   text-align: center;
 }
-.t-2{
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: center;
-  margin-top: 1.5rem;
-}
 
 .top-section {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-}
-
-.top-section-dos {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 2rem;
 }
 
 .card-crea-reduccion {
@@ -409,6 +398,20 @@ onMounted(async () => {
   flex-direction: column;
 }
 
+.t-2{
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.form-group{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: 2.5rem;
+}
+
 .form-label {
   cursor: pointer;
   top: 50px;
@@ -417,20 +420,11 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   margin-left: 25px;
 }
-.form-label-numer {
-  cursor: pointer;
-  top: 50px;
-  left: 5px;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  margin-left: 5rem;
-}
 
-.form-group{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding-top: 2.5rem;
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .form-input {
@@ -442,6 +436,16 @@ onMounted(async () => {
   min-width: 150px;
   margin-bottom: 1rem;
 }
+
+.form-label-numer {
+  cursor: pointer;
+  top: 50px;
+  left: 5px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-left: 5rem;
+}
+
 .form-input-numer {
   min-width: 60px;
   text-align: center;
@@ -454,7 +458,7 @@ onMounted(async () => {
 }
 
 .btn-guardar {
-  background-color: #3B82F6;
+  background-color: #0054e9;
   border: none;
   color: #FFFFFF;
   font-size: 18px;
@@ -464,6 +468,10 @@ onMounted(async () => {
   margin-top: 2.4rem;
   margin-left: 15px;
   margin-right: 15px;
+}
+
+.btn-guardar:hover {
+  background-color: #2563EB;
 }
 
 .card-cargar-reduccion {
@@ -505,6 +513,14 @@ table{
   border: none;
 }
 
+.top-section-dos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 2rem;
+}
+
 .dropdown-container {
   display: flex;
   flex-direction: column;
@@ -541,17 +557,23 @@ table{
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
   }
+
   .form-input,
   .form-input-numer {
     border-bottom: 1px solid #D1D5DB
   }
+
   .btn-guardar {
     color: black;
+    background-color: #4782eb;
+  }
+
+  .btn-guardar:hover {
+    background-color: #3476eb;
   }
 }
 
 @media ((min-width: 768px) and (max-width: 1422px)) {
-
   .card-cargar-reduccion {
     min-width: 420px;
   }

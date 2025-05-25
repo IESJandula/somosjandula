@@ -1,3 +1,23 @@
+<template>
+  <h1 class="t-1">Generador de horarios</h1>
+    <div class="top-section">
+      <!-- Botón para lanzar el generador aquí -->
+      <button @click="generarHorarios" class="btn-lanzar-generador">Lanzar Generador</button>
+      <button @click="forzarDetencion" class="btn-forzar-detencion">Forzar Detención</button>
+
+      
+      
+      <ion-toast
+        :is-open="isToastOpen"
+        :message="toastMessage"
+        :color="toastColor"
+        duration="2000"
+        @did-dismiss="() => (isToastOpen = false)"
+        position="top">
+      </ion-toast>
+    </div>
+</template>
+
 <script setup>
 import {ref} from 'vue';
 import { IonToast } from "@ionic/vue";
@@ -53,26 +73,6 @@ const forzarDetencion = async () => {
 
 </script>
 
-<template>
-  <h1 class="t-1">Generador de horarios</h1>
-    <div class="top-section">
-      <!-- Botón para lanzar el generador aquí -->
-      <button @click="generarHorarios" class="btn-lanzar-generador">Lanzar Generador</button>
-      <button @click="forzarDetencion" class="btn-forzar-detencion">Forzar Detención</button>
-
-      
-      
-      <ion-toast
-        :is-open="isToastOpen"
-        :message="toastMessage"
-        :color="toastColor"
-        duration="2000"
-        @did-dismiss="() => (isToastOpen = false)"
-        position="top">
-      </ion-toast>
-    </div>
-</template>
-
 <style scoped>
 
 .t-1 {
@@ -122,6 +122,7 @@ const forzarDetencion = async () => {
   margin-bottom: 0.5rem;
   margin-left: 25px;
 }
+
 .form-label-numer {
   cursor: pointer;
   top: 50px;
@@ -147,6 +148,7 @@ const forzarDetencion = async () => {
   min-width: 150px;
   margin-bottom: 1rem;
 }
+
 .form-input-numer {
   min-width: 60px;
   text-align: center;

@@ -1,3 +1,44 @@
+<template>
+  <!-- Actualizar Constantes -->
+  <div class="form-wrapper">
+    <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Actualizar Constantes</h1>
+      </div>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Clave de la constante:</ion-label>
+            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
+              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
+                {{ constante.clave }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item v-if="selectedConstante">
+            <ion-label position="stacked">Valor:</ion-label>
+            <ion-input v-model="selectedConstante.valor"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
+            Actualizar
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </div>
+    </div>
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top">
+  </ion-toast>
+</template>
+
 <script setup>
 import { onMounted, ref } from 'vue';
 import { IonToast, IonInput, IonRow, IonCol, IonItem, IonLabel, IonSelect, IonSelectOption, IonButton } from "@ionic/vue";
@@ -101,47 +142,6 @@ onMounted(async () => {
 
 </script>
 
-<template>
-  <!-- Actualizar Constantes -->
-  <div class="form-wrapper">
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Actualizar Constantes</h1>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Clave de la constante:</ion-label>
-            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
-                {{ constante.clave }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item v-if="selectedConstante">
-            <ion-label position="stacked">Valor:</ion-label>
-            <ion-input v-model="selectedConstante.valor"></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
-            Actualizar
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
-    </div>
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top">
-  </ion-toast>
-</template>
-
 <style scoped>
 .form-wrapper {
   display: flex;
@@ -156,8 +156,7 @@ onMounted(async () => {
   width: 100%;
   max-width: 400px;
   background-color: var(--form-bg-light);
-  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-  border: 1px solid #444;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
   box-sizing: border-box;
   padding: 20px 30px;
@@ -201,6 +200,5 @@ onMounted(async () => {
     font-size: 14px;
     width: 100%;
   }
-
 }
 </style>

@@ -18,6 +18,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  selectClass: {
+    type: String,
+    default: ''
   }
 });
 
@@ -73,9 +77,9 @@ const actualizarSelect = () => {
         @change="actualizarSelect" 
         name="cursos-etapas" 
         id="cursos-etapas" 
-        class="p-2">
+        :class="['dropdown', selectClass]">
         <!-- Opción inicial por defecto -->
-        <option value="">Selecciona un curso</option>
+        <option value="" disabled hidden>Selecciona un curso</option>
         <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
         <option 
             v-for="cursoEtapa in cursosEtapas" 
@@ -96,12 +100,15 @@ const actualizarSelect = () => {
 </template>
 
 <style>
-.m-1 {
-  margin-bottom: 1rem;
-  font-size: 20px;
-  flex-grow: 1;
+.dropdown {
+  padding: 0.5rem;
+  border: 1px solid ; 
+  border-radius: 0.375rem; 
+  width: 100%;
 }
-.p-2{
+
+.select-sm {
+  width: 200px;
   padding: 0.5rem;
   border: 1px solid ; 
   border-radius: 0.375rem; 
