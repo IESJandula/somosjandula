@@ -120,7 +120,7 @@ const routes = [
         component: ControlPanel,
         name: 'ControlPanel',
         meta: { 
-          role: 'PROFESOR' 
+          role: 'ADMINISTRADOR' 
         },
       },
       {

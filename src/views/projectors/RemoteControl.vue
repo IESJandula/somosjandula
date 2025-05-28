@@ -18,6 +18,16 @@ onMounted(() => {
     loadActionsList();
     const modalElement = document.getElementById('actionModal');
     modalInstance = new Modal(modalElement);
+    const saved = localStorage.getItem('buttonDisabledUntil');
+    if (saved) {
+        const expireAt = parseInt(saved);
+        if (Date.now() < expireAt) {
+        startCountdown(expireAt);
+        } else {
+        // Expiró, limpiar estado
+        localStorage.removeItem('buttonDisabledUntil');
+        }
+    }
 });
 
 // ----------------- MODAL FOR ACTIONS -----------------
@@ -33,26 +43,41 @@ const showModal = (title, message) => {
 };
 
 // ------------------ buttons
-const isButtonDisabled = ref(false);
 
+const isButtonDisabled = ref(false);
 const actionCountdown = ref(20);
 let interval = null;
 
 const disableButtonTemporarily = () => {
-    // Reset countdown and clear previous interval if it exists
-    clearInterval(interval);
-    actionCountdown.value = 20;
-    isButtonDisabled.value = true;
+  const now = Date.now();
+  const expireAt = now + 20000; // 20 segundos en milisegundos
+  localStorage.setItem('buttonDisabledUntil', expireAt.toString());
 
-    interval = setInterval(() => {
-        if (actionCountdown.value > 0) {
-            actionCountdown.value--; // Decrease countdown by 1 every second
-        } else {
-            clearInterval(interval); // Stop the timer when it reaches 0
-            isButtonDisabled.value = false;
-        }
-    }, 1000);
+  startCountdown(expireAt);
 };
+
+const startCountdown = (expireAt) => {
+  clearInterval(interval);
+
+  const updateCountdown = () => {
+    const now = Date.now();
+    const remaining = Math.ceil((expireAt - now) / 1000);
+
+    if (remaining > 0) {
+      isButtonDisabled.value = true;
+      actionCountdown.value = remaining;
+    } else {
+      clearInterval(interval);
+      isButtonDisabled.value = false;
+      actionCountdown.value = 0;
+      localStorage.removeItem('buttonDisabledUntil');
+    }
+  };
+
+  updateCountdown(); // Update immediately
+  interval = setInterval(updateCountdown, 1000);
+};
+
 
 // ----------------- PROJECTOR ACTIONS -----------------
 const actionsList = ref([]);

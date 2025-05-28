@@ -51,19 +51,15 @@
         </ion-list>
         <!-- Proyectores -->
         <ion-list>
-          <ion-item button @click="toggleSubMenuProjectors" v-if="mostrarProjectorsAdmin">
+          <ion-item button @click="toggleSubMenuProjectors">
             Proyectores
             <ion-icon slot="end"
               :icon="projectorsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="projectorsSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/projectors/EventsTable')">Cola eventos</ion-item>
-          </ion-list>
-          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Control remoto</ion-item>
-          </ion-list>
-          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Administración</ion-item>
+            <ion-item v-if="mostrarProjectorsAdmin" button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Administración</ion-item>
           </ion-list>
         </ion-list>
       </ion-content>
