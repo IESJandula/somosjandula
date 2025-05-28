@@ -180,6 +180,7 @@ const cargarAsignatura = async () => {
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
+    asignaturas.value = [];
   } finally {
     loading.value = false;
   }

@@ -18,8 +18,8 @@
             </option>
         </select>
         <div class="top-section">
-          <ul class="lista-asignaturas p-1">
-            <li v-for="asignatura in asignaturas" :key="asignatura.id" class="p-1 transparente ">
+          <ul class="lista-asignaturas p-2">
+            <li v-for="asignatura in asignaturas" :key="asignatura.id" class="p-2 transparente ">
               <label>
                 <input
                     type="checkbox"
@@ -171,9 +171,16 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
-import {IonInput, IonToast} from "@ionic/vue";
-import { asignarAsignaturasADepartamentos, asignarProfesoresADepartamentos, obtenerAsignaturasPorCursoEtapaGrupo, obtenerCursosEtapasGrupos, obtenerDatosDepartamentosConAsignaturas, obtenerDepartamentos, obtenerTodasLasAsignaturas, quitarAsignaturasDeDepartamentos } from '@/services/schoolManager.js';
+import { onMounted, ref } from 'vue';
+import { IonInput, IonToast } from "@ionic/vue";
+import { asignarAsignaturasADepartamentos, 
+         asignarProfesoresADepartamentos, 
+         obtenerAsignaturasPorCursoEtapaGrupo, 
+         obtenerCursosEtapasGrupos, 
+         obtenerDatosDepartamentosConAsignaturas, 
+         obtenerDepartamentos, 
+         obtenerTodasLasAsignaturas, 
+         quitarAsignaturasDeDepartamentos } from '@/services/schoolManager.js';
 import { crearToast } from '@/utils/toast.js';
 
 const departamentos = ref([]);
@@ -454,6 +461,9 @@ const asignarDepPropietario = async () => {
     }
 
     asignaturaSeleccionada.value = [];
+    if (asignaturas.value.length > 0) {
+      asignaturas.value = [];
+    }
     await obtenerAsignaturas()
     await obtenerAsignaturasCompletas()
     await obtenerDatosDepartamentoConAsignatura()
@@ -475,30 +485,25 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.t-1, .t-2 {
-  font-weight: 700;
-  text-align: center;
-}
 
 .t-1 {
   font-size: 2.25rem;
+  font-weight: 700;
   margin-bottom: 1.5rem;
+  text-align: center;
 }
 
-.t-2 {
-  font-size: 1.5rem;
-  margin-top: 1rem;
-}
-
-.top-card, .top-card-dos {
+.top-card {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  width: 100%;
+  min-width: 100%;
 }
 
-.card-asignacion, .card-departamentos-asignaturas {
+.card-asignacion {
+  min-width: 520px;
+  min-height: 400px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -507,25 +512,127 @@ onMounted(async () => {
   flex-direction: column;
 }
 
-.card-asignacion {
-  min-width: 520px;
-  min-height: 400px;
+.t-2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.top-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-left: 1rem;
+  margin-top: 1.5rem;
+}
+
+.dropdown-select {
+  width: 270px;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid currentColor;
+}
+
+.top-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.lista-asignaturas {
+  max-width: 250px;
+  table-layout: auto;
+  min-height: 10rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  border-radius: 10px;
+  overflow: auto;
+    height: 100px;
+}
+
+.p-2 {
+  padding: 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 0.375rem;
+}
+
+.transparente{
+  border-color: transparent;
+}
+
+.checkbox {
+  width: 13.5px;
+  height: 13.5px;
+  cursor: pointer;
+}
+
+.form-groups {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 300px;
+}
+
+.dropdown-departamentos {
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-departamentos label {
+  margin-bottom: 0.8rem;
+}
+
+.dropdown-select-group {
+  width: 190px;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid currentColor;
+}
+
+.btn-asignar {
+  background-color: #0054e9;
+  border: none;
+  color: #FFFFFF;
+  font-size: 18px;
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+.btn-asignar:hover {
+    background-color: #1461eb;
 }
 
 .card-departamentos-asignaturas {
   min-width: 900px;
   min-height: 435px;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   overflow: auto;
-  height: 300px;
-  width: 300px;
+    height: 300px;
+    width: 300px;
 }
 
 .table-wrapper {
   width: 100%;
 }
 
-table {
+table{
   margin-top: 1.5rem;
   min-width: 860px;
 }
@@ -539,57 +646,30 @@ table {
 
 .btn-eliminar {
   color: #EF4444;
-  font-size: 2rem;
+  font-size: 2rem; /* <-- Reducir tamaño */
   background-color: transparent;
-  border: none;
-  line-height: 1;
-}
-
-.btn-asignar {
-  background-color: #0054e9;
-  color: white;
-  font-size: 18px;
-  border-radius: 0.375rem;
-  padding: 0.5rem;
-  margin: 1.5rem 15px 0;
-  cursor: pointer;
+  line-height: 1; /* <-- Ajuste para evitar desbordamiento */
   border: none;
 }
 
-.btn-asignar:hover {
-  background-color: #1461eb;
-}
-
-.dropdown-select,
-.dropdown-select-group {
-  padding: 0.5rem;
-  border-radius: 5px;
-  border: 1px solid currentColor;
-}
-
-.dropdown-select {
-  width: 270px;
-}
-
-.dropdown-select-group {
-  width: 190px;
-}
-
-.form-group,
-.form-groups,
-.dropdown-departamentos {
+.top-card-dos {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 2rem;
 }
 
 .form-group {
+  display: flex;
+  flex-direction: column;
   padding-top: 2.5rem;
   margin-left: 2rem;
 }
 
-.form-label,
 .form-label-numer {
-  margin-top: 1rem;
+  cursor: pointer;
+  margin-top: 1.5rem;
   margin-bottom: 1rem;
 }
 
@@ -598,69 +678,33 @@ table {
   text-align: center;
   background: transparent;
   border: none;
+  outline: none;
   border-bottom: 1px solid black;
   padding: 0.5rem;
-}
-
-.lista-asignaturas {
-  max-width: 250px;
-  width: 100%;
-  height: 100px;
-  margin: 0.5rem 0 1rem;
-  border-radius: 10px;
-  overflow: auto;
-}
-
-.checkbox {
-  width: 13.5px;
-  height: 13.5px;
-  cursor: pointer;
+  margin-bottom: 1rem;
 }
 
 li {
-  padding: 0.5rem 0 0.5rem 2.2rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 2.2rem;
 }
 
-.p-1 {
-  padding: 0.4rem;
-  border: 1px solid currentColor;
-  border-radius: 0.375rem;
-}
-
-.transparente {
-  border-color: transparent;
-}
-
-.top-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  margin: 1.5rem 0 0 1rem;
-}
-
-.top-section {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 1.5rem;
-  width: 100%;
+.form-label {
   margin-top: 1rem;
 }
 
-.texto-verde {
+.texto-verde{
   color: #2b8f06;
 }
-
-.texto-amarillo {
+.texto-amarillo{
   color: #e0a205;
 }
-
-.texto-rojo {
+.texto-rojo{
   color: #EF4444;
 }
 
-/* Dark mode */
+
 @media (prefers-color-scheme: dark) {
   .card-asignacion,
   .card-departamentos-asignaturas {
@@ -670,65 +714,66 @@ li {
   }
 
   .form-input-numer {
-    border-bottom: 1px solid #D1D5DB;
+    border-bottom: 1px solid #D1D5DB
   }
-
   .btn-asignar {
-    background-color: #4782eb;
     color: black;
+    background-color: #4782eb;
   }
 
   .btn-asignar:hover {
     background-color: #3476eb;
   }
 
-  .columna {
+  .columna{
     border: 1px solid white;
   }
-
-  .texto-amarillo {
-    color: #FBBF24;
-  }
+  .texto-amarillo{
+  color: #FBBF24;
+}
 }
 
-/* Responsive */
-@media (min-width: 768px) and (max-width: 1422px) {
+@media ((min-width: 768px) and (max-width: 1422px)) {
+
   .card-departamentos-asignaturas {
     min-width: 520px;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px ) {
+
   .card-departamentos-asignaturas {
     min-width: 355px;
     min-height: 100%;
   }
-
   .card-asignacion {
-    width: 100%;
-    max-width: 355px;
-    min-width: 340px;
+  width: 100%;
+  max-width: 355px;
+  min-width: 340px;
   }
-
   .top-container {
-    min-width: 340px;
+    flex-direction: column;
+    min-width: 350px;
     align-self: center;
+    min-width: 340px;
   }
-
   .top-section {
+    display: flex;
     flex-direction: column;
     gap: 1rem;
     max-width: 350px;
     min-width: 340px;
   }
-
-  .dropdown-select-group {
+  .lista-asignaturas {
+  width: 100%;
+  max-width: 250px;
+  }
+  .dropdown-select-group{
     width: 250px;
   }
-
   .form-groups {
     align-items: center;
   }
+  
 }
-
 </style>
