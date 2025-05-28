@@ -290,6 +290,24 @@ export const asignaturasSinDocencia = async (nombreAsignatura, sinDocencia, toas
       });
   }
 
+export const asignaturasDesdobles = async (nombreAsignatura, desdoble, toastMessage, toastColor, isToastOpen) =>
+  {
+  
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/asignaturasYBloques/desdoble', 
+      {
+        method: 'PUT',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'Content-Type': 'application/json',
+          'nombreAsignatura': nombreAsignatura,
+          'desdoble': desdoble
+        },
+      });
+  }
+
 export const mostrarHoras = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);

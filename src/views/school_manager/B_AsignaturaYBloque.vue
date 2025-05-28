@@ -29,6 +29,7 @@
               <th class="th">Nombre</th>
               <th class="th-bloque">Bloque</th>
               <th class="th-sin-docencia">Asignaturas sin docencia</th>
+              <th class="th-desdoble">Desdoble</th>
               <th class="th-horas">Horas</th>
               <th class="th-accion">Acciones</th>
             </tr>
@@ -55,8 +56,14 @@
                   type="checkbox" 
                   class="checkbox"
                   v-model="asignatura.sinDocencia" 
-                  @click="asignaturaSinDocencia(asignatura)"
-                />
+                  @click="asignaturaSinDocencia(asignatura)"/>
+              </td>
+              <td class="th t-3">
+                <input 
+                  type="checkbox" 
+                  class="checkbox"
+                  v-model="asignatura.desdoble" 
+                  @click="asignaturasDesdoble(asignatura)"/>
               </td>
               <td class="t-3 th">
               <ion-input 
@@ -102,7 +109,7 @@
 import { ref, watch} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { crearToast } from '@/utils/toast.js';
-import { cargarAsignaturas, crearBloques, eliminarBloques, asignaturasSinDocencia, mostrarHoras, asignarHoras } from '@/services/schoolManager.js'
+import { cargarAsignaturas, crearBloques, eliminarBloques, asignaturasSinDocencia, asignaturasDesdobles, mostrarHoras, asignarHoras } from '@/services/schoolManager.js'
 import { IonToast, IonCard, IonInput, IonCardContent, IonCardHeader, IonCardTitle } from "@ionic/vue";
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
@@ -114,6 +121,7 @@ const asignaturasConHoras = ref([]);
 const horasPorAsignatura = ref({});
 const isProcessing = ref(false); // Estado de carga para "Guardar Todo"
 const bloquesConUnaAsignatura = ref([]);
+const filtroSeleccionadoString = ref('');
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -121,8 +129,6 @@ const toastColor = ref('success');
 // Nueva variable reactiva para el mensaje de actualización
 let mensajeActualizacion = "";
 let mensajeColor = "";
-// Agregar esta variable reactiva
-const filtroSeleccionadoString = ref('');
 
 
 const actualizarSelect = (seleccionado) => {
@@ -303,6 +309,38 @@ const asignaturaSinDocencia = async (asignatura) => {
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     // Revertimos el cambio en caso de error
     asignatura.sinDocencia = !nuevoValor;
+  }
+};
+
+const asignaturasDesdoble = async (asignatura) => {
+  try {
+    // Invertimos el valor actual de desdoble
+    const nuevoValor = !asignatura.desdoble;
+
+    const response = await asignaturasDesdobles(
+      asignatura.nombre,
+      nuevoValor,
+      toastMessage, 
+      toastColor, 
+      isToastOpen
+    );
+
+    if(response.ok) {
+      mensajeActualizacion = `Asignatura ${asignatura.nombre} ${nuevoValor ? 'marcada' : 'desmarcada'} como desdoble`;
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+  } catch (error) {
+    mensajeActualizacion = "Error al desdoblar la asignatura.";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
   }
 };
 
@@ -517,6 +555,13 @@ async () =>{
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   text-align: center;
+}
+
+.th-desdoble {
+  border: 1px solid currentColor;
+  width: 10%;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .th-horas {
