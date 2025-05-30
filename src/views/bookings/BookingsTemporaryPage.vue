@@ -157,9 +157,9 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <Datepicker v-model="fechaSeleccionada" :auto-apply = "true" :disabled-dates="disableWeekends" :enable-time-picker="false"
-            :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
-            :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso" @update:model-value="handleDateChange"
+          <Datepicker v-model="fechaRepeticion" :auto-apply = "true" :disabled-dates="disableWeekends" :enable-time-picker="false"
+            :clearable="false" :highlight="semanaSeleccionadaRepeticion.length > 0 ? semanaSeleccionadaRepeticion : semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
+            :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso" @update:model-value="sombrearRepeticion(fechaRepeticion)"
             :input-class="{ 'placeholder-date': !fechaSeleccionada }" />
         </div>
         <span class="custom-message-numAlumno"
@@ -258,6 +258,7 @@ const fechaMaxima = ref('');
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const reseteoFecha = ref('');
 const fechaSeleccionada = ref(fechaActual.value);
+const fechaRepeticion = ref(fechaSeleccionada.value);
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
@@ -269,6 +270,7 @@ const month = ref('');
 const preCargaSemana = ref('');
 const fechaLimite = ref('');
 const semanaSeleccionada = ref([]);
+const semanaSeleccionadaRepeticion = ref([]);
 
 // Variables para el modal de confirmación de borrado
 const isDeleteModalOpen = ref(false);
@@ -334,28 +336,31 @@ const actualizarSemana = (fecha) => {
   incrementarFecha();
 }
 
-function handleDateChange(date) {
+function sombrearRepeticion(date) {
   const selectedDate = new Date(date);
-  const today = new Date();
+  const today = new Date(fechaSeleccionada.value);
   const daysToHighlight = [];
 
   if (selectedDate < today) {
-    semanaSeleccionada.value = [];
+    semanaSeleccionadaRepeticion.value = [];
     return;
   }
 
-  const current = new Date(today);
+  const startOfWeek = new Date(today);
+  const dayOfWeek = startOfWeek.getDay();
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startOfWeek.setDate(startOfWeek.getDate() + diffToMonday);
+
+  const current = new Date(startOfWeek);
   while (current <= selectedDate) {
     daysToHighlight.push(new Date(current));
     current.setDate(current.getDate() + 1);
   }
 
-  semanaSeleccionada.value = daysToHighlight;
+  semanaSeleccionadaRepeticion.value = daysToHighlight;
   fechaModal({ target: { value: date } });
   comprobarDisponibilidad();
 }
-
-
 
 const resetearSemana = () => {
   semana.value = reseteoFecha.value;
