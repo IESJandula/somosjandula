@@ -938,7 +938,7 @@ export const actualizarObservaciones = async (conciliacion, trabajarPrimeraHora,
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones',
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones',
       {
         method: 'PUT',
         headers:
@@ -994,7 +994,7 @@ export const eliminarSolicitudes = async (data, toastMessage, toastColor, isToas
           'etapa': data.etapa || '',
           'grupo': data.grupo || '',
           'nombreReduccion': data.nombreReduccion || '',
-          'horasReduccion': data.horasReduccion || ''
+          'horasReduccion': data.horasReduccion ?? ''
         },
       });
   }

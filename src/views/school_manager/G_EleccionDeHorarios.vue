@@ -184,18 +184,22 @@
                 </span>
                 <span v-else>-</span>
               </td>
-              <td class="columna">
-                <span v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && asignaturaReduccion.tipo === 'Asignatura'">
+              <td class="columna" v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))">
+                <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
                   <button @click="guardarSolicitud(index)" :disabled="isDesabilitado" class="btn">Guardar</button>
                 </span>
-                <span v-else>-</span>
+                <samp v-else>-</samp>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <button v-if="(listaAsignaturasReducciones.length > 0) && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))" :disabled="isDesabilitado" class="btn-guardar-todo" @click="guardarTodo">Guardar
-        todo</button>
+      <button v-if="(listaAsignaturasReducciones.length > 0) && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION'))" 
+        :disabled="isDesabilitado" 
+        class="btn-guardar-todo" 
+        @click="guardarTodo">
+        Guardar todo
+      </button>
     </div>
   </div>
   <ion-toast 
@@ -269,13 +273,6 @@ const verificarConstantes = async () => {
     } else {
       isDesabilitado.value = solicitudesDeshabilitada.valor !== ''; // Se deshabilita para otros si hay valor
     }
-
-    console.log('Estado de permisos:', {
-      roles: rolesUsuario.value,
-      valorConstante: valorConstante.value,
-      isDesabilitado: isDesabilitado.value
-    });
-
   }
   catch (error) {
     mensajeActualizacion = 'Error al obtener constantes';
@@ -356,50 +353,15 @@ const asignacionDeAsignaturas = async () => {
       return;
     }
 
-    let response = null;
-
-    if (profesorSeleccionado.value !== '') {
-      response = await asignarAsignatura(
-        asignaturaSeleccionada.value.nombre,
-        asignaturaSeleccionada.value.horas,
-        asignaturaSeleccionada.value.curso,
-        asignaturaSeleccionada.value.etapa,
-        asignaturaSeleccionada.value.grupo,
-        emailDestino,
-        toastMessage, toastColor, isToastOpen);
-    }
-    else {
-      // Primero obtener la lista completa de profesores y sus asignaturas
-      const todosLosProfesores = await obtenerProfesoresHorarios(toastMessage, toastColor, isToastOpen);
-
-      // Buscar si la asignatura ya está asignada a algún profesor
-      for (const profesor of todosLosProfesores) {
-        const solicitudes = await obtenerSolicitudes(profesor.email, toastMessage, toastColor, isToastOpen);
-
-        const asignaturaExistente = solicitudes.asigunaturas.find(item =>
-          item.nombreAsignatura === asignaturaSeleccionada.value.nombre &&
-          item.curso === asignaturaSeleccionada.value.curso &&
-          item.etapa === asignaturaSeleccionada.value.etapa &&
-          item.grupo === asignaturaSeleccionada.value.grupo
-        );
-
-        if (asignaturaExistente) {
-          mensajeActualizacion = `Esta asignatura ya está asignada al profesor ${profesor.nombre} ${profesor.apellidos}`;
-          mensajeColor = "danger";
-          crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-          return;
-        }
-      }
-
-      await asignarAsignatura(
-        asignaturaSeleccionada.value.nombre,
-        asignaturaSeleccionada.value.horas,
-        asignaturaSeleccionada.value.curso,
-        asignaturaSeleccionada.value.etapa,
-        asignaturaSeleccionada.value.grupo,
-        emailDestino,
-        toastMessage, toastColor, isToastOpen);
-    }
+    const response = await asignarAsignatura(
+      asignaturaSeleccionada.value.nombre,
+      asignaturaSeleccionada.value.horas,
+      asignaturaSeleccionada.value.curso,
+      asignaturaSeleccionada.value.etapa,
+      asignaturaSeleccionada.value.grupo,
+      emailDestino,
+      toastMessage, toastColor, isToastOpen);
+    
 
     await obtenerSolicitud();
 
@@ -594,8 +556,17 @@ const actualizarObservacion = async () => {
 
 const totalHorasAsignaturas = computed(() => {
   return listaAsignaturasReducciones.value
-    .filter(item => item.tipo === 'Asignatura')
-    .reduce((total, asignatura) => total + Number(asignatura.horasSeleccionadas), 0);
+    .reduce((total, item) => {
+      // Para los que son de tipo Asignatura
+      if (item.tipo === 'Asignatura') {
+        return total + Number(item.horasSeleccionadas || 0);
+      }
+      // Para los que son de tipo Reduccion
+      if (item.tipo === 'Reducción') {
+        return total + Number(item.horasReduccion || 0);
+      }
+      return total;
+    }, 0);
 });
 
 const obtenerSolicitud = async () => {
@@ -660,18 +631,19 @@ const eliminarSolicitud = async (index) => {
       horasAsignatura: solicitud.horasSeleccionadas,
       curso: solicitud.curso,
       etapa: solicitud.etapa,
-      grupo: solicitud.grupo,
+      grupo: solicitud.grupoSeleccionado,
       nombreReduccion: solicitud.nombreReduccion,
       horasReduccion: solicitud.horasReduccion,
     };
     const response = await eliminarSolicitudes(data, toastMessage, toastColor, isToastOpen);
 
-    // Elimina la solicitud de la lista
-    listaAsignaturasReducciones.value.splice(index, 1);
     if (response.ok) {
       mensajeActualizacion = "Solicitud eliminada correctamente.";
       mensajeColor = "success";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+      // Elimina la solicitud de la lista
+      listaAsignaturasReducciones.value.splice(index, 1);
     } else {
       const errorData = await response.json();
       mensajeColor = 'danger';
@@ -745,10 +717,15 @@ const guardarTodo = async () => {
     ? profesorSeleccionado.value.email
     : emailUsuarioActual.value;
 
+    
   for (let index = 0; index < listaAsignaturasReducciones.value.length; index++) {
     const solicitud = listaAsignaturasReducciones.value[index];
+    if (solicitud.tipo === 'Reducción' ) {
+      
+      return;
+    }
 
-    if (listaAsignaturasReducciones.value[index].grupoSeleccionado === '') {
+    if (solicitud.grupoSeleccionado === '') {
       mensajeActualizacion = 'Tienes que elegir el grupo antes de guardar'
       mensajeColor = 'warning'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
