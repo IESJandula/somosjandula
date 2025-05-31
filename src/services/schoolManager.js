@@ -977,7 +977,7 @@ export const obtenerSolicitudes = async (email, toastMessage, toastColor, isToas
       return await response.json();
   }
 
-export const eliminarSolicitudes = async (data, toastMessage, toastColor, isToastOpen) =>
+export const eliminarSolicitudes = async (email, nombreAsignatura, horasAsignatura, curso, etapa, grupo, nombreReduccion, horasReduccion, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -987,19 +987,19 @@ export const eliminarSolicitudes = async (data, toastMessage, toastColor, isToas
         headers:
         {
           'Authorization': `Bearer ${tokenPropio}`,
-          'email': data.email,
-          'nombreAsignatura': data.nombreAsignatura || '',
-          'horasAsignatura': data.horasAsignatura || '',
-          'curso': data.curso || '',
-          'etapa': data.etapa || '',
-          'grupo': data.grupo || '',
-          'nombreReduccion': data.nombreReduccion || '',
-          'horasReduccion': data.horasReduccion ?? ''
+          'email': email,
+          'nombreAsignatura': nombreAsignatura || '',
+          'horasAsignatura': horasAsignatura || '',
+          'curso': curso || '',
+          'etapa': etapa || '',
+          'grupo': grupo || '',
+          'nombreReduccion': nombreReduccion || '',
+          'horasReduccion': horasReduccion ?? ''
         },
       });
   }
 
-export const guardarSolicitudes = async (data, toastMessage, toastColor, isToastOpen) =>
+export const guardarSolicitudes = async (email, nombreAsignatura, horasAsignatura, curso, etapa, grupoAntiguo, grupoNuevo, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
@@ -1009,13 +1009,13 @@ export const guardarSolicitudes = async (data, toastMessage, toastColor, isToast
         headers:
         {
           'Authorization': `Bearer ${tokenPropio}`,
-          'email': data.email,
-          'nombreAsignatura': data.nombreAsignatura,
-          'horasAsignatura': data.horasAsignatura,
-          'curso': data.curso,
-          'etapa': data.etapa,
-          'grupoAntiguo': data.grupoAntiguo,
-          'grupoNuevo': data.grupoNuevo,
+          'email': email,
+          'nombreAsignatura': nombreAsignatura,
+          'horasAsignatura': horasAsignatura,
+          'curso': curso,
+          'etapa': etapa,
+          'grupoAntiguo': grupoAntiguo,
+          'grupoNuevo': grupoNuevo,
         },
       });
   }

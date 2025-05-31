@@ -618,24 +618,29 @@ const eliminarSolicitud = async (index) => {
 
     await verificarConstantes();
 
+    if (listaAsignaturasReducciones.value[index].grupoSeleccionado === '') {
+      mensajeActualizacion = 'Tienes que elegir el grupo antes de eliminar la solicitud'
+      mensajeColor = 'warning'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      return
+    }
+
     const solicitud = listaAsignaturasReducciones.value[index];
-    console.log(solicitud);
 
     const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
       ? profesorSeleccionado.value.email
       : emailUsuarioActual.value;
 
-    const data = {
-      email: emailDestino,
-      nombreAsignatura: solicitud.nombreAsignatura,
-      horasAsignatura: solicitud.horasSeleccionadas,
-      curso: solicitud.curso,
-      etapa: solicitud.etapa,
-      grupo: solicitud.grupoSeleccionado,
-      nombreReduccion: solicitud.nombreReduccion,
-      horasReduccion: solicitud.horasReduccion,
-    };
-    const response = await eliminarSolicitudes(data, toastMessage, toastColor, isToastOpen);
+    const response = await eliminarSolicitudes(
+      emailDestino, 
+      solicitud.nombreAsignatura, 
+      solicitud.horasSeleccionadas, 
+      solicitud.curso, 
+      solicitud.etapa,
+      solicitud.grupoSeleccionado,
+      solicitud.nombreReduccion,
+      solicitud.horasReduccion,
+      toastMessage, toastColor, isToastOpen);
 
     if (response.ok) {
       mensajeActualizacion = "Solicitud eliminada correctamente.";
@@ -672,29 +677,28 @@ const guardarSolicitud = async (index) => {
       return
     }
     
-    let data = null;
     const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
       ? profesorSeleccionado.value.email
       : emailUsuarioActual.value;
 
-    data = {
-      email: emailDestino,
-      nombreAsignatura: solicitud.nombreAsignatura,
-      horasAsignatura: solicitud.horasSeleccionadas,
-      curso: solicitud.curso,
-      etapa: solicitud.etapa,
-      grupoAntiguo: solicitud.grupoOriginal,
-      grupoNuevo: solicitud.grupoSeleccionado,
-    };
-
-    const response = await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
-
-    solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
+    const response = await guardarSolicitudes(
+      emailDestino, 
+      solicitud.nombreAsignatura,
+      solicitud.horasSeleccionadas,
+      solicitud.curso,
+      solicitud.etapa,
+      solicitud.grupoOriginal,
+      solicitud.grupoSeleccionado,
+      toastMessage, 
+      toastColor, 
+      isToastOpen);
 
     if (response.ok) {
       mensajeActualizacion = "Solicitud guardada correctamente.";
       mensajeColor = "success";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+      solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
     } else {
       const errorData = await response.json();
       mensajeColor = 'danger';
@@ -720,8 +724,8 @@ const guardarTodo = async () => {
     
   for (let index = 0; index < listaAsignaturasReducciones.value.length; index++) {
     const solicitud = listaAsignaturasReducciones.value[index];
+
     if (solicitud.tipo === 'Reducción' ) {
-      
       return;
     }
 
@@ -732,25 +736,25 @@ const guardarTodo = async () => {
       return
     }
 
-    const data = {
-      email: emailDestino,
-      nombreAsignatura: solicitud.nombreAsignatura,
-      horasAsignatura: solicitud.horasSeleccionadas,
-      curso: solicitud.curso,
-      etapa: solicitud.etapa,
-      grupoAntiguo: solicitud.grupoOriginal,
-      grupoNuevo: solicitud.grupoSeleccionado,
-    };
-
     try {
-      const response = await guardarSolicitudes(data, toastMessage, toastColor, isToastOpen);
-
-      solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
+      const response = await guardarSolicitudes(
+        emailDestino, 
+        solicitud.nombreAsignatura,
+        solicitud.horasSeleccionadas,
+        solicitud.curso,
+        solicitud.etapa,
+        solicitud.grupoOriginal,
+        solicitud.grupoSeleccionado,
+        toastMessage, 
+        toastColor, 
+        isToastOpen);
 
       if (response.ok) {
         mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
         mensajeColor = "success";
         crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+        solicitud.grupoOriginal = solicitud.grupoSeleccionado; // Actualiza el grupo original al nuevo
       } else {
         const errorData = await response.json();
         mensajeColor = 'danger';
