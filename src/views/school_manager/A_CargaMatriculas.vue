@@ -222,12 +222,6 @@ const subirFichero = async () => {
       mensajeActualizacion = "Csv cargado con éxito";
       mensajeColor = "success";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
-      } else {
-        const errorData = await response.json();
-        mensajeColor = 'danger';
-        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
-      }
 
       // Limpiar el archivo seleccionado
       const fileUploadComponent = fileUploadRef.value;
@@ -239,6 +233,12 @@ const subirFichero = async () => {
       filtroSeleccionado.value = { curso: null, etapa: '' };
       filtroSeleccionadoString.value = '';
       comprobarBoton()
+      
+      } else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }   
 
     } catch (error) {
       mensajeActualizacion = 'Error al subir el fichero';

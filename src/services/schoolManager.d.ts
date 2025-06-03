@@ -140,6 +140,11 @@ export declare function actualizarTurnoHorario(curso: Ref<number>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Ventana 4 TablaResumen ******************************/
+export declare function obtenerTodosGrupos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
 export declare function cargarAsignaturasUnicas(curso: Ref<number>,
                                            etapa: Ref<string>,
                                            toastMessage: Ref<string>,

@@ -63,7 +63,7 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { cargarAsignaturasUnicas, obtenerCantidadAlumnosEnGrupoPorAsignatura, obtenerGrupos } from '@/services/schoolManager.js';
+import { cargarAsignaturasUnicas, obtenerCantidadAlumnosEnGrupoPorAsignatura, obtenerTodosGrupos } from '@/services/schoolManager.js';
 import { IonToast, IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 
@@ -177,7 +177,7 @@ const cargarNumeroAlumnosPorGrupo = async () => {
 const obtenerGrupo = async () => {
   try {
    
-    const response = await obtenerGrupos(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
+    const response = await obtenerTodosGrupos(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
 
     infoGrupos.value = response
     

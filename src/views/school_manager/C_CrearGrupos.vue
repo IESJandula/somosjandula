@@ -319,12 +319,6 @@ const limpiarGrupo = async (grupo) => {
       mensajeActualizacion = "Grupo limpiado correctamente.";
       mensajeColor = "success";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
-      } else {
-        const errorData = await response.json();
-        mensajeColor = 'danger';
-        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
-      }
 
       listadoAlumnosSinGrupo.value.push(alumno);
       listadoAlumnosSinGrupo.value.sort((a, b) => { //Primero filtra por nombre y después por apellido
@@ -332,10 +326,16 @@ const limpiarGrupo = async (grupo) => {
         if (cmpApellidos  !== 0) return cmpApellidos ;
         return a.nombre.localeCompare(b.nombre);
       });
+
+      alumnosPorGrupo.value[grupo] = [];
+      
+      } else {
+        const errorData = await response.json();
+        mensajeColor = 'danger';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+      }     
     }
-
-    alumnosPorGrupo.value[grupo] = [];
-
+    
   } catch (error) {
     mensajeActualizacion = "Error al limpiar el grupo.";
     mensajeColor = "danger";

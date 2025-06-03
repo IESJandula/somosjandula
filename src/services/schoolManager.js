@@ -482,6 +482,29 @@ export const actualizarTurnoHorario = async (curso, etapa, grupo, esHorarioMatut
   }
 
 /****************************** Ventana 4 TablaResumen ******************************/
+export const obtenerTodosGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+  {
+    const cursoInt = parseInt(curso, 10);
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/resumenAsignaturas/grupos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+  }
 export const cargarAsignaturasUnicas = async (curso, etapa, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
