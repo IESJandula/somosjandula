@@ -36,6 +36,10 @@
           <option v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" :value="infoGrupo.grupo">{{ infoGrupo.grupo }}</option>
         </select>
         <button @click="asignarAlumno" class="btn">Añadir alumnos</button>
+        <!-- Spinner de carga -->
+        <div v-if="isLoading" class="fondo-gris">
+          <div class="circulo"></div>
+        </div>
       </div>
     </div>
     <div class="card-upload-table">
@@ -98,6 +102,8 @@ const infoGrupos = ref([]);
 const listadoAlumnosSeleccionados = ref([]);
 const listadoAlumnosSinGrupo = ref([]);
 const alumnosPorGrupo = ref({})
+// Nueva variable reactiva para el estado de carga
+const isLoading = ref(false);
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -225,6 +231,7 @@ const asignarAlumno = async () => {
       return;
     }
 
+    isLoading.value = true; // Activar el estado de carga
     const response = await asignarAlumnos(cursoInt, etapa, grupo, listadoAlumnosSeleccionados.value, toastMessage, toastColor, isToastOpen);
 
     if(response.ok) {
@@ -260,6 +267,10 @@ const asignarAlumno = async () => {
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     console.error(error);
+  }
+  finally {
+    console.log("Desactivando spinner...");
+    isLoading.value = false; // Desactivar el estado de carga
   }
 };
 
@@ -313,6 +324,7 @@ const limpiarGrupo = async (grupo) => {
   try {
     const alumnosDeEsteGrupo = alumnosPorGrupo.value[grupo] || [];
     for (const alumno of alumnosDeEsteGrupo) {
+      isLoading.value = true; // Activar el estado de carga
       const response = await borrarAlumnos({ ...alumno, grupo }, toastMessage, toastColor, isToastOpen);
 
       if(response.ok) {
@@ -341,6 +353,10 @@ const limpiarGrupo = async (grupo) => {
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     console.error(error);
+  }
+  finally {
+    console.log("Desactivando spinner...");
+    isLoading.value = false; // Desactivar el estado de carga
   }
 };
 
@@ -575,6 +591,38 @@ onMounted(async () => {
   background-color: transparent;
   line-height: 1;
   border: none;
+}
+
+.fondo-gris {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); 
+  z-index: 9998; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.circulo {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4782eb;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  z-index: 9999;
+}
+
+@keyframes spin {
+  0% { 
+    transform: rotate(0deg); 
+  }
+  100% { 
+    transform: rotate(360deg); 
+  }
 }
 
 /* Modo oscuro */

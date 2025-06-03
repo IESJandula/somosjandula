@@ -235,7 +235,7 @@ const asignarProfesorADepartamento = async (nombreDepartamento) => {
     departamentos.value = response;
 
     if(response.ok) {
-      mensajeActualizacion = "Profesor asignado correctamente.";
+      mensajeActualizacion = "Plantilla actualizada correctamente.";
       mensajeColor = "success";
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
       

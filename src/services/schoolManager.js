@@ -1012,7 +1012,7 @@ export const eliminarSolicitudes = async (email, nombreAsignatura, horasAsignatu
           'Authorization': `Bearer ${tokenPropio}`,
           'email': email,
           'nombreAsignatura': nombreAsignatura || '',
-          'horasAsignatura': horasAsignatura || '',
+          'horasAsignatura': horasAsignatura ?? '',
           'curso': curso || '',
           'etapa': etapa || '',
           'grupo': grupo || '',

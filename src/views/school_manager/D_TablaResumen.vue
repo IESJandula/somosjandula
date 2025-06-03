@@ -38,7 +38,7 @@
               <!-- Se calcula el total al sumar los valores obtenidos en cada grupo -->
               <td class="th th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
               <td v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" class="th th-center">
-                {{ asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] || 0 }}
+                {{ asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] || "-" }}
               </td>
             </tr>
             </tbody>
