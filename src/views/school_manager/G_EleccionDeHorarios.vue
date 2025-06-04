@@ -16,7 +16,6 @@
             id="profesor-select" v-model="profesorSeleccionado" @change="async () => {
               await obtenerSolicitud();
               await obtenerListaAsignaturas();
-              await obtenerObservaciones();
             }" class="dropdown-select">
             <option value="">Selecciona un profesor</option>
             <option v-for="profesor in listaProfesores" 
@@ -256,7 +255,6 @@ const isDesabilitado = ref(false)
 const valorConstante = ref('')
 const datosObservacionesProfesorSeleccionado = ref(null);
 const preferenciasHorariasProfesorSeleccionado = ref([]);
-const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -314,7 +312,6 @@ const obtenerProfesor = async () => {
 
     const response = await obtenerProfesoresHorarios(toastMessage, toastColor, isToastOpen);
     listaProfesores.value = response;
-    console.log("listaProfesores", listaProfesores.value);
 
     profesorSeleccionado.value = '';
 
@@ -333,7 +330,6 @@ const obtenerListaAsignaturas = async () => {
 
     const response = await obtenerAsignaturas(emailDestino, toastMessage, toastColor, isToastOpen);
     listaAsignaturas.value = response;
-    console.log("listaAsignaturas", listaAsignaturas.value);
 
   } catch (error) {
     mensajeColor = 'danger';
@@ -391,7 +387,6 @@ const asignacionDeAsignaturas = async () => {
 }
 
 const obtenerListaReducciones = async () => {
-  console.log(listaTramoHorarioSeleccionado)
   try {
 
     const response = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
@@ -452,7 +447,6 @@ const obtenerObservaciones = async () => {
 
     listaTramoHorarioSeleccionado.value =
         await (async () => {
-          // Si ya la habías cargado en mounted, este await será rápido/innofensivo.
           return await obtenerDiasTramosTipoHorario(
               null,
               toastMessage,
@@ -467,44 +461,33 @@ const obtenerObservaciones = async () => {
     datosObservacionesProfesorSeleccionado.value = await obtenerObservacionesDeUsuario(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
     preferenciasHorariasProfesorSeleccionado.value= await obtenerPreferenciasDeUsuario(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
 
-    isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== 0;
-    trabajarPrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.trabajarPrimeraHora !== 0;
+    isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== false;
+    trabajarPrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.trabajarPrimeraHora !== false;
     otrasObservacionesSeleccionado.value= datosObservacionesProfesorSeleccionado.value.otrasObservaciones || '';
 
+    const diaNameMap = {
+      0: 'Lunes',
+      1: 'Martes',
+      2: 'Miércoles',
+      3: 'Jueves',
+      4: 'Viernes'
+    };
+
     let contador = 0;
-
     for (const tramoH of preferenciasHorariasProfesorSeleccionado.value) {
-      let dia = tramoH.dia;
-      if(dia ==="1"){
-        dia="Lunes"
-      }
-      else if(dia ==="2"){
-        dia="Martes"
-      }
-      else if(dia ==="3"){
-        dia="Miércoles"
-      }
-      else if(dia ==="4"){
-        dia="Jueves"
-      }
-      else if(dia ==="5"){
-        dia="Viernes"
-      }
-      console.log(dia)
-      const tramo = tramoH.tramo;
-      console.log(tramo)
+      const diaNum = Number(tramoH.dia);
+      const diaNombre = diaNameMap[diaNum];
+      const tramoNum = Number(tramoH.tramo);
       const tipoHorario = tramoH.tipoHorario;
-      console.log(tipoHorario)
-
 
       const encontrado = listaTramoHorarioSeleccionado.value.find(item =>
-          item.dia === dia &&
-          item.tramo === tramo &&
-          item.tipoHorario === tipoHorario
+          item.dia === diaNombre &&
+          item.tramo === tramoNum &&
+          item.tipoHorario.toLowerCase() === tipoHorario.toLowerCase()
       );
-      console.log(encontrado)
-      contador=contador+1;
-      switch (contador){
+
+      contador++;
+      switch (contador) {
         case 1:
           tramoHorarioSeleccionado.value = encontrado;
           break;
@@ -513,20 +496,16 @@ const obtenerObservaciones = async () => {
           break;
         case 3:
           tramoHorarioSeleccionado3.value = encontrado;
-          contador=0;
+          contador = 0;
           break;
       }
-
     }
-
-
-
   } catch (error) {
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
   }
-}
+};
 
 const obtenerDiaTramoTipoHorario = async () => {
   try {
@@ -619,6 +598,7 @@ const actualizarObservacion = async () => {
     // Iteramos sobre los tramos y envíamos una solicitud por cada uno
     for (const tramo of tramos) {
       if (tramo) {
+
         // Llama al método para enviar los datos al backend
         response = await actualizarObservaciones(isOn.value, trabajarPrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailDestino,
           toastMessage, toastColor, isToastOpen);
@@ -687,7 +667,6 @@ const obtenerSolicitud = async () => {
       }),
       ...solicitudes.reduccionAsignadas
     ];
-    console.log(listaAsignaturasReducciones.value);
 
     for (let i = 0; i < listaAsignaturasReducciones.value.length; i++) {
       if (listaAsignaturasReducciones.value[i].tipo === 'Asignatura') {
@@ -911,6 +890,7 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
   ) {
     await obtenerListaAsignaturas();
     await obtenerSolicitud();
+    await obtenerObservaciones();
   }
 });
 
