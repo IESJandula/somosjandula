@@ -16,6 +16,7 @@
             id="profesor-select" v-model="profesorSeleccionado" @change="async () => {
               await obtenerSolicitud();
               await obtenerListaAsignaturas();
+              await obtenerObservaciones();
             }" class="dropdown-select">
             <option value="">Selecciona un profesor</option>
             <option v-for="profesor in listaProfesores" 
@@ -211,25 +212,27 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { IonToast, IonInput } from "@ionic/vue";
-import { crearToast } from '@/utils/toast.js';
-import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
+import {computed, onMounted, ref, watch} from 'vue';
+import {IonInput, IonToast} from "@ionic/vue";
+import {crearToast} from '@/utils/toast.js';
+import {obtenerEmailUsuario, obtenerRolesUsuario} from '@/services/firebaseService';
 import {
-  obtenerProfesoresHorarios,
-  obtenerAsignaturas,
-  asignarAsignatura,
-  obtenerReducciones,
-  asignarReducciones,
-  obtenerDiasTramosTipoHorario,
   actualizarObservaciones,
-  obtenerSolicitudes,
+  asignarAsignatura,
+  asignarReducciones,
   eliminarSolicitudes,
   guardarSolicitudes,
-  obtenerGruposDeAsignaturas
+  obtenerAsignaturas,
+  obtenerDiasTramosTipoHorario,
+  obtenerGruposDeAsignaturas,
+  obtenerObservacionesDeUsuario,
+  obtenerPreferenciasDeUsuario,
+  obtenerProfesoresHorarios,
+  obtenerReducciones,
+  obtenerSolicitudes
 } from "@/services/schoolManager.js";
-import { obtenerConstantes } from '@/services/constantes'
-import { schoolmanagerApiUrl } from "@/environment/apiUrls.ts";
+import {obtenerConstantes} from '@/services/constantes'
+import {schoolmanagerApiUrl} from "@/environment/apiUrls.ts";
 
 const rolesUsuario = ref([]);
 const profesorSeleccionado = ref('');
@@ -251,6 +254,9 @@ const listaGrupos = ref([]);
 const constantes = ref([]);
 const isDesabilitado = ref(false)
 const valorConstante = ref('')
+const datosObservacionesProfesorSeleccionado = ref(null);
+const preferenciasHorariasProfesorSeleccionado = ref([]);
+const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -385,7 +391,7 @@ const asignacionDeAsignaturas = async () => {
 }
 
 const obtenerListaReducciones = async () => {
-
+  console.log(listaTramoHorarioSeleccionado)
   try {
 
     const response = await obtenerReducciones(toastMessage, toastColor, isToastOpen);
@@ -422,6 +428,7 @@ const asignarReduccion = async () => {
     
     await obtenerSolicitud();
 
+
     if(response.ok) {
       mensajeActualizacion = "Reducción asignada correctamente.";
       mensajeColor = "success";
@@ -439,6 +446,87 @@ const asignarReduccion = async () => {
     console.error(error);
   }
 };
+
+const obtenerObservaciones = async () => {
+  try {
+
+    listaTramoHorarioSeleccionado.value =
+        await (async () => {
+          // Si ya la habías cargado en mounted, este await será rápido/innofensivo.
+          return await obtenerDiasTramosTipoHorario(
+              null,
+              toastMessage,
+              toastColor,
+              isToastOpen
+          );
+        })();
+    tramoHorarioSeleccionado.value = '';
+    tramoHorarioSeleccionado2.value = '';
+    tramoHorarioSeleccionado3.value = '';
+
+    datosObservacionesProfesorSeleccionado.value = await obtenerObservacionesDeUsuario(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
+    preferenciasHorariasProfesorSeleccionado.value= await obtenerPreferenciasDeUsuario(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
+
+    isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== 0;
+    trabajarPrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.trabajarPrimeraHora !== 0;
+    otrasObservacionesSeleccionado.value= datosObservacionesProfesorSeleccionado.value.otrasObservaciones || '';
+
+    let contador = 0;
+
+    for (const tramoH of preferenciasHorariasProfesorSeleccionado.value) {
+      let dia = tramoH.dia;
+      if(dia ==="1"){
+        dia="Lunes"
+      }
+      else if(dia ==="2"){
+        dia="Martes"
+      }
+      else if(dia ==="3"){
+        dia="Miércoles"
+      }
+      else if(dia ==="4"){
+        dia="Jueves"
+      }
+      else if(dia ==="5"){
+        dia="Viernes"
+      }
+      console.log(dia)
+      const tramo = tramoH.tramo;
+      console.log(tramo)
+      const tipoHorario = tramoH.tipoHorario;
+      console.log(tipoHorario)
+
+
+      const encontrado = listaTramoHorarioSeleccionado.value.find(item =>
+          item.dia === dia &&
+          item.tramo === tramo &&
+          item.tipoHorario === tipoHorario
+      );
+      console.log(encontrado)
+      contador=contador+1;
+      switch (contador){
+        case 1:
+          tramoHorarioSeleccionado.value = encontrado;
+          break;
+        case 2:
+          tramoHorarioSeleccionado2.value = encontrado;
+          break;
+        case 3:
+          tramoHorarioSeleccionado3.value = encontrado;
+          contador=0;
+          break;
+      }
+
+    }
+
+
+
+  } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
+}
 
 const obtenerDiaTramoTipoHorario = async () => {
   try {

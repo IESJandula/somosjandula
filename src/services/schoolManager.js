@@ -978,6 +978,51 @@ export const actualizarObservaciones = async (conciliacion, trabajarPrimeraHora,
       });
   }
 
+export const obtenerObservacionesDeUsuario = async (email, toastMessage, toastColor, isToastOpen) =>
+{
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/usuario',
+        {
+            method: 'GET',
+            headers:
+                {
+                    'Authorization': `Bearer ${tokenPropio}`,
+                    'email': email
+                },
+        });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+
+    return await response.json();
+}
+
+export const obtenerPreferenciasDeUsuario = async (email, toastMessage, toastColor, isToastOpen) =>
+{
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/preferencias/usuario',
+        {
+            method: 'GET',
+            headers:
+                {
+                    'Authorization': `Bearer ${tokenPropio}`,
+                    'email': email
+                },
+        });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+
+    return await response.json();
+}
+
+
 export const obtenerSolicitudes = async (email, toastMessage, toastColor, isToastOpen) =>
   {  
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
