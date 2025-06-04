@@ -477,7 +477,7 @@ const obtenerObservaciones = async () => {
     for (const tramoH of preferenciasHorariasProfesorSeleccionado.value) {
       const diaNum = Number(tramoH.dia);
       const diaNombre = diaNameMap[diaNum];
-      const tramoNum = Number(tramoH.tramo);
+      const tramoNum = Number(tramoH.tramo) + 1;
       const tipoHorario = tramoH.tipoHorario;
 
       const encontrado = listaTramoHorarioSeleccionado.value.find(item =>
