@@ -1,11 +1,10 @@
 <script setup>
 import { onMounted, ref, watch, computed } from 'vue';
-import axios from 'axios';
 import MassiveControlTable from '@/components/projectors/RemoteControlTable.vue';
 import FormBox from '@/components/projectors/FormBox.vue';
 import constants from '@/utils/constants';
 import { Modal } from 'bootstrap';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { fetchActionsList, sendServerEventBatchService, fetchProjectorList } from '@/services/projectors';
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -82,32 +81,10 @@ const startCountdown = (expireAt) => {
 // ----------------- PROJECTOR ACTIONS -----------------
 const actionsList = ref([]);
 
-const loadActionsList = async () => {
-    try {
-
-        console.log('Fetching actions list.');
-
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-        const response = await axios.get(constants.ACTIONS, {
-            headers: { 'Authorization': `Bearer ${tokenPropio}` },
-        });
-
-        actionsList.value = response.data;
-
-    } catch (error) {
-        console.error('Error while retrieving actions list', error);
-
-        if (error.response) {
-            console.error('Error code:', error.response.status);
-            console.error('Server message:', error.response.data.message);
-        } else if (error.request) {
-            console.error('No response received from the server', error.request);
-        } else {
-            console.error('Request configuration error', error.message);
-        }
-    }
-};
+const loadActionsList = async () =>
+{
+ actionsList.value = await fetchActionsList( toastMessage, toastColor, isToastOpen );
+}
 
 // ----------------- END PROJECTOR ACTIONS -----------------
 
@@ -139,39 +116,13 @@ const loadProjectorList = async () => {
         const orderCriteria = filterObject.value.orderCriteriaF;
         const page = filterObject.value.pageNumberF;
         const size = filterObject.value.pageSizeF;
-        let classroom = filterObject.value.selectedClassroomF;
-        let floor = filterObject.value.selectedFloorF;
-        let model = filterObject.value.selectedModelF;
+        const classroom = filterObject.value.selectedClassroomF;
+        const floor = filterObject.value.selectedFloorF;
+        const model = filterObject.value.selectedModelF;
+        
+        const response = await fetchProjectorList(toastMessage, toastColor, isToastOpen, orderCriteria, page, size, classroom, floor, model );
 
-        if (classroom === 'default') {
-            classroom = null
-        }
-
-        if (floor === 'default') {
-            floor = null
-        }
-
-        if (model === 'default') {
-            model = null
-        }
-
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-        const response = await axios.get(constants.PROJECTORS, {
-            params: {
-                criteria: orderCriteria,
-                page: page,
-                size: size,
-                classroom: classroom,
-                floor: floor,
-                model: model
-            },
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-            }
-        });
-
-        pageObjectP.value = response.data;
+        pageObjectP.value = response;
 
     } catch (error) {
         console.error('Error while retrieving projector list', error);
@@ -212,33 +163,18 @@ const sendServerEventBatch = async (actionParam) => {
             return;
         }
 
-        // recuperacción del token.
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-        console.log(selectedProjectorsList.value);
-        console.log('Sending server event batch with projectors:', selectedProjectorsList);
-
-
         const requestBody = {
             action: actionParam.actionName,
             projectorList: selectedProjectorsList.value
         }
 
-        const response = await axios.post(
-            constants.EVENTS_BATCH, 
-            requestBody, 
-            {
-                headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-                }
-            }
-        );
+        const response = await sendServerEventBatchService( toastMessage, toastColor, isToastOpen, requestBody );
 
-        //responseTypeCMD.value = response.data.status;
-        //responseDataCMD.value = response.data.message;
+        responseTypeCMD.value = response.status;
+        responseDataCMD.value = response.message;
 
         disableButtonTemporarily();
-        showModal(response.data.status, response.data.message);
+        showModal(response.status, response.message);
 
     } catch (error) {
         responseTypeCMD.value = constants.RESPONSE_STATUS_ERROR;
@@ -246,8 +182,8 @@ const sendServerEventBatch = async (actionParam) => {
         console.error('Error while sending server event batch', error);
         if (error.response) {
             console.error('Error code:', error.response.status);
-            console.error('Server message:', error.response.data.message);
-            responseDataCMD.value = error.response.data.message;
+            console.error('Server message:', error.response.message);
+            responseDataCMD.value = error.response.message;
 
         } else if (error.request) {
             responseDataCMD.value = error.request;

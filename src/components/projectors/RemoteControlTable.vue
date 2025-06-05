@@ -3,9 +3,7 @@ import { defineProps, computed, defineEmits, ref, watch, onMounted } from 'vue';
 import ComboBoxClassroom from '@/components/projectors/ComboBoxClassroom.vue';
 import ComboBoxFloor from '@/components/projectors/ComboBoxFloor.vue';
 import ComboBoxModel from '@/components/projectors/ComboBoxModel.vue';
-import axios from 'axios';
-import constants from '@/utils/constants';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import {fetchFloorsList,fetchSelectedFloorClassrooms,fetchProjectorModelsList} from '@/services/projectors';
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -14,8 +12,8 @@ const toastColor = ref('success');
 
 // Llamar a la función al montar el componente
 onMounted(() => {
-  fetchFloorsList();
-  fetchProjectorModels();
+  loadFloorsList();
+  loadProjectorModels();
 });
 
 // Props
@@ -140,21 +138,10 @@ const selectedFloor = ref('default');
 const classroomsForSelectedFloor = ref([]);
 const selectedClassroom = ref('default');
 
-const fetchFloorsList = async () => {
+const loadFloorsList = async () => {
   console.log("Loading floors list for remote control.");
   try {
-
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await axios.get(constants.FLOORS, {
-      headers: {
-        'Authorization': `Bearer ${tokenPropio}`
-      }
-    });
-
-    floorsList.value = response.data;
-
-    console.log("Listado plantas obtenido.\n" + response.data);
+    floorsList.value = await fetchFloorsList(toastMessage, toastColor, isToastOpen);
   }
   catch (error) {
     console.error('Error loading list of values', error);
@@ -162,25 +149,16 @@ const fetchFloorsList = async () => {
 };
 
 // Fetch classrooms for the selected floor.
-const fetchSelectedFloorClassrooms = async (floorParam) => {
+const loadSelectedFloorClassrooms = async (floorParam) => {
   try {
-
-    console.log('loading classrooms for remote control on floor: ' + floorParam);
 
     // Ensure floor is selected
     if (floorParam.value === 'default') return;
 
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await axios.get(constants.CLASSROOMS, {
-      params: { floor: floorParam },
-      headers: {
-          'Authorization': `Bearer ${tokenPropio}`,
-      }
-    });
+    const response = await fetchSelectedFloorClassrooms(toastMessage, toastColor, isToastOpen, floorParam);
 
     // List of the classrooms for the selected floor.
-    classroomsForSelectedFloor.value = await response.data;
+    classroomsForSelectedFloor.value = await response;
 
     // Reset selected classroom
     selectedClassroom.value = 'default';
@@ -195,27 +173,13 @@ const projectorModels = ref([]);
 const selectedModel = ref("default");
 
 // Function to fetch projectors for a specific classroom.
-const fetchProjectorModels = async () => {
-
-  console.log('Fetching projector models for remote control');
-
+const loadProjectorModels = async () => {
   try {
 
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await axios.get(
-      constants.MODELS,
-      {
-        headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-            }
-      }
-    );
-
-    projectorModels.value = response.data;
+    projectorModels.value = await fetchProjectorModelsList(toastMessage, toastColor, isToastOpen);
 
   } catch (error) {
-    console.error('Error loading projector list.', error);
+    console.error("Error loading projector list.", error);
   }
 };
 
@@ -265,7 +229,7 @@ const resetFilters = () => {
         <!-- Select Floor -->
         <div class="col">
           <ComboBoxFloor :labelValue="'Planta:'" :optionsList="floorsList" v-model="selectedFloor"
-            @selectUpdate="fetchSelectedFloorClassrooms" />
+            @selectUpdate="loadSelectedFloorClassrooms" />
         </div>
 
         <!-- Select Classroom -->

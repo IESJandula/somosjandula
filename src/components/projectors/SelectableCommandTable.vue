@@ -1,10 +1,8 @@
 <script setup>
 import { computed, onMounted, defineProps, ref, defineEmits, watch } from "vue";
-import axios from 'axios';
 import ComboBoxModel from "@/components/projectors/ComboBoxModel.vue";
 import constants from '@/utils/constants';
-
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import {fetchProjectorModelsList} from '@/services/projectors';
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -47,7 +45,7 @@ const pageNumber = (pageNumberParam) => {
 
 // When the page object changes reload the comboboxes.
 watch(() => props.pageObject, () => {
-    fetchProjectorModels();
+    loadProjectorModels();
 });
 
 
@@ -94,7 +92,7 @@ const discardSelection = () => {
 }
 
 onMounted(() => {
-    fetchProjectorModels();
+    loadProjectorModels();
 });
 
 const emitDeletionRequest = () => {
@@ -122,42 +120,14 @@ watch(
 
 const modelsList = ref([]);
 
-const fetchProjectorModels = async () => {
-    
-    console.log("Fetching projector models");
-
+// Function to fetch projectors for a specific classroom.
+const loadProjectorModels = async () => {
     try {
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-        const response = await axios.get(constants.MODELS, {
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-            }
-        });
-        
-        modelsList.value = response.data;
-
-        //selectedCommandModel.value = "default";
+    modelsList.value = await fetchProjectorModelsList(toastMessage, toastColor, isToastOpen);
 
     } catch (error) {
-        responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
-
-        if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-            responseDataDelC.value = error.response.data.message || "Error while retrieving models list.";
-        }
-        else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
-            console.error("No response received from the server:", error.request);
-            responseDataDelC.value = "The server is not responding. Please check your connection and try again.";
-        }
-        else {
-            // Other errors (misconfigured request, axios setup issues)
-            console.error("Request configuration error:", error.message);
-            responseDataDelC.value = "An unexpected error occurred. Please try again.";
-        }
+    console.error("Error loading projector list.", error);
     }
 };
 

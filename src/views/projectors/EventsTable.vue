@@ -1,12 +1,11 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import axios from 'axios';
 import ComboBoxClassroom from "@/components/projectors/ComboBoxClassroom.vue";
 import ComboBoxFloor from "@/components/projectors/ComboBoxFloor.vue";
 import ComboBoxModel from "@/components/projectors/ComboBoxModel.vue";
 import ComboBoxState from "@/components/projectors/ComboBoxState.vue";
 import constants from "@/utils/constants";
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import {fetchFloorsList, fetchSelectedFloorClassrooms,fetchProjectorModelsList, fetchEventStates,fetchEvents } from '@/services/projectors';
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -34,10 +33,10 @@ const serverEventsList = ref([]);
 
 // Call the filtered fetch method.
 onMounted(() => {
-    fetchEvents();
-    fetchFloorsList();
-    fetchProjectorModels();
-    fetchEventStates();
+    loadEvents();
+    loadFloorsList();
+    loadProjectorModels();
+    loadEventStates();
 });
 
 const dateArrayToDate = (dateArray) => 
@@ -81,26 +80,19 @@ const getStatusClass = (status) => {
 // Stores the list of floors for the combobox options.
 const floorsList = ref([]);
 
-const classroomsForfilterClassroomName = ref([]);
+const selectedFloorClassroomsList = ref([]);
 
 // Stores the list of projectors for the table.
 const projectorModels = ref([]);
 const eventStatesList = ref([]);
 
 
-const fetchFloorsList = async () => {
+const loadFloorsList = async () => {
     console.log("Loading floors list.");
     try {
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-        const response = await axios.get(constants.FLOORS, {
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`
-            }
-        });
+        floorsList.value = await fetchFloorsList();
 
-        floorsList.value = response.data;
-        console.log("Listado plantas obtenido.\n" + response.data);
     }
     catch (error) {
         console.error('Error loading list of values', error);
@@ -108,25 +100,18 @@ const fetchFloorsList = async () => {
 };
 
 // Fetch classrooms for the selected floor.
-const fetchfilterClassroomNameClassrooms = async (floorParam) => {
+const loadClassroomsForSelectedFloor = async (floorParam) => {
     try {
 
         console.log('loading classrooms for ' + floorParam);
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
         // Ensure floor is selected
         if (floorParam.value === 'default') return;
 
-        const response = await axios.get(constants.CLASSROOMS, {
-            params: { floor: floorParam },
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`
-            }
-        });
+        const response = await fetchSelectedFloorClassrooms(toastMessage, toastColor, isToastOpen, floorParam );
 
         // List of the classrooms for the selected floor.
-        classroomsForfilterClassroomName.value = await response.data;
+        selectedFloorClassroomsList.value = await response;
 
         // Reset selected classroom
         filterClassroomName.value = 'default';
@@ -137,23 +122,15 @@ const fetchfilterClassroomNameClassrooms = async (floorParam) => {
 };
 
 // Function to fetch projectors for a specific classroom.
-const fetchProjectorModels = async () => {
+const loadProjectorModels = async () => {
 
     console.log('Fetching projector models');
 
     try {
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+        const response = await fetchProjectorModelsList(toastMessage, toastColor, isToastOpen);
 
-        const response = await axios.get(constants.MODELS,
-            {
-                headers: {
-                'Authorization': `Bearer ${tokenPropio}`
-            }
-            }
-        );
-
-        projectorModels.value = response.data;
+        projectorModels.value = response;
 
         filterModelName.value = "default";
 
@@ -163,23 +140,15 @@ const fetchProjectorModels = async () => {
 };
 
 // Function to fetch projectors for a specific classroom.
-const fetchEventStates = async () => {
+const loadEventStates = async () => {
 
     console.log('Fetching event states');
 
     try {
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+        const response = await fetchEventStates(toastMessage, toastColor, isToastOpen);
 
-        const response = await axios.get(constants.EVENT_STATES,
-            {
-                headers: {
-                'Authorization': `Bearer ${tokenPropio}`
-                }
-            }
-        );
-
-        eventStatesList.value = response.data;
+        eventStatesList.value = response;
 
         filterActionStatus.value = "default";
 
@@ -188,7 +157,6 @@ const fetchEventStates = async () => {
     }
 };
 
-
 // FILTER FUNCTIONS.
 
 // Watched all the important values and when one changes emits the new filter.
@@ -196,7 +164,7 @@ watch(
     [filterClassroomName, filterModelName, filterActionStatus, filterFloorName],
     () => {
         console.log("Un filtro ha cambiado. Emitiendo actualización...");
-        fetchEvents();
+        loadEvents();
     }
 );
 
@@ -207,72 +175,55 @@ const resetFilters = () => {
     filterActionStatus.value = 'default';
 };
 
-
-
 // ---------------- END FILTROS DROPDOWN ----------------
 
-const fetchEvents = async () => {
+const loadEvents = async () => {
+  const requestBody = {
+    eventId: null,
+    actionName: filterActionName.value,
+    modelName: filterModelName.value,
+    classroomName: filterClassroomName.value,
+    floorName: filterFloorName.value,
+    user: filterUser.value,
+    dateTime: filterDateTime.value,
+    actionStatus: filterActionStatus.value
+  };
 
-    const requestBody = {
-        eventId: null,
-        actionName: filterActionName.value,
-        modelName: filterModelName.value,
-        classroomName: filterClassroomName.value,
-        floorName: filterFloorName.value,
-        user: filterUser.value,
-        dateTime: filterDateTime.value,
-        actionStatus: filterActionStatus.value
-    };
+  try {
+    const responseData = await fetchEvents(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      currentPage.value,
+      pageSize.value,
+      requestBody
+    );
 
-    // Ensure that default values are set to null
-    if (requestBody.classroomName === 'default') requestBody.classroomName = null;
-    if (requestBody.floorName === 'default') requestBody.floorName = null;
-    if (requestBody.modelName === 'default') requestBody.modelName = null;
-    if (requestBody.actionStatus === 'default') requestBody.actionStatus = null;
+    console.log('API Response:', responseData);
 
-    console.log("Fetching events with filter:", requestBody);
-    try {
+    pageObject.value = responseData;
+    serverEventsList.value = pageObject.value.content;
+    numberOfPages.value = pageObject.value.totalPages;
+    lastPage.value = pageObject.value.last;
+    firstPage.value = pageObject.value.first;
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-
-        const response = await axios.post(constants.SERVER_EVENT, requestBody, {
-            params: {
-                page: currentPage.value,
-                size: pageSize.value
-            },
-            headers:
-                {
-                    'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
-                },
-        });
-
-        // Log the entire response to verify its structure
-        console.log("API Response:", response.data);
-
-        pageObject.value = response.data;
-        serverEventsList.value = pageObject.value.content;
-        numberOfPages.value = pageObject.value.totalPages;
-        lastPage.value = pageObject.value.last;
-        firstPage.value = pageObject.value.first;
-
-    } catch (error) {
-        console.error("Error fetching events:", error);
-        alert("Hubo un error al obtener los eventos. Intenta de nuevo.");
-    }
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    alert('Hubo un error al obtener los eventos. Intenta de nuevo.');
+  }
 };
 
 // Update page size and request a new page
 const pageBy = (pageSizeParam) => {
     pageSize.value = pageSizeParam; // Update the page size
     pageNumber(0);
-    fetchEvents();
+    loadEvents();
 };
 
 //
 const pageNumber = (pageNumberParam) => {
     currentPage.value = pageNumberParam; // Update the page size
-    fetchEvents();
+    loadEvents();
     console.log(currentPage.value);
     console.log(numberOfPages.value);
 };
@@ -305,13 +256,13 @@ const gradientStyle = computed(() => ({
                     <!-- Select Floor -->
                     <div class="col-12 col-md-3">
                         <ComboBoxFloor :labelValue="'Planta:'" :optionsList="floorsList" v-model="filterFloorName"
-                            @selectUpdate="fetchfilterClassroomNameClassrooms" />
+                            @selectUpdate="loadClassroomsForSelectedFloor" />
                     </div>
 
                     <!-- Select Classroom -->
                     <div class="col-12 col-md-3">
                         <ComboBoxClassroom v-model="filterClassroomName" :labelValue="'Aula:'"
-                            :key="filterClassroomName" :optionsList="classroomsForfilterClassroomName" />
+                            :key="filterClassroomName" :optionsList="selectedFloorClassroomsList" />
                     </div>
 
                     <!-- Select Model -->

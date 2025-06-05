@@ -1,12 +1,16 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import axios from "axios";
 import SelectableActionTable from "@/components/projectors/SelectableActionTable.vue";
 import SelectableCommandTable from "@/components/projectors/SelectableCommandTable.vue";
 import SelectableProjectorTable from "@/components/projectors/SelectableProjectorTable.vue";
 import FormBox from "@/components/projectors/FormBox.vue";
 import constants from "@/utils/constants";
 import * as bootstrap from 'bootstrap';
+import { fetchProjectorOverView, 
+        fetchProjectorList,deleteProjectors, 
+        deleteAllProjectors, fetchProjectorModelsList, 
+        fetchActionsPage, deleteActions, 
+        fetchCommandsPage,deleteSelectedCommands } from '@/services/projectors';
 
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
@@ -184,7 +188,7 @@ const fetchEventsOverView = async () => {
 
         if (error.response) {
             // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
+            console.error("Server error:", error.response.status, error.response);
         }
         else if (error.request) {
             // No response from server (network issue, server down, timeout, CORS issue)
@@ -197,30 +201,14 @@ const fetchEventsOverView = async () => {
     }
 }
 
-// Funcion que rellena los valores de la visión general de registros.
-const fetchProjectorOverView = async () => {
+// Función que rellena los valores de la visión general de registros.
+const loadProjectorOverView = async () => {
     try {
-
         console.log("Recuperando overview eventos.");
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+        const respuesta = await fetchProjectorOverView(toastMessage, toastColor, isToastOpen);
 
-        const response = await fetch(constants.PROJECTOR_OVERVIEW,
-            {
-                method: 'GET',
-                headers:
-                {
-                    'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
-                }
-            }
-        )
-        if (!response.ok) {
-            const errorString = 'Error al obtener el overview de proyectores.';
-            crearToast(toastMessage, toastColor, isToastOpen, 'danger', errorString);
-            throw new Error(errorString);
-        }
-
-        const respuesta = await response.json();
+        console.log("DATA:", respuesta);
 
         numberOfModels.value = respuesta.numberOfModels || 0;
         numberOfActions.value = respuesta.numberOfActions || 0;
@@ -231,9 +219,11 @@ const fetchProjectorOverView = async () => {
 
     } catch (error) {
         console.error("Error fetching projector overview:", error);
-        //alert("Hubo un error al obtener los datos. Intenta de nuevo.");
+        // alert("Hubo un error al obtener los datos. Intenta de nuevo.");
     }
 };
+
+
 // ----------------------- END OVERVIEW INFO -----------------------
 
 // -------------------------- PROJECTORS ---------------------------
@@ -241,70 +231,49 @@ const fetchProjectorOverView = async () => {
 const loadProjectorList = async () => {
     try {
 
-        console.log("Recuperando listado proyectores registrados.");
-
-        // Parametros de filtrado.
+        // Parámetros de filtrado.
         const orderCriteria = filterObject.value.orderCriteriaF;
         const page = filterObject.value.pageNumberF;
         const size = filterObject.value.pageSizeF;
-        let classroom = filterObject.value.selectedClassroomF;
-        let floor = filterObject.value.selectedFloorF;
-        let model = filterObject.value.selectedModelF;
+        const classroom = filterObject.value.selectedClassroomF;
+        const floor = filterObject.value.selectedFloorF;
+        const model = filterObject.value.selectedModelF;
 
-        // Default checks
-        if (classroom === "default") classroom = null;
-        if (floor === "default") floor = null;
-        if (model === "default") model = null;
+        // Llamada al servicio
+        const responseData = await fetchProjectorList(
+            toastMessage,
+            toastColor,
+            isToastOpen,
+            orderCriteria,
+            page,
+            size,
+            classroom,
+            floor,
+            model
+        );
 
-        // recuperacción del token.
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-
-        const response = await axios.get(constants.PROJECTORS, {
-            params: {
-                criteria: orderCriteria,
-                page: page,
-                size: size,
-                classroom: classroom,
-                floor: floor,
-                model: model,
-            },
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-            }
-        });
-
-        pageObjectP.value = response.data;
+        // Asignación del resultado al estado
+        pageObjectP.value = responseData;
 
     } catch (error) {
+        console.error("Error al recuperar la lista de proyectores:", error);
         responseTypeDelP.value = constants.RESPONSE_STATUS_ERROR;
 
-        if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-            responseDataDelP.value = error.response.data.message || "Error while retrieving projectors list.";
-        }
-        else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
-            console.error("No response received from the server:", error.request);
-            responseDataDelP.value = "The server is not responding. Please check your connection and try again.";
-        }
-        else {
-            // Other errors (misconfigured request, axios setup issues)
-            console.error("Request configuration error:", error.message);
-            responseDataDelP.value = "An unexpected error occurred. Please try again.";
+        if (error instanceof Error) {
+            responseDataDelP.value = error.message;
+        } else {
+            responseDataDelP.value = "Se produjo un error inesperado al recuperar la lista.";
         }
     }
 };
 
+
 // ------------------------ END PROJECTORS -------------------------
 
-
-
 const reloadPageLists = async () => {
-    fetchActionsPage();
-    fetchCommandsPage();
-    fetchProjectorOverView(); // done
+    loadActionsPage();
+    loadCommandsPage();
+    loadProjectorOverView(); // done
     fetchEventsOverView(); // done
     fetchProjectorModels();
     loadProjectorList();
@@ -312,9 +281,9 @@ const reloadPageLists = async () => {
 
 onMounted(() => {
 
-    fetchActionsPage();
-    fetchCommandsPage();
-    fetchProjectorOverView(); // done
+    loadActionsPage();
+    loadCommandsPage();
+    loadProjectorOverView(); // done
     fetchEventsOverView(); // done
     fetchProjectorModels();
     loadProjectorList();
@@ -379,46 +348,45 @@ const removeSelectedProjectorsRequest = async () => {
     try {
         if (selectedProjectorsList.length === 0) {
             responseTypeDelP.value = "INFO";
-            responseDataDelP.value = "Seleccione almenos un proyector.";
+            responseDataDelP.value = "Seleccione al menos un proyector.";
+            deleteProjectorsLoading.value = false;
+            return;
         }
 
-        console.log("request selectedProjectorsList:" + selectedProjectorsList);
+        console.log("Request selectedProjectorsList:", selectedProjectorsList);
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+        const responseData = await deleteProjectors(
+            toastMessage,
+            toastColor,
+            isToastOpen,
+            selectedProjectorsList
+        );
 
-        // Properly configure the DELETE request body
-        const response = await axios({
-            method: "delete",
-            url: constants.PROJECTORS,
-            data: selectedProjectorsList,
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-            }
-        });
+        // Info para alert
+        responseTypeDelP.value = responseData.status;
+        responseDataDelP.value = responseData.message;
 
-        // info for alert component.
-        responseTypeDelP.value = response.data.status;
-        responseDataDelP.value = response.data.message;
-
-
-        // reload table
+        // Recargar tabla
         reloadPageLists();
 
-        // Cierra el modal después de eliminar
-        await delay(250); // Wait for 0.25 seconds
+        // Cerrar modal
+        await delay(250);
         deleteSelectedModalInstance.hide();
-        await delay(250); // Wait for 0.25 seconds
-        // empty selected projectors list (gone)
-        selectedProjectors.value = [];
-        deleteProjectorsLoading.value = false;
+        await delay(250);
 
+        // Limpiar selección
+        selectedProjectors.value = [];
         console.log("Projectors removed successfully.");
     } catch (error) {
-        console.error("Error while removing projectors", error);
+        console.error("Error while removing projectors:", error);
+        responseTypeDelP.value = "ERROR";
+        responseDataDelP.value = error.message || "Error inesperado al eliminar proyectores.";
         deleteSelectedModalInstance.hide();
+    } finally {
+        deleteProjectorsLoading.value = false;
     }
-    
 };
+
 
 const deleteProjectorsLoading = ref(false);
 
@@ -428,28 +396,17 @@ function delay(ms) {
 }
 
 const removeAllProjectorsRequest = async () => {
-    console.log("Delete ALL projectors request received.");
 
     try {
 
         deleteProjectorsLoading.value = true;
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
         // Properly configure the DELETE request body
-        const response = await axios({
-            method: "delete",
-            url: constants.PROJECTORS_ALL,
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-            }
-        });
+        const response = await deleteAllProjectors( toastMessage, toastColor, isToastOpen );
 
         // info for alert component.
-        responseTypeDelP.value = response.data.status;
-        responseDataDelP.value = response.data.message;
-
-        console.log("Projectors removed successfully.");
+        responseTypeDelP.value = response.status;
+        responseDataDelP.value = response.message;
 
         // reload table
         reloadPageLists();
@@ -479,8 +436,8 @@ const removeAllProjectorsRequest = async () => {
         console.error('Error while sending remove request', error);
         if (error.response) {
             console.error('Error code:', error.response.status);
-            console.error('Server message:', error.response.data.message);
-            responseTypeDelP.value = error.response.data.message;
+            console.error('Server message:', error.response.message);
+            responseTypeDelP.value = error.response.message;
 
         } else if (error.request) {
             responseDataDelP.value = error.request;
@@ -509,23 +466,17 @@ const fetchProjectorModels = async () => {
 
     try {
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+        const response = await fetchProjectorModelsList();
 
-        const response = await axios.get(constants.MODELS, {
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`,
-            }
-        });
-
-        projectorModels.value = response.data;
+        projectorModels.value = response.value;
 
     } catch (error) {
         responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
 
         if (error.response) {
             // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-            responseDataDelC.value = error.response.data.message || "Error while retrieving models list.";
+            console.error("Server error:", error.response.status, error.response);
+            responseDataDelC.value = error.response.message || "Error while retrieving models list.";
         }
         else if (error.request) {
             // No response from server (network issue, server down, timeout, CORS issue)
@@ -539,8 +490,6 @@ const fetchProjectorModels = async () => {
         }
     }
 };
-
-
 
 // --------------  modal eliminar todos
 
@@ -584,26 +533,22 @@ const responseDataDelA = ref();
 let deleteActionModalInstance = null;
 
 // Retreives an actions page from the server.
-const fetchActionsPage = async (page = 0, size = 5) => {
+const loadActionsPage = async (page = 0, size = 5) => {
     console.log("Recuperando pagina acciones.");
     try {
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+        const response = await fetchActionsPage( toastMessage, toastColor, isToastOpen, page, size); 
 
-        const response = await axios.post(constants.ACTIONS_PAGE, null, {
-            params: { page, size }, // Query parameters
-            headers: { 'Authorization': `Bearer ${tokenPropio}` }, // Authorization header
-        });
+        actionsPageObject.value = response;
 
-        actionsPageObject.value = response.data;
     }
     catch (error) {
         responseTypeDelA.value = constants.RESPONSE_STATUS_ERROR;
 
         if (error.response) {
             // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-            responseDataDelA.value = error.response.data.message || "Error while retrieving actions list.";
+            console.error("Server error:", error.response.status, error.response);
+            responseDataDelA.value = error.response.message || "Error while retrieving actions list.";
         }
         else if (error.request) {
             // No response from server (network issue, server down, timeout, CORS issue)
@@ -629,68 +574,36 @@ const showDeleteActionModal = () => {
 
 // Function to send a DELETE requeste for the selected actions.
 const removeActionsRequest = async () => {
-    // Debug log: Displays the number of actions to be deleted
-    console.log("Delete actions request for size of: " + selectedActionsList.value.length);
-
-    const selectedActions = selectedActionsList.value; // Store the selected actions list
-
     try {
-        // Activate the loading indicator (spinner)
         deleteOperationIsLoading.value = true;
 
-        console.log("request selectedActions: " + selectedActions.length);
+        const response = await deleteActions(toastMessage, toastColor, isToastOpen, selectedActionsList.value);
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-        // Properly configure the DELETE request
-        const response = await axios({
-            method: "delete",
-            url: constants.ACTIONS,
-            data: selectedActions, // Pass data in the request body
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`
-            }
-        });
-
-        // Store response data to display an alert with the result
-        responseTypeDelA.value = response.data.status;
-        responseDataDelA.value = response.data.message;
+        responseTypeDelA.value = response.status;
+        responseDataDelA.value = response.message;
 
         console.log(responseTypeDelA.value + " " + responseDataDelA.value);
 
-        // Reload the actions & commands table to reflect changes
         reloadPageLists();
-
-        responseDataDelA.value = response.data.message;
-        responseTypeDelA.value = response.data.status;
 
         deleteActionModalInstance.hide();
         await delay(500);
         selectedActionsList.value = [];
-        // Deactivate the loading indicator (spinner)
         deleteOperationIsLoading.value = false;
-        // Clear the selected actions list after deletion
-
 
         console.log("Actions removed successfully.");
-    } catch (error) {
-        // In case of an error, deactivate the spinner and store the error message
+    } catch (error) 
+    {
         deleteOperationIsLoading.value = false;
         responseTypeDelA.value = constants.RESPONSE_STATUS_ERROR;
-        //responseDataDelA.value = error.response.data;
         deleteActionModalInstance.hide();
-        console.error("Error while removing actions", error);
 
-        if (error.response) {
-            console.error("Error code:", error.response.status);
-            console.error("Server message:", error.response.data);
-            responseDataDelA.value = error.response.data;
-        } else if (error.request) {
-            console.error("No response received from the server", error.request);
-            responseDataDelA.value = error.request;
+        if (error instanceof Error) {
+        responseDataDelA.value = error.message;
+        console.error("Error while removing actions:", error.message);
         } else {
-            console.error("Request configuration error", error.message);
-            responseDataDelA.value = error.message;
+        responseDataDelA.value = "An unexpected error occurred.";
+        console.error("Unknown error while removing actions:", error);
         }
     }
 };
@@ -714,31 +627,20 @@ const responseDataDelC = ref();
 
 let deleteCommandModalInstance = null;
 
-const fetchCommandsPage = async (page = 0, size = 5, modelName, action) => {
+const loadCommandsPage = async (page = 0, size = 5, modelName, action) => {
     try {
 
-        console.log("Fetching commands page", page, size, modelName, action);
+        const response = await fetchCommandsPage(toastMessage, toastColor, isToastOpen, page, size, modelName, action);
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-        const response = await axios.post(constants.COMMANDS_PAGE, null, {
-            params: { page, size, modelName, action },
-            headers:
-            {
-                'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
-            },
-        });
-
-        commandsPageObject.value = response.data;
-        console.log("Commands page data:", response.data);
+        commandsPageObject.value = response;
 
     } catch (error) {
         responseTypeDelP.value = constants.RESPONSE_STATUS_ERROR;
 
         if (error.response) {
             // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-            responseDataDelP.value = error.response.data.message || "Error while retrieving commands list.";
+            console.error("Server error:", error.response.status, error.response);
+            responseDataDelP.value = error.response.message || "Error while retrieving commands list.";
         }
         else if (error.request) {
             // No response from server (network issue, server down, timeout, CORS issue)
@@ -761,60 +663,45 @@ const showDeleteCommandModal = async () => {
     deleteCommandModalInstance.show();
 }
 
-const deleteSelectedCommands = async () => {
-
-    console.log("Solicitud de borrado de comandos recibida.");
+const deleteSelectedCommandsRequest = async () => {
 
     try {
+    deleteOperationIsLoading.value = true;
 
-        if (!selectedCommandsList.value || selectedCommandsList.value.length === 0) {
-            console.warn("No commands selected for deletion");
-            return;
-        }
+    const { status, message } = await deleteSelectedCommands(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        selectedCommandsList.value
+    );
 
-        const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+    responseDataDelC.value = message;
+    responseTypeDelC.value = status;
 
-        deleteOperationIsLoading.value = true;
-        const response = await axios.delete(constants.COMMANDS, {
-            data: selectedCommandsList.value,
-            headers: {
-                'Authorization': `Bearer ${tokenPropio}`
-            }
-        });
+    reloadPageLists();
 
-        responseDataDelC.value = response.data.message;
-        responseTypeDelC.value = response.data.status;
-
-        // UI updates
-        //await fetchCommandsPage(0, 5, null, null);
-        reloadPageLists();
-
-        await delay(250); // for testing.
-        deleteCommandModalInstance.hide();
-        await delay(250);
-        deleteOperationIsLoading.value = false;
-        selectedCommandsList.value = [];
-
+    await delay(250);
+    deleteCommandModalInstance.hide();
+    await delay(250);
+    selectedCommandsList.value = [];
 
     } catch (error) {
-        responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
+    responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
 
-        if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
-            console.error("Server error:", error.response.status, error.response.data);
-            responseDataDelC.value = error.response.data.message || "Error while deleting commands.";
-        }
-        else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
-            console.error("No response received from the server:", error.request);
-            responseDataDelC.value = "The server is not responding. Please check your connection and try again.";
-        }
-        else {
-            // Other errors (misconfigured request, axios setup issues)
-            console.error("Request configuration error:", error.message);
-            responseDataDelC.value = "An unexpected error occurred. Please try again.";
-        }
-        deleteCommandModalInstance.hide();
+    if (error.response) {
+        console.error("Server error:", error.response.status, error.response.data);
+        responseDataDelC.value = error.response.data.message || "Error while deleting commands.";
+    } else if (error.request) {
+        console.error("No response received from the server", error.request);
+        responseDataDelC.value = "The server is not responding. Please check your connection and try again.";
+    } else {
+        console.error("Request configuration error", error.message);
+        responseDataDelC.value = "An unexpected error occurred. Please try again.";
+    }
+
+    deleteCommandModalInstance.hide();
+    } finally {
+    deleteOperationIsLoading.value = false;
     }
 };
 
@@ -910,7 +797,7 @@ const deleteSelectedCommands = async () => {
                             <button v-if="!deleteOperationIsLoading" type="button" class="btn btn-secondary"
                                 data-bs-dismiss="modal">Cancelar</button>
                             <button v-if="!deleteOperationIsLoading" type="button" class="btn btn-danger"
-                                @click="deleteSelectedCommands()">Eliminar</button>
+                                @click="deleteSelectedCommandsRequest()">Eliminar</button>
                             <span v-if="deleteOperationIsLoading">
                                 Esperando respuesta del servidor...
                             </span>
@@ -1145,13 +1032,13 @@ const deleteSelectedCommands = async () => {
                         <h3 class="text-center text-black">Eliminar acción</h3>
                         <SelectableActionTable v-model="selectedActionsList" :pageObject="actionsPageObject"
                             :responseData="responseDataDelA" :responseType="responseTypeDelA"
-                            @pageUpdate="fetchActionsPage" @deleteRequest="showDeleteActionModal()">
+                            @pageUpdate="loadActionsPage" @deleteRequest="showDeleteActionModal()">
                         </SelectableActionTable>
                     </div>
 
                     <div class="col-lg-5 border border-dark rounded rounded-3 m-3 p-2 bg-lightg">
                         <h3 class="text-center text-black">Eliminar comando</h3>
-                        <SelectableCommandTable :pageObject="commandsPageObject" @pageUpdate="fetchCommandsPage"
+                        <SelectableCommandTable :pageObject="commandsPageObject" @pageUpdate="loadCommandsPage"
                             :responseData="responseDataDelC" :responseType="responseTypeDelC"
                             @deleteRequest="showDeleteCommandModal()" v-model="selectedCommandsList">
                         </SelectableCommandTable>
