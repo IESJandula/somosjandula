@@ -64,6 +64,19 @@
             <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
           </ion-list>
         </ion-list>
+        <!-- Proyectores -->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuProjectors">
+            Proyectores
+            <ion-icon slot="end"
+              :icon="projectorsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/projectors/EventsTable')">Cola eventos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Control remoto</ion-item>
+            <ion-item v-if="mostrarProjectorsAdmin" button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Administración</ion-item>
+          </ion-list>
+        </ion-list>
       </ion-content>
     </ion-menu>
 
@@ -142,11 +155,13 @@ export default defineComponent({
     const mostrarBookingsAdmin = ref(false);
     const mostrarPrintersAdmin = ref(false);
     const mostrarSchoolManager = ref(false);
+    const mostrarProjectorsAdmin = ref(false); 
     const adminSubmenuVisible = ref(false);
     const printersSubmenuVisible = ref(false);
     const bookingsSubmenuVisible = ref(false);
     const documentsSubmenuVisible = ref(false);
     const schoolManagerSubmenuVisible = ref(false);
+    const projectorsSubmenuVisible = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -179,6 +194,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuPrinters = () => {
@@ -187,6 +203,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuBookings = () => {
@@ -195,14 +212,17 @@ export default defineComponent({
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuDocuments = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
       schoolManagerSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuSchoolManager = () => {
@@ -211,6 +231,15 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
+      projectorsSubmenuVisible.value = false;
+    };
+    const toggleSubMenuProjectors = () => {
+      adminSubmenuVisible.value = false;
+      printersSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      documentsSubmenuVisible.value = false;
+      schoolManagerSubmenuVisible.value = false;
+      projectorsSubmenuVisible.value = !projectorsSubmenuVisible.value;
     };
 
     onMounted(async () => {
@@ -224,6 +253,7 @@ export default defineComponent({
         mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
         mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
         mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
+        mostrarProjectorsAdmin.value = rolesMenu.mostrarAdmin; // para ocultar menu a administradores.
       }
       catch (error) {
         crearToast(
@@ -244,16 +274,19 @@ export default defineComponent({
       mostrarPrintersAdmin,
       mostrarBookingsAdmin,
       mostrarSchoolManager,
+      mostrarProjectorsAdmin,
       adminSubmenuVisible,
       printersSubmenuVisible,
       bookingsSubmenuVisible,
       documentsSubmenuVisible,
       schoolManagerSubmenuVisible,
+      projectorsSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuPrinters,
       toggleSubMenuBookings,
       toggleSubMenuDocuments,
       toggleSubMenuSchoolManager,
+      toggleSubMenuProjectors
     };
   },
 });
