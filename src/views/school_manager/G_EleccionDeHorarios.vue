@@ -442,6 +442,15 @@ const asignarReduccion = async () => {
   }
 };
 
+const resetearValores = () => {
+      isOn.value = false;
+      trabajarPrimeraHoraSeleccionado.value = false;
+      otrasObservacionesSeleccionado.value = '';
+      tramoHorarioSeleccionado.value = '';
+      tramoHorarioSeleccionado2.value = '';
+      tramoHorarioSeleccionado3.value = '';
+    };
+
 const obtenerObservaciones = async () => {
   try {
 
@@ -501,6 +510,7 @@ const obtenerObservaciones = async () => {
       }
     }
   } catch (error) {
+    resetearValores();
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     console.error(error);
