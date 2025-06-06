@@ -895,6 +895,7 @@ onMounted(async () => {
   if (!(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
     await obtenerListaAsignaturas();
     await obtenerSolicitud();
+    await obtenerObservaciones();
   }
 });
 
