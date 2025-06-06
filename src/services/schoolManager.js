@@ -272,7 +272,7 @@ export const eliminarBloques = async (curso, etapa, nombre, toastMessage, toastC
       });
   }
 
-export const asignaturasSinDocencia = async (nombreAsignatura, sinDocencia, toastMessage, toastColor, isToastOpen) =>
+export const asignaturasSinDocencia = async (curso, etapa, nombreAsignatura, sinDocencia, toastMessage, toastColor, isToastOpen) =>
   {
   
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
@@ -285,12 +285,14 @@ export const asignaturasSinDocencia = async (nombreAsignatura, sinDocencia, toas
           'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
           'nombreAsignatura': nombreAsignatura,
+          'curso': curso,
+          'etapa': etapa,
           'sinDocencia': sinDocencia
         },
       });
   }
 
-export const asignaturasDesdobles = async (nombreAsignatura, desdoble, toastMessage, toastColor, isToastOpen) =>
+export const asignaturasDesdobles = async (curso, etapa, nombreAsignatura, desdoble, toastMessage, toastColor, isToastOpen) =>
   {
   
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
@@ -303,6 +305,8 @@ export const asignaturasDesdobles = async (nombreAsignatura, desdoble, toastMess
           'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
           'nombreAsignatura': nombreAsignatura,
+          'curso': curso,
+          'etapa': etapa,
           'desdoble': desdoble
         },
       });
