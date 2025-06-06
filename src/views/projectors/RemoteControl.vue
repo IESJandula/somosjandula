@@ -345,6 +345,7 @@ const filterObject = ref({
 	selectedClassroomF: "default",
 	selectedFloorF: "default",
 	selectedModelF: "default",
+	selectedStatusF: "default",
 });
 
 const updateFilter = (newFilterObject) => {
@@ -359,7 +360,10 @@ const loadProjectorList = async () => {
 		const size = filterObject.value.pageSizeF;
 		const classroom = filterObject.value.selectedClassroomF;
 		const floor = filterObject.value.selectedFloorF;
+		const isTurnedOn = filterObject.value.selectedStatusF;
 		const model = filterObject.value.selectedModelF;
+
+		console.log("llamando backend.");
 
 		const response = await fetchProjectorList(
 			toastMessage,
@@ -370,6 +374,7 @@ const loadProjectorList = async () => {
 			size,
 			classroom,
 			floor,
+			isTurnedOn,
 			model
 		);
 
@@ -426,13 +431,12 @@ const sendServerEventBatch = async (actionParam) => {
 
 		responseTypeCMD.value = response.status;
 		responseDataCMD.value = response.message;
-		
+
 		disableButtonTemporarily();
 
-		loadEvents(); // Recarga los eventos una vez enviada la orden. 
+		loadEvents(); // Recarga los eventos una vez enviada la orden.
 
 		showModal(response.status, response.message);
-
 	} catch (error) {
 		responseTypeCMD.value = RESPONSE_STATUS_ERROR;
 
@@ -615,19 +619,19 @@ const alertClass = computed(() => {
 		</div>
 
 		<!-- SERVER EVENTS -->
-		<div style="width: 100%" class="pb-5">
-			<div
-				class="col-12 col-md-8 mx-auto pt-1 pb-1 mb-0 mt-0 rounded-top-3 border-dark border"
-				:style="{ backgroundColor: colorGradienteFondo }"
-			>
-				<h3 class="text-center text-white">
-					ORDENES ENVIADAS A LOS PROYECTORES
-				</h3>
-			</div>
 
-			<div
-				class="container bg-light rounded-top-0 border-dark border p-2 col-12 col-lg-8"
-			>
+		<div class="row d-flex flex-grow-1 justify-content-center p-3 pb-5 bg-info">
+			<div class="col-12 col-md-10 col-lg-8 p-0">
+				<div
+					class="mx-auto pt-1 pb-1 mb-0 mt-0 rounded-top-3 border-dark border"
+					:style="{ backgroundColor: colorGradienteFondo }"
+				>
+					<h3 class="text-center text-white">
+						ORDENES ENVIADAS A LOS PROYECTORES
+					</h3>
+				</div>
+			</div>
+			<div class="container bg-light rounded-top-0 border-dark border col-12 col-md-10 col-lg-8 p-0">
 				<div class="row justify-content-center">
 					<div class="row justify-content-center gy-2 small">
 						<!-- Select Floor -->
@@ -668,8 +672,8 @@ const alertClass = computed(() => {
 								:optionsList="eventStatesList"
 							></ComboBoxState>
 						</div>
-                        
-						<div class="col-12 col-md-2 pt-4 ">
+
+						<div class="col-12 col-md-2 pt-4">
 							<button
 								class="btn btn-warning w-100 border border-dark"
 								@click="resetFilters"

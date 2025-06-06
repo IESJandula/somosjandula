@@ -73,16 +73,16 @@ export const fetchProjectorList = async (
     page, 
     size, 
     classroom, 
-    floor, 
+    floor,
+    status, 
     model ) => {
-
-    console.log('fetchProjectorList from service.');
 
     // Normalizar valores
     if (classroom === 'default') classroom = null;
     if (floor === 'default') floor = null;
     if (model === 'default') model = null;
-
+    if (status === 'default') status = null;
+ 
     // Obtener token JWT válido
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -95,8 +95,8 @@ export const fetchProjectorList = async (
     if (classroom !== null) queryParams.append('classroom', classroom);
     if (floor !== null) queryParams.append('floor', floor);
     if (model !== null) queryParams.append('model', model);
+    if (status !== null) queryParams.append('status', status);
 
-    // TODO: Cambiar por la URL real.
     const url = `${PROJECTORS}?${queryParams.toString()}`;
 
     const response = await fetch(url, {
@@ -115,13 +115,14 @@ export const fetchProjectorList = async (
     const data = await response.json();
 
     if (Array.isArray(data.content)) {
-    console.table(data.content); // muestra la lista de proyectores como tabla
+        console.table(data.content); // muestra la lista de proyectores como tabla
     } else {
         console.warn('La respuesta no contiene un array en "content"');
     }
 
-    return await data;
+    return data;
 };
+
 
 export const sendServerEventBatchService = async (toastMessage, toastColor, isToastOpen, requestBody ) => 
 {

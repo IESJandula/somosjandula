@@ -19,6 +19,7 @@ export declare function fetchProjectorList(toastMessage: Ref<string>,
     size: Ref<number>,
     classroom: Ref<string>,
     floor: Ref<string>,
+    isTurnedOn: Ref<string>,
     model: Ref<string>
     ): Promise<string[]>;
 

@@ -4,6 +4,7 @@ import ComboBoxClassroom from '@/components/projectors/ComboBoxClassroom.vue';
 import ComboBoxFloor from '@/components/projectors/ComboBoxFloor.vue';
 import ComboBoxModel from '@/components/projectors/ComboBoxModel.vue';
 import {fetchFloorsList,fetchSelectedFloorClassrooms,fetchProjectorModelsList} from '@/services/projectors';
+import ComboBoxTurnOnStatus from '@/components/projectors/ComboBoxTurnOnStatus.vue';
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -183,6 +184,8 @@ const loadProjectorModels = async () => {
   }
 };
 
+const selectedStatus = ref("default");
+
 // Emits a filter object.
 const emitFilter = () => {
 
@@ -192,7 +195,8 @@ const emitFilter = () => {
     pageNumberF: currentPage,
     selectedFloorF: selectedFloor,
     selectedClassroomF: selectedClassroom,
-    selectedModelF: selectedModel
+    selectedModelF: selectedModel,
+    selectedStatusF: selectedStatus
   }
   console.log('Emitting new filterObject' + filterObject);
   emit('filterUpdated', filterObject);
@@ -201,7 +205,7 @@ const emitFilter = () => {
 
 // Watched all the important values and when one changes emits the new filter.
 watch(
-  [selectedFloor, selectedClassroom, selectedModel, currentPage, pageSize, orderCriteria],
+  [selectedFloor, selectedClassroom, selectedModel, currentPage, pageSize, orderCriteria, selectedStatus],
   () => {
     console.log("Un filtro ha cambiado. Emitiendo actualización...");
     emitFilter();
@@ -212,6 +216,7 @@ const resetFilters = () => {
   selectedFloor.value = 'default';
   selectedClassroom.value = 'default';
   selectedModel.value = 'default';
+  selectedStatus.value = 'default';
   orderCriteria.value = 'floor';
   pageSize.value = 15;
   currentPage.value = 0;
@@ -242,6 +247,12 @@ const resetFilters = () => {
         <div class="col">
           <ComboBoxModel v-model="selectedModel" :labelValue="'Modelo:'" :key="selectedModel"
             :optionsList="projectorModels" />
+        </div>
+
+        <!-- Select Status -->
+        <div class="col">
+          <ComboBoxTurnOnStatus v-model="selectedStatus" :labelValue="'Estado:'" :key="selectedStatus"
+          :optionsList="['Encendido', 'Apagado']" />
         </div>
 
         <!-- Reset Filters Button -->
@@ -348,8 +359,9 @@ const resetFilters = () => {
           <tr>
             <th :class="tableHeaderClass" class="col-3">Floor</th>
             <th :class="tableHeaderClass" class="col-3">Classroom</th>
-            <th :class="tableHeaderClass" class="col-4">Model</th>
+            <th :class="tableHeaderClass" class="col-3">Model</th>
             <th :class="tableHeaderClass" class="col-1">Select.</th>
+            <th :class="tableHeaderClass" class="col-1">Estado</th>
           </tr>
         </thead>
         <tbody>
@@ -362,6 +374,17 @@ const resetFilters = () => {
             <td>
               <div class="form-check form-switch ms-4">
                 <input class="form-check-input" type="checkbox" role="switch" :checked="isProjectorSelected(projector)"/>
+              </div>
+            </td>
+            <td v-if="projector.status==='Apagado'">
+              <div class="bg-danger rounded rounded-2 pt-1 pb-1">
+                <i class="bi bi-lightbulb-off" data-bs-toggle="tooltip" title="APAGADO"></i> OFF
+              </div>
+
+            </td>
+            <td v-if="projector.status==='Encendido'">
+              <div class="bg-success rounded rounded-2 pt-1 pb-1">
+                <i class="bi bi-lightbulb-fill" data-bs-toggle="tooltip" title="ENCENDIDO"></i> ON
               </div>
             </td>
           </tr>
