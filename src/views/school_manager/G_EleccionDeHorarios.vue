@@ -877,6 +877,11 @@ const obtenerGrupoDeAsignatura = async (index) => {
     // Asigna los grupos directamente
     listaGrupos.value[index] = response;
 
+    // Si no hay grupo seleccionado, establecer el grupo original
+    if (!asignatura.grupoSeleccionado && asignatura.grupoOriginal) {
+      asignatura.grupoSeleccionado = asignatura.grupoOriginal;
+    }
+
   } catch (error) {
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
