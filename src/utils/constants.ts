@@ -21,11 +21,11 @@ export const RESPONSE_STATUS_INFO = "INFO";
 export const RESPONSE_STATUS_WARNING = "WARNING";
 
 // Statuses for the actions in the server events table.
-export const EVENT_STATUS_PENDING = "PENDING";
-export const EVENT_STATUS_EXECUTED = "EXECUTED";
-export const EVENT_STATUS_SERVED = "SERVED";
+export const EVENT_STATUS_PENDING = "PENDIENTE";
+export const EVENT_STATUS_EXECUTED = "REALIZADO";
+export const EVENT_STATUS_SERVED = "ENVIADO";
 export const EVENT_STATUS_ERROR = "ERROR";
-export const EVENT_STATUS_CANCELED = "CANCELED";
+export const EVENT_STATUS_CANCELED = "CANCELADO";
 
 // Constantes para endpoints de proyectores.
 export const FLOORS = projectorsApiUrl + "/projectors/floors";

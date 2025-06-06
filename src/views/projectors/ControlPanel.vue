@@ -946,21 +946,21 @@ const deleteSelectedCommandsRequest = async () => {
                                     <tr>
                                         <th class="table-warning table-bordered border-dark" data-bs-toggle="tooltip"
                                             data-bs-html="true"
-                                            title="<b>PENDING</b><br/><em>Tarea creada correctamente, aún pendiente de entrega al proyector.</em> ">
+                                            title="<b>PENDIENTE</b><br/><em>Tarea creada correctamente, aún pendiente de entrega al proyector.</em> ">
                                             <i class="bi bi-hourglass-split text-dark"></i>
                                         </th>
                                         <th class="table-info table-bordered border-dark" data-bs-toggle="tooltip"
                                             data-bs-html="true"
-                                            title="<b>SERVED</b><br/><em>Tarea entregada al proyector pertinente en espera de confirmación de éxito.</em> ">
+                                            title="<b>ENVIADO</b><br/><em>Tarea entregada al proyector pertinente en espera de confirmación de éxito.</em> ">
                                             <i class="bi bi-upload"></i>
                                         </th>
                                         <th class="table-success table-bordered border-dark" data-bs-toggle="tooltip"
                                             data-bs-html="true"
-                                            title="<b>COMPLETED</b><br/><em>Tarea ejecutada con éxito por el proyector.</em> ">
+                                            title="<b>REALIZADO</b><br/><em>Tarea ejecutada con éxito por el proyector.</em> ">
                                             <i class="bi bi-check-circle-fill"></i>
                                         </th>
                                         <th class="table-secondary table-bordered border-dark" data-bs-toggle="tooltip"
-                                            data-bs-html="true" title="<b>CANCELED</b><br/><em>Tarea cancelada.</em> ">
+                                            data-bs-html="true" title="<b>CANCELADO</b><br/><em>Tarea cancelada.</em> ">
                                             <i class="bi bi-x-circle"></i>
                                         </th>
                                         <th class="table-danger table-bordered border-dark" data-bs-toggle="tooltip"

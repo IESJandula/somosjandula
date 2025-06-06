@@ -247,7 +247,7 @@ const resetFilters = () => {
         <!-- Reset Filters Button -->
         <div class="col-auto d-flex align-items-end" >
           <button class="btn btn-warning w-100 border border-dark" @click="resetFilters" style="margin-bottom: 2px;">
-            <i class="bi bi-arrow-counterclockwise"></i>
+            <i class="bi bi-x-diamond"></i> Descartar filtro
           </button>
         </div>
       </div>
@@ -381,18 +381,18 @@ const resetFilters = () => {
     <div class="text-center row">
       <div class="col">
         <!-- Button to discard all selections -->
-        <button class="btn btn-info" @click="selectAll"><i class="bi bi-file-earmark-fill"></i> Seleccionar todo</button>
+        <button class="btn btn-info border border-dark" @click="selectAll"><i class="bi bi-file-earmark-fill"></i> Seleccionar todo</button>
       </div>
 
       <div v-if="enableDelete" class="col">
         <!-- Button to discard all selections -->
-        <button class="btn btn-danger" @click="deleteSelectedProjectors"><i class="bi bi-trash3-fill"></i> Eliminar seleccionados
+        <button class="btn btn-danger border border-dark" @click="deleteSelectedProjectors"><i class="bi bi-trash3-fill"></i> Eliminar seleccionados
         </button>
       </div>
 
       <div class="col">
         <!-- Button to discard all selections -->
-        <button class="btn btn-warning" @click="discardSelection"><i class="bi bi-x-lg"></i> Descartar selección
+        <button class="btn btn-warning border border-dark" @click="discardSelection"><i class="bi bi-x-lg"></i> Descartar selección
         </button>
       </div>
       <p class="pt-3">Total registros recuperados: {{ totalElements }}</p>

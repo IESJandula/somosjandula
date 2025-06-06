@@ -406,7 +406,7 @@ const deleteAllProjectors = () => {
       <div class="col">
         <!-- Button to discard all selections -->
         <button class="btn btn-warning" @click="discardSelection">
-          <i class="bi bi-x-lg"></i> Descartar selección.
+          <i class="bi bi-x-diamond"></i> Descartar selección.
         </button>
       </div>
 

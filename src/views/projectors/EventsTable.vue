@@ -279,7 +279,7 @@ const gradientStyle = computed(() => ({
                     <!-- Reset Filters Button -->
                     <div class="col-auto d-flex flex-column justify-content-end mt-4 mb-2" style="max-width: 220px;">
                         <button class="btn btn-warning w-100 border border-dark" @click="resetFilters">
-                            <i class="bi bi-arrow-counterclockwise"></i> Descartar filtro
+                            <i class="bi bi-x-diamond"></i>  Descartar filtro
                         </button>
                     </div>
                 </div>

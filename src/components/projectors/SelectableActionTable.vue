@@ -167,13 +167,11 @@ const emitDeletionRequest = () => {
 
         </table>
         
-        <div class="d-flex justify-content-evenly p-2 ">
-            <button class="btn btn-warning m-1  popup-shadow" @click="discardSelection"><i class="bi bi-x-lg"></i>
-                Descartar</button>
-            <button class="btn btn-danger m-1 popup-shadow" @click="emitDeletionRequest">
-                <i class="bi bi-trash3-fill"></i> Eliminar
-            </button>
-        </div>
+<div class="d-flex justify-content-evenly m-2">
+    <button class="btn btn-warning m-1 popup-shadow" @click="discardSelection"><i class="bi bi-x-lg"></i> Descartar selección</button>
+    <button class="btn btn-danger m-1 popup-shadow" @click="emitDeletionRequest"> <i class="bi bi-trash3-fill"></i> Eliminar </button>
+</div>
+        
         <p class="pt-3 small text-center p-0 m-0 text-black">Total registros recuperados: {{ totalElements }}</p>
 
         <!-- ALERT BANNERS FOR OPERATION RESULTT -->
