@@ -173,6 +173,7 @@
                       v-model="asignaturaReduccion.grupoSeleccionado"
                       @change="obtenerGrupoDeAsignatura(index)" 
                       class="dropdown-select-solicitudes">
+                      <option value="" disabled hidden>A</option>
                       <option v-for="grupo in listaGrupos[index]" 
                         :key="grupo" 
                         :value="grupo.grupo">
@@ -475,9 +476,12 @@ const obtenerObservaciones = async () => {
     datosObservacionesProfesorSeleccionado.value = await obtenerObservacionesDeUsuario(emailDestino, toastMessage, toastColor, isToastOpen);
     preferenciasHorariasProfesorSeleccionado.value= await obtenerPreferenciasDeUsuario(emailDestino, toastMessage, toastColor, isToastOpen);
 
-    isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== false;
-    trabajarPrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.trabajarPrimeraHora !== false;
-    otrasObservacionesSeleccionado.value= datosObservacionesProfesorSeleccionado.value.otrasObservaciones || '';
+    if(datosObservacionesProfesorSeleccionado.value.tieneObservaciones === true){
+
+      isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== false;
+      trabajarPrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.trabajarPrimeraHora !== false;
+      otrasObservacionesSeleccionado.value= datosObservacionesProfesorSeleccionado.value.otrasObservaciones || '';
+    }
 
     const diaNameMap = {
       0: 'Lunes',
@@ -487,31 +491,35 @@ const obtenerObservaciones = async () => {
       4: 'Viernes'
     };
 
-    let contador = 0;
-    for (const tramoH of preferenciasHorariasProfesorSeleccionado.value) {
-      const diaNum = Number(tramoH.dia);
-      const diaNombre = diaNameMap[diaNum];
-      const tramoNum = Number(tramoH.tramo) + 1;
-      const tipoHorario = tramoH.tipoHorario;
-
-      const encontrado = listaTramoHorarioSeleccionado.value.find(item =>
-          item.dia === diaNombre &&
-          item.tramo === tramoNum &&
-          item.tipoHorario.toLowerCase() === tipoHorario.toLowerCase()
-      );
-
-      contador++;
-      switch (contador) {
-        case 1:
-          tramoHorarioSeleccionado.value = encontrado;
-          break;
-        case 2:
-          tramoHorarioSeleccionado2.value = encontrado;
-          break;
-        case 3:
-          tramoHorarioSeleccionado3.value = encontrado;
-          contador = 0;
-          break;
+    if (preferenciasHorariasProfesorSeleccionado.value.tieneObservaciones === true)  {
+      
+      let contador = 0;
+      const preferenciasHorarias = preferenciasHorariasProfesorSeleccionado.value.tramosHorarios || [];
+      for (const tramoH of preferenciasHorarias) {
+        const diaNum = Number(tramoH.dia);
+        const diaNombre = diaNameMap[diaNum];
+        const tramoNum = Number(tramoH.tramo) + 1;
+        const tipoHorario = tramoH.tipoHorario;
+  
+        const encontrado = listaTramoHorarioSeleccionado.value.find(item =>
+            item.dia === diaNombre &&
+            item.tramo === tramoNum &&
+            item.tipoHorario.toLowerCase() === tipoHorario.toLowerCase()
+        );
+  
+        contador++;
+        switch (contador) {
+          case 1:
+            tramoHorarioSeleccionado.value = encontrado;
+            break;
+          case 2:
+            tramoHorarioSeleccionado2.value = encontrado;
+            break;
+          case 3:
+            tramoHorarioSeleccionado3.value = encontrado;
+            contador = 0;
+            break;
+        }
       }
     }
   } catch (error) {
@@ -699,13 +707,6 @@ const eliminarSolicitud = async (index) => {
   try {
 
     await verificarConstantes();
-
-    if (listaAsignaturasReducciones.value[index].grupoSeleccionado === '') {
-      mensajeActualizacion = 'Tienes que elegir el grupo antes de eliminar la solicitud'
-      mensajeColor = 'warning'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-      return
-    }
 
     const solicitud = listaAsignaturasReducciones.value[index];
 
@@ -906,10 +907,10 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
   ) {
     await obtenerListaAsignaturas();
     await obtenerSolicitud();
+    resetearValores();
     await obtenerObservaciones();
   }
 });
-
 
 </script>
 
