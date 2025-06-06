@@ -454,6 +454,10 @@ const resetearValores = () => {
 const obtenerObservaciones = async () => {
   try {
 
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
     listaTramoHorarioSeleccionado.value =
         await (async () => {
           return await obtenerDiasTramosTipoHorario(
@@ -467,8 +471,8 @@ const obtenerObservaciones = async () => {
     tramoHorarioSeleccionado2.value = '';
     tramoHorarioSeleccionado3.value = '';
 
-    datosObservacionesProfesorSeleccionado.value = await obtenerObservacionesDeUsuario(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
-    preferenciasHorariasProfesorSeleccionado.value= await obtenerPreferenciasDeUsuario(profesorSeleccionado.value.email, toastMessage, toastColor, isToastOpen);
+    datosObservacionesProfesorSeleccionado.value = await obtenerObservacionesDeUsuario(emailDestino, toastMessage, toastColor, isToastOpen);
+    preferenciasHorariasProfesorSeleccionado.value= await obtenerPreferenciasDeUsuario(emailDestino, toastMessage, toastColor, isToastOpen);
 
     isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== false;
     trabajarPrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.trabajarPrimeraHora !== false;
