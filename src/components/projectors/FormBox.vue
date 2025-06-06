@@ -1,6 +1,6 @@
 <script setup>
 import { defineProps } from 'vue';
-import constants from '@/utils/constants';
+import { RESPONSE_STATUS_ERROR, RESPONSE_STATUS_INFO, RESPONSE_STATUS_SUCCESS, RESPONSE_STATUS_WARNING } from '@/utils/constants';
 
 // Define the props passed from the parent
 const props = defineProps({
@@ -94,28 +94,28 @@ const props = defineProps({
         </div>
 
         <div> 
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseTypeAlt === constants.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseTypeAlt === RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
                 {{ props.responseDataAlt }}
             </div>
-            <div v-if="props.responseTypeAlt === constants.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseTypeAlt === RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
                 {{ props.responseDataAlt }}
             </div>
-            <div v-if="props.responseTypeAlt === constants.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseTypeAlt === RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
                 {{ props.responseDataAlt }}
             </div>
-            <div v-if="props.responseTypeAlt === constants.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseTypeAlt === RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
                 {{ props.responseDataAlt }}
             </div>
             <div v-if="props.dataLoading" class="alert alert-info ms-3 me-3 p-3 text-center" role="alert">

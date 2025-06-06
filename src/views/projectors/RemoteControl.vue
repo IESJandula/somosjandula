@@ -2,7 +2,7 @@
 import { onMounted, ref, watch, computed } from 'vue';
 import MassiveControlTable from '@/components/projectors/RemoteControlTable.vue';
 import FormBox from '@/components/projectors/FormBox.vue';
-import constants from '@/utils/constants';
+import { RESPONSE_STATUS_ERROR } from '@/utils/constants';
 import { Modal } from 'bootstrap';
 import { fetchActionsList, sendServerEventBatchService, fetchProjectorList } from '@/services/projectors';
 
@@ -177,7 +177,7 @@ const sendServerEventBatch = async (actionParam) => {
         showModal(response.status, response.message);
 
     } catch (error) {
-        responseTypeCMD.value = constants.RESPONSE_STATUS_ERROR;
+        responseTypeCMD.value = RESPONSE_STATUS_ERROR;
 
         console.error('Error while sending server event batch', error);
         if (error.response) {

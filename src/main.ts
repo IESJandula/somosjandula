@@ -47,7 +47,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
 import { firebaseConfig } from '@/environment/firebaseConfig';
-import { APP_VERSION, SESSION_JWT_TOKEN } from '@/utils/constants.js';
+import { APP_VERSION, SESSION_JWT_TOKEN } from '@/utils/constants';
 
 // Inicializar Firebase
 const firebaseApp = initializeApp(firebaseConfig);

@@ -4,7 +4,7 @@ import SelectableActionTable from "@/components/projectors/SelectableActionTable
 import SelectableCommandTable from "@/components/projectors/SelectableCommandTable.vue";
 import SelectableProjectorTable from "@/components/projectors/SelectableProjectorTable.vue";
 import FormBox from "@/components/projectors/FormBox.vue";
-import constants from "@/utils/constants";
+import { RESPONSE_STATUS_ERROR, RESPONSE_STATUS_INFO, PARSE_MULTIFILE, EVENTS_OVERVIEW } from '@/utils/constants';
 import * as bootstrap from 'bootstrap';
 import { fetchProjectorOverView, 
         fetchProjectorList,deleteProjectors, 
@@ -67,7 +67,7 @@ const parseFiles = async () => {
     const projectorsFile = projectorsCsvInput.value?.files[0];
 
     if (!projectorsFile && !commandsFile) {
-        responseTypeCSV.value = constants.RESPONSE_STATUS_INFO;
+        responseTypeCSV.value = RESPONSE_STATUS_INFO;
         responseDataCSV.value = "ATENCIÓN: No hay ficheros seleccionados.";
         multifileLoading.value = false;
         return;
@@ -83,11 +83,11 @@ const parseFiles = async () => {
 
     try {
 
-        console.log(constants.PARSE_MULTIFILE);
+        console.log(PARSE_MULTIFILE);
 
         const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-        const response = await fetch(constants.PARSE_MULTIFILE,
+        const response = await fetch(PARSE_MULTIFILE,
             {
                 method: 'POST',
                 headers:
@@ -160,7 +160,7 @@ const fetchEventsOverView = async () => {
 
         const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-        const response = await fetch(constants.EVENTS_OVERVIEW,
+        const response = await fetch(EVENTS_OVERVIEW,
             {
                 method: 'GET',
                 headers:
@@ -257,7 +257,7 @@ const loadProjectorList = async () => {
 
     } catch (error) {
         console.error("Error al recuperar la lista de proyectores:", error);
-        responseTypeDelP.value = constants.RESPONSE_STATUS_ERROR;
+        responseTypeDelP.value = RESPONSE_STATUS_ERROR;
 
         if (error instanceof Error) {
             responseDataDelP.value = error.message;
@@ -431,7 +431,7 @@ const removeAllProjectorsRequest = async () => {
         deleteAllModalInstance.hide();
         await delay(250); // Wait for 0.25 seconds
 
-        responseDataDelP.value = constants.RESPONSE_STATUS_ERROR;
+        responseDataDelP.value = RESPONSE_STATUS_ERROR;
 
         console.error('Error while sending remove request', error);
         if (error.response) {
@@ -471,7 +471,7 @@ const fetchProjectorModels = async () => {
         projectorModels.value = response.value;
 
     } catch (error) {
-        responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
+        responseTypeDelC.value = RESPONSE_STATUS_ERROR;
 
         if (error.response) {
             // Server responded with an error status (e.g., 400, 404, 500)
@@ -543,7 +543,7 @@ const loadActionsPage = async (page = 0, size = 5) => {
 
     }
     catch (error) {
-        responseTypeDelA.value = constants.RESPONSE_STATUS_ERROR;
+        responseTypeDelA.value = RESPONSE_STATUS_ERROR;
 
         if (error.response) {
             // Server responded with an error status (e.g., 400, 404, 500)
@@ -595,7 +595,7 @@ const removeActionsRequest = async () => {
     } catch (error) 
     {
         deleteOperationIsLoading.value = false;
-        responseTypeDelA.value = constants.RESPONSE_STATUS_ERROR;
+        responseTypeDelA.value = RESPONSE_STATUS_ERROR;
         deleteActionModalInstance.hide();
 
         if (error instanceof Error) {
@@ -635,7 +635,7 @@ const loadCommandsPage = async (page = 0, size = 5, modelName, action) => {
         commandsPageObject.value = response;
 
     } catch (error) {
-        responseTypeDelP.value = constants.RESPONSE_STATUS_ERROR;
+        responseTypeDelP.value = RESPONSE_STATUS_ERROR;
 
         if (error.response) {
             // Server responded with an error status (e.g., 400, 404, 500)
@@ -686,7 +686,7 @@ const deleteSelectedCommandsRequest = async () => {
     selectedCommandsList.value = [];
 
     } catch (error) {
-    responseTypeDelC.value = constants.RESPONSE_STATUS_ERROR;
+        responseTypeDelC.value = RESPONSE_STATUS_ERROR;
 
     if (error.response) {
         console.error("Server error:", error.response.status, error.response.data);

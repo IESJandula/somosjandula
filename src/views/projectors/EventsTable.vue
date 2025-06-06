@@ -4,7 +4,7 @@ import ComboBoxClassroom from "@/components/projectors/ComboBoxClassroom.vue";
 import ComboBoxFloor from "@/components/projectors/ComboBoxFloor.vue";
 import ComboBoxModel from "@/components/projectors/ComboBoxModel.vue";
 import ComboBoxState from "@/components/projectors/ComboBoxState.vue";
-import constants from "@/utils/constants";
+import { EVENT_STATUS_ERROR, EVENT_STATUS_PENDING, EVENT_STATUS_EXECUTED, EVENT_STATUS_SERVED, EVENT_STATUS_CANCELED } from '@/utils/constants';
 import {fetchFloorsList, fetchSelectedFloorClassrooms,fetchProjectorModelsList, fetchEventStates,fetchEvents } from '@/services/projectors';
 
 // Variables para el toast
@@ -60,15 +60,15 @@ const formatTime = (date) => {
 
 const getStatusClass = (status) => {
     switch (status) {
-        case constants.EVENT_STATUS_ERROR:
+        case EVENT_STATUS_ERROR:
             return "table-danger border border-dark light-red";
-        case constants.EVENT_STATUS_PENDING:
+        case EVENT_STATUS_PENDING:
             return "table-warning border border-dark light-yellow";
-        case constants.EVENT_STATUS_EXECUTED:
+        case EVENT_STATUS_EXECUTED:
             return "table-success border border-dark light-green";
-        case constants.EVENT_STATUS_SERVED:
+        case EVENT_STATUS_SERVED:
             return "table-info border border-dark light-cyan";
-        case constants.EVENT_STATUS_CANCELED:
+        case EVENT_STATUS_CANCELED:
             return "table-secondary border border-dark light-grey";
         default:
             return "";

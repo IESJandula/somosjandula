@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, defineProps, ref, defineEmits, watch } from "vue";
-import constants from '@/utils/constants';
+import { RESPONSE_STATUS_ERROR, RESPONSE_STATUS_INFO, RESPONSE_STATUS_SUCCESS, RESPONSE_STATUS_WARNING } from '@/utils/constants';
 
 // ----------------- PROPS DEFINITION -----------------
 const props = defineProps({
@@ -178,16 +178,16 @@ const emitDeletionRequest = () => {
 
         <!-- ALERT BANNERS FOR OPERATION RESULTT -->
         <div class="pt-3"> 
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
-            <div v-if="props.responseType === constants.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
+            <div v-if="props.responseType === RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3" role="alert">
                 {{ props.responseData }}
             </div>
             <div v-if="props.dataLoading" class="alert alert-info ms-3 me-3 p-3 text-center" role="alert">

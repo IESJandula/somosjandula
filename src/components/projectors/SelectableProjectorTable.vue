@@ -3,7 +3,7 @@ import { defineProps, computed, defineEmits, ref, watch, onMounted } from "vue";
 import ComboBoxClassroom from "@/components/projectors/ComboBoxClassroom.vue";
 import ComboBoxFloor from "@/components/projectors/ComboBoxFloor.vue";
 import ComboBoxModel from "@/components/projectors/ComboBoxModel.vue";
-import constants from '@/utils/constants';
+import { RESPONSE_STATUS_ERROR, RESPONSE_STATUS_INFO, RESPONSE_STATUS_SUCCESS, RESPONSE_STATUS_WARNING } from '@/utils/constants';
 import {fetchFloorsList,fetchSelectedFloorClassrooms,fetchProjectorModelsList} from '@/services/projectors';
 
 
@@ -421,19 +421,19 @@ const deleteAllProjectors = () => {
 
       <!-- ALERT BANNERS FOR OPERATION RESULTT -->
       <div class="pt-3">
-        <div v-if="props.responseType === constants.RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3"
+        <div v-if="props.responseType === RESPONSE_STATUS_ERROR" class="alert alert-danger ms-3 me-3 p-3"
           role="alert">
           {{ props.responseData }}
         </div>
-        <div v-if="props.responseType === constants.RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3"
+        <div v-if="props.responseType === RESPONSE_STATUS_INFO" class="alert alert-primary ms-3 me-3 p-3"
           role="alert">
           {{ props.responseData }}
         </div>
-        <div v-if="props.responseType === constants.RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3"
+        <div v-if="props.responseType === RESPONSE_STATUS_SUCCESS" class="alert alert-success ms-3 me-3 p-3"
           role="alert">
           {{ props.responseData }}
         </div>
-        <div v-if="props.responseType === constants.RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3"
+        <div v-if="props.responseType === RESPONSE_STATUS_WARNING" class="alert alert-warning ms-3 me-3 p-3"
           role="alert">
           {{ props.responseData }}
         </div>

@@ -1,11 +1,11 @@
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
-import constants from '../utils/constants.js';
+import { EVENTS_OVERVIEW, ACTIONS, FLOORS, MODELS, PROJECTORS, EVENTS_BATCH, CLASSROOMS, EVENT_STATES, SERVER_EVENT, PROJECTOR_OVERVIEW, PROJECTORS_ALL, ACTIONS_PAGE, COMMANDS_PAGE, COMMANDS } from '@/utils/constants';
 
 export const fetchEventsOverView = async (toastMessage, toastColor, isToastOpen) =>
     {
         const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
     
-        const respuesta = await fetch('http://localhost:8086/projectors/events-overview',
+        const respuesta = await fetch(EVENTS_OVERVIEW,
         {
             method: 'GET',
             headers:
@@ -25,7 +25,7 @@ export const fetchActionsList = async (toastMessage, toastColor, isToastOpen) =>
 
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(constants.ACTIONS,
+    return await fetch(ACTIONS,
     {
         method: 'GET',
         headers:
@@ -41,7 +41,7 @@ export const fetchFloorsList = async (toastMessage, toastColor, isToastOpen) =>
 
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(constants.FLOORS,
+    return await fetch(FLOORS,
     {
         method: 'GET',
         headers:
@@ -55,7 +55,7 @@ export const fetchProjectorModelsList = async (toastMessage, toastColor, isToast
 {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(constants.MODELS,
+    return await fetch(MODELS,
     {
         method: 'GET',
         headers:
@@ -96,7 +96,8 @@ export const fetchProjectorList = async (
     if (floor !== null) queryParams.append('floor', floor);
     if (model !== null) queryParams.append('model', model);
 
-    const url = `${constants.PROJECTORS}?${queryParams.toString()}`;
+    // TODO: Cambiar por la URL real.
+    const url = `${PROJECTORS}?${queryParams.toString()}`;
 
     const response = await fetch(url, {
         method: 'GET',
@@ -129,11 +130,11 @@ export const sendServerEventBatchService = async (toastMessage, toastColor, isTo
     // recuperacción del token.
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(constants.EVENTS_BATCH,
+    const response = await fetch(EVENTS_BATCH,
+    {
+        method: 'POST',
+        headers:
         {
-            method: 'POST',
-            headers:
-            {
                 'Authorization': `Bearer ${tokenPropio}`, // Agrega el JWT al encabezado
                 'Content-Type': 'application/json',
             },
@@ -160,7 +161,7 @@ export const fetchSelectedFloorClassrooms = async ( toastMessage, toastColor, is
     // Obtener token JWT válido
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const url = `${constants.CLASSROOMS}?${queryParams.toString()}`;
+    const url = `${CLASSROOMS}?${queryParams.toString()}`;
 
     const response = await fetch(url, {
         method: 'GET',
@@ -185,7 +186,7 @@ export const fetchEventStates = async (toastMessage, toastColor, isToastOpen) =>
 
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(constants.EVENT_STATES,
+    return await fetch(EVENT_STATES,
     {
         method: 'GET',
         headers:
@@ -215,7 +216,7 @@ export const fetchEvents = async (
 
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const url = new URL(constants.SERVER_EVENT);
+    const url = new URL(SERVER_EVENT);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('size', size.toString());
 
@@ -238,7 +239,7 @@ export const fetchEvents = async (
 export const fetchProjectorOverView = async (toastMessage, toastColor, isToastOpen) => {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(constants.PROJECTOR_OVERVIEW, {
+    const response = await fetch(PROJECTOR_OVERVIEW, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${tokenPropio}`,
@@ -256,7 +257,7 @@ export const fetchProjectorOverView = async (toastMessage, toastColor, isToastOp
 export const deleteProjectors = async ( toastMessage, toastColor, isToastOpen, selectedProjectorsList ) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(constants.PROJECTORS, {
+    const response = await fetch(PROJECTORS, {
         method: "DELETE",
         headers: {
             "Authorization": `Bearer ${token}`,
@@ -276,7 +277,7 @@ export const deleteProjectors = async ( toastMessage, toastColor, isToastOpen, s
 export const deleteAllProjectors = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(constants.PROJECTORS_ALL, {
+    const response = await fetch(PROJECTORS_ALL, {
     method: 'DELETE',
     headers: {
         'Authorization': `Bearer ${token}`,
@@ -299,7 +300,7 @@ export const deleteAllProjectors = async (toastMessage, toastColor, isToastOpen)
 export const fetchActionsPage = async ( toastMessage, toastColor, isToastOpen, page, size) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const url = new URL(constants.ACTIONS_PAGE);
+    const url = new URL(ACTIONS_PAGE);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('size', size.toString());
 
@@ -328,7 +329,7 @@ export const deleteActions = async (toastMessage, toastColor, isToastOpen, selec
 
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(constants.ACTIONS, {
+    const response = await fetch(ACTIONS, {
         method: 'DELETE',
         headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -355,7 +356,7 @@ export const deleteActions = async (toastMessage, toastColor, isToastOpen, selec
 export const fetchCommandsPage = async (toastMessage, toastColor, isToastOpen, page, size, modelName, action) => {
 
     // Construir URL con parámetros query
-    const url = new URL(constants.COMMANDS_PAGE);
+    const url = new URL(COMMANDS_PAGE);
     url.searchParams.append('page', page.toString());
     url.searchParams.append('size', size.toString());
     if (modelName) url.searchParams.append('modelName', modelName);
@@ -390,7 +391,7 @@ export const fetchCommandsPage = async (toastMessage, toastColor, isToastOpen, p
 export const deleteSelectedCommands = async (toastMessage, toastColor, isToastOpen, selectedCommands) => {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(constants.COMMANDS, {
+    const response = await fetch(COMMANDS, {
     method: "DELETE",
     headers: {
         "Content-Type": "application/json",
