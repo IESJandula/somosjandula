@@ -282,6 +282,8 @@ const asignaturaSinDocencia = async (asignatura) => {
     const nuevoValor = !asignatura.sinDocencia;
     
     const response = await asignaturasSinDocencia(
+      filtroSeleccionado.value.curso, 
+      filtroSeleccionado.value.etapa, 
       asignatura.nombre,
       nuevoValor,
       toastMessage, 
@@ -318,6 +320,8 @@ const asignaturasDesdoble = async (asignatura) => {
     const nuevoValor = !asignatura.desdoble;
 
     const response = await asignaturasDesdobles(
+      filtroSeleccionado.value.curso, 
+      filtroSeleccionado.value.etapa, 
       asignatura.nombre,
       nuevoValor,
       toastMessage, 
