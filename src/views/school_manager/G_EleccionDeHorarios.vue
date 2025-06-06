@@ -173,10 +173,10 @@
                       v-model="asignaturaReduccion.grupoSeleccionado"
                       @change="obtenerGrupoDeAsignatura(index)" 
                       class="dropdown-select-solicitudes">
-                      <option value="" disabled hidden>A</option>
-                      <option v-for="grupo in listaGrupos[index]" 
+                      <option v-for="(grupo, i) in listaGrupos[index]" 
                         :key="grupo" 
-                        :value="grupo.grupo">
+                        :value="grupo.grupo"
+                        :selected="asignaturaReduccion.grupoSeleccionado === undefined && i === 0">
                         {{ grupo.grupo }}
                       </option>
                     </select>
@@ -326,6 +326,9 @@ const obtenerProfesor = async () => {
 };
 
 const obtenerListaAsignaturas = async () => {
+
+  listaAsignaturas.value = [];
+
   try {
     const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
       ? profesorSeleccionado.value.email
