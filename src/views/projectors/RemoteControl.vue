@@ -492,10 +492,10 @@ const alertClass = computed(() => {
 	<div style="width: 100%" :style="gradientStyle" class="p-0">
 		<!-- Bootstrap Modal -->
 		<div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
-			<div class="modal-dialog modal-dialog-centered">
-				<div class="modal-content">
-					<div class="modal-header text-white" :class="alertClass">
-						<h5 class="modal-title text-center">{{ modalTitle }}</h5>
+			<div class="modal-dialog modal-dialog-centered pt-0">
+				<div class="modal-content pt-0">
+					<div class="modal-header text-white  pt-0" :class="alertClass">
+						<h5 class="modal-title text-center pt-0">{{ modalTitle }}</h5>
 						<button
 							type="button"
 							class="btn-close"
@@ -538,7 +538,7 @@ const alertClass = computed(() => {
 						:containerBackgroundStyle="'background-color: azure;'"
 					>
 						<div class="row p-0">
-							<div class="col-12 col-md-12 col-lg-7 small p-3">
+							<div class="col-12 col-md-12 col-lg-8 small p-3">
 								<MassiveControlTable
 									v-model="selectedProjectorsList"
 									:tableHeaderClass="'table-primary'"
@@ -548,8 +548,10 @@ const alertClass = computed(() => {
 								/>
 							</div>
 
+							
+
 							<!-- Actions formbox. -->
-							<div class="col-12 col-md-12 col-lg-5">
+							<div class="col-12 col-md-12 col-lg-4">
 								<div class="m-3">
 									<FormBox
 										:formTitle="'ACCIONES'"
@@ -620,7 +622,7 @@ const alertClass = computed(() => {
 
 		<!-- SERVER EVENTS -->
 
-		<div class="row d-flex flex-grow-1 justify-content-center p-3 pb-5 bg-info">
+		<div class="row d-flex flex-grow-1 justify-content-center p-3 pb-5">
 			<div class="col-12 col-md-10 col-lg-8 p-0">
 				<div
 					class="mx-auto pt-1 pb-1 mb-0 mt-0 rounded-top-3 border-dark border"

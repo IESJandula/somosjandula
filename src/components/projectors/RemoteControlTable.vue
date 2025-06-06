@@ -361,7 +361,7 @@ const resetFilters = () => {
             <th :class="tableHeaderClass" class="col-3">Classroom</th>
             <th :class="tableHeaderClass" class="col-3">Model</th>
             <th :class="tableHeaderClass" class="col-1">Select.</th>
-            <th :class="tableHeaderClass" class="col-1">Estado</th>
+            <th :class="tableHeaderClass" class="col-auto">Estado</th>
           </tr>
         </thead>
         <tbody>
@@ -377,14 +377,14 @@ const resetFilters = () => {
               </div>
             </td>
             <td v-if="projector.status==='Apagado'">
-              <div class="bg-danger rounded rounded-2 pt-1 pb-1">
-                <i class="bi bi-lightbulb-off" data-bs-toggle="tooltip" title="APAGADO"></i> OFF
+              <div class="proj-off rounded rounded- p-0 m-0" data-bs-toggle="tooltip" title="El proyector está apagado.">
+                <i class="bi bi-projector"></i> <span style="font-size:15px;">Apagado  </span>
               </div>
 
             </td>
-            <td v-if="projector.status==='Encendido'">
-              <div class="bg-success rounded rounded-2 pt-1 pb-1">
-                <i class="bi bi-lightbulb-fill" data-bs-toggle="tooltip" title="ENCENDIDO"></i> ON
+            <td v-if="projector.status==='Encendido'"  data-bs-toggle="tooltip" title="El proyector está encendido.">
+              <div class="proj-on rounded rounded-2 p-0 m-0">
+                <i class="bi bi-projector-fill"></i> <span style="font-size:15px;">Encendido</span>
               </div>
             </td>
           </tr>
@@ -415,7 +415,7 @@ const resetFilters = () => {
 
       <div class="col">
         <!-- Button to discard all selections -->
-        <button class="btn btn-warning border border-dark" @click="discardSelection"><i class="bi bi-x-lg"></i> Descartar selección
+        <button class="btn btn-warning border border-dark" @click="discardSelection"><i class="bi bi-x-lg"></i> Descartar selección ({{selectedProjectors.length}})
         </button>
       </div>
       <p class="pt-3">Total registros recuperados: {{ totalElements }}</p>
@@ -440,5 +440,19 @@ const resetFilters = () => {
 /* Make rows clickable */
 .clickable-row {
   cursor: pointer;
+}
+
+.proj-on{
+  background-color: rgb(213, 255, 213);
+  color: rgb(15, 87, 24);
+  border: rgb(16, 102, 23) 1px solid;
+  font-size: 18px;
+}
+
+.proj-off{
+  background-color: rgb(255, 194, 194);
+  color: rgb(114, 12, 12);
+  border: rgb(115, 12, 12) 1px solid;
+  font-size: 18px;
 }
 </style>
