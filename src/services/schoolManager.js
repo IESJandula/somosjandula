@@ -896,7 +896,7 @@ export const obtenerAsignaturas = async (email, toastMessage, toastColor, isToas
     return await response.json();
   }
 
-export const asignarAsignatura = async (nombre, horas, curso, etapa, grupo, email, toastMessage, toastColor, isToastOpen) =>
+export const asignarAsignatura = async (nombre, horas, curso, etapa, email, toastMessage, toastColor, isToastOpen) =>
   {
 
     const cursoInt = parseInt(curso, 10);
@@ -913,7 +913,6 @@ export const asignarAsignatura = async (nombre, horas, curso, etapa, grupo, emai
           'horas': horas,
           'curso': cursoInt,
           'etapa': etapa,
-          'grupo': grupo,
           'email': email,
         },
       });

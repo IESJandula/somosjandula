@@ -315,6 +315,8 @@ const obtenerProfesor = async () => {
 
     profesorSeleccionado.value = '';
 
+    listaAsignaturas.value = [];
+
   } catch (error) {
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
@@ -360,7 +362,6 @@ const asignacionDeAsignaturas = async () => {
       asignaturaSeleccionada.value.horas,
       asignaturaSeleccionada.value.curso,
       asignaturaSeleccionada.value.etapa,
-      asignaturaSeleccionada.value.grupo,
       emailDestino,
       toastMessage, toastColor, isToastOpen);
     
