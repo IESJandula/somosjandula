@@ -106,8 +106,9 @@ const parseFiles = async () => {
         const respuesta = await response.json();
 
         // Log the server response
-        console.log('Server response:', response.data);
+        console.log('Server response:', response);
 
+        console.log("xxxxxxxxx",respuesta );
 
         // Update the UI with the response data
         responseTypeCSV.value = respuesta.status1;
@@ -118,10 +119,16 @@ const parseFiles = async () => {
         // Response about Commands
         responseDataAltCSV.value = respuesta.message2;
 
+        console.log("responseTypeCSV",responseTypeCSV );
+        console.log("responseTypeAltCSV",responseTypeAltCSV );
+        console.log("responseDataCSV",responseDataCSV );
+        console.log("responseDataAltCSV",responseDataAltCSV );
+
         // Reload data in the forms
         reloadPageLists();
 
         multifileLoading.value = false;
+
 
     }
     catch (error) {
@@ -133,8 +140,8 @@ const parseFiles = async () => {
         if (error.response) {
             // Server responded with a status code outside the range of 2xx
             console.error('Error code:', error.response.status);
-            console.error('Server message:', error.response.data.message);
-            responseDataCSV.value = error.response.data.message;
+            console.error('Server message:', error.response.message);
+            responseDataCSV.value = error.response.message;
         } else if (error.request) {
             // The request was made, but no response was received
             console.error('No response received from the server', error.request);
@@ -249,6 +256,7 @@ const loadProjectorList = async () => {
             size,
             classroom,
             floor,
+            "default", // Da igual el estado, encendido o apagado.
             model
         );
 
@@ -655,7 +663,6 @@ const loadCommandsPage = async (page = 0, size = 5, modelName, action) => {
     }
 };
 
-
 const showDeleteCommandModal = async () => {
     if (!deleteCommandModalInstance) {
         deleteCommandModalInstance = new bootstrap.Modal(document.getElementById('deleteCommandConfirmationModal'));
@@ -944,7 +951,8 @@ const deleteSelectedCommandsRequest = async () => {
                             <table class="table border table-bordered border-dark text-center">
                                 <thead class="thead-dark">
                                     <tr>
-                                        <th class="table-warning table-bordered border-dark" data-bs-toggle="tooltip"
+                                        <th class="table-warning table-bordered border-dark" 
+                                            data-bs-toggle="tooltip"
                                             data-bs-html="true"
                                             title="<b>PENDIENTE</b><br/><em>Tarea creada correctamente, aún pendiente de entrega al proyector.</em> ">
                                             <i class="bi bi-hourglass-split text-dark"></i>

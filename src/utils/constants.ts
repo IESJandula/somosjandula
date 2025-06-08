@@ -15,10 +15,10 @@ export const SESSION_JWT_TOKEN = 'tokenJwt' ;
 
 
 // Statuses for the responses from the server.
-export const RESPONSE_STATUS_SUCCESS = "SUCCESS";
+export const RESPONSE_STATUS_SUCCESS = "EXITO";
 export const RESPONSE_STATUS_ERROR = "ERROR";
 export const RESPONSE_STATUS_INFO = "INFO";
-export const RESPONSE_STATUS_WARNING = "WARNING";
+export const RESPONSE_STATUS_WARNING = "ATENCION";
 
 // Statuses for the actions in the server events table.
 export const EVENT_STATUS_PENDING = "PENDIENTE";

@@ -68,7 +68,6 @@ onMounted(() => {
 			localStorage.removeItem("buttonDisabledUntil");
 		}
 	}
-	const feature = computed(() => state.value);
 	loadEvents();
 	loadFloorsList();
 	loadProjectorModels();
@@ -795,7 +794,7 @@ const alertClass = computed(() => {
 				<!-- /pagination-->
 
 				<!-- Card or record where the information is displayed -->
-				<div class="col-12 col-lg-auto mx-auto">
+				<div class="col-12 col-lg-auto mx-auto p-3">
 					<div>
 						<div class="d-none d-md-block p-0 m-0">
 							<table class="table table-primary border border-black table-auto">
