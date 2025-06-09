@@ -1,3 +1,33 @@
+<template>
+  <div>
+    <!-- Dropdown para seleccionar curso y etapa -->
+    <select 
+        v-model="seleccionado" 
+        @change="actualizarSelect" 
+        name="cursos-etapas" 
+        id="cursos-etapas" 
+        :class="['dropdown', selectClass]">
+        <!-- Opción inicial por defecto -->
+        <option value="" disabled hidden>Selecciona un curso</option>
+        <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
+        <option 
+            v-for="cursoEtapa in cursosEtapas" 
+            :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
+            :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
+            {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
+        </option>
+    </select>
+    <ion-toast 
+      :is-open="isToastOpen" 
+      :message="toastMessage" 
+      :color="toastColor" 
+      duration="2000"
+      @did-dismiss="() => (isToastOpen = false)" 
+      position="top">
+    </ion-toast>
+  </div>
+</template>
+
 <script setup>
 // Importa las funciones necesarias de Vue y Axios
 import { onMounted, ref, computed } from 'vue';
@@ -68,36 +98,6 @@ const actualizarSelect = () => {
     }
 };
 </script>
-
-<template>
-  <div>
-    <!-- Dropdown para seleccionar curso y etapa -->
-    <select 
-        v-model="seleccionado" 
-        @change="actualizarSelect" 
-        name="cursos-etapas" 
-        id="cursos-etapas" 
-        :class="['dropdown', selectClass]">
-        <!-- Opción inicial por defecto -->
-        <option value="" disabled hidden>Selecciona un curso</option>
-        <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
-        <option 
-            v-for="cursoEtapa in cursosEtapas" 
-            :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
-            :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-            {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
-        </option>
-    </select>
-    <ion-toast 
-      :is-open="isToastOpen" 
-      :message="toastMessage" 
-      :color="toastColor" 
-      duration="2000"
-      @did-dismiss="() => (isToastOpen = false)" 
-      position="top">
-    </ion-toast>
-  </div>
-</template>
 
 <style>
 .dropdown {
