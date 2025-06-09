@@ -913,6 +913,7 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
     nuevoProfesor &&
     (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
   ) {
+    asignaturaSeleccionada.value = '';
     await obtenerListaAsignaturas();
     await obtenerSolicitud();
     resetearValores();
