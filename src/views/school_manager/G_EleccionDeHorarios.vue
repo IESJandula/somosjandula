@@ -17,7 +17,7 @@
               await obtenerSolicitud();
               await obtenerListaAsignaturas();
             }" class="dropdown-select">
-            <option value="">Selecciona un profesor</option>
+            <option value="" disabled hidden>Selecciona un profesor</option>
             <option v-for="profesor in listaProfesores" 
               :key="profesor" 
               :value="profesor">
@@ -836,7 +836,7 @@ const guardarTodo = async () => {
         isToastOpen);
 
       if (response.ok) {
-        mensajeActualizacion = 'Todas las solicitudes guardadas correctamente'
+        mensajeActualizacion = 'Todas las solicitudes se han guardado correctamente'
         mensajeColor = "success";
         crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
 

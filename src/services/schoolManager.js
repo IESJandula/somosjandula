@@ -23,29 +23,7 @@ export const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) 
     return await response.json();
 }
 
-export const obtenerGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
-  {
-    const cursoInt = parseInt(curso, 10);
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/common/grupos', 
-      {
-        method: 'GET',
-        headers: 
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-          'curso': cursoInt,
-          'etapa': etapa
-        },
-      });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message);
-    }
-
-    return await response.json();
-  }
 
 export const asignarReducciones = async (email, reduccion, horas, toastMessage, toastColor, isToastOpen) =>
   {
@@ -371,6 +349,30 @@ export const crearNuevosGrupos = async (curso, etapa, toastMessage, toastColor, 
           'etapa': etapa
         },
       });
+  }
+
+export const obtenerGrupos = async (curso, etapa, toastMessage, toastColor, isToastOpen) => 
+  {
+    const cursoInt = parseInt(curso, 10);
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/crearGrupos/grupos', 
+      {
+        method: 'GET',
+        headers: 
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': cursoInt,
+          'etapa': etapa
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
   }
 
 export const obtenerAlumnosConGrupos = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) => 

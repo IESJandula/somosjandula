@@ -2,11 +2,6 @@
 export declare function cargarCursosEtapas(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<any>;
-export declare function obtenerGrupos(curso: Ref<number>,
-                                           etapa: Ref<string>,
-                                           toastMessage: Ref<string>,
-                                           toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<any>;
 export declare function asignarReducciones(email: Ref<string>,
                                            reduccion: Ref<string>,
                                            horas: Ref<number>,
@@ -113,6 +108,11 @@ export declare function crearNuevosGrupos(curso: Ref<number>,
                                            toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerGrupos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
 export declare function obtenerAlumnosConGrupos(curso: Ref<number>,
                                            etapa: Ref<string>,
                                            grupo: Ref<string>,
