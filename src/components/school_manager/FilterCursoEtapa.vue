@@ -1,7 +1,39 @@
+<template>
+  <div>
+    <!-- Dropdown para seleccionar curso y etapa -->
+    <select 
+        v-model="seleccionado" 
+        @change="actualizarSelect" 
+        name="cursos-etapas" 
+        id="cursos-etapas" 
+        :class="['dropdown', selectClass]">
+        <!-- Opción inicial por defecto -->
+        <option value="" disabled hidden>Selecciona un curso</option>
+        <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
+        <option 
+            v-for="cursoEtapa in cursosEtapas" 
+            :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
+            :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
+            {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
+        </option>
+    </select>
+    <ion-toast 
+      :is-open="isToastOpen" 
+      :message="toastMessage" 
+      :color="toastColor" 
+      duration="2000"
+      @did-dismiss="() => (isToastOpen = false)" 
+      position="top">
+    </ion-toast>
+  </div>
+</template>
+
 <script setup>
 // Importa las funciones necesarias de Vue y Axios
-import { onMounted, ref, defineEmits } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { cargarCursosEtapas } from '@/services/schoolManager.js'
+import { crearToast } from '@/utils/toast.js';
+import { IonToast } from "@ionic/vue";
 
 // Declara una variable reactiva para almacenar los cursos y etapas obtenidos del servidor
 const cursosEtapas = ref([]);
@@ -10,18 +42,39 @@ const toastMessage = ref('');
 const toastColor = ref('success');
 
 // Define un emisor para comunicar eventos al componente padre
-const emit = defineEmits(['actualizar-select']);
+const emit = defineEmits(['actualizar-select', 'update:modelValue']);
 
-// Declara una variable reactiva que almacena el valor seleccionado en el dropdown
-const seleccionado = ref('');
+const props = defineProps({
+  modelValue: {
+    type: String,
+    default: ''
+  },
+  selectClass: {
+    type: String,
+    default: ''
+  }
+});
+
+// Modificar la variable seleccionado para usar v-model
+const seleccionado = computed({
+  get() {
+    return props.modelValue || '';
+  },
+  set(value) {
+    emit('update:modelValue', value);
+  }
+});
 
 // Función asíncrona para cargar los datos de cursos y etapas desde el servidor
 const cargarCursosEtapa = async () => {
   try {
-    const data = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
-    cursosEtapas.value = data;
+    const response = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
+    cursosEtapas.value = response;
+
   } catch (error) {
-    console.error('Error al cargar cursos y etapas', error);
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
   }
 };
 
@@ -46,35 +99,16 @@ const actualizarSelect = () => {
 };
 </script>
 
-<template>
-    <div>
-        <!-- Dropdown para seleccionar curso y etapa -->
-        <select 
-            v-model="seleccionado" 
-            @change="actualizarSelect" 
-            name="cursos-etapas" 
-            id="cursos-etapas" 
-            class="p-2">
-            <!-- Opción inicial por defecto -->
-            <option value="">Selecciona un curso</option>
-            <!-- Genera las opciones dinámicamente desde los datos obtenidos -->
-            <option 
-                v-for="cursoEtapa in cursosEtapas" 
-                :key="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`"
-                :value="`${cursoEtapa.idCursoEtapa.curso}-${cursoEtapa.idCursoEtapa.etapa}`">
-                {{ cursoEtapa.idCursoEtapa.curso }} {{ cursoEtapa.idCursoEtapa.etapa }}
-            </option>
-        </select>
-    </div>
-</template>
-
 <style>
-.m-1 {
-  margin-bottom: 1rem;
-  font-size: 20px;
-  flex-grow: 1;
+.dropdown {
+  padding: 0.5rem;
+  border: 1px solid ; 
+  border-radius: 0.375rem; 
+  width: 100%;
 }
-.p-2{
+
+.select-sm {
+  width: 200px;
   padding: 0.5rem;
   border: 1px solid ; 
   border-radius: 0.375rem; 

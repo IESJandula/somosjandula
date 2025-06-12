@@ -1,225 +1,3 @@
-<script setup>
-import {onMounted, ref} from 'vue';
-import { IonInput, IonToast } from "@ionic/vue";
-import { crearToast } from '@/utils/toast.js';
-import { cargarReducciones, crearReducciones, borrarReducciones, obtenerProfesores, asignarReducciones, obtenerReduccionesProfesores, borrarReduccionesProfesores } from '@/services/schoolManager.js';
-
-const listaReducciones = ref([]);
-const decideDireccion = ref(false);
-const nombre = ref('');
-const horas = ref('');
-const listaProfesores = ref([]);
-const profesorSeleccionado = ref('');
-const reduccionSeleccionada = ref('');
-const listaReduccionesAsignadas = ref([]);
-// Variable para el toast
-const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
-// Nueva variable reactiva para el mensaje de actualización
-let mensajeActualizacion = "";
-let mensajeColor = "";
-
-const cargarReduccion = async () => {
-  try {
-
-    const data = await cargarReducciones(toastMessage, toastColor, isToastOpen);
-    listaReducciones.value = data;
-    decideDireccion.value = false;
-    nombre.value = '';
-    horas.value = '';
-    
-  } catch (error) {
-    mensajeActualizacion = 'Error al cargar las reducciones.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-const crearReduccion = async (nombreRe, horasRe, decideDireccionRe) => {
-
-  try {
-
-    if (horasRe === 0) {
-      mensajeActualizacion = 'Las horas deben mayor de 0.';
-      mensajeColor = 'warning';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-    }
-    if (!nombreRe || !horasRe) {
-      mensajeActualizacion = 'Por favor, completa todos los campos.';
-      mensajeColor = 'warning';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-    }
-
-    await crearReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha creado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    cargarReduccion();
-   
-  } catch (error) {
-    mensajeActualizacion = 'Error al crear la reducción.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-const borrarReduccion = async(index) => {
-  
-  try {
-
-    const registro = listaReducciones.value[index];
-    
-    if (!registro) {
-      mensajeActualizacion = 'Reducción no encontrada';
-      mensajeColor = 'warning';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-    }
-    const nombreRe = registro.nombre;
-    const horasRe = registro.horas;
-    const decideDireccionRe = registro.decideDireccion;
-
-    // Asegúrate de que las reducciones asignadas estén actualizadas
-    await obtenerReduccionProfesor();
-
-    if(listaReduccionesAsignadas.value !== undefined){
-      if (listaReduccionesAsignadas.value.some(reduccion => reduccion.nombreReduccion === nombreRe)) {
-      mensajeActualizacion = 'No se puede eliminar la reducción porque está asignada a un profesor.';
-      mensajeColor = 'warning';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-      }
-    }
-
-    await borrarReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha eliminado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-
-    await cargarReduccion();
-
-  } catch (error) {
-    mensajeActualizacion = 'Error al eliminar la reducción.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-const obtenerProfesor = async () => {
-
-  try {
-
-    const data = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
-    listaProfesores.value = data;
-
-    profesorSeleccionado.value = '';
-
-  } catch (error) {
-    mensajeActualizacion = 'Error al cargar los profesores.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-const asignarReduccion = async (profesor) => {
-  try {
-
-    if (!profesorSeleccionado.value || !reduccionSeleccionada.value) {
-      mensajeActualizacion = 'Por favor, selecciona un profesor y una reducción.';
-      mensajeColor = 'warning';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-    }
-
-    for(const i in listaReduccionesAsignadas.value) {
-      if (listaReduccionesAsignadas.value[i].email === profesor.email && listaReduccionesAsignadas.value[i].nombreReduccion === reduccionSeleccionada.value.nombre) {
-        mensajeActualizacion = 'El profesor ya tiene asignada esta reducción.';
-        mensajeColor = 'warning';
-        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-        return;
-      }
-    }
-
-    const horas = reduccionSeleccionada.value.horas;
-    const reduccion = reduccionSeleccionada.value.nombre;
-
-    await asignarReducciones(profesor.email, reduccion, horas, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha asignado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-
-    await obtenerReduccionProfesor();
-
-  } catch (error) {
-    mensajeActualizacion = 'Error al asignar la reducción.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-const obtenerReduccionProfesor = async () => {
-
-  try {
-
-    const data = await obtenerReduccionesProfesores(toastMessage, toastColor, isToastOpen);
-    listaReduccionesAsignadas.value = data;
-    profesorSeleccionado.value = '';
-    reduccionSeleccionada.value = '';
-
-  } catch (error) {
-    mensajeActualizacion = 'Error al cargar las reducciones asignadas.';
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-const borrarReduccionProfesor = async (index) => {
-  try {
-    
-    const registro = listaReduccionesAsignadas.value[index];
-    
-    if (!registro) {
-      mensajeActualizacion = 'Reducción no encontrada';
-      mensajeColor = 'warning';
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      return;
-    }
-    const email = registro.email;
-    const nombreRe = registro.nombreReduccion;
-    const horasRe = registro.horas;
-
-    await borrarReduccionesProfesores(email, nombreRe, horasRe, toastMessage, toastColor, isToastOpen);
-    mensajeActualizacion = 'La reducción se ha eliminado correctamente.';
-    mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    await obtenerReduccionProfesor();
-
-  } catch (error) {
-    mensajeActualizacion = 'Error al eliminar la reducción.';
-    mensajeColor = 'danger';  
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-  }
-};
-
-onMounted(async () => {
-  await cargarReduccion();
-  await obtenerProfesor();
-  await obtenerReduccionProfesor();
-});
-
-
-</script>
-
 <template>
   <h1 class="t-1">Reducciones</h1>
     <div class="top-section">
@@ -231,15 +9,17 @@ onMounted(async () => {
             <ion-input type="text" v-model="nombre" class="form-input"/>
           </label>
           <label class="form-label-numer">Horas:
-            <ion-input type="number" v-model.number="horas" min="1" max="50" step="1" class="form-input-numer"/>
+            <ion-input type="number" v-model.number="horas" min="0" max="50" step="1" class="form-input-numer"/>
           </label>
         </div>
-        <label class="form-label">Decide dirección:
-          <input type="checkbox" v-model="decideDireccion" />
+        <label class="form-label">
+          <input 
+            type="checkbox"
+            class="checkbox"
+            v-model="decideDireccion"/> Decide dirección
         </label>
         <!-- Aqui se guarda en la tabla de reducciones -->
         <button @click="crearReduccion(nombre, horas, decideDireccion)" class="btn-guardar">Guardar</button>
-        <!-- formulario -->
       </div>
       <!-- Tabla con todas las reducciones que existen -->
       <div class="card-cargar-reduccion">
@@ -277,7 +57,7 @@ onMounted(async () => {
                 id="profesor-select"
                 v-model="profesorSeleccionado" 
                 class="dropdown-select">
-                <option value="">Selecciona un profesor</option>
+                <option value="" disabled hidden>Selecciona un profesor</option>
                 <option 
                     v-for="profesor in listaProfesores" 
                     :key="profesor"
@@ -286,38 +66,21 @@ onMounted(async () => {
                 </option>
             </select>
           </div>
-          <div class="dropdown-group-section">
             <div class="dropdown-group">
               <label for="reduccion-select">Reducción:</label>
               <select 
                   id="reduccion-select"
                   v-model="reduccionSeleccionada" 
-                  class="dropdown-select-row">
-                  <option value="">Selecciona una reducción</option>
+                  class="dropdown-select">
+                  <option value="" disabled hidden>Selecciona una reducción</option>
                   <option 
                       v-for="reduccion in listaReducciones" 
                       :key="reduccion" 
                       :value="reduccion">
-                      {{ reduccion.nombre }} 
+                      {{ reduccion.nombre }} ({{ reduccion.horas }} horas)
                   </option>
               </select>
             </div>
-            <div class="dropdown-group">
-              <label for="reduccion-select">Horas:</label>
-              <select 
-                  id="reduccion-select"
-                  v-model="reduccionSeleccionada" 
-                  class="dropdown-select-row">
-                  <option value="">Selecciona una hora</option>
-                  <option 
-                      v-for="reduccion in listaReducciones" 
-                      :key="reduccion" 
-                      :value="reduccion">
-                      {{ reduccion.horas }} 
-                  </option>
-              </select>
-            </div>
-          </div>
         </div>
         <!-- Aqui se guarda en la tabla de reducciones -->
         <button @click="asignarReduccion(profesorSeleccionado)" class="btn-guardar">Asignar</button>
@@ -357,6 +120,257 @@ onMounted(async () => {
     </div>
 </template>
 
+<script setup>
+import { onMounted, ref } from 'vue';
+import { IonInput, IonToast } from "@ionic/vue";
+import { crearToast } from '@/utils/toast.js';
+import { cargarReducciones, crearReducciones, borrarReducciones, obtenerProfesores, asignarReducciones, obtenerReduccionesProfesores, borrarReduccionesProfesores } from '@/services/schoolManager.js';
+
+const listaReducciones = ref([]);
+const decideDireccion = ref(false);
+const nombre = ref('');
+const horas = ref('');
+const listaProfesores = ref([]);
+const profesorSeleccionado = ref('');
+const reduccionSeleccionada = ref('');
+const listaReduccionesAsignadas = ref([]);
+// Variable para el toast
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
+// Nueva variable reactiva para el mensaje de actualización
+let mensajeActualizacion = "";
+let mensajeColor = "";
+
+const crearReduccion = async (nombreRe, horasRe, decideDireccionRe) => {
+
+  try {
+
+    if (horasRe < 0) {
+      mensajeActualizacion = 'Las horas deben ser mayor o igual a 0.';
+      mensajeColor = 'warning';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+
+    if (!nombreRe || horasRe === '') {
+      mensajeActualizacion = 'Por favor, completa todos los campos.';
+      mensajeColor = 'warning';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+
+    const response = await crearReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
+    
+    if (response.ok) {
+      mensajeActualizacion = "Reducción creada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+    cargarReduccion();
+   
+  } catch (error) {
+    mensajeActualizacion = 'Error al crear la reducción.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const cargarReduccion = async () => {
+  try {
+
+    const response = await cargarReducciones(toastMessage, toastColor, isToastOpen);
+    listaReducciones.value = response;
+    decideDireccion.value = false;
+    
+  } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
+};
+
+const borrarReduccion = async(index) => {
+  
+  try {
+
+    const registro = listaReducciones.value[index];
+    
+    if (!registro) {
+      mensajeActualizacion = 'Reducción no encontrada';
+      mensajeColor = 'warning';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+    const nombreRe = registro.nombre;
+    const horasRe = registro.horas;
+    const decideDireccionRe = registro.decideDireccion;
+
+    // Asegúrate de que las reducciones asignadas estén actualizadas
+    await obtenerReduccionProfesor();
+
+    const response = await borrarReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
+
+    if(response.ok) {
+      mensajeActualizacion = "Reducción eliminada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+    await cargarReduccion();
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al eliminar la reducción.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const obtenerProfesor = async () => {
+
+  try {
+
+    const response = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
+    listaProfesores.value = response;
+
+    profesorSeleccionado.value = '';
+
+    if(response.length < 0) {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+  } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
+};
+
+const asignarReduccion = async (profesor) => {
+  try {
+
+    if (!profesorSeleccionado.value || !reduccionSeleccionada.value) {
+      mensajeActualizacion = 'Por favor, selecciona un profesor y una reducción.';
+      mensajeColor = 'warning';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+
+    for(const i in listaReduccionesAsignadas.value) {
+      if (listaReduccionesAsignadas.value[i].email === profesor.email && listaReduccionesAsignadas.value[i].nombreReduccion === reduccionSeleccionada.value.nombre) {
+        mensajeActualizacion = 'El profesor ya tiene asignada esta reducción.';
+        mensajeColor = 'warning';
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+        return;
+      }
+    }
+
+    const horas = reduccionSeleccionada.value.horas;
+    const reduccion = reduccionSeleccionada.value.nombre;
+
+    const response = await asignarReducciones(profesor.email, reduccion, horas, toastMessage, toastColor, isToastOpen);
+    
+    await obtenerReduccionProfesor();
+    
+    if(response.ok) {
+      mensajeActualizacion = "Reducción asignada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al asignar la reducción.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+const obtenerReduccionProfesor = async () => {
+
+  try {
+
+    const response = await obtenerReduccionesProfesores(toastMessage, toastColor, isToastOpen);
+    listaReduccionesAsignadas.value = response;
+    profesorSeleccionado.value = '';
+    reduccionSeleccionada.value = '';
+
+    if(response.length < 0) {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+  } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
+};
+
+const borrarReduccionProfesor = async (index) => {
+  try {
+    
+    const registro = listaReduccionesAsignadas.value[index];
+    
+    if (!registro) {
+      mensajeActualizacion = 'Reducción no encontrada';
+      mensajeColor = 'warning';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      return;
+    }
+    const email = registro.email;
+    const nombreRe = registro.nombreReduccion;
+    const horasRe = registro.horas;
+
+    const response = await borrarReduccionesProfesores(email, nombreRe, horasRe, toastMessage, toastColor, isToastOpen);
+
+    if(response.ok) {
+      mensajeActualizacion = "Reducción eliminada correctamente.";
+      mensajeColor = "success";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    } else {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+    await obtenerReduccionProfesor();
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al eliminar la reducción.';
+    mensajeColor = 'danger';  
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    console.error(error);
+  }
+};
+
+onMounted(async () => {
+  await cargarReduccion();
+  await obtenerProfesor();
+  await obtenerReduccionProfesor();
+});
+
+
+</script>
+
 <style scoped>
 
 .t-1 {
@@ -365,26 +379,12 @@ onMounted(async () => {
   margin-bottom: 1.5rem;
   text-align: center;
 }
-.t-2{
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-align: center;
-  margin-top: 1.5rem;
-}
 
 .top-section {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-}
-
-.top-section-dos {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 2rem;
 }
 
 .card-crea-reduccion {
@@ -398,6 +398,20 @@ onMounted(async () => {
   flex-direction: column;
 }
 
+.t-2{
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.form-group{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding-top: 2.5rem;
+}
+
 .form-label {
   cursor: pointer;
   top: 50px;
@@ -406,20 +420,11 @@ onMounted(async () => {
   margin-bottom: 0.5rem;
   margin-left: 25px;
 }
-.form-label-numer {
-  cursor: pointer;
-  top: 50px;
-  left: 5px;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  margin-left: 5rem;
-}
 
-.form-group{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding-top: 2.5rem;
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .form-input {
@@ -431,6 +436,16 @@ onMounted(async () => {
   min-width: 150px;
   margin-bottom: 1rem;
 }
+
+.form-label-numer {
+  cursor: pointer;
+  top: 50px;
+  left: 5px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-left: 5rem;
+}
+
 .form-input-numer {
   min-width: 60px;
   text-align: center;
@@ -443,20 +458,24 @@ onMounted(async () => {
 }
 
 .btn-guardar {
-  background-color: #3B82F6;
+  background-color: #0054e9;
   border: none;
   color: #FFFFFF;
   font-size: 18px;
   border-radius: 0.375rem;
   padding: 0.5rem;
   cursor: pointer;
-  margin-top: 2rem;
+  margin-top: 2.4rem;
   margin-left: 15px;
   margin-right: 15px;
 }
 
+.btn-guardar:hover {
+  background-color: #2563EB;
+}
+
 .card-cargar-reduccion {
-  min-width: 520px;
+  min-width: 590px;
   min-height: 400px;
   height: auto;
   background-color: var(--form-bg-light);
@@ -494,6 +513,14 @@ table{
   border: none;
 }
 
+.top-section-dos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 2rem;
+}
+
 .dropdown-container {
   display: flex;
   flex-direction: column;
@@ -516,30 +543,12 @@ table{
   margin-bottom: 0.8rem;
 }
 
-.dropdown-group-section {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  width: 100%;
-  max-width: 300px;
-  margin-top: 0.5rem;
-}
-
 .dropdown-select {
   width: 300px;
   padding: 0.5rem;
   border-radius: 5px;
   border: 1px solid currentColor;
 }
-
-.dropdown-select-row {
-  width: 145px;
-  padding: 0.5rem;
-  border-radius: 5px;
-  border: 1px solid currentColor;
-  margin-right: 1rem;
-}
-
 
 @media (prefers-color-scheme: dark) {
   .card-crea-reduccion,
@@ -548,17 +557,23 @@ table{
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
   }
+
   .form-input,
   .form-input-numer {
     border-bottom: 1px solid #D1D5DB
   }
+
   .btn-guardar {
     color: black;
+    background-color: #4782eb;
+  }
+
+  .btn-guardar:hover {
+    background-color: #3476eb;
   }
 }
 
 @media ((min-width: 768px) and (max-width: 1422px)) {
-
   .card-cargar-reduccion {
     min-width: 420px;
   }

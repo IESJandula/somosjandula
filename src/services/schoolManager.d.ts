@@ -1,127 +1,310 @@
-/****************************** Ventana 1 CargarMatriculas ******************************/
+/****************************** Ventana X Common ******************************/
 export declare function cargarCursosEtapas(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
-export declare function subirFicheros(toastMessage: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
+export declare function asignarReducciones(email: Ref<string>,
+                                           reduccion: Ref<string>,
+                                           horas: Ref<number>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
+
+/****************************** Ventana 1 CargarMatriculas ******************************/
+export declare function subirFicheros(file: FormData,
+                                           curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
+export declare function cargarMatriculas(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerCursosCargados(toastMessage: Ref<string>,
+export declare function borrarMatriculas(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function borrarMatriculas(toastMessage: Ref<string>,
+export declare function obtenerDatosMatriculas(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerDatosMatriculas(toastMessage: Ref<string>,
-                                                toastColor: Ref<string>,
-                                                isToastOpen: Ref<boolean>): Promise<void>;
-export declare function matricularAsignaturasCsv(toastMessage: Ref<string>,
-                                                toastColor: Ref<string>,
-                                                isToastOpen: Ref<boolean>): Promise<void>;
-export declare function matricularAlumnoSCsv(toastMessage: Ref<string>,
-                                                toastColor: Ref<string>,
-                                                isToastOpen: Ref<boolean>): Promise<void>;
-export declare function desmatricularAlumnosCsv(toastMessage: Ref<string>,
-                                                toastColor: Ref<string>,
-                                                isToastOpen: Ref<boolean>): Promise<void>;
+export declare function matricularAsignaturas(nombre: Ref<string>,
+                                           apellidos: Ref<string>,
+                                           asignatura: Ref<string>,
+                                           curso: Ref<string>,
+                                           etapa: Ref<string>,
+                                           estado: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
+export declare function matricularAlumnoS(nombre: Ref<string>,
+                                           apellidos: Ref<string>,
+                                           asignatura: Ref<string>,
+                                           curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           estado: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function desmatricularAlumnos(nombre: Ref<string>,
+                                           apellidos: Ref<string>,
+                                           asignatura: Ref<string>,
+                                           curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           estado: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
                                            
 /****************************** Ventana 2 AsignaturasYBloques ******************************/
-export declare function cargarAsignaturas(toastMessage: Ref<string>,
+export declare function cargarAsignaturas(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function crearBloques(toastMessage: Ref<string>,
+export declare function crearBloques(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           asignaturas: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function eliminarBloques(toastMessage: Ref<string>,
+export declare function eliminarBloques(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           nombre: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function mostrarHoras(toastMessage: Ref<string>,
+export declare function asignaturasSinDocencia(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           nombreAsignatura: Ref<string>,
+                                           sinDocencia: boolean,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function asignarHoras(toastMessage: Ref<string>,
+export declare function asignaturasDesdobles(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           nombreAsignatura: Ref<string>,
+                                           desdoble: boolean,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function mostrarHoras(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignarHoras(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           nombre: Ref<string>,
+                                           horas: Ref<number>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Ventana 3 CrearGrupos ******************************/
-export declare function crearNuevosGrupos(toastMessage: Ref<string>,
+export declare function crearNuevosGrupos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerInfoGrupos(toastMessage: Ref<string>,
-                                          toastColor: Ref<string>,
-                                          isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerAlumnosConGrupos(toastMessage: Ref<string>,
+export declare function obtenerGrupos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
+export declare function obtenerAlumnosConGrupos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerAlumnosSinGrupos(toastMessage: Ref<string>,
+export declare function obtenerAlumnosSinGrupos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function asignarAlumnos(toastMessage: Ref<string>,
+export declare function asignarAlumnos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           alumnosSeleccionados: Ref<string>[],
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function borrarAlumnos(toastMessage: Ref<string>,
+export declare function borrarAlumnos(alumno: object,
+                                           toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function actualizarTurnoHorario(curso: Ref<string>,
-                                               etapa: Ref<string>,
-                                               grupo: Ref<string>,
-                                               esHorarioMatutino: Ref<boolean>,
-                                               toastMessage: Ref<string>,
-                                               toastColor: Ref<string>,
-                                               isToastOpen: Ref<boolean>): Promise<void>;
+export declare function actualizarTurnoHorario(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           esHorarioMatutino: Ref<boolean>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Ventana 4 TablaResumen ******************************/
-export declare function cargarAsignaturasUnicas(toastMessage: Ref<string>,
-                                                toastColor: Ref<string>,
-                                                isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerNumAlumnosAsignatura(toastMessage: Ref<string>,
-                                                    toastColor: Ref<string>,
-                                                    isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerTodosGrupos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
+export declare function cargarAsignaturasUnicas(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerCantidadAlumnosEnGrupoPorAsignatura(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           asignatura: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Ventana 5 AsignaturasYDepartamentos  ******************************/
 export declare function obtenerDepartamentos(toastMessage: Ref<string>,
-                                             toastColor: Ref<string>,
-                                             isToastOpen: Ref<boolean>): Promise<void>;
-export declare function asignarProfesoresADepartamentos(toastMessage: Ref<string>,
-                                                        toastColor: Ref<string>,
-                                                        isToastOpen: Ref<boolean>): Promise<void>;
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignarProfesoresADepartamentos(nombre: Ref<string>,
+                                           plantilla: Ref<number>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerDatosDepartamentosConAsignaturas(toastMessage: Ref<string>,
-                                                                toastColor: Ref<string>,
-                                                                isToastOpen: Ref<boolean>): Promise<void>;
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerCursosEtapasGrupos(toastMessage: Ref<string>,
-                                                  toastColor: Ref<string>,
-                                                  isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerAsignaturasPorCursoEtapaGrupo(toastMessage: Ref<string>,
-                                                             toastColor: Ref<string>,
-                                                             isToastOpen: Ref<boolean>): Promise<void>;
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerAsignaturasPorCursoEtapaGrupo(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerTodasLasAsignaturas(toastMessage: Ref<string>,
-                                                   toastColor: Ref<string>,
-                                                   isToastOpen: Ref<boolean>): Promise<void>;
-export declare function quitarAsignaturasDeDepartamentos(toastMessage: Ref<string>,
-                                                         toastColor: Ref<string>,
-                                                         isToastOpen: Ref<boolean>): Promise<void>;
-export declare function asignarAsignaturasADepartamentos(toastMessage: Ref<string>,
-                                                         toastColor: Ref<string>,
-                                                         isToastOpen: Ref<boolean>): Promise<void>;
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function quitarAsignaturasDeDepartamentos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           nombre: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignarAsignaturasADepartamentos(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           nombre: Ref<string>,
+                                           departamentoPropietario: Ref<string>,
+                                           departamentoReceptor: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Ventana 6 Reducciones ******************************/
-export declare function cargarReducciones(toastMessage: Ref<string>,
-                                          toastColor: Ref<string>,
-                                          isToastOpen: Ref<boolean>): Promise<void>;
+export declare function cargarReducciones(nombre: Ref<string>,
+                                           horas: Ref<number>,
+                                           decideDireccion: Ref<boolean>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 export declare function crearReducciones(toastMessage: Ref<string>,
-                                         toastColor: Ref<string>,
-                                         isToastOpen: Ref<boolean>): Promise<void>;
-export declare function borrarReducciones(toastMessage: Ref<string>,
-                                          toastColor: Ref<string>,
-                                          isToastOpen: Ref<boolean>): Promise<void>;
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function borrarReducciones(nombre: Ref<string>,
+                                           horas: Ref<number>,
+                                           decideDireccion: Ref<boolean>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerProfesores(toastMessage: Ref<string>,
-                                          toastColor: Ref<string>,
-                                          isToastOpen: Ref<boolean>): Promise<void>;
-export declare function asignarReducciones(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 export declare function obtenerReduccionesProfesores(toastMessage: Ref<string>,
-                                                     toastColor: Ref<string>,
-                                                     isToastOpen: Ref<boolean>): Promise<void>;
-export declare function borrarReduccionesProfesores(toastMessage: Ref<string>,
-                                                    toastColor: Ref<string>,
-                                                    isToastOpen: Ref<boolean>): Promise<void>;
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function borrarReduccionesProfesores(email: Ref<string>,
+                                           reduccion: Ref<string>,
+                                           horas: Ref<number>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
 
+/****************************** Eleccion de horarios ******************************/
+export declare function obtenerProfesoresHorarios(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerAsignaturas(email: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function asignarAsignatura(nombre: Ref<string>,
+                                           horas: Ref<number>,
+                                           curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           email: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
+export declare function obtenerReducciones(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerDiasTramosTipoHorario(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerDiasTramosTipoHorario(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function actualizarObservaciones(conciliacion: Ref<boolean>,
+                                           trabajarPrimeraHora: Ref<boolean>,
+                                           otrasObservaciones: Ref<string>,
+                                           dia: Ref<string>,
+                                           tramo: Ref<number>,
+                                           tipoHorario: Ref<string>,
+                                           email: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerSolicitudes(email: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function eliminarSolicitudes(email: Ref<string>,
+                                           nombreAsignatura: Ref<string>,
+                                           horasAsignatura: Ref<number>,
+                                           curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           nombreReduccion: Ref<string>,
+                                           horasReduccion: Ref<number>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function guardarSolicitudes(email: Ref<string>,
+                                           nombreAsignatura: Ref<string>,
+                                           horasAsignatura: Ref<number>,
+                                           curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupoAntiguo: Ref<string>,
+                                           grupoNuevo: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function obtenerGruposDeAsignaturas(nombreAsignatura: Ref<string>,
+                                           horasAsignatura: Ref<number>,
+                                           curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
+
+/****************************** Generador de Horarios ******************************/
+export declare function lanzarGeneradorHorarios(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+
+export declare function forzarDetencionGeneradorHorarios(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
