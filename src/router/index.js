@@ -12,6 +12,9 @@ import AbsencesPage from '@/views/documents/AbsencesPage.vue';
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
+import ControlPanel from '@/views/projectors/ControlPanel.vue';
+import RemoteControl from '@/views/projectors/RemoteControl.vue';
+import EventsTable from '@/views/projectors/EventsTable.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
 import A_CargaMatriculas from '@/views/school_manager/A_CargaMatriculas.vue';
@@ -192,7 +195,31 @@ const routes = [
         meta: {
           role: 'DIRECCION'
         },
-      }
+      },
+      {
+        path: 'projectors/ControlPanel',
+        component: ControlPanel,
+        name: 'ControlPanel',
+        meta: { 
+          role: 'ADMINISTRADOR' 
+        },
+      },
+      {
+        path: 'projectors/RemoteControl',
+        component: RemoteControl,
+        name: 'RemoteControl',
+        meta: { 
+          role: 'PROFESOR' 
+        },
+      },
+      {
+        path: 'projectors/EventsTable',
+        component: EventsTable,
+        name: 'EventsTable',
+        meta: { 
+          role: 'PROFESOR' 
+        },
+      },
     ],
   },
 ];

@@ -7,6 +7,9 @@ import { signOut } from "firebase/auth";
 
 /* Importaciones de CSS */
 import '@ionic/vue/css/core.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
 
 /* Tema básico de Ionic */
 import '@ionic/vue/css/normalize.css';
@@ -44,7 +47,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/firebaseService';
 import { firebaseConfig } from '@/environment/firebaseConfig';
-import { APP_VERSION, SESSION_JWT_TOKEN } from '@/utils/constants.js';
+import { APP_VERSION, SESSION_JWT_TOKEN } from '@/utils/constants';
 
 // Inicializar Firebase
 const firebaseApp = initializeApp(firebaseConfig);
