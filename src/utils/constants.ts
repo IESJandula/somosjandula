@@ -27,6 +27,12 @@ export const EVENT_STATUS_SERVED = "ENVIADO";
 export const EVENT_STATUS_ERROR = "ERROR";
 export const EVENT_STATUS_CANCELED = "CANCELADO";
 
+// Status posibles de los proyectores.
+export const PROJECTOR_STATUS_ON = "Encendido";
+export const PROJECTOR_STATUS_TURNING_ON = "Encendiendo";
+export const PROJECTOR_STATUS_OFF = "Apagado";
+export const PROJECTOR_STATUS_TURNING_OFF = "Apagando";
+
 // Constantes para endpoints de proyectores.
 export const FLOORS = projectorsApiUrl + "/projectors/floors";
 export const CLASSROOMS = projectorsApiUrl + "/projectors/classrooms";

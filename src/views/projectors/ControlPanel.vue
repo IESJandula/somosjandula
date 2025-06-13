@@ -35,7 +35,6 @@ const completedEvents = ref(0);
 const deliveredEvents = ref(0);
 const pendingEvents = ref(0);
 
-
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');

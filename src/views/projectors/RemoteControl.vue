@@ -434,6 +434,7 @@ const sendServerEventBatch = async (actionParam) => {
 		disableButtonTemporarily();
 
 		loadEvents(); // Recarga los eventos una vez enviada la orden.
+		loadProjectorList();
 
 		showModal(response.status, response.message);
 	} catch (error) {
@@ -668,7 +669,7 @@ const alertClass = computed(() => {
 						<div class="col-12 col-md-2">
 							<ComboBoxState
 								v-model="filterActionStatus"
-								:labelValue="'Estado:'"
+								:labelValue="'Estado orden:'"
 								:key="filterActionStatus"
 								:optionsList="eventStatesList"
 							></ComboBoxState>
