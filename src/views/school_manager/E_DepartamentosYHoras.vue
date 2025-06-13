@@ -152,7 +152,7 @@
                 'texto-amarillo': departamento.desfase > 0,
                 'texto-rojo': departamento.desfase < 0,
                 'texto-verde': departamento.desfase === 0
-              }">{{ departamento.desfase > 0 ? 'Sobran horas' : departamento.desfase < 0 ? 'Faltan horas' : 'Cerrado' }}</td>
+              }">{{ departamento.resultado }}</td>
             </tr>
           </tbody>
         </table>
@@ -269,31 +269,6 @@ const obtenerDatosDepartamentoConAsignatura = async () => {
     listaDepartamentosIterable.value.forEach(d =>
         d.desfase = Number(d.desfase)
     );
-
-    // Mapa rápido por nombre de departamento
-    const deptMap = new Map(
-        listaDepartamentosIterable.value.map(d => [d.nombre, d])
-    );
-
-    // Para cada asignación
-    listaAsignaturasDepartamentos.value.forEach(asign => {
-      const donor   = deptMap.get(asign.departamentoDonante);
-      const receptor= deptMap.get(asign.departamentoPropietario);
-      if (!donor || !receptor) return;
-
-      // Solo se dona si hay sobrante y déficit, es decir que a uno le sobre y otro este en negativo
-      if (donor.desfase > 0 && receptor.desfase < 0) {
-        // horas que realmente necesita el receptor
-        const receptorDeficit = -receptor.desfase;
-        // la donacion tiene que parar cuando el que dona que se queda sin sobrantes o cuando se queda a 0 el receptor
-        // el mas pequeño de los dos
-        const ajuste = Math.min(donor.desfase, receptorDeficit);
-
-        // aplicamos la donación
-        donor.desfase    -= ajuste;   // el donante pierde esas horas
-        receptor.desfase += ajuste;   // el receptor “cubre” parte de su déficit
-      }
-    });
 
   } catch (error) {
     mensajeColor = "danger";
