@@ -5,6 +5,7 @@ import ComboBoxFloor from '@/components/projectors/ComboBoxFloor.vue';
 import ComboBoxModel from '@/components/projectors/ComboBoxModel.vue';
 import {fetchFloorsList,fetchSelectedFloorClassrooms,fetchProjectorModelsList} from '@/services/projectors';
 import ComboBoxTurnOnStatus from '@/components/projectors/ComboBoxTurnOnStatus.vue';
+import { PROJECTOR_STATUS_ON, PROJECTOR_STATUS_TURNING_ON, PROJECTOR_STATUS_OFF, PROJECTOR_STATUS_TURNING_OFF } from '@/utils/constants.ts';
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -251,8 +252,8 @@ const resetFilters = () => {
 
         <!-- Select Status -->
         <div class="col">
-          <ComboBoxTurnOnStatus v-model="selectedStatus" :labelValue="'Estado:'" :key="selectedStatus"
-          :optionsList="['Encendido', 'Apagado']" />
+          <ComboBoxTurnOnStatus v-model="selectedStatus" :labelValue="'Estado proyector:'" :key="selectedStatus"
+          :optionsList="[PROJECTOR_STATUS_ON, PROJECTOR_STATUS_TURNING_ON, PROJECTOR_STATUS_OFF, PROJECTOR_STATUS_TURNING_OFF]" />
         </div>
 
         <!-- Reset Filters Button -->
@@ -357,10 +358,10 @@ const resetFilters = () => {
       <table class="table table-sm border border-1 border-dark text-center align-middle">
         <thead>
           <tr>
+            <th :class="tableHeaderClass" class="col-1">Select.</th>
             <th :class="tableHeaderClass" class="col-3">Floor</th>
             <th :class="tableHeaderClass" class="col-3">Classroom</th>
-            <th :class="tableHeaderClass" class="col-3">Model</th>
-            <th :class="tableHeaderClass" class="col-1">Select.</th>
+            <th :class="tableHeaderClass" class="col-2">Model</th>
             <th :class="tableHeaderClass" class="col-auto">Estado</th>
           </tr>
         </thead>
@@ -368,23 +369,32 @@ const resetFilters = () => {
           <tr v-for="(projector, index) in projectorsList" :key="index"
             :class="{ 'table-info': isProjectorSelected(projector) }" class="clickable-row"
             @click="toggleProjectorSelection(projector)">
-            <td>{{ projector.floorname }}</td>
-            <td>{{ projector.classroom }}</td>
-            <td>{{ projector.model }}</td>
             <td>
               <div class="form-check form-switch ms-4">
                 <input class="form-check-input" type="checkbox" role="switch" :checked="isProjectorSelected(projector)"/>
               </div>
             </td>
-            <td v-if="projector.status==='Apagado'">
+            <td>{{ projector.floorname }}</td>
+            <td>{{ projector.classroom }}</td>
+            <td>{{ projector.model }}</td>
+            <td v-if="projector.status===PROJECTOR_STATUS_OFF">
               <div class="proj-off rounded rounded- p-0 m-0" data-bs-toggle="tooltip" title="El proyector está apagado.">
-                <i class="bi bi-projector"></i> <span style="font-size:15px;">Apagado  </span>
+                <i class="bi bi-projector"></i> <span style="font-size:15px;">{{PROJECTOR_STATUS_OFF}}</span>
               </div>
-
             </td>
-            <td v-if="projector.status==='Encendido'"  data-bs-toggle="tooltip" title="El proyector está encendido.">
+            <td v-if="projector.status===PROJECTOR_STATUS_TURNING_OFF">
+              <div class="proj-turning-off rounded rounded- p-0 m-0" data-bs-toggle="tooltip" title="El proyector está en proceso de apagado.">
+                <i class="bi bi-projector"></i> <span style="font-size:15px;">{{PROJECTOR_STATUS_TURNING_OFF}}..</span>
+              </div>
+            </td>
+            <td v-if="projector.status===PROJECTOR_STATUS_ON" data-bs-toggle="tooltip" title="El proyector está encendido.">
               <div class="proj-on rounded rounded-2 p-0 m-0">
-                <i class="bi bi-projector-fill"></i> <span style="font-size:15px;">Encendido</span>
+                <i class="bi bi-projector-fill"></i> <span style="font-size:15px;">{{PROJECTOR_STATUS_ON}}</span>
+              </div>
+            </td>
+            <td v-if="projector.status===PROJECTOR_STATUS_TURNING_ON" data-bs-toggle="tooltip" title="El proyector está en proceso de encendido.">
+              <div class="proj-turning-on rounded rounded-2 p-0 m-0">
+                <i class="bi bi-projector-fill"></i> <span style="font-size:15px;">{{PROJECTOR_STATUS_TURNING_ON}}..</span>
               </div>
             </td>
           </tr>
@@ -422,7 +432,6 @@ const resetFilters = () => {
 
     </div>
 
-
   </div>
 </template>
 
@@ -452,6 +461,20 @@ const resetFilters = () => {
 .proj-off{
   background-color: rgb(255, 194, 194);
   color: rgb(114, 12, 12);
+  border: rgb(115, 12, 12) 1px solid;
+  font-size: 18px;
+}
+
+.proj-turning-on{
+  background-color: rgb(0, 248, 215);
+  color: rgb(15, 82, 87);
+  border: rgb(16, 102, 23) 1px solid;
+  font-size: 18px;
+}
+
+.proj-turning-off{
+  background-color: rgb(248, 176, 94);
+  color: rgb(131, 56, 13);
   border: rgb(115, 12, 12) 1px solid;
   font-size: 18px;
 }
