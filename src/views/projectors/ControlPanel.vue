@@ -1066,7 +1066,7 @@ const deleteSelectedCommandsRequest = async () => {
     </div>
 </template>
 
-<style>
+<style scoped>
 .modal {
     z-index: 1050 !important;
     /* Default value for Bootstrap modal */
