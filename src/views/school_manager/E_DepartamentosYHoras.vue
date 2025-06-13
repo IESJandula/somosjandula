@@ -48,7 +48,7 @@
               </select>
             </div>
             <div class="dropdown-departamentos">
-              <label class="form-label" for="depReceptor-select">Departamento donante:</label>
+              <label class="form-label" for="depReceptor-select">Departamento receptor:</label>
               <select 
                 id="depReceptor-select"
                 v-model="depReceptorSeleccionado"
@@ -79,7 +79,7 @@
               <th class="columna">Asignaturas</th>
               <th class="columna">Horas</th>
               <th class="columna">Departamento propietario</th>
-              <th class="columna">Departamento donante</th>
+              <th class="columna">Departamento receptor</th>
               <th class="columna">Acción</th>
             </tr>
           </thead>
