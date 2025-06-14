@@ -1,23 +1,23 @@
 <template>
-  <div class="pdf-viewer-container">
-    <div class="pdf-controls">
-      <ion-button @click="previousPage" :disabled="currentPage <= 1">
-        <ion-icon :icon="chevronBackOutline"></ion-icon>
-      </ion-button>
-      <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-      <ion-button @click="nextPage" :disabled="currentPage >= totalPages">
-        <ion-icon :icon="chevronForwardOutline"></ion-icon>
-      </ion-button>
-      <ion-button @click="zoomIn">
-        <ion-icon :icon="addOutline"></ion-icon>
-      </ion-button>
-      <ion-button @click="zoomOut">
-        <ion-icon :icon="removeOutline"></ion-icon>
-      </ion-button>
+  <div class="viewer__container">
+    <div class="viewer__controls">
+      <button class="viewer__button" @click="previousPage" :disabled="currentPage <= 1">
+        ◀
+      </button>
+      <span class="viewer__page-info">{{ currentPage }} / {{ totalPages }}</span>
+      <button class="viewer__button" @click="nextPage" :disabled="currentPage >= totalPages">
+        ▶
+      </button>
+      <button class="viewer__button" @click="zoomIn">
+        ＋
+      </button>
+      <button class="viewer__button" @click="zoomOut">
+        －
+      </button>
     </div>
-    
-    <div class="pdf-container">
-      <div ref="pdfContainer" class="canvas-container">
+
+    <div class="viewer__pdf">
+      <div ref="pdfContainer" class="viewer__canvas-container">
         <canvas ref="pdfCanvas"></canvas>
       </div>
     </div>
@@ -26,14 +26,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { IonButton, IonIcon } from '@ionic/vue';
-import { chevronBackOutline, chevronForwardOutline, addOutline, 
-         removeOutline } from 'ionicons/icons';
 import * as pdfjsLib from 'pdfjs-dist';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
-// Props
 const props = defineProps({
   pdfUrl: {
     type: String,
@@ -41,20 +37,16 @@ const props = defineProps({
   }
 });
 
-// Emits
 const emit = defineEmits(['pages-counted', 'selection-changed']);
 
-// Refs
 const pdfContainer = ref(null);
 const pdfCanvas = ref<HTMLCanvasElement | null>(null);
 const currentPage = ref(1);
 const totalPages = ref(0);
 const scale = ref(1.2);
 
-// ref pdf
 let pdfDoc: pdfjsLib.PDFDocumentProxy | null = null;
 
-// Carga del PDF
 onMounted(async () => {
   try {
     await loadPDF(props.pdfUrl);
@@ -63,10 +55,8 @@ onMounted(async () => {
   }
 });
 
-// Watcher for changes in pdfUrl
 watch(() => props.pdfUrl, async (newUrl) => {
   try {
-    // Reset current page to 1 when loading a new PDF
     currentPage.value = 1;
     await loadPDF(newUrl);
   } catch (error) {
@@ -76,29 +66,24 @@ watch(() => props.pdfUrl, async (newUrl) => {
 
 async function loadPDF(url: string) {
   try {
-    // Cleanup previous PDF document if exists
     if (pdfDoc) {
       await pdfDoc.destroy();
       pdfDoc = null;
     }
-    
+
     const loadingTask = pdfjsLib.getDocument(url);
     pdfDoc = await loadingTask.promise;
     totalPages.value = pdfDoc.numPages;
-    
-    // Emit the page count to the parent component
+
     emit('pages-counted', totalPages.value);
-    
-    // Reset selection when a new PDF is loaded
     emit('selection-changed', Array.from({ length: totalPages.value }, (_, i) => i + 1));
-    
+
     renderPage(currentPage.value);
   } catch (error) {
     console.error('Error loading PDF:', error);
   }
 }
 
-// Mostrar página actual
 async function renderPage(pageNum: number) {
   if (!pdfDoc) {
     console.error("Documento PDF no cargado aún.");
@@ -123,7 +108,6 @@ async function renderPage(pageNum: number) {
   canvas.height = viewport.height;
   canvas.width = viewport.width;
 
-  // Aquí context ya está validado como no nulo
   const renderContext = {
     canvasContext: context,
     viewport: viewport
@@ -132,7 +116,6 @@ async function renderPage(pageNum: number) {
   await page.render(renderContext).promise;
 }
 
-// Navegación
 function previousPage() {
   if (currentPage.value > 1) {
     currentPage.value--;
@@ -147,7 +130,6 @@ function nextPage() {
   }
 }
 
-// Zoom
 function zoomIn() {
   scale.value *= 1.2;
   renderPage(currentPage.value);
@@ -160,7 +142,7 @@ function zoomOut() {
 </script>
 
 <style scoped>
-.pdf-viewer-container {
+.viewer__container {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -168,30 +150,48 @@ function zoomOut() {
   overflow: hidden;
 }
 
-.pdf-controls {
+.viewer__controls {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 10px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--button-border-light);
 }
 
-.page-info {
+.viewer__button {
+  margin: 0 5px;
+  padding: 6px 12px;
+  font-size: 16px;
+  background-color: var(--button-bg-light);
+  color: var(--background-light);
+  border: 1px solid var(--button-border-light);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.viewer__button:disabled {
+  background-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.viewer__page-info {
   margin: 0 15px;
   font-size: 14px;
+  color: var(--text-color-light);
 }
 
-.pdf-container {
+.viewer__pdf {
   flex: 1;
   overflow: auto;
   position: relative;
   display: flex;
   justify-content: center;
   padding: 20px;
-  background-color: #f5f5f5;
+  background-color: var(--form-bg-light);
 }
 
-.canvas-container {
+.viewer__canvas-container {
   position: relative;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
@@ -200,14 +200,23 @@ canvas {
   display: block;
 }
 
-/* Dark mode support */
 @media (prefers-color-scheme: dark) {
-  .pdf-container {
-    background-color: #2d2d2d;
+  .viewer__pdf {
+    background-color: var(--form-bg-dark);
   }
-  
-  .pdf-controls {
-    border-bottom: 1px solid #555;
+
+  .viewer__controls {
+    border-bottom: 1px solid var(--button-border-dark);
+  }
+
+  .viewer__button {
+    background-color: var(--button-bg-dark);
+    color: var(--background-dark);
+    border: 1px solid var(--button-border-dark);
+  }
+
+  .viewer__page-info {
+    color: var(--text-color-dark);
   }
 }
 </style>

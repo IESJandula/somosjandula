@@ -1,16 +1,22 @@
 <template>
-  <div class="file-drop-area" @dragover.prevent="handleDragOver" @dragleave.prevent="handleDragLeave"
-    @drop.prevent="handleDrop" @click="triggerFileInput" :class="{ 'dragging': isDragging }">
-    <p v-if="!file">Arrastra un archivo aquí o haz clic para seleccionar</p>
-    <p v-else>Archivo seleccionado: {{ file.name }}</p>
-    <input ref="fileInput" type="file" class="hidden" @change="handleFileChange" />
+  <div
+      class="drop__area"
+      @dragover.prevent="handleDragOver"
+      @dragleave.prevent="handleDragLeave"
+      @drop.prevent="handleDrop"
+      @click="triggerFileInput"
+      :class="{ 'drop__area--dragging': isDragging }"
+  >
+    <p v-if="!file" class="drop__message">Arrastra un archivo aquí o haz clic para seleccionar</p>
+    <p v-else class="drop__message">Archivo seleccionado: {{ file.name }}</p>
+    <input ref="fileInput" type="file" class="drop__input" @change="handleFileChange" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 
-const emits = defineEmits(['file-selected']); // Define el evento emitido
+const emits = defineEmits(['file-selected']);
 
 const isDragging = ref(false);
 const file = ref(null);
@@ -29,7 +35,7 @@ const handleDrop = (event) => {
   const files = event.dataTransfer.files;
   if (files.length) {
     file.value = files[0];
-    emits('file-selected', file.value); // Emite el archivo seleccionado
+    emits('file-selected', file.value);
   }
 };
 
@@ -41,23 +47,24 @@ const handleFileChange = (event) => {
   const files = event.target.files;
   if (files.length) {
     file.value = files[0];
-    emits('file-selected', file.value); // Emite el archivo seleccionado
+    emits('file-selected', file.value);
   }
 };
 
 const fileClear = () => {
-  file.value = null; // Limpia el archivo seleccionado
+  file.value = null;
   if (fileInput.value) {
-    fileInput.value.value = ""; // Resetea el input de archivo
+    fileInput.value.value = "";
   }
 };
 
 defineExpose({
-  fileClear // Expone el método para poder llamarlo desde el componente padre
+  fileClear
 });
 </script>
+
 <style scoped>
-.file-drop-area {
+.drop__area {
   position: relative;
   text-align: center;
   border: 2px dashed var(--button-border-light);
@@ -65,35 +72,44 @@ defineExpose({
   padding: 20px;
   cursor: pointer;
   background-color: var(--form-bg-light);
+  transition: background-color 0.3s, border-color 0.3s;
 }
 
-.file-drop-area:hover {
+.drop__area:hover {
   border-color: var(--text-color-light);
 }
 
-.file-drop-area.dragging {
+.drop__area--dragging {
   border-color: var(--text-color-light);
   background-color: #f9f9f9;
 }
 
-.hidden {
+.drop__message {
+  font-size: 14px;
+  color: var(--text-color-light);
+}
+
+.drop__input {
   display: none;
 }
 
-/* Modo oscuro */
 @media (prefers-color-scheme: dark) {
-  .file-drop-area {
+  .drop__area {
     border-color: var(--button-border-dark);
     background-color: var(--form-bg-dark);
   }
 
-  .file-drop-area:hover {
+  .drop__area:hover {
     border-color: var(--text-color-dark);
   }
 
-  .file-drop-area.dragging {
+  .drop__area--dragging {
     border-color: var(--text-color-dark);
     background-color: #2c2c2c;
+  }
+
+  .drop__message {
+    color: var(--text-color-dark);
   }
 }
 </style>

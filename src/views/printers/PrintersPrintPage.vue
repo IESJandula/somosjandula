@@ -1,220 +1,172 @@
 <template>
-  <div class="container">
+  <div class="print__container">
     <!-- Fila superior: Formulario de Envío de PDF y Tabla de Resultados -->
-    <div class="top-section">
+    <div class="print__top-section">
       <!-- Columna derecha: Formulario de Envío de PDF -->
-      <div class="form-container">
-        <h1 class="title">Enviar PDF a Imprimir</h1>
+      <div class="print__form-container">
+        <h1 class="print__title">Enviar PDF a Imprimir</h1>
         <form @submit.prevent="submitForm" enctype="multipart/form-data">
-          <div class="form-section">
-            <!-- Usa el componente de carga de archivos -->
+          <div class="print__form-section">
             <FileUpload @file-selected="handleFileSelected" />
-            
+
             <!-- Configuración de impresión -->
-            <ion-card class="printer-settings-card">
-              <ion-grid>
+            <div class="print__settings-card">
+              <div class="print__settings-grid">
+
                 <!-- Primera Fila: Selector de impresora -->
-                <ion-row>
-                  <ion-col size="12">
-                    <ion-item>
-                      <ion-label position="stacked">Destino:</ion-label>
-                      <ion-select v-model="formData.printerSelected">
-                        <ion-select-option v-for="printer in printers" :key="printer.name" :value="printer.name">
-                          {{ printer.name }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
+                <div class="print__row">
+                  <div class="print__col">
+                    <label class="print__label">Destino:</label>
+                    <select v-model="formData.printerSelected" class="print__select">
+                      <option v-for="printer in printers" :key="printer.name" :value="printer.name">
+                        {{ printer.name }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
                 <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
-                <ion-row>
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Copias:</ion-label>
-                      <ion-input type="number"
-                                  v-model="formData.copiesSelected"
-                                  min="1"
-                                  max="50"
-                                  step="1"
-                                  @input="validateCopiesInput"></ion-input>
-                    </ion-item>
-                  </ion-col>
+                <div class="print__row">
+                  <div class="print__col">
+                    <label class="print__label">Copias:</label>
+                    <input type="number"
+                           v-model="formData.copiesSelected"
+                           min="1"
+                           max="50"
+                           step="1"
+                           @input="validateCopiesInput"
+                           class="print__input" />
+                  </div>
 
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Color:</ion-label>
-                      <ion-select v-model="formData.colorSelected">
-                        <ion-select-option v-for="color in colors" :key="color" :value="color">
-                          {{ color }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
+                  <div class="print__col">
+                    <label class="print__label">Color:</label>
+                    <select v-model="formData.colorSelected" class="print__select">
+                      <option v-for="color in colors" :key="color" :value="color">
+                        {{ color }}
+                      </option>
+                    </select>
+                  </div>
 
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Orientación:</ion-label>
-                      <ion-select v-model="formData.orientationSelected">
-                        <ion-select-option v-for="orientation in orientations" :key="orientation" :value="orientation">
-                          {{ orientation }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
+                  <div class="print__col">
+                    <label class="print__label">Orientación:</label>
+                    <select v-model="formData.orientationSelected" class="print__select">
+                      <option v-for="orientation in orientations" :key="orientation" :value="orientation">
+                        {{ orientation }}
+                      </option>
+                    </select>
+                  </div>
 
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Caras:</ion-label>
-                      <ion-select v-model="formData.sidesSelected">
-                        <ion-select-option v-for="side in sides" :key="side" :value="side">
-                          {{ side }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
+                  <div class="print__col">
+                    <label class="print__label">Caras:</label>
+                    <select v-model="formData.sidesSelected" class="print__select">
+                      <option v-for="side in sides" :key="side" :value="side">
+                        {{ side }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
                 <!-- Nueva fila: Selección de páginas -->
-                <ion-row v-if="pdfPreviewUrl && pagesToPrint > 0">
-                  <ion-col size="12">
-                    <div class="page-selection-controls">
+                <div v-if="pdfPreviewUrl && pagesToPrint > 0" class="print__row">
+                  <div class="print__col">
+                    <div class="print__page-selection">
                       <h4>Selección de páginas</h4>
-                      <div class="selection-mode">
-                        <ion-segment v-model="selectionMode" @ionChange="updateSelectedPages">
-                          <ion-segment-button value="all">
-                            <ion-label>Todas págs.</ion-label>
-                          </ion-segment-button>
-                          <ion-segment-button value="range">
-                            <ion-label>Rango</ion-label>
-                          </ion-segment-button>
-                          <ion-segment-button value="custom">
-                            <ion-label>Personalizado</ion-label>
-                          </ion-segment-button>
-                        </ion-segment>
+                      <div class="print__selection-mode">
+                        <div class="print__segment">
+                          <button type="button" :class="{'print__segment-button--active': selectionMode === 'all'}"
+                                  @click="selectionMode = 'all'; updateSelectedPages()">Todas págs.</button>
+                          <button type="button" :class="{'print__segment-button--active': selectionMode === 'range'}"
+                                  @click="selectionMode = 'range'; updateSelectedPages()">Rango</button>
+                          <button type="button" :class="{'print__segment-button--active': selectionMode === 'custom'}"
+                                  @click="selectionMode = 'custom'; updateSelectedPages()">Personalizado</button>
+                        </div>
                       </div>
 
-                      <div v-if="selectionMode === 'range'" class="range-selector">
-                        <ion-item>
-                          <ion-label position="stacked">Desde página:</ion-label>
-                          <ion-input 
-                            v-model="pageRangeStart" 
-                            type="number" 
-                            min="1" 
-                            :max="pagesToPrint" 
-                            @ionChange="validateRangeInputs"
-                          ></ion-input>
-                        </ion-item>
-                        <ion-item>
-                          <ion-label position="stacked">Hasta página:</ion-label>
-                          <ion-input 
-                            v-model="pageRangeEnd" 
-                            type="number" 
-                            min="1" 
-                            :max="pagesToPrint" 
-                            @ionChange="validateRangeInputs"
-                          ></ion-input>
-                        </ion-item>
+                      <div v-if="selectionMode === 'range'" class="print__range-selector">
+                        <label class="print__label">Desde página:</label>
+                        <input v-model="pageRangeStart" type="number" min="1" :max="pagesToPrint"
+                               @input="validateRangeInputs" class="print__input" />
+                        <label class="print__label">Hasta página:</label>
+                        <input v-model="pageRangeEnd" type="number" min="1" :max="pagesToPrint"
+                               @input="validateRangeInputs" class="print__input" />
                       </div>
 
-                      <div v-if="selectionMode === 'custom'" class="custom-selector">
-                        <ion-item>
-                          <ion-label position="stacked">Páginas específicas:</ion-label>
-                          <ion-input 
-                            v-model="customPages"
-                            placeholder="Ej: 1,3,5-7,10" 
-                            @ionChange="validateCustomPages"
-                          ></ion-input>
-                          <ion-note>Usa comas para separar páginas y guiones para rangos (ej: 1,3,5-7,10)</ion-note>
-                        </ion-item>
+                      <div v-if="selectionMode === 'custom'" class="print__custom-selector">
+                        <label class="print__label">Páginas específicas:</label>
+                        <input v-model="customPages" placeholder="Ej: 1,3,5-7,10"
+                               @input="validateCustomPages" class="print__input" />
+                        <small class="print__note">Usa comas para separar páginas y guiones para rangos (ej: 1,3,5-7,10)</small>
                       </div>
 
-                      <div class="page-summary">
+                      <div class="print__page-summary">
                         <p>Se imprimirán {{ selectedPageCount }} páginas de {{ pagesToPrint }}.</p>
                       </div>
                     </div>
-                  </ion-col>
-                </ion-row>
+                  </div>
+                </div>
 
                 <!-- Tercera Fila: Mensaje de error -->
-                <ion-row v-if="mensajeError">
-                  <ion-col size="12">
-                    <ion-text color="warning" class="status-text">
-                      {{ mensajeError }}
-                    </ion-text>
-                  </ion-col>
-                </ion-row>
+                <div v-if="mensajeError" class="print__row">
+                  <div class="print__col">
+                    <p class="print__status-text">{{ mensajeError }}</p>
+                  </div>
+                </div>
 
                 <!-- Cuarta Fila: Información de la impresión -->
-                <ion-row v-if="formData.file">
-                  <ion-col size="12">
-                    <ion-text color="primary" class="folio-text">
-                      {{ mensajeImpresion }}
-                    </ion-text>
-                  </ion-col>
-                </ion-row>
-
-                <!-- Quinta Fila: Información de páginas seleccionadas (si no son todas) 
-                <ion-row v-if="selectedPages.length > 0 && selectedPages.length !== pagesToPrint">
-                  <ion-col size="12">
-                    <ion-text color="secondary" class="pages-text">
-                      Se imprimirán únicamente {{ selectedPages.length }} de {{ pagesToPrint }} páginas.
-                    </ion-text>
-                  </ion-col>
-                </ion-row>-->
+                <div v-if="formData.file" class="print__row">
+                  <div class="print__col">
+                    <p class="print__folio-text">{{ mensajeImpresion }}</p>
+                  </div>
+                </div>
 
                 <!-- Botón de Imprimir -->
-                <ion-row class="ion-justify-content-center ion-padding-top">
-                  <ion-col size="auto">
-                    <ion-button type="submit" color="primary" expand="block" :disabled="isButtonDisabled">
+                <div class="print__row print__row--center print__row--padding-top">
+                  <div class="print__col--auto">
+                    <button type="submit" class="print__submit-button" :disabled="isButtonDisabled">
                       {{ buttonText }}
-                    </ion-button>
-                    <!-- Mensaje de incidencias -->
-                    <div class="incidence-message">
+                    </button>
+                    <div class="print__incidence-message">
                       ¿Crees que sucede algún problema? Crea una incidencia <a @click.prevent="navigateToIssues">aquí</a>
                     </div>
-                  </ion-col>
-                </ion-row>
+                  </div>
+                </div>
 
-              </ion-grid>
-            </ion-card>
+              </div>
+            </div>
           </div>
         </form>
       </div>
+
       <!-- Visor PDF cuando haya selección -->
-      <div v-if="pdfPreviewUrl" class="pdf-preview-container">
-        <ion-button fill="clear" class="close-preview-btn" @click="closePdfPreview">
-          <ion-icon :icon="closeOutline" size="small"></ion-icon>
-        </ion-button>
-        <PdfViewer 
-          :pdf-url="pdfPreviewUrl" 
-          @pages-counted="handlePagesCount" 
-          @selection-changed="handlePageSelectionChanged"
+      <div v-if="pdfPreviewUrl" class="print__pdf-preview">
+        <button class="print__close-btn" @click="closePdfPreview">✕</button>
+        <PdfViewer
+            :pdf-url="pdfPreviewUrl"
+            @pages-counted="handlePagesCount"
+            @selection-changed="handlePageSelectionChanged"
         />
       </div>
 
       <!-- Tabla de resultados -->
-      <div class="table-container">
-        <h2 class="title">Mis impresiones</h2>
-        <div class="table-content">
+      <div class="print__table-container">
+        <h2 class="print__title">Mis impresiones</h2>
+        <div class="print__table-content">
           <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="actualizarTabla" />
         </div>
-        <!-- Botón de Actualizar centrado -->
-        <ion-row class="ion-justify-content-center">
-          <ion-col size="auto">
-            <ion-button color="primary" expand="block" @click="actualizarTabla">Actualizar</ion-button>
-          </ion-col>
-        </ion-row>
+        <div class="print__row print__row--center">
+          <div class="print__col--auto">
+            <button class="print__update-button" @click="actualizarTabla">Actualizar</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
-import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
-import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon, IonSegment, IonSegmentButton, IonNote } from '@ionic/vue';
 import { obtenerConstantes } from '@/services/constantes';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
@@ -222,7 +174,6 @@ import FileUpload from '@/components/printers/FileUpload.vue';
 import PdfViewer from '@/components/printers/PdfViewer.vue';
 import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { printersApiUrl } from "@/environment/apiUrls.ts";
-import { closeOutline } from 'ionicons/icons';
 
 // Configuramos la URL del Worker
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
@@ -702,21 +653,22 @@ watch(
   }
 );
 </script>
+
 <style scoped>
-.container {
+.print__container {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.top-section {
+.print__top-section {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 20px;
 }
 
-.form-container {
+.print__form-container {
   flex: 1 1 45%;
   min-width: 300px;
   max-width: 600px;
@@ -728,27 +680,68 @@ watch(
   position: relative;
 }
 
-ion-item {
+.print__settings-card {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: var(--form-bg-light);
+  border-radius: 12px;
+}
+
+.print__settings-grid {
   display: flex;
-  align-items: center;
-  --inner-padding-end: 0;
-  padding-left: 0;
+  flex-direction: column;
+  gap: 20px;
 }
 
-ion-label {
-  flex: 1;
-  white-space: nowrap;
-  overflow: visible;
-  text-align: left;
+.print__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-ion-select,
-ion-input {
-  font-size: 12px;
-  flex: 1;
+.print__row--center {
+  justify-content: center;
 }
 
-.table-container {
+.print__row--padding-top {
+  padding-top: 20px;
+}
+
+.print__col {
+  flex: 1 1 22%;
+  display: flex;
+  flex-direction: column;
+}
+
+.print__col--auto {
+  flex: 0 0 auto;
+}
+
+.print__label {
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: var(--text-color-light);
+}
+
+.print__select,
+.print__input {
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--button-border-light);
+  background-color: var(--form-bg-light);
+  color: var(--text-color-light);
+}
+
+.print__title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-color-light);
+}
+
+.print__table-container {
   flex: 1 1 55%;
   min-width: 300px;
   max-width: 90%;
@@ -761,56 +754,49 @@ ion-input {
   justify-content: space-between;
 }
 
-.table-content {
+.print__table-content {
   flex-grow: 1;
   max-height: 400px;
   overflow-y: auto;
   overflow-x: auto;
 }
 
-.title {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 24px;
+.print__submit-button,
+.print__update-button {
+  padding: 10px 20px;
+  background-color: var(--button-bg-light);
+  color: #fff;
   font-weight: bold;
-  color: var(--text-color-light);
-}
-
-.pdf-selector-container {
-  position: relative;
-  text-align: center;
-  border: 2px dashed var(--button-border-light);
-  border-radius: 10px;
-  padding: 20px;
+  border: 2px solid var(--button-border-light);
+  border-radius: 8px;
   cursor: pointer;
-  background-color: var(--form-bg-light);
+  font-size: 16px;
 }
 
-.pdf-selector-container:hover {
-  border-color: var(--text-color-light);
+.print__submit-button:disabled {
+  background-color: #ccc;
+  border-color: #aaa;
+  cursor: not-allowed;
 }
 
-.pdf-button {
-  width: 100%;
-  height: 100%;
-  display: block;
-  line-height: 40px;
-  font-weight: bold;
+.print__incidence-message {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 16px;
   color: var(--text-color-light);
 }
 
-.file-input-hidden {
-  display: none;
+.print__incidence-message a {
+  color: var(--button-border-light);
+  text-decoration: underline;
 }
 
-.printer-settings-card {
-  margin-top: 20px;
-  padding: 16px;
-  background-color: var(--form-bg-light);
-  border-radius: 12px;
+.print__incidence-message a:hover {
+  color: var(--button-bg-light);
+  cursor: pointer;
 }
 
-.status-text {
+.print__status-text {
   display: block;
   margin-top: 8px;
   padding: 8px;
@@ -821,7 +807,7 @@ ion-input {
   text-align: center;
 }
 
-.folio-text {
+.print__folio-text {
   display: block;
   margin-top: 8px;
   padding: 8px;
@@ -832,18 +818,7 @@ ion-input {
   text-align: center;
 }
 
-.pages-text {
-  display: block;
-  margin-top: 8px;
-  padding: 8px;
-  border-radius: 4px;
-  background-color: #d4edda;
-  color: #155724;
-  font-size: 1rem;
-  text-align: center;
-}
-
-.pdf-preview-container {
+.print__pdf-preview {
   flex: 1 1 55%;
   min-width: 300px;
   max-width: 90%;
@@ -854,104 +829,115 @@ ion-input {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
 }
 
-.close-preview-btn {
+.print__close-btn {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  z-index: 5;
-  --padding-start: 5px;
-  --padding-end: 5px;
-}
-
-/* Modo oscuro */
-@media (prefers-color-scheme: dark) {
-  .form-container,
-  .table-container,
-  .printer-settings-card {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-  }
-
-  .title {
-    color: var(--text-color-dark);
-  }
-
-  .pdf-selector-container {
-    border-color: var(--button-border-dark);
-    background-color: var(--form-bg-dark);
-  }
-
-  .pdf-selector-container:hover {
-    border-color: var(--text-color-dark);
-  }
-
-  .pdf-button {
-    color: var(--text-color-dark);
-  }
-
-  .status-text {
-    background-color: #2c2c2c;
-    color: #e57373;
-  }
-
-  .folio-text {
-    background-color: #3e3e3e;
-    color: #a2cffe;
-  }
-
-  .pages-text {
-    background-color: #3e4a3e;
-    color: #8fd19e;
-  }
-}
-
-.incidence-message {
-  margin-top: 20px;
-  text-align: center;
-  font-size: 16px;
+  top: 10px;
+  right: 10px;
+  font-size: 18px;
+  background: transparent;
+  border: none;
   color: var(--text-color-light);
+  cursor: pointer;
 }
 
-.incidence-message a {
-  color: var(--primary-color);
-  text-decoration: underline;
-}
-
-.incidence-message a:hover {
-  color: var(--primary-color-hover);
-  cursor: pointer ;
-}
-
-.page-selection-controls {
+/* Páginas */
+.print__page-selection {
   margin-top: 20px;
 }
 
-.selection-mode {
+.print__selection-mode {
   margin-bottom: 10px;
 }
 
-.range-selector,
-.custom-selector {
+.print__segment {
+  display: flex;
+  gap: 10px;
+}
+
+.print__segment-button--active {
+  background-color: var(--button-bg-light);
+  color: white;
+  font-weight: bold;
+}
+
+.print__range-selector,
+.print__custom-selector {
   margin-top: 10px;
 }
 
-.page-summary {
+.print__note {
+  font-size: 12px;
+  color: var(--text-color-light);
+}
+
+.print__page-summary {
   margin-top: 10px;
   font-size: 14px;
   color: var(--text-color-light);
 }
 
-/* Media query para dispositivos móviles */
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .print__form-container,
+  .print__table-container,
+  .print__settings-card {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+  }
+
+  .print__title {
+    color: var(--text-color-dark);
+  }
+
+  .print__label,
+  .print__select,
+  .print__input,
+  .print__note,
+  .print__page-summary,
+  .print__incidence-message {
+    color: var(--text-color-dark);
+  }
+
+  .print__select,
+  .print__input {
+    background-color: var(--form-bg-dark);
+    border-color: var(--button-border-dark);
+  }
+
+  .print__submit-button,
+  .print__update-button {
+    background-color: var(--button-bg-dark);
+    border-color: var(--button-border-dark);
+  }
+
+  .print__segment-button--active {
+    background-color: var(--button-bg-dark);
+    color: white;
+  }
+
+  .print__status-text {
+    background-color: #2c2c2c;
+    color: #e57373;
+  }
+
+  .print__folio-text {
+    background-color: #3e3e3e;
+    color: #a2cffe;
+  }
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .top-section {
+  .print__top-section {
     flex-direction: column;
     align-items: center;
   }
 
-  .form-container,
-  .table-container {
+  .print__form-container,
+  .print__table-container {
     flex: 1 1 100%;
     max-width: 100%;
     min-width: unset;

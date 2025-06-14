@@ -94,28 +94,6 @@ const verCocheLince = () => {
 </script>
 
 <style scoped>
-body * {
-  box-sizing: border-box;
-}
-
-body {
-  height: 100dvh;
-  margin: 0;
-  padding: 0;
-  font-family: "Roboto", sans-serif;
-  overflow: hidden;
-}
-
-ul, ol {
-  list-style: none;
-  padding: 0;
-}
-
-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 .cnt__login {
   display: flex;
@@ -282,6 +260,10 @@ h1 {
 
   .login__button {
     font-size: 12px;
+  }
+
+  .login__photo {
+    display: none;
   }
 }
 

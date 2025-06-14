@@ -1,44 +1,50 @@
 <template>
-  <div class="p-10 bg-gray-200 rounded-2xl shadow-md shadow-gray-500 h-[38rem] overflow-auto overflow-x-auto">
-    <table class="table-fixed w-full">
+  <div class="print-table">
+    <table class="print-table__table">
       <thead>
-        <tr class="py-5">
-          <th class="w-1/12 text-left pb-3 text-lg">Fecha</th>
-          <th v-if="adminRole" class="w-1/12 text-left pb-3 text-lg">Usuario</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Fichero</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Estado</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Impresora</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Copias</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Color</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Orientación</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Caras</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Tamaño (KB)</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Páginas PDF</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Hojas totales</th>
-        </tr>
+      <tr class="print-table__row">
+        <th class="print-table__header">Fecha</th>
+        <th v-if="adminRole" class="print-table__header">Usuario</th>
+        <th class="print-table__header">Fichero</th>
+        <th class="print-table__header">Estado</th>
+        <th class="print-table__header">Impresora</th>
+        <th class="print-table__header">Copias</th>
+        <th class="print-table__header">Color</th>
+        <th class="print-table__header">Orientación</th>
+        <th class="print-table__header">Caras</th>
+        <th class="print-table__header">Tamaño (KB)</th>
+        <th class="print-table__header">Páginas PDF</th>
+        <th class="print-table__header">Hojas totales</th>
+      </tr>
       </thead>
       <tbody>
-        <tr v-for="(print, index) in info" :key="index">
-          <td class="truncate text-left pl-1">{{ formatDate(print.date) }}</td>
-          <td v-if="adminRole" class="truncate text-left pl-1">{{ print.user }}</td>
-          <td class="truncate text-left pl-1">{{ print.fileName }}</td>
-          <td :title="print.errorMessage" class="truncate text-left pl-1">
-            {{ print.status }}
-            <ion-icon v-if="print.status === 'Pendiente'"
-                      name="close-circle-outline"
-                      style="font-size: 24px; cursor: pointer;"
-                      class="ml-2 text-red-500"
-                      @click="cancelarImpresionTabla(print.id)"></ion-icon>
-          </td>
-          <td class="truncate text-left pl-1">{{ print.printer }}</td>
-          <td class="truncate text-left pl-1">{{ print.copies }}</td>
-          <td class="truncate text-left pl-1">{{ print.color }}</td>
-          <td class="truncate text-left pl-1">{{ print.orientation }}</td>
-          <td class="truncate text-left pl-1">{{ print.sides }}</td>
-          <td class="truncate text-left pl-1">{{ print.fileSizeInKB }}</td>
-          <td class="truncate text-left pl-1">{{ print.numeroPaginasPdf }}</td>
-          <td class="truncate text-left pl-1">{{ print.hojasTotales }}</td>
-        </tr>
+      <tr
+          v-for="(print, index) in info"
+          :key="index"
+          :class="['print-table__row', index % 2 === 1 ? 'print-table__row--even' : '', 'print-table__row--hover']"
+      >
+        <td class="print-table__cell">{{ formatDate(print.date) }}</td>
+        <td v-if="adminRole" class="print-table__cell">{{ print.user }}</td>
+        <td class="print-table__cell">{{ print.fileName }}</td>
+        <td :title="print.errorMessage" class="print-table__cell">
+          {{ print.status }}
+          <ion-icon
+              v-if="print.status === 'Pendiente'"
+              name="close-circle-outline"
+              style="font-size: 24px; cursor: pointer;"
+              class="print-table__icon"
+              @click="cancelarImpresionTabla(print.id)"
+          ></ion-icon>
+        </td>
+        <td class="print-table__cell">{{ print.printer }}</td>
+        <td class="print-table__cell">{{ print.copies }}</td>
+        <td class="print-table__cell">{{ print.color }}</td>
+        <td class="print-table__cell">{{ print.orientation }}</td>
+        <td class="print-table__cell">{{ print.sides }}</td>
+        <td class="print-table__cell">{{ print.fileSizeInKB }}</td>
+        <td class="print-table__cell">{{ print.numeroPaginasPdf }}</td>
+        <td class="print-table__cell">{{ print.hojasTotales }}</td>
+      </tr>
       </tbody>
     </table>
   </div>
@@ -85,7 +91,7 @@ export default defineComponent({
         const response = await cancelarImpresion(toastMessage, toastColor, isToastOpen, id);
         if (response.ok)
         {
-          emit('actualizar-tabla'); // Refrescar la tabla después de cancelar
+          emit('actualizar-tabla');
         }
         else
         {
@@ -104,82 +110,75 @@ export default defineComponent({
   }
 });
 </script>
+
 <style scoped>
-/* Estilos generales de la tabla */
-.table-container table {
+.print-table {
+  width: 100%;
+  height: 38rem;
+  background-color: var(--form-bg-light);
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
+  border-radius: 1rem;
+  padding: 2.5rem;
+  overflow: auto;
+}
+
+.print-table__table {
   width: 100%;
   border-collapse: collapse;
   font-family: 'Roboto', sans-serif;
 }
 
-.table-container th, .table-container td {
+.print-table__header,
+.print-table__cell {
   border: 1px solid #dddddd;
-  text-align: center;
-  padding: 8px;
+  text-align: left;
+  padding: 0.75rem;
+  font-size: 1rem;
 }
 
-.table-container th {
-  background-color: var(--form-bg-light);
-  color: var(--text-color-light);
+.print-table__header {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  background-color: var(--form-bg-light);
+  color: var(--text-color-light);
 }
 
-.table-container tr:nth-child(even) {
+.print-table__row--even {
   background-color: #f9f9f9;
 }
 
-.table-container tr:hover {
+.print-table__row--hover:hover {
   background-color: #e6f7ff;
 }
 
-.table-container a {
-  color: #3a7ca5;
-  text-decoration: none;
-}
-
-.table-container a:hover {
-  text-decoration: underline;
-  color: #1a5a7a;
-}
-
-.table-container {
-  width: 50%;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
-  border-radius: 10px;
-  padding: 20px;
-  overflow: auto;
+.print-table__icon {
+  margin-left: 0.5rem;
+  color: red;
 }
 
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
-  .table-container {
+  .print-table {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 4px 6px;
   }
 
-  .table-container th {
+  .print-table__header {
     background-color: var(--form-bg-dark);
     color: var(--text-color-dark);
   }
 
-  .table-container tr:nth-child(even) {
+  .print-table__row--even {
     background-color: #2c2c2c;
   }
 
-  .table-container tr:hover {
+  .print-table__row--hover:hover {
     background-color: #3e3e3e;
   }
 
-  .table-container a {
-    color: var(--text-color-dark);
-  }
-
-  .table-container a:hover {
-    color: #76c7c0;
+  .print-table__icon {
+    color: #ff6b6b;
   }
 }
 </style>
-
