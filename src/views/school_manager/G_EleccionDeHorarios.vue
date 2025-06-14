@@ -164,7 +164,7 @@
                 <span v-else>{{ asignaturaReduccion.horasReduccion }}</span>
               </td>
               <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.curso : '-' }}</td>
-              <td class="columna">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.etapa : '-' }}</td>
+              <td class="columna white-space">{{ asignaturaReduccion.tipo === 'Asignatura' ? asignaturaReduccion.etapa : '-' }}</td>
               <td class="columna">
                 <span v-if="asignaturaReduccion.tipo === 'Asignatura'">
                   <span v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
@@ -1065,6 +1065,7 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
   width: 15px;
   height: 16px;
   cursor: pointer;
+  margin-right: 0.4rem;
 }
 
 .t-6 {
@@ -1190,7 +1191,7 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
 
 .card-solicitudes {
   min-width: 750px;
-  min-height: 859px;
+  min-height: 917px;
   height: 300px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
@@ -1244,13 +1245,17 @@ table {
 }
 
 .btn {
-  padding: 0.5rem;
   border: 1px solid;
   border-radius: 0.375rem;
   background-color: #0054e9;
   color: #FFFFFF;
   font-size: 1.1rem;
-}
+  height: 2.1rem;
+  display: flex;          
+  align-items: center;    
+  justify-content: center;
+  white-space: nowrap; 
+  }
 
 .btn:hover {
   background-color: #1461eb;
@@ -1269,10 +1274,15 @@ table {
   position: sticky;
   top: 0;
   left: 550px;
+  height: 2.1rem;
 }
 
 .btn-guardar-todo:hover {
   background-color: #1461eb;
+}
+
+.white-space {
+  white-space: nowrap; 
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1294,10 +1304,11 @@ table {
   .btn-guardar-todo {
     color: black;
     background-color: #4782eb;
+    border: none;
   }
 
   .separator-line {
-    border-top: 1.3px solid #949494;
+    border-top: 1.3px solid #a1a1a1;
   }
 
   .dropdown-select-solicitudes {
@@ -1324,7 +1335,7 @@ table {
 
 @media ((min-width: 768px) and (max-width: 1422px)) {
   .card-solicitudes {
-    min-width: 420px;
+    min-width: 535px;
   }
 
   .btn-guardar-todo {
@@ -1378,7 +1389,7 @@ table {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 540px) {
   .card-asignaturas-reducciones {
     min-width: 100%;
     min-height: 100%;

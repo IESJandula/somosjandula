@@ -874,10 +874,10 @@ input {
   }
 }
 
-@media ((min-width: 768px) and (max-width: 1132px)) {
+@media ((min-width: 768px) and (max-width: 1190px)) {
   .card-upload-csv {
     min-width: 350px;
-    min-height: 100%;
+    max-height: 380px;
     margin-right: 5px;
   }
 
@@ -892,14 +892,54 @@ input {
   }
   
   .dropdown-datos { 
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
   }
 
   .btn-guardar-todo {
     position: sticky;
     top: 0;
     left: calc(100% - 180px);
+  }
+}
+
+@media (max-width: 540px) {
+
+  .card-upload-csv, 
+  .card-upload-data {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .card-upload-table {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .btn-guardar-todo {
+    position: sticky;
+    top: 0;
+    left: 250px;
+  }
+}
+
+@media (max-width: 440px) {
+
+  .card-upload-csv, 
+  .card-upload-data {
+    min-width: 100%;
+    max-width: 100%;
+  }
+
+  .card-upload-table {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .btn-guardar-todo {
+    position: sticky;
+    top: 0;
+    left: 90px;
   }
 }
 </style>
