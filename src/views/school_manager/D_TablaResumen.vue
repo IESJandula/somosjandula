@@ -21,12 +21,12 @@
           <table class="table-asignaturas">
             <thead>
             <tr>
-              <th class="th">Asignatura</th>
-              <th class="th">Nº Horas</th>
+              <th class="th th-center">Asignatura</th>
+              <th class="th th-center white-space">Nº Horas</th>
               <!-- Se calcula el total sumando los valores de cada grupo -->
-              <th class="th">Tot. Alumnos</th>
+              <th class="th th-center white-space">Tot. Alumnos</th>
               <!-- Cabeceras dinámicas para cada grupo -->
-              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th">
+              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th th-center white-space">
                 Grupo {{ infoGrupo.grupo }}
               </th>
             </tr>
@@ -200,6 +200,7 @@ onMounted(() => {
   align-items: center;
   flex-grow: 1;
   align-items: center;
+  width: 100%;
 }
 
 .t-1 {
@@ -262,6 +263,10 @@ onMounted(() => {
 .t-3 {
   text-align: center;
   color: black;
+}
+
+.white-space {
+  white-space: nowrap; 
 }
 
 @media (prefers-color-scheme: dark) {

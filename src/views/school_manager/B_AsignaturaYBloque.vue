@@ -25,8 +25,8 @@
           <table class="table-asignaturas">
             <thead>
             <tr>
-              <th class="th-secleccion">Selecciona para crear un bloque</th>
-              <th class="th">Nombre</th>
+              <th class="th-seleccion">Selecciona para crear un bloque</th>
+              <th class="th-nombre">Nombre</th>
               <th class="th-bloque">Bloque</th>
               <th class="th-sin-docencia">Asignaturas sin docencia</th>
               <th class="th-desdoble">Desdoble</th>
@@ -537,6 +537,14 @@ async () =>{
   border: 1px solid currentColor; 
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+.th-nombre {
+  border: 1px solid currentColor; 
+  text-align: center;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .th-asignatura {
@@ -551,6 +559,7 @@ async () =>{
   width: 11.5%;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  text-align: center;
 }
 
 .th-sin-docencia {
@@ -566,6 +575,7 @@ async () =>{
   width: 10%;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  text-align: center;
 }
 
 .th-horas {
@@ -573,6 +583,7 @@ async () =>{
   width: 8%;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  text-align: center;
 }
 
 .th-accion {
@@ -580,6 +591,7 @@ async () =>{
   border: 1px solid currentColor; 
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  text-align: center;
 }
 
 .th {

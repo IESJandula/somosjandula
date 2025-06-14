@@ -441,12 +441,13 @@ onMounted(async () => {
   background-color: #0054e9;
   color: #FFFFFF;
   font-size: 17px;
-  padding: 0.5rem;
+  padding: 0.2rem;
   border: none;
   border-radius: 0.375rem; 
   margin-top: 1rem;
   cursor: pointer;
   width: 100%;
+  height: 2rem; 
 }
 
 .btn:hover {
@@ -457,6 +458,7 @@ onMounted(async () => {
   font-size: 1.1rem;
   text-align: center;
   margin-bottom: 10px;
+  margin-top: 12px;
 }
 
 .lista-alumnos {
@@ -505,7 +507,7 @@ onMounted(async () => {
 
 .card-upload-table {
   width: 540px;
-  min-height: 614px;
+  min-height: 627px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -565,7 +567,6 @@ onMounted(async () => {
 .blue {
   background-color: #0054e9;
   color: #FFFFFF;
-  /* color: #3a7ca5;  */
 }
 
 .th {
