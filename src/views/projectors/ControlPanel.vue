@@ -504,7 +504,11 @@ let deleteAllModalInstance = null;
 const showDeleteAllModal = (modalId) => {
 
     if (!deleteAllModalInstance) {
-        deleteAllModalInstance = new bootstrap.Modal(document.getElementById(modalId));
+        deleteAllModalInstance = new bootstrap.Modal(document.getElementById(modalId),            
+        {
+            backdrop: false,
+            keyboard: false // opcional: evita cerrar con ESC
+        });
     }
     deleteAllModalInstance.show();
 };
@@ -513,7 +517,11 @@ let deleteSelectedModalInstance = null;
 const showDeleteSelectedModal = (modalId) => {
 
     if (!deleteSelectedModalInstance) {
-        deleteSelectedModalInstance = new bootstrap.Modal(document.getElementById(modalId));
+        deleteSelectedModalInstance = new bootstrap.Modal(document.getElementById(modalId),            
+        {
+            backdrop: false,
+            keyboard: false // opcional: evita cerrar con ESC
+        });
     }
     deleteSelectedModalInstance.show();
 };
@@ -574,7 +582,11 @@ const loadActionsPage = async (page = 0, size = 5) => {
 const showDeleteActionModal = () => {
 
     if (!deleteActionModalInstance) {
-        deleteActionModalInstance = new bootstrap.Modal(document.getElementById('deleteActionConfirmationModal'));
+        deleteActionModalInstance = new bootstrap.Modal(document.getElementById('deleteActionConfirmationModal'),            
+        {
+            backdrop: false,
+            keyboard: false // opcional: evita cerrar con ESC
+        });
     }
     deleteActionModalInstance.show();
 };
@@ -664,10 +676,16 @@ const loadCommandsPage = async (page = 0, size = 5, modelName, action) => {
 
 const showDeleteCommandModal = async () => {
     if (!deleteCommandModalInstance) {
-        deleteCommandModalInstance = new bootstrap.Modal(document.getElementById('deleteCommandConfirmationModal'));
+        deleteCommandModalInstance = new bootstrap.Modal(
+            document.getElementById('deleteCommandConfirmationModal'),
+            {
+                backdrop: false,
+                keyboard: false // opcional: evita cerrar con ESC
+            }
+        );
     }
     deleteCommandModalInstance.show();
-}
+};
 
 const deleteSelectedCommandsRequest = async () => {
 
