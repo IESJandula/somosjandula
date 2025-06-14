@@ -138,4 +138,5 @@ const props = defineProps({
 
     </div> <!-- /root container. -->
 </template>
-
+<style scoped>
+</style>
