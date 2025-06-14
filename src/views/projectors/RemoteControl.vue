@@ -57,7 +57,11 @@ onMounted(() => {
 	loadProjectorList();
 	loadActionsList();
 	const modalElement = document.getElementById("actionModal");
-	modalInstance = new Modal(modalElement);
+	modalInstance = new Modal(modalElement,
+		{
+			backdrop: false, keyboard: false
+		}
+	);
 	const saved = localStorage.getItem("buttonDisabledUntil");
 	if (saved) {
 		const expireAt = parseInt(saved);
