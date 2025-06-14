@@ -702,9 +702,11 @@ button:disabled {
     color: #000000;
     background-color: #4782eb
   }
+
   .table-asignaturas {
     color: #c4c6ca;
   }
+
   .t-3 {
     color: #c4c6ca;
   }
@@ -721,4 +723,43 @@ button:disabled {
     background-color: #3476eb;
   }
 }
+
+@media (max-width: 768px) {
+  .card-table {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .table-asignaturas {
+    font-size: 0.9rem;
+  }
+
+  .th-seleccion, 
+  .th-nombre, 
+  .th-bloque, 
+  .th-sin-docencia, 
+  .th-desdoble, 
+  .th-horas, 
+  .th-accion {
+    padding: 0.3rem;
+  }
+
+  .btn-bloque {
+    width: 100%;
+    margin-bottom: 1rem;
+    
+  }
+
+  .container-botones {
+    width: 630px;
+   flex-direction: row;  /* Apila los botones en móvil */
+  }
+
+  .btn-actualizar-todas-horas {
+    margin-left: 11rem;
+    width: 500px;
+  }
+}
+
+
 </style>

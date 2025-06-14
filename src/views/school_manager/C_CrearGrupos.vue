@@ -666,6 +666,11 @@ onMounted(async () => {
   .tabla-alumnos{
     margin-left: 0%;
   }
+
+  .card-upload-table {
+    width: 100%;
+    max-width: 500px;
+  }
 }
 
 /* Media queries para hacer que la tarjeta sea más responsive */

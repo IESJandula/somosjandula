@@ -1251,10 +1251,9 @@ table {
   color: #FFFFFF;
   font-size: 1.1rem;
   height: 2.1rem;
-
-  display: flex;          /* Activa flexbox */
-  align-items: center;    /* Centra verticalmente */
-  justify-content: center;/* Centra horizontalmente */
+  display: flex;          
+  align-items: center;    
+  justify-content: center;
   white-space: nowrap; 
   }
 
@@ -1305,6 +1304,7 @@ table {
   .btn-guardar-todo {
     color: black;
     background-color: #4782eb;
+    border: none;
   }
 
   .separator-line {
@@ -1335,7 +1335,7 @@ table {
 
 @media ((min-width: 768px) and (max-width: 1422px)) {
   .card-solicitudes {
-    min-width: 420px;
+    min-width: 535px;
   }
 
   .btn-guardar-todo {
@@ -1389,7 +1389,7 @@ table {
   }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 540px) {
   .card-asignaturas-reducciones {
     min-width: 100%;
     min-height: 100%;
