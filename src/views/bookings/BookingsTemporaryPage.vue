@@ -1,190 +1,192 @@
 <!-- eslint-disable vue/no-dupe-v-else-if -->
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <h1 class="titulo-pagina">Reservas Temporales</h1>
-  <div class="container">
-    <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
-    <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
+  <h1 class="booking__title">Reservas Temporales</h1>
+  <div class="booking__container">
+    <span class="booking__constant-value" v-if="valorConstante">{{ valorConstante }}</span>
+    <span class="booking__constant-value" v-if="logRecursos">{{ logRecursos }}</span>
+    <span class="booking__info-message" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
 
-    <div class="date-picker-container">
+    <div class="booking__date-picker">
       <label for="start">Selecciona una fecha</label>
       <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso" :max="fechaFinCurso"
-        @change="actualizarSemana($event)" />
+             @change="actualizarSemana($event)" />
     </div>
+
     <br>
+
     <!-- Dropdown para seleccionar recurso -->
-    <select class=" custom-select" v-model="recursoSeleccionado">
+    <select class="booking__resource-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
         {{ recurso.recursos }} (Máximo permitido: {{ recurso.cantidad }})
       </option>
     </select>
 
-    <div class="incidence-message">
+    <div class="booking__incidence-message">
       {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
     </div>
 
-    <div class="semana_button-container">
-      <button class="semanaAnterior_button" @click.stop="decrementarSemana()"
-        v-if="!deshabilitarSemanaAnterior()">Semana Anterior</button>
-      <button class="semanaSiguiente_button" @click.stop="incrementarSemana()"
-        v-if="!deshabilitarSemanaSiguiente()">Semana Siguiente</button>
+    <div class="booking__week-buttons">
+      <button class="booking__button booking__button--previous" @click.stop="decrementarSemana()"
+              v-if="!deshabilitarSemanaAnterior()">Semana Anterior</button>
+      <button class="booking__button booking__button--next" @click.stop="incrementarSemana()"
+              v-if="!deshabilitarSemanaSiguiente()">Semana Siguiente</button>
     </div>
 
     <!-- Tabla con horarios y reservas -->
-    <table class="tabla-container" v-if="mostrarTabla">
+    <table class="booking__table" v-if="mostrarTabla">
       <thead>
-        <tr>
-          <th class="sticky-column">Horarios</th>
-          <th v-for="(dia, index) in diasSemanas" :key="index">
-            {{ dia.diaSemana }}
-          </th>
-        </tr>
+      <tr>
+        <th class="booking__sticky-column">Horarios</th>
+        <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
+      </tr>
       </thead>
       <tbody v-if="valorConstante === ''">
-        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+      <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+        <td class="booking__sticky-column">{{ tramo.tramoHorario }}</td>
+        <td class="booking__cell--hover" v-for="(dia, index) in diasSemanas" :key="index"
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="booking__teacher">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
-                  <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
+                  <div class="booking__fixed" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
                   <button
-                    v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
+                      v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
+                      @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
                   <button
-                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
-                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
+                      v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                      @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
                     Borrar
                   </button>
                 </div>
               </template>
             </span>
-          </td>
-        </tr>
+        </td>
+      </tr>
       </tbody>
       <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+      <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+        <td class="booking__sticky-column">{{ tramo.tramoHorario }}</td>
+        <td class="booking__cell--hover" v-for="(dia, index) in diasSemanas" :key="index"
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="booking__teacher">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
+                      v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
                       (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index])">
+                      @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
                 </div>
               </template>
             </span>
-          </td>
-        </tr>
+        </td>
+      </tr>
       </tbody>
       <tbody v-else>
-        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
+      <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+        <td class="booking__sticky-column">{{ tramo.tramoHorario }}</td>
+        <td class="booking__cell--blocked" v-for="(dia, index) in diasSemanas" :key="index">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="booking__teacher">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
                 </div>
               </template>
             </span>
-          </td>
-        </tr>
+        </td>
+      </tr>
       </tbody>
     </table>
 
     <!-- Modal de edición -->
     <div
-      v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible && reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0)"
-      class="modal-overlay" @change="comprobarDisponibilidad()">
-      <div class="modal-content">
+        v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible && reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0)"
+        class="booking__modal-overlay" @change="comprobarDisponibilidad()">
+      <div class="booking__modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
-          for="profesorCorreo">Profesor:</label>
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" for="profesorCorreo">Profesor:</label>
         <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
-          class="custom-select-modal" v-model="profesorSeleccionado" @change="comprobarDisponibilidad()">
+                class="booking__select-modal" v-model="profesorSeleccionado" @change="comprobarDisponibilidad()">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
           </option>
         </select>
 
-        <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
-        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
-          placeholder="Número de alumnos" min="0"
-          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))"
-          @change="comprobarDisponibilidad()" />
+        <label class="booking__label-alumnos" for="numAlumnos">Número de Alumnos:</label>
+        <input class="booking__select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
+               placeholder="Número de alumnos" min="0"
+               :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))"
+               @change="comprobarDisponibilidad()" />
+
         <label>Opciones de Repetición:</label>
-        <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
+        <select class="booking__select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
           <option value="" selected>Ninguna</option>
           <option value="Semanal">Semanal</option>
         </select>
-        <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
-          <label for="start">Limite de Repetición</label>
+
+        <div class="booking__date-picker-modal" v-if="opcionRepeticion != ''">
+          <label for="start">Límite de Repetición</label>
           <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
-            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" :class="{'placeholder-date': !fechaSeleccionada }" />
+                 :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" :class="{'placeholder-date': !fechaSeleccionada }" />
         </div>
-        <span class="custom-message-numAlumno"
-          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
-          permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
-            cantidadSeleccionada)) }} alumnos</span>
-        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
-          permitido: 1 Alumno</span>
+
+        <span class="booking__message--warning"
+              v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">
+          Máximo permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) }} alumnos
+        </span>
+
+        <span class="booking__message--warning" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">
+          Mínimo permitido: 1 Alumno
+        </span>
+
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
-          @click="saveChanges">Reservar</button>
+            v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
+            @click="saveChanges">Reservar</button>
+
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
-          @click="saveChanges">Reservar</button>
+            v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
+            @click="saveChanges">Reservar</button>
+
         <button @click="closeModal">Cerrar</button>
       </div>
     </div>
 
     <!-- Modal de confirmación para borrar reservas -->
-    <div v-if="isDeleteModalOpen" class="modal-overlay">
-      <div class="modal-content">
+    <div v-if="isDeleteModalOpen" class="booking__modal-overlay">
+      <div class="booking__modal-content">
         <h2>¿Estás seguro de borrar la / las reservas?</h2>
 
         <label for="deleteOption">Selecciona una opción:</label>
-        <select class="custom-select-modal" v-model="deleteOption">
+        <select class="booking__select-modal" v-model="deleteOption">
           <option value="" default>Esta Reserva</option>
           <option value="Semanal">Reservas Semanales</option>
         </select>
 
-        <div class="button-container">
+        <div class="booking__button-group">
           <button @click="confirmacionBorrado()">Aceptar</button>
           <button @click="closeDeleteModal">Cancelar</button>
         </div>
       </div>
     </div>
   </div>
-
-
-
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
+
 <script setup>
 
 import { ref, onMounted, watch } from 'vue'
-import { IonToast } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
@@ -736,7 +738,7 @@ const comprobarDisponibilidad = async () => {
       semanas.push(i);  // Se agrega la semana al array
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
-    semanas = []; // Se reinicia el array 
+    semanas = []; // Se reinicia el array
   }
   disponibleSemanal.value = data.value;
 }
@@ -764,7 +766,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.valorConstante {
+.booking__constant-value {
   color: #dc3545;
   padding: 10px;
   font-size: 25px;
@@ -772,15 +774,15 @@ onMounted(async () => {
   margin-bottom: 15px;
 }
 
-.mensajeInformativo {
-  color: #ffae00;
+.booking__info-message {
+  color: #007bff;
   padding: 10px;
   font-size: 25px;
   font-weight: bold;
   margin-bottom: 15px;
 }
 
-.container {
+.booking__container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -793,7 +795,7 @@ onMounted(async () => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.custom-select {
+.booking__resource-select {
   width: 80%;
   margin-bottom: 20px;
   padding: 10px;
@@ -805,19 +807,11 @@ onMounted(async () => {
   outline: none;
   cursor: pointer;
   transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
+      border-color 0.3s,
+      box-shadow 0.3s;
 }
 
-.mensajeInformativo {
-  color: #007bff;
-  padding: 10px;
-  font-size: 25px;
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-
-.custom-select-modal {
+.booking__select-modal {
   width: 100%;
   padding: 10px;
   font-size: 16px;
@@ -828,11 +822,11 @@ onMounted(async () => {
   outline: none;
   cursor: pointer;
   transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
+      border-color 0.3s,
+      box-shadow 0.3s;
 }
 
-.date-picker-container-modal {
+.booking__date-picker-modal {
   display: flex;
   margin-top: 10px;
   margin-right: 10%;
@@ -842,20 +836,24 @@ onMounted(async () => {
   font-family: Arial, sans-serif;
 }
 
-.custom-numAlumnos {
+.booking__label-alumnos {
   margin-top: 10px;
 }
 
-.custom-select:hover {
+.booking__resource-select:hover {
   border-color: #0056b3;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-h1 {
+.booking__title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 20px;
   margin-bottom: -3%;
 }
 
-table {
+.booking__table {
   border-collapse: collapse;
   width: 100%;
   text-align: center;
@@ -873,7 +871,7 @@ span {
   font-style: oblique;
 }
 
-.div_profesor {
+.booking__teacher {
   padding: 6px;
 }
 
@@ -886,16 +884,11 @@ td {
 td {
   height: 50px;
   width: 150px;
-  /* Establece un ancho fijo */
   background-color: #e9f5ff;
   text-overflow: ellipsis;
-  /* Para manejar contenido largo */
   overflow: hidden;
-  /* Oculta cualquier contenido que desborde */
   word-wrap: break-word;
-  /* Permite que el texto largo se divida y se ajuste */
 }
-
 
 th {
   background-color: #007bff;
@@ -903,25 +896,23 @@ th {
   font-weight: bold;
 }
 
-td {
-  height: 50px;
-  background-color: #e9f5ff;
-}
-
-.reservaHover:hover {
-  /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
+.booking__cell--hover:hover {
   cursor: pointer;
 }
 
-.reservaBloqueadaHover:hover {
-  /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
+.booking__cell--blocked:hover {
   cursor: auto;
 }
 
+.booking__sticky-column {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+}
 
 th:first-child {
   background-color: #0056b3;
-  /* Diferenciar la columna de tramos horarios */
 }
 
 button {
@@ -935,10 +926,9 @@ button {
 
 tr:hover td {
   background-color: #d0eaff;
-  /* Efecto hover en filas */
 }
 
-.modal-overlay {
+.booking__modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -951,7 +941,7 @@ tr:hover td {
   z-index: 1000;
 }
 
-.modal-content {
+.booking__modal-content {
   background-color: white;
   padding: 20px;
   border-radius: 10px;
@@ -959,16 +949,16 @@ tr:hover td {
   width: 300px;
 }
 
-.modal-content h2 {
+.booking__modal-content h2 {
   margin-bottom: 10px;
 }
 
-.modal-content label {
+.booking__modal-content label {
   display: block;
   margin-bottom: 5px;
 }
 
-.modal-content input {
+.booking__modal-content input {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
@@ -976,7 +966,7 @@ tr:hover td {
   border: 1px solid #ccc;
 }
 
-.modal-content button {
+.booking__modal-content button {
   width: 100%;
   padding: 10px;
   margin-top: 10px;
@@ -987,28 +977,27 @@ tr:hover td {
   cursor: pointer;
 }
 
-.modal-content button:hover {
+.booking__modal-content button:hover {
   background-color: #0056b3;
 }
 
-/* Contenedor que permite el scroll horizontal solo en móviles */
 @media (max-width: 768px) {
-  .tabla-container {
+  .booking__table {
     overflow-x: auto;
     display: block;
     white-space: nowrap;
   }
-  input[type="date"].placeholder-date::before
-  {
-  content: "Elige una fecha";
-  color: #ffffff;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  font-size: 1rem;
-  white-space: nowrap;
+
+  input[type="date"].placeholder-date::before {
+    content: "Elige una fecha";
+    color: #ffffff;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    font-size: 1rem;
+    white-space: nowrap;
   }
 
   input[type="date"].placeholder-date {
@@ -1017,22 +1006,12 @@ tr:hover td {
     text-align: center;
   }
 
-  /* Hacer que los tramos se mantengan visibles (bloqueados) */
-  .sticky-column {
-    position: sticky;
-    left: 0;
-    background: white;
-    /* Para que no se mezcle con otras celdas */
-    z-index: 2;
-  }
-
-  .custom-select {
+  .booking__resource-select {
     width: 100%;
   }
 }
 
-/* Estilo para el contenedor del input */
-.date-picker-container {
+.booking__date-picker {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1040,13 +1019,11 @@ tr:hover td {
   font-family: Arial, sans-serif;
 }
 
-/* Etiqueta asociada */
 label {
   font-weight: bold;
   color: #555;
 }
 
-/* Estilo para el input */
 input[type="date"] {
   padding: 10px;
   margin-left: 12px;
@@ -1058,13 +1035,11 @@ input[type="date"] {
   transition: all 0.3s ease;
 }
 
-/* Estilo al hacer hover */
 input[type="date"]:hover {
   border-color: #0078d7;
   background-color: #353030;
 }
 
-/* Estilo al estar en focus */
 input[type="date"]:focus {
   outline: none;
   border-color: #0078d7;
@@ -1072,21 +1047,13 @@ input[type="date"]:focus {
   background-color: #242222;
 }
 
-/* Estilo cuando el campo está deshabilitado */
 input[type="date"]:disabled {
   background-color: #e9e9e9;
   border-color: #d3d3d3;
   color: #a9a9a9;
 }
 
-.titulo-pagina {
-  text-align: center;
-  font-size: 30px;
-  font-weight: bold;
-  margin-top: 20px;
-}
-
-.custom-message-numAlumno {
+.booking__message--warning {
   display: flex;
   justify-content: center;
   text-align: center;
@@ -1096,7 +1063,7 @@ input[type="date"]:disabled {
   margin-bottom: 5px;
 }
 
-.reservaFija {
+.booking__fixed {
   background-color: #28a745;
   color: white;
   padding: 5px;
@@ -1110,12 +1077,12 @@ input[type="date"]:disabled {
   cursor: pointer;
 }
 
-.semana_button-container {
+.booking__week-buttons {
   justify-content: space-between;
   width: 100%;
 }
 
-.semanaAnterior_button {
+.booking__button--previous {
   background-color: #007bff;
   color: white;
   float: left;
@@ -1127,7 +1094,7 @@ input[type="date"]:disabled {
   cursor: pointer;
 }
 
-.semanaSiguiente_button {
+.booking__button--next {
   background-color: #007bff;
   color: white;
   float: right;
@@ -1139,20 +1106,21 @@ input[type="date"]:disabled {
   cursor: pointer;
 }
 
-.incidence-message {
+.booking__incidence-message {
   margin-top: 20px;
   text-align: center;
   font-size: 16px;
   color: var(--text-color-light);
 }
 
-.incidence-message a {
+.booking__incidence-message a {
   color: var(--primary-color);
   text-decoration: underline;
 }
 
-.incidence-message a:hover {
+.booking__incidence-message a:hover {
   color: var(--primary-color-hover);
   cursor: pointer;
 }
 </style>
+

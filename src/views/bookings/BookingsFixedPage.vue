@@ -1,132 +1,148 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <h1 class="titulo-pagina">Reservas Fijas</h1>
-  <div class="container">
-    <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
-    <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
-    <!-- Dropdown para seleccionar recurso -->
-    <select class="custom-select" v-model="recursoSeleccionado">
+  <h1 class="booking__title">Reservas Fijas</h1>
+  <div class="booking__container">
+    <span class="booking__valor-constante" v-if="valorConstante">{{ valorConstante }}</span>
+    <span class="booking__valor-constante" v-if="logRecursos">{{ logRecursos }}</span>
+    <span class="booking__mensaje-informativo" v-if="mensajeInformativo && valorConstante == ''">
+      {{ mensajeInformativo }}
+    </span>
+
+    <select class="booking__select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
         {{ recurso.recursos }} (Máximo permitido: {{ recurso.cantidad }})
       </option>
     </select>
-    <div class="incidence-message">
+
+    <div class="booking__incidence-message">
       {{ mensajeIncidencia }} <a @click.prevent="navigateToIssues">aquí</a>
     </div>
 
-    <!-- Tabla con horarios y reservas -->
-    <table class="tabla-container" v-if="mostrarTabla">
+    <table class="booking__tabla" v-if="mostrarTabla">
       <thead>
-        <tr>
-          <th class="sticky-column">Horarios</th>
-          <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
-        </tr>
+      <tr>
+        <th class="booking__columna-sticky">Horarios</th>
+        <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
+      </tr>
       </thead>
+
       <tbody v-if="valorConstante === ''">
-        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+      <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+        <td class="booking__columna-sticky">{{ tramo.tramoHorario }}</td>
+        <td class="booking__celda reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
-                  {{ nombre }} <br>
+                  {{ nombre }} <br />
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
-
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
-                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                      v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
+                          (rolesUsuario.includes('PROFESOR') &&
+                          reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                      @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
                     Borrar
                   </button>
                 </div>
               </template>
             </span>
-          </td>
-        </tr>
+        </td>
+      </tr>
       </tbody>
+
       <tbody v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')">
-        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
+      <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+        <td class="booking__columna-sticky">{{ tramo.tramoHorario }}</td>
+        <td class="booking__celda reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
-                  {{ nombre }} <br>
+                  {{ nombre }} <br />
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
-
                   <button
-                    v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
-                      (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
+                      v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') ||
+                          (rolesUsuario.includes('PROFESOR') &&
+                          reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                      @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index])">
                     Borrar
                   </button>
                 </div>
               </template>
             </span>
-          </td>
-        </tr>
+        </td>
+      </tr>
       </tbody>
+
       <tbody v-else>
-        <tr v-for="(tramo, index) in tramosHorarios" :key="index">
-          <td class="sticky-column">{{ tramo.tramoHorario }}</td>
-          <td class="reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
+      <tr v-for="(tramo, index) in tramosHorarios" :key="index">
+        <td class="booking__columna-sticky">{{ tramo.tramoHorario }}</td>
+        <td class="booking__celda reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
                 <div class="div_profesor">
-                  {{ nombre }} <br>
+                  {{ nombre }} <br />
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
                 </div>
               </template>
             </span>
-          </td>
-        </tr>
+        </td>
+      </tr>
       </tbody>
     </table>
 
-    <!-- Modal de edición -->
-    <div
-      v-if="isModalOpen && (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0]) || (isModalOpen && recursoSeleccionadoCompartible && reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0)"
-      class="modal-overlay">
-      <div class="modal-content">
+    <div v-if="isModalOpen &&
+              (!reservas[currentTramo?.id]?.[currentDia?.id]?.nalumnos[0] ||
+              (recursoSeleccionadoCompartible &&
+               reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes > 0))"
+         class="booking__modal-overlay">
+      <div class="booking__modal-content">
         <h2>Reservar</h2>
 
-        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
-          for="profesorCorreo">Profesor:</label>
+        <label v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')" for="profesorCorreo">
+          Profesor:
+        </label>
         <select v-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')"
-          class="custom-select-modal" v-model="profesorSeleccionado">
+                class="booking__select-modal" v-model="profesorSeleccionado">
           <option value="" disabled hidden>Seleccione un Profesor</option>
           <option v-for="user in users" :key="user.email" :value="user.email">
             {{ `${user.nombre} ${user.apellidos}` }}
           </option>
         </select>
 
-        <label class="custom-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
-        <input class="custom-select-modal" v-model="numAlumnos" type="number" id="numAlumnos"
-          placeholder="Número de alumnos" min="0"
-          :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
+        <label class="booking__label-numAlumnos" for="numAlumnos">Número de Alumnos:</label>
+        <input class="booking__input-modal" v-model="numAlumnos" type="number" id="numAlumnos"
+               placeholder="Número de alumnos" min="0"
+               :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
 
-        <span class="custom-message-numAlumno"
-          v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
-          permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
-            cantidadSeleccionada)) }} alumnos</span>
-        <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
+        <span class="booking__mensaje-numAlumno"
+              v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">
+          Máximo permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) }} alumnos
+        </span>
+        <span class="booking__mensaje-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
+
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
-          @click="saveChanges">Reservar</button>
+            v-if="numAlumnos && numAlumnos > 0 &&
+                numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) &&
+                profesorSeleccionado"
+            @click="saveChanges">
+          Reservar
+        </button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION')"
-          @click="saveChanges">Reservar</button>
+            v-else-if="numAlumnos && numAlumnos > 0 &&
+                     numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) &&
+                     rolesUsuario.includes('PROFESOR') &&
+                     !rolesUsuario.includes('ADMINISTRADOR') &&
+                     !rolesUsuario.includes('DIRECCION')"
+            @click="saveChanges">
+          Reservar
+        </button>
         <button @click="closeModal">Cerrar</button>
       </div>
     </div>
   </div>
-
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
+
 <script setup>
 
 import { ref, onMounted, watch } from 'vue'
@@ -459,7 +475,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.valorConstante {
+.booking__valor-constante {
   color: #dc3545;
   padding: 10px;
   font-size: 25px;
@@ -467,7 +483,7 @@ onMounted(async () => {
   margin-bottom: 15px;
 }
 
-.mensajeInformativo {
+.booking__mensaje-informativo {
   color: #007bff;
   padding: 10px;
   font-size: 25px;
@@ -475,7 +491,7 @@ onMounted(async () => {
   margin-bottom: 15px;
 }
 
-.container {
+.booking__container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -488,7 +504,7 @@ onMounted(async () => {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.custom-select {
+.booking__select {
   width: 80%;
   margin-bottom: 20px;
   padding: 10px;
@@ -500,11 +516,11 @@ onMounted(async () => {
   outline: none;
   cursor: pointer;
   transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
+      border-color 0.3s,
+      box-shadow 0.3s;
 }
 
-.custom-select-modal {
+.booking__select-modal {
   width: 100%;
   padding: 10px;
   font-size: 16px;
@@ -515,24 +531,27 @@ onMounted(async () => {
   outline: none;
   cursor: pointer;
   transition:
-    border-color 0.3s,
-    box-shadow 0.3s;
+      border-color 0.3s,
+      box-shadow 0.3s;
 }
 
-.custom-numAlumnos {
+.booking__label-numAlumnos {
   margin-top: 10px;
 }
 
-.custom-select:hover {
+.booking__select:hover {
   border-color: #0056b3;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-h1 {
-  margin-bottom: -3%;
+.booking__title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 20px;
 }
 
-table {
+.booking__tabla {
   border-collapse: collapse;
   width: 100%;
   text-align: center;
@@ -563,16 +582,11 @@ td {
 td {
   height: 50px;
   width: 150px;
-  /* Establece un ancho fijo */
   background-color: #e9f5ff;
   text-overflow: ellipsis;
-  /* Para manejar contenido largo */
   overflow: hidden;
-  /* Oculta cualquier contenido que desborde */
   word-wrap: break-word;
-  /* Permite que el texto largo se divida y se ajuste */
 }
-
 
 th {
   background-color: #007bff;
@@ -580,25 +594,21 @@ th {
   font-weight: bold;
 }
 
-td {
+.booking__celda {
   height: 50px;
   background-color: #e9f5ff;
 }
 
 .reservaHover:hover {
-  /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
   cursor: pointer;
 }
 
 .reservaBloqueadaHover:hover {
-  /* Para que cuando se pase por encima de la tabla con el ratón se cambie el formato del ratón */
   cursor: auto;
 }
 
-
 th:first-child {
   background-color: #0056b3;
-  /* Diferenciar la columna de tramos horarios */
 }
 
 button {
@@ -612,10 +622,9 @@ button {
 
 tr:hover td {
   background-color: #d0eaff;
-  /* Efecto hover en filas */
 }
 
-.modal-overlay {
+.booking__modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -628,7 +637,7 @@ tr:hover td {
   z-index: 1000;
 }
 
-.modal-content {
+.booking__modal-content {
   background-color: white;
   padding: 20px;
   border-radius: 10px;
@@ -636,16 +645,16 @@ tr:hover td {
   width: 300px;
 }
 
-.modal-content h2 {
+.booking__modal-content h2 {
   margin-bottom: 10px;
 }
 
-.modal-content label {
+.booking__modal-content label {
   display: block;
   margin-bottom: 5px;
 }
 
-.modal-content input {
+.booking__input-modal {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
@@ -653,7 +662,7 @@ tr:hover td {
   border: 1px solid #ccc;
 }
 
-.modal-content button {
+.booking__modal-content button {
   width: 100%;
   padding: 10px;
   margin-top: 10px;
@@ -664,53 +673,51 @@ tr:hover td {
   cursor: pointer;
 }
 
-.modal-content button:hover {
+.booking__modal-content button:hover {
   background-color: #0056b3;
 }
 
-/* Contenedor que permite el scroll horizontal solo en móviles */
-@media (max-width: 768px) {
-  .tabla-container {
-    overflow-x: auto;
-    display: block;
-    white-space: nowrap;
-  }
-
-  /* Hacer que los tramos se mantengan visibles (bloqueados) */
-  .sticky-column {
-    position: sticky;
-    left: 0;
-    background: white;
-    /* Para que no se mezcle con otras celdas */
-    z-index: 2;
-  }
-
-  .custom-select {
-    width: 100%;
-  }
-}
-
-.titulo-pagina {
-  text-align: center;
-  font-size: 30px;
+.booking__mensaje-numAlumno {
   font-weight: bold;
-  margin-top: 20px;
+  font-size: 14px;
+  color: #dc3545;
 }
 
-.incidence-message {
+.booking__incidence-message {
   margin-top: 20px;
   text-align: center;
   font-size: 16px;
   color: var(--text-color-light);
 }
 
-.incidence-message a {
+.booking__incidence-message a {
   color: var(--primary-color);
   text-decoration: underline;
 }
 
-.incidence-message a:hover {
+.booking__incidence-message a:hover {
   color: var(--primary-color-hover);
   cursor: pointer;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .booking__tabla {
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .booking__columna-sticky {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 2;
+  }
+
+  .booking__select {
+    width: 100%;
+  }
+}
 </style>
+

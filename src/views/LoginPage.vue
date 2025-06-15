@@ -28,7 +28,7 @@
     </div>
 
     <div class="login__photo">
-      <img src="../assets/img/login/login.jpg" alt="login image">
+      <img src="../assets/img/login/login.png" alt="login image">
     </div>
   </div>
 </template>
