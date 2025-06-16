@@ -2,12 +2,30 @@ import { bookingsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
 export const getDiasSemana = async (toastMessage, toastColor, isToastOpen) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/days_week',
+  const response = await fetch(bookingsApiUrl + '/bookings/fixed/days_week',
+  {
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+  return await response.json()
+}
+
+export const getTramosHorarios = async (toastMessage, toastColor, isToastOpen) =>
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+  const response = await fetch(bookingsApiUrl + '/bookings/fixed/timeslots',
     {
       method: 'GET',
       headers:
@@ -16,308 +34,215 @@ export const getDiasSemana = async (toastMessage, toastColor, isToastOpen) =>
       },
     })
 
-    if (!response.ok)
-    {
-      throw new Error('No se ha cargado previamente ningun dato de los dias de la semana')
-    }
-    return await response.json()
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
-  catch (error)
-  {
-    console.log(error)
-  }
-}
-
-export const getTramosHorarios = async (toastMessage, toastColor, isToastOpen) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/timeslots',
-      {
-        method: 'GET',
-        headers:
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-        },
-      })
-
-    if (!response.ok)
-    {
-      throw new Error('No se ha cargado previamente ningun horario')
-    }
-    return await response.json()
-  }
-  catch (error)
-  {
-    console.log(error)
-  }
+  return await response.json()
 }
 
 export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso, cantidad, esCompartible) =>
 {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
-    {
-      method: 'POST',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        recurso: recurso,
-        cantidad: cantidad,
-        esCompartible: esCompartible
-      }
-    })
-    return response
-  }
-  catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
   {
-    console.log('Error al crear el recurso');
+    method: 'POST',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      recurso: recurso,
+      cantidad: cantidad,
+      esCompartible: esCompartible
+    }
+    })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+  return response
 }
+
 
 //obtener reserva a partir de un recurso
 export const getRecursos = async (toastMessage, toastColor, isToastOpen) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
+  const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
+  {
+    method: 'GET',
+    headers:
     {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-      }
-    })
-
-    if (!response.ok)
-    {
-      throw new Error('No se ha cargado previamente ningun recurso')
+      'Authorization': `Bearer ${tokenPropio}`,
     }
-    return await response.json()
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
-  catch (error)
-  {
-    console.log(error)
-  }
+  return await response.json()
 }
 
 export const getRecursosCompartible = async (toastMessage, toastColor, isToastOpen, esCompartible) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/resourcesCompartible',
-    {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        esCompartible: esCompartible
-      },
-    })
-
-    if (!response.ok)
-    {
-      throw new Error('No se ha cargado previamente ningun recurso')
-    }
-    return await response.json()
-  }
-  catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/fixed/resourcesCompartible',
   {
-    console.log(error)
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      esCompartible: esCompartible
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+  return await response.json()
 }
 
 export const comprobarEliminacion = async (toastMessage, toastColor, isToastOpen, recurso) =>
 {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/admin/checkDelete',
-    {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        recurso: recurso
-      },
-    })
-
-    if (!response.ok)
-    {
-      throw new Error('No se ha cargado previamente ningun recurso')
-    }
-    return await response.json()
-  }
-  catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/admin/checkDelete',
   {
-    console.log(error)
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      recurso: recurso
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+  return await response.json()
 }
 
 export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurso) =>
 {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
+  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
+  {
+    method: 'DELETE',
+    headers:
     {
-      method: 'DELETE',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        recurso: recurso
-      },
-    })
+      'Authorization': `Bearer ${tokenPropio}`,
+      recurso: recurso
+    },
+  })
 
-    if (!response.ok) {
-      throw new Error('No se ha cargado previamente ningun recurso')
-    }
-  }
-  catch (error)
-  {
-    console.log(error)
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
 }
 
 export const deleteRecursoReserva = async(toastMessage, toastColor, isToastOpen, recurso) =>
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/bookings',
   {
-    try
+    method: 'DELETE',
+    headers:
     {
-      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+      'Authorization': `Bearer ${tokenPropio}`,
+      recurso: recurso
+    },
+  })
 
-      const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/bookings',
-      {
-        method: 'DELETE',
-        headers:
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-          recurso: recurso
-        },
-      })
-
-      if (!response.ok)
-      {
-        throw new Error('No se ha cargado previamente ningun recurso')
-      }
-
-    }
-    catch (error)
-    {
-      console.log(error)
-    }
+  if (!response.ok)
+  {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+}
 
 export const postReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, motivoCurso) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings',
-      {
-      method: 'POST',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        email: email,
-        recurso: recurso,
-        diaDeLaSemana: diaDeLaSemana,
-        tramosHorarios: tramoHorario,
-        nAlumnos: nAlumnos,
-        motivoCurso: motivoCurso
-      },
-    })
-
-    if (!response.ok)
+  const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings',
     {
-      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-    }
-    return await response.json()
-  }
-  catch (error)
-  {
-    console.log();
+    method: 'POST',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      email: email,
+      recurso: recurso,
+      diaDeLaSemana: diaDeLaSemana,
+      tramosHorarios: tramoHorario,
+      nAlumnos: nAlumnos,
+      motivoCurso: motivoCurso
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
 }
 
 export const getReservas = async (toastMessage, toastColor, isToastOpen, recurso) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings',
-    {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        aulaYCarritos: recurso,
-      },
-    })
-
-    if (!response.ok)
-    {
-      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-    }
-    const data = await response.json()
-    return data
-  }
-  catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings',
   {
-    console.error('Error al obtener las reservas:', error)
-    throw error
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      aulaYCarritos: recurso,
+    },
+  })
+
+  if (!response.ok)
+  {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+  return await response.json()
 }
 
 export const deleteReserva = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario) =>
-  {
-  try
-  {
-      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-      const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings', {
-        method: 'DELETE',
-        headers:
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-          email: email,
-          recurso: recurso,
-          diaDeLaSemana: diaDeLaSemana,
-          tramoHorario: tramoHorario,
-        },
-      })
-
-      if (!response.ok)
-      {
-        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-      }
-    }
-    catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings', {
+    method: 'DELETE',
+    headers:
     {
-      console.error('Error al eliminar la reserva:', error)
-      throw error
-    }
+      'Authorization': `Bearer ${tokenPropio}`,
+      email: email,
+      recurso: recurso,
+      diaDeLaSemana: diaDeLaSemana,
+      tramoHorario: tramoHorario,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+}
 
 export const getProfesores = async (toastMessage, toastColor, isToastOpen) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(firebaseApiUrl + '/firebase/queries/users', {
+  const response = await fetch(firebaseApiUrl + '/firebase/queries/users', {
       method: 'GET',
       headers:
       {
@@ -325,27 +250,19 @@ export const getProfesores = async (toastMessage, toastColor, isToastOpen) =>
       },
     })
 
-    if (!response.ok)
-    {
-      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-    }
-    return await response.json()
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
-  catch (error)
-  {
-    console.error('Error al devolver los profesores:', error)
-    throw error
-  }
+  return await response.json()
 }
 
 
 export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, nAlumnos, numSemana, esSemanal, motivoCurso) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
+  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
       {
       method: 'POST',
       headers:
@@ -360,58 +277,42 @@ export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen
         esSemanal: esSemanal,
         motivoCurso: motivoCurso
       }
-    })
+  })
 
-    if (!response.ok)
-    {
-      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-    }
-    return await response.json()
-  }
-  catch (error)
-  {
-    console.log();
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
 }
 
 export const getReservasTemporary = async (toastMessage, toastColor, isToastOpen, recurso, numSemana) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
-    {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        aulaYCarritos: recurso,
-        numSemana: numSemana,
-      },
-    })
-
-    if (!response.ok)
-    {
-      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-    }
-    const data = await response.json()
-    return data
-  }
-  catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
   {
-    console.error('Error al obtener las reservas:', error)
-    throw error
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      aulaYCarritos: recurso,
+      numSemana: numSemana,
+    },
+  })
+
+  if (!response.ok)
+  {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+  return await response.json()
 }
 
 export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOpen, email, recurso, diaDeLaSemana, tramoHorario, numSemana, esSemanal) =>
-  {
-  try
-  {
-      const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-      const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings', {
+  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings', {
         method: 'DELETE',
         headers:
         {
@@ -425,130 +326,96 @@ export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOp
         },
       })
 
-      if (!response.ok)
-      {
-        throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
-      }
-    }
-    catch (error)
-    {
-      console.error('Error al eliminar la reserva:', error)
-      throw error
-    }
+  if (!response.ok)
+  {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
 }
 
 export const getCantMaxResource = async (toastMessage, toastColor, isToastOpen) =>
 {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/cantMax',
-    {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-      },
-    })
-
-    if (!response.ok)
-    {
-      throw new Error('No se ha cargado previamente ningun recurso')
-    }
-    return await response.json()
-  }
-  catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/cantMax',
   {
-    console.log(error)
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+  return await response.json()
 }
 
 export const getCheckAvailable = async (toastMessage, toastColor, isToastOpen,diaDeLaSemana,recurso,tramoHorario,numAlumnos,semanas) =>
 {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings/available',
-    {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        'diaDeLaSemana': diaDeLaSemana,
-        'recurso': recurso,
-        'tramoHorario': tramoHorario,
-        'numAlumnos': numAlumnos,
-        'semanas': semanas
-      },
-    })
-
-    if (!response.ok)
-    {
-      throw new Error('No se ha cargado previamente ningun recurso')
-    }
-    return await response.json()
-  }
-  catch (error)
+  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings/available',
   {
-    console.log(error)
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      'diaDeLaSemana': diaDeLaSemana,
+      'recurso': recurso,
+      'tramoHorario': tramoHorario,
+      'numAlumnos': numAlumnos,
+      'semanas': semanas
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
+  return await response.json()
 }
 
 export const modifyResourceLock = async (toastMessage, toastColor, isToastOpen, recurso, bloqueado) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
-      {
-      method: 'PUT',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        recurso: recurso,
-        bloqueado: bloqueado,
-      }
-    })
-
-    if (!response.ok)
+  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
     {
-      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    method: 'PUT',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      recurso: recurso,
+      bloqueado: bloqueado,
     }
-    return await response.json()
-  }
-  catch (error)
-  {
-    console.log();
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
 }
 
 export const getPaginatedLogs = async (toastMessage, toastColor, isToastOpen, pagina) =>
-  {
-  try
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    const response = await fetch(bookingsApiUrl + '/bookings/admin/logs',
-      {
-      method: 'GET',
-      headers:
-      {
-        'Authorization': `Bearer ${tokenPropio}`,
-        pagina: pagina
-      }
-    })
-
-    if (!response.ok)
+  const response = await fetch(bookingsApiUrl + '/bookings/admin/logs',
     {
-      throw new Error(`Error en la solicitud: ${response.status} - ${response.statusText}`)
+    method: 'GET',
+    headers:
+    {
+      'Authorization': `Bearer ${tokenPropio}`,
+      pagina: pagina
     }
-    return await response.json()
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
-  catch (error)
-  {
-    console.log("Error al obtener los logs:", error);
-  }
+  return await response.json()
 }

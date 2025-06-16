@@ -4,8 +4,10 @@
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == '' && !recursoSeleccionadoBloqueado">{{ mensajeInformativo }}</span>
-    <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está bloqueado</span>
+    <span class="mensajeInformativo"
+      v-if="mensajeInformativo && valorConstante == '' && !recursoSeleccionadoBloqueado">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está
+      bloqueado</span>
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
@@ -162,7 +164,6 @@ const numAlumnos = ref('')
 const motivoCurso = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
-let mensajeActualizacion = ''
 const valorConstante = ref('')
 let mensajeColor = ''
 let emailUserActual = '';
@@ -193,9 +194,8 @@ const verificarConstantes = async () => {
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
-    mensajeActualizacion = 'Error al obtener constantes';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
     throw new Error(error.message);
   }
 }
@@ -218,7 +218,7 @@ const openModal = (tramo, dia, email) => {
     currentTramo.value = tramo
     currentDia.value = dia
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
-    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
+    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || 1 // Cargar número de alumnos si existe
     isModalOpen.value = true
     verificarConstantes()
     getReserva()
@@ -227,7 +227,7 @@ const openModal = (tramo, dia, email) => {
     currentTramo.value = tramo
     currentDia.value = dia
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
-    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
+    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || 1 // Cargar número de alumnos si existe
     isModalOpen.value = true
     verificarConstantes()
     getReserva()
@@ -242,30 +242,27 @@ const closeModal = () => {
 // Función para guardar los cambios (ahora usando `postReserva`)
 const saveChanges = async () => {
   if (!currentDia.value || !currentTramo.value || !recursoSeleccionado.value) {
-    mensajeActualizacion = 'Faltan datos para guardar la reserva';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Faltan datos para guardar la reserva');
     return;
   }
 
   // Validar si ya existe un email en la reserva del mismo día y tramo
   const reservaExistente = reservas.value[currentTramo.value.id]?.[currentDia.value.id];
   if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
-    mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Ya existe una reserva con un email en este día y tramo.');
     return;
   }
 
   if (motivoCurso.value === '') {
-    mensajeActualizacion = 'El campo "Motivo y Curso" es obligatorio.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'El campo "Motivo y Curso" es obligatorio');
     return;
   }
 
   try {
-    mensajeActualizacion = 'Reserva guardada correctamente';
+    let mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
 
     // Normalizar número de alumnos
@@ -278,10 +275,10 @@ const saveChanges = async () => {
 
     // Llamar a la API para guardar la reserva
     await postReserva(
-      isToastOpen,
       toastMessage,
       toastColor,
-      profesorSeleccionado.value  || emailUsuarioActual.value,
+      isToastOpen,
+      profesorSeleccionado.value || emailUsuarioActual.value,
       recursoSeleccionado.value,
       currentDia.value.id,
       currentTramo.value.id,
@@ -307,9 +304,8 @@ const saveChanges = async () => {
 
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
   } catch (error) {
-    mensajeActualizacion = 'Error al crear la reserva';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
 
   closeModal();
@@ -325,9 +321,8 @@ const getDiasSemanas = async () => {
     diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
   }
   catch (error) {
-    mensajeActualizacion = 'Error obteniendo los días de la semana'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
 }
 
@@ -341,9 +336,8 @@ const getTramosHorario = async () => {
     }))
   }
   catch (error) {
-    mensajeActualizacion = 'Error obteniendo los tramos horarios'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
 }
 
@@ -362,39 +356,44 @@ const getRecurso = async () => {
     }
   }
   catch (error) {
-    mensajeActualizacion = 'Error obteniendo los recursos'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
 }
 
 // Función para obtener las reservas estructuradas
 const getReserva = async () => {
-  const recurso = recursoSeleccionado.value;
-  const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)
+  try {
+    const recurso = recursoSeleccionado.value;
+    const data = await getReservas(isToastOpen, toastMessage, toastColor, recurso)
 
-  // Reestructurar reservas en un objeto organizado por tramos y días
-  const estructuraReservas = {}
+    // Reestructurar reservas en un objeto organizado por tramos y días
+    const estructuraReservas = {}
 
-  for (let i = 0; i < data.length; i++) {
-    const reserva = data[i]
-    const tramo = reserva.tramoHorario
-    const dia = reserva.diaSemana
+    for (let i = 0; i < data.length; i++) {
+      const reserva = data[i]
+      const tramo = reserva.tramoHorario
+      const dia = reserva.diaSemana
 
-    if (!estructuraReservas[tramo]) {
-      estructuraReservas[tramo] = {}
+      if (!estructuraReservas[tramo]) {
+        estructuraReservas[tramo] = {}
+      }
+
+      estructuraReservas[tramo][dia] =
+      {
+        nalumnos: reserva.nalumnos,
+        nombreYapellidos: reserva.nombreYapellidos,
+        email: reserva.email,
+        plazasRestantes: reserva.plazasRestantes,
+        motivoCurso: reserva.motivoCurso,
+      }
     }
-
-    estructuraReservas[tramo][dia] =
-    {
-      nalumnos: reserva.nalumnos,
-      nombreYapellidos: reserva.nombreYapellidos,
-      email: reserva.email,
-      plazasRestantes: reserva.plazasRestantes,
-      motivoCurso: reserva.motivoCurso,
-    }
+    reservas.value = estructuraReservas
   }
-  reservas.value = estructuraReservas
+  catch (error) {
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
+  }
 }
 
 const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => {
@@ -404,15 +403,12 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email) => 
     // Llamar a la API para cancelar la reserva
     await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
 
-
-    mensajeActualizacion = 'Reserva cancelada correctamente'
     mensajeColor = 'success'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva cancelada correctamente')
   }
   catch (error) {
-    mensajeActualizacion = 'Error al cancelar la reserva'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
   getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
 }
@@ -452,9 +448,8 @@ async function verificarRoles() {
     rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
   }
   catch (error) {
-    mensajeActualizacion = 'Error al verificar roles'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
 }
 
@@ -493,8 +488,7 @@ onMounted(async () => {
   margin-bottom: 15px;
 }
 
-.mensajeInformativoBloqueo
-{
+.mensajeInformativoBloqueo {
   color: #ff9900;
   padding: 10px;
   font-size: 25px;

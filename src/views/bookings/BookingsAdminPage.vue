@@ -263,7 +263,6 @@ const recurso = ref("");
 const cantidad = ref("");
 
 // Nueva variable reactiva para el mensaje de actualización
-let mensajeActualizacion = "";
 let mensajeColor = "";
 
 // Función que se llama cuando el usuario selecciona una constante
@@ -284,38 +283,63 @@ const onReservaChange = () => {
   }
 };
 const borrarReservasRecurso = async () => {
-  await deleteRecursoReserva(isToastOpen, toastMessage, toastColor, selectedRecurso.value.recursos);
-  mensajeActualizacion = "Reservas eliminadas correctamente";
-  mensajeColor = "success";
-  crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-  getRecurso();
+  try {
+    await deleteRecursoReserva(isToastOpen, toastMessage, toastColor, selectedRecurso.value.recursos);
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Reservas eliminadas correctamente");
+    getRecurso();
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+  }
 }
 
 const getRecurso = async () => {
-  const data = await getRecursos(isToastOpen, toastMessage, toastColor);
-  if (data) {
-    recursos.value = data.map((item) => ({ recursos: item.id, }));
-  }
-  else {
-    mensajeActualizacion = "No existen recursos todavía";
-    mensajeColor = "warning";
+  try {
+    const data = await getRecursos(isToastOpen, toastMessage, toastColor);
+    if (data) {
+      recursos.value = data.map((item) => ({ recursos: item.id, }));
+    }
+    else {
+      mensajeColor = "warning";
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        mensajeColor,
+        "No existen recursos todavía"
+      );
+    }
+  } catch (error) {
+    mensajeColor = "danger";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
   }
 }
 
 const getCantMax = async () => {
-  const data = await getCantMaxResource(
-    isToastOpen,
-    toastMessage,
-    toastColor
-  );
-  recursosCantidadMaxima.value = data;
+  try {
+    const data = await getCantMaxResource(
+      isToastOpen,
+      toastMessage,
+      toastColor
+    );
+    recursosCantidadMaxima.value = data;
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      error.message
+    );
+  }
 }
 
 // Función para actualizar la constante seleccionada
@@ -332,27 +356,23 @@ const actualizarConstanteSeleccionada = async () => {
       isToastOpen,
       constantesActualizadas
     );
-    mensajeActualizacion = "Constantes actualizadas con éxito";
     mensajeColor = "success";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      "Constantes actualizadas con éxito"
     );
   } catch (error) {
-    mensajeActualizacion = "Error al actualizar la constante";
     mensajeColor = "danger";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
-    throw new Error(error.message);
-
   }
 };
 
@@ -376,21 +396,21 @@ const cargarConstantes = async () => {
       selectedConstante.value = reservaDeshabilitada;
     }
   } catch (error) {
-    mensajeActualizacion = "Error al obtener constantes";
     mensajeColor = "danger";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
-    throw new Error(error.message);
   }
 };
 
 const crearRecurso = async () => {
   try {
+    let mensajeActualizacion = "Operación realizada correctamente";
+    mensajeColor = "success";
     if (parseInt(cantidad.value) < 0) {
       cantidad.value = cantidad.value * -1;
     }
@@ -404,11 +424,7 @@ const crearRecurso = async () => {
       esCompartibleGestion.value
     );
 
-    if (status.status == 200) {
-      mensajeActualizacion = "Operación realizada correctamente";
-      mensajeColor = "success";
-    }
-    else if (status.status == 409) {
+    if (status.status == 409) {
 
       const compartido = recursosCompartido.value.find((item) => item.recursos === recurso.value);
 
@@ -433,14 +449,13 @@ const crearRecurso = async () => {
     //cantidad.value = "";
     cargarRecursos();
   } catch (error) {
-    mensajeActualizacion = "Error al crear el recurso";
     mensajeColor = "danger";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
   }
 };
@@ -472,14 +487,13 @@ const cargarRecursos = async () => {
 
 
   } catch (error) {
-    mensajeActualizacion = "No existen recursos todavía";
     mensajeColor = "warning";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
   }
 };
@@ -487,7 +501,7 @@ const cargarRecursos = async () => {
 const bloquearRecurso = async (recurso, bloqueado) => {
   try {
     await modifyResourceLock(isToastOpen, toastMessage, toastColor, recurso, bloqueado);
-    mensajeActualizacion = "";
+    let mensajeActualizacion = "";
 
     if (bloqueado) {
       mensajeActualizacion = "Recurso bloqueado correctamente";
@@ -505,14 +519,13 @@ const bloquearRecurso = async (recurso, bloqueado) => {
     );
     await cargarRecursos();
   } catch (error) {
-    mensajeActualizacion = "Error al actualizar el recurso";
     mensajeColor = "danger";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
   }
 }
@@ -526,27 +539,24 @@ const eliminarRecurso = async (recurso, event) => {
     if (data) {
       await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso);
       mensajeColor = "success";
-      mensajeActualizacion = "Recurso eliminado correctamente";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Recurso eliminado correctamente");
     }
     else {
-      mensajeActualizacion = "No se puede eliminar el recurso, ya que tiene reservas asociadas";
       mensajeColor = "danger";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "No se puede eliminar el recurso, ya que tiene reservas asociadas");
     }
 
     // Recargar los recursos desde el backend para asegurarse de que todo esté sincronizado
     cargarRecursos();
   } catch (error) {
     // Si ocurre un error, mostrar mensaje de error
-    mensajeActualizacion = "Error eliminando el recurso";
     mensajeColor = "danger";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
   }
 };
@@ -592,26 +602,24 @@ const paginarLogs = async (pagina) => {
       }
     }
     else {
-      mensajeActualizacion = "No hay logs disponibles para la página seleccionada";
       mensajeColor = "warning";
       crearToast(
         toastMessage,
         toastColor,
         isToastOpen,
         mensajeColor,
-        mensajeActualizacion
+        "No hay logs disponibles para la página seleccionada"
       );
     }
   }
   catch (error) {
-    mensajeActualizacion = "Todavía no existen logs disponibles";
     mensajeColor = "warning";
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       mensajeColor,
-      mensajeActualizacion
+      error.message
     );
   }
 }

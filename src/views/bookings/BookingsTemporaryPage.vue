@@ -12,10 +12,11 @@
 
     <div class="date-picker-container">
       <label class="label-datepicker" for="start">Selecciona una fecha</label>
-      <Datepicker v-model="fechaActual" :auto-apply="true" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false"
-        :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso"
-        @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es"
-        input-class="datepicker-input-custom" menu-class="datepicker-menu-custom" />
+      <Datepicker v-model="fechaActual" :auto-apply="true" :disabled-dates="disableWeekends" :enable-time-picker="false"
+        :clearable="false" :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
+        :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso" @update:model-value="actualizarSemana"
+        id="start" name="trip-start" locale="es" input-class="datepicker-input-custom"
+        menu-class="datepicker-menu-custom" />
     </div>
     <br>
     <!-- Dropdown para seleccionar recurso -->
@@ -157,9 +158,12 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <Datepicker v-model="fechaRepeticion" :auto-apply = "true" :disabled-dates="disableWeekends" :enable-time-picker="false"
-            :clearable="false" :highlight="semanaSeleccionadaRepeticion.length > 0 ? semanaSeleccionadaRepeticion : semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
-            :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso" @update:model-value="sombrearRepeticion(fechaRepeticion)"
+          <Datepicker v-model="fechaRepeticion" :auto-apply="true" :disabled-dates="disableWeekends"
+            :enable-time-picker="false" :clearable="false"
+            :highlight="semanaSeleccionadaRepeticion.length > 0 ? semanaSeleccionadaRepeticion : semanaSeleccionada"
+            :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
+            :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso"
+            @update:model-value="sombrearRepeticion(fechaRepeticion)"
             :input-class="{ 'placeholder-date': !fechaSeleccionada }" />
         </div>
         <span class="custom-message-numAlumno"
@@ -234,7 +238,6 @@ const numAlumnos = ref('')
 const motivoCurso = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
-let mensajeActualizacion = ''
 const valorConstante = ref('')
 let mensajeColor = ''
 let emailUserActual = '';
@@ -368,13 +371,19 @@ const resetearSemana = () => {
 
 const confirmacionBorrado = async () => {
 
-  if (deleteOption.value == "Semanal") {
-    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, true);
-    closeDeleteModal();
+  try {
+    if (deleteOption.value == "Semanal") {
+      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, true);
+      closeDeleteModal();
+    }
+    else {
+      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, false);
+      closeDeleteModal();
+    }
   }
-  else {
-    await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, false);
-    closeDeleteModal();
+  catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
 }
 
@@ -467,32 +476,38 @@ const incrementarFecha = () => {
 }
 
 const repetirReserva = async () => {
-  let motivo = '';
-  if (motivoCurso.value != '') {
-    motivo = motivoCurso.value;
-  }
-
-  if (opcionRepeticion.value === 'Semanal') {
-    do {
-      await postReservaTemporary(
-        isToastOpen,
-        toastMessage,
-        toastColor,
-        profesorSeleccionado.value,
-        recursoSeleccionado.value,
-        currentDia.value.id,
-        currentTramo.value.id,
-        numAlumnos.value,
-        +semana.value,
-        true,
-        motivo,
-      );
-      semana.value = parseInt(semana.value) + 1;
+  try {
+    let motivo = '';
+    if (motivoCurso.value != '') {
+      motivo = motivoCurso.value;
     }
-    while (semana.value <= semanaLimite.value);
-    resetearSemana();
+
+    if (opcionRepeticion.value === 'Semanal') {
+      do {
+        await postReservaTemporary(
+          isToastOpen,
+          toastMessage,
+          toastColor,
+          profesorSeleccionado.value,
+          recursoSeleccionado.value,
+          currentDia.value.id,
+          currentTramo.value.id,
+          numAlumnos.value,
+          +semana.value,
+          true,
+          motivo,
+        );
+        semana.value = parseInt(semana.value) + 1;
+      }
+      while (semana.value <= semanaLimite.value);
+      resetearSemana();
+    }
+    getReserva(recursoSeleccionado);
   }
-  getReserva(recursoSeleccionado);
+  catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+  }
 }
 
 const verificarRecursos = () => {
@@ -512,10 +527,8 @@ const verificarConstantes = async () => {
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
-    mensajeActualizacion = 'Error al obtener constantes';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    throw new Error(error.message);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
 }
 
@@ -536,7 +549,7 @@ const openModal = (tramo, dia, email) => {
     currentTramo.value = tramo
     currentDia.value = dia
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
-    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
+    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || 1 // Cargar número de alumnos si existe
     isModalOpen.value = true
     verificarConstantes()
     getReserva()
@@ -545,7 +558,7 @@ const openModal = (tramo, dia, email) => {
     currentTramo.value = tramo
     currentDia.value = dia
     correoProfesor.value = reservas[dia.id]?.[tramo.id]?.email || '' // Cargar correo si existe
-    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || '' // Cargar número de alumnos si existe
+    numAlumnos.value = reservas[dia.id]?.[tramo.id]?.nalumnos || 1 // Cargar número de alumnos si existe
     isModalOpen.value = true
     verificarConstantes()
     getReserva()
@@ -561,30 +574,27 @@ const closeModal = () => {
 // Función para guardar los cambios (ahora usando `postReserva`)
 const saveChanges = async () => {
   if (!currentDia.value || !currentTramo.value || !recursoSeleccionado.value) {
-    mensajeActualizacion = 'Faltan datos para guardar la reserva';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Faltan datos para guardar la reserva');
     return;
   }
 
   // Validar si ya existe un email en la reserva del mismo día y tramo
   const reservaExistente = reservas.value[currentTramo.value.id]?.[currentDia.value.id];
   if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
-    mensajeActualizacion = 'Ya existe una reserva con un email en este día y tramo.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Ya existe una reserva con un email en este día y tramo.');
     return;
   }
 
   if (motivoCurso.value === '') {
-    mensajeActualizacion = 'El campo "Motivo y Curso" es obligatorio.';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'El campo "Motivo y Curso" es obligatorio.');
     return;
   }
 
   try {
-    mensajeActualizacion = 'Reserva guardada correctamente';
+    let mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
 
     // Normalizar número de alumnos
@@ -635,11 +645,8 @@ const saveChanges = async () => {
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
   } catch (error) {
-    mensajeActualizacion = 'Error al crear la reserva';
     mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    console.error(error);
-
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
 
   closeModal();
@@ -656,9 +663,8 @@ const getDiasSemanas = async () => {
     fechaMaxima.value = new Date(new Date().setDate(new Date().getDate() + Number(valorMaxDays.value))).toISOString().slice(0, 10);
   }
   catch (error) {
-    mensajeActualizacion = 'Error obteniendo los días de la semana'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
 }
 
@@ -672,9 +678,8 @@ const getTramosHorario = async () => {
     }))
   }
   catch (error) {
-    mensajeActualizacion = 'Error obteniendo los tramos horarios'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
 }
 
@@ -693,48 +698,53 @@ const getRecurso = async () => {
     }
   }
   catch (error) {
-    mensajeActualizacion = 'Error obteniendo los recursos'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
 }
 
 // Función para obtener las reservas estructuradas
 const getReserva = async () => {
-  const recurso = recursoSeleccionado.value;
-  preCargaSemana.value = getWeek(new Date());
-  mes.value = getMonth(new Date()) + 1;
+  try {
+    const recurso = recursoSeleccionado.value;
+    preCargaSemana.value = getWeek(new Date());
+    mes.value = getMonth(new Date()) + 1;
 
-  if (!semana.value) {
-    semana.value = preCargaSemana.value;
-  }
-
-  const data = await getReservasTemporary(isToastOpen, toastMessage, toastColor, recurso, +semana.value)
-
-  // Reestructurar reservas en un objeto organizado por tramos y días
-  const estructuraReservas = {}
-
-  for (let i = 0; i < data.length; i++) {
-    const reserva = data[i]
-    const tramo = reserva.tramoHorario
-    const dia = reserva.diaSemana
-
-    if (!estructuraReservas[tramo]) {
-      estructuraReservas[tramo] = {}
+    if (!semana.value) {
+      semana.value = preCargaSemana.value;
     }
 
-    estructuraReservas[tramo][dia] =
-    {
-      nalumnos: reserva.nalumnos,
-      nombreYapellidos: reserva.nombreYapellidos,
-      email: reserva.email,
-      plazasRestantes: reserva.plazasRestantes,
-      esfija: reserva.esfija,
-      motivoCurso: reserva.motivoCurso,
-      esSemanal: reserva.esSemanal,
+    const data = await getReservasTemporary(isToastOpen, toastMessage, toastColor, recurso, +semana.value)
+
+    // Reestructurar reservas en un objeto organizado por tramos y días
+    const estructuraReservas = {}
+
+    for (let i = 0; i < data.length; i++) {
+      const reserva = data[i]
+      const tramo = reserva.tramoHorario
+      const dia = reserva.diaSemana
+
+      if (!estructuraReservas[tramo]) {
+        estructuraReservas[tramo] = {}
+      }
+
+      estructuraReservas[tramo][dia] =
+      {
+        nalumnos: reserva.nalumnos,
+        nombreYapellidos: reserva.nombreYapellidos,
+        email: reserva.email,
+        plazasRestantes: reserva.plazasRestantes,
+        esfija: reserva.esfija,
+        motivoCurso: reserva.motivoCurso,
+        esSemanal: reserva.esSemanal,
+      }
     }
+    reservas.value = estructuraReservas
   }
-  reservas.value = estructuraReservas
+  catch (error) {
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
+  }
 }
 
 const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija, esSemanal) => {
@@ -743,9 +753,8 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
 
     if (esSemanal && esFija) {
       await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value, false)
-      mensajeActualizacion = 'Reserva cancelada correctamente'
       mensajeColor = 'success'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva cancelada correctamente')
       getReserva(recursoSeleccionado)
       return;
     }
@@ -760,22 +769,19 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
     }
     else {
       if (email !== emailUsuarioActual.value) {
-        mensajeActualizacion = 'No puedes borrar reservas de otras personas'
         mensajeColor = 'danger'
-        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'No puedes borrar reservas de otras personas')
       }
       else {
         await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
       }
     }
-    mensajeActualizacion = 'Reserva cancelada correctamente'
     mensajeColor = 'success'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva cancelada correctamente')
   }
   catch (error) {
-    mensajeActualizacion = 'No se pueden eliminar las reservas fijas desde las temporales'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
   }
   getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
 }
@@ -816,26 +822,30 @@ async function verificarRoles() {
     rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
   }
   catch (error) {
-    mensajeActualizacion = 'Error al verificar roles'
     mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
 }
 
 const comprobarDisponibilidad = async () => {
+  try {
+    const data = ref(true);
 
-  const data = ref(true);
+    // Array para almacenar las semanas
 
-  // Array para almacenar las semanas
-
-  if (opcionRepeticion.value == 'Semanal') {
-    for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {
-      semanas.push(i);  // Se agrega la semana al array
+    if (opcionRepeticion.value == 'Semanal') {
+      for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {
+        semanas.push(i);  // Se agrega la semana al array
+      }
+      data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
+      semanas = []; // Se reinicia el array
     }
-    data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
-    semanas = []; // Se reinicia el array
+    disponibleSemanal.value = data.value;
   }
-  disponibleSemanal.value = data.value;
+  catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+  }
 }
 
 
