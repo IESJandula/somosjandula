@@ -4,7 +4,8 @@
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == '' && !recursoSeleccionadoBloqueado">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está bloqueado</span>
     <!-- Dropdown para seleccionar recurso -->
     <select class="custom-select" v-model="recursoSeleccionado">
       <option v-for="(recurso, index) in recursos" :key="index" :value="recurso.recursos">
@@ -23,14 +24,14 @@
           <th v-for="(dia, index) in diasSemanas" :key="index">{{ dia.diaSemana }}</th>
         </tr>
       </thead>
-      <tbody v-if="valorConstante === ''">
+      <tbody v-if="valorConstante === '' && !recursoSeleccionadoBloqueado">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
@@ -53,7 +54,7 @@
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
@@ -75,7 +76,7 @@
           <td class="reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
                 </div>
@@ -108,16 +109,20 @@
           placeholder="Número de alumnos" min="0"
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))" />
 
+        <label class="custom-motivoCurso" for="motivoCurso">Motivo y Curso:</label>
+        <input class="custom-select-modal" v-model="motivoCurso" type="text" id="motivoCurso"
+          placeholder="Justifica el motivo y curso" />
+
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
           permitido: {{ ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ??
             cantidadSeleccionada)) }} alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0">Mínimo permitido: 1 Alumno</span>
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && motivoCurso"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION')"
+          v-else-if="motivoCurso && numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION')"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -150,9 +155,11 @@ const recursoSeleccionado = ref('')
 const cantidadSeleccionada = ref('')
 const profesorSeleccionado = ref('')
 const recursoSeleccionadoCompartible = ref(false)
+const recursoSeleccionadoBloqueado = ref(false)
 const isModalOpen = ref(false)
 const correoProfesor = ref('')
 const numAlumnos = ref('')
+const motivoCurso = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
 let mensajeActualizacion = ''
@@ -250,6 +257,13 @@ const saveChanges = async () => {
     return;
   }
 
+  if (motivoCurso.value === '') {
+    mensajeActualizacion = 'El campo "Motivo y Curso" es obligatorio.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
   try {
     mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
@@ -262,17 +276,17 @@ const saveChanges = async () => {
       alumnos = maxAlumnos;
     }
 
-
     // Llamar a la API para guardar la reserva
     await postReserva(
       isToastOpen,
       toastMessage,
       toastColor,
-      profesorSeleccionado.value,
+      profesorSeleccionado.value  || emailUsuarioActual.value,
       recursoSeleccionado.value,
       currentDia.value.id,
       currentTramo.value.id,
-      alumnos
+      alumnos,
+      motivoCurso.value,
     );
 
     // Actualizar reservas localmente
@@ -299,6 +313,7 @@ const saveChanges = async () => {
   }
 
   closeModal();
+  motivoCurso.value = '';
   getReserva(recursoSeleccionado); // Actualizar reservas después de guardar
 };
 
@@ -336,13 +351,14 @@ const getTramosHorario = async () => {
 const getRecurso = async () => {
   try {
     const data = await getRecursos(isToastOpen, toastMessage, toastColor)
-    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible }))
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible, bloqueado: item.bloqueado }))
 
     // Nos aseguraramos que recursos no está vacío antes de asignar
     if (recursos.value.length > 0) {
       recursoSeleccionado.value = recursos.value[0].recursos;
       cantidadSeleccionada.value = recursos.value[0].cantidad;
       recursoSeleccionadoCompartible.value = recursos.value[0].esCompartible;
+      recursoSeleccionadoBloqueado.value = recursos.value[0].bloqueado;
     }
   }
   catch (error) {
@@ -374,7 +390,8 @@ const getReserva = async () => {
       nalumnos: reserva.nalumnos,
       nombreYapellidos: reserva.nombreYapellidos,
       email: reserva.email,
-      plazasRestantes: reserva.plazasRestantes
+      plazasRestantes: reserva.plazasRestantes,
+      motivoCurso: reserva.motivoCurso,
     }
   }
   reservas.value = estructuraReservas
@@ -407,6 +424,7 @@ watch(recursoSeleccionado, () => {
   );
   cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
+  recursoSeleccionadoBloqueado.value = recursoEncontrado ? recursoEncontrado.bloqueado : false;
   isModalOpen.value = false
 
   if (recursoSeleccionadoCompartible.value) {
@@ -469,6 +487,15 @@ onMounted(async () => {
 
 .mensajeInformativo {
   color: #007bff;
+  padding: 10px;
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.mensajeInformativoBloqueo
+{
+  color: #ff9900;
   padding: 10px;
   font-size: 25px;
   font-weight: bold;

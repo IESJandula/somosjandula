@@ -43,7 +43,7 @@
         </ion-col>
       </ion-row>
     </div>
-  
+
     <!-- Lista de Recursos -->
     <div class="form-container-table">
       <div class="title-container">
@@ -72,8 +72,14 @@
                 <td>{{ r.recursos }}</td>
                 <td>{{ r.cantidad }}</td>
                 <td>
-                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                  <button @click.stop="eliminarRecurso(r.recursos, $event)">
                     X
+                  </button>
+                  <button class="btn-modify-lock" v-if="r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
+                    🔒
+                  </button>
+                  <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
+                    🔓
                   </button>
                 </td>
               </tr>
@@ -83,8 +89,14 @@
                 <td>{{ r.recursos }}</td>
                 <td>{{ r.cantidad }}</td>
                 <td>
-                  <button color="danger" @click.stop="eliminarRecurso(r.recursos, $event)">
+                  <button @click.stop="eliminarRecurso(r.recursos, $event)">
                     X
+                  </button>
+                  <button class="btn-modify-lock" v-if="r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
+                    🔒
+                  </button>
+                  <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
+                    🔓
                   </button>
                 </td>
               </tr>
@@ -97,7 +109,7 @@
       </ion-row>
     </div>
   </div>
-  
+
   <!-- Actualizar Constantes -->
   <div class="form-wrapper">
     <div class="form-container">
@@ -134,39 +146,75 @@
     </div>
     <!-- Borrado Reservas -->
     <div class="form-container">
-    <div class="title-container">
-      <h1 class="title">Borrado de Reservas por recurso</h1>
+      <div class="title-container">
+        <h1 class="title">Borrado de Reservas por recurso</h1>
+      </div>
+
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Seleccione el recurso a borrar:</ion-label>
+            <ion-select v-model="selectedRecurso" @ionChange="onReservaChange">
+              <ion-select-option v-for="recurso in [...recursos]" :key="recurso.id" :value="recurso">
+                {{ recurso.recursos }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" color="primary" @click="borrarReservasRecurso">
+            Borrar
+          </ion-button>
+        </ion-col>
+      </ion-row>
     </div>
-
-    <ion-row>
-      <ion-col size="12">
-        <ion-item>
-          <ion-label position="stacked">Seleccione el recurso a borrar:</ion-label>
-          <ion-select v-model="selectedRecurso" @ionChange="onReservaChange">
-            <ion-select-option
-              v-for="recurso in [...recursos]"
-              :key="recurso.id"
-              :value="recurso"
-            >
-              {{ recurso.recursos }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-      </ion-col>
-    </ion-row>
-
-    <ion-row>
-      <ion-col size="12">
-        <ion-button expand="block" color="primary" @click="borrarReservasRecurso">
-          Borrar
-        </ion-button>
-      </ion-col>
-    </ion-row>
   </div>
+  <div class="form-wrapper">
+    <div class="form-container-table-logs">
+      <div class="title-container">
+        <h1 class="title">Logs de Recursos</h1>
+        <div class="pagina-container">
+          <button class="decrementar-button" v-if="paginaActual > 0" @click="paginarLogs(--paginaActual)">
+            Anterior
+          </button>
+          <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
+          <button class="incrementar-button" v-if="disableLogsPaginated" @click="paginarLogs(++paginaActual)">
+            Siguiente
+          </button>
+        </div>
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th class="sticky-column">Fecha</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Tipo</th>
+              <th>Recurso</th>
+              <th>Reserva</th>
+              <th>Superusuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="log in logsPaginados" :key="log.numRegistro">
+              <td class="sticky-column">{{ log.fecha }}</td>
+              <td>{{ log.usuario }}</td>
+              <td>{{ log.accion }}</td>
+              <td>{{ log.tipo }}</td>
+              <td>{{ log.recurso }}</td>
+              <td>{{ log.locReserva }}</td>
+              <td>{{ log.superusuario }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
-    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-      @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
-  </template>
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+</template>
 
 <script setup>
 import { bookingsApiUrl } from "@/environment/apiUrls.ts";
@@ -184,11 +232,13 @@ import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
 import {
   postRecurso,
   getRecursosCompartible,
+  comprobarEliminacion,
   deleteRecurso,
-  getReservas,
   getRecursos,
   getCantMaxResource,
-  deleteRecursoReserva
+  deleteRecursoReserva,
+  modifyResourceLock,
+  getPaginatedLogs,
 } from "@/services/bookings";
 
 // Selección de constante
@@ -201,6 +251,9 @@ const esCompartibleLista = ref(false);
 const esCompartibleGestion = ref(false);
 const recursosCantidadMaxima = ref('');
 const recursos = ref([]);
+const logsPaginados = ref([]);
+const paginaActual = 0;
+const disableLogsPaginated = ref(true);
 // Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref("");
@@ -230,8 +283,7 @@ const onReservaChange = () => {
     selectedRecurso.value.valor = "";
   }
 };
-const borrarReservasRecurso = async() => 
-{
+const borrarReservasRecurso = async () => {
   await deleteRecursoReserva(isToastOpen, toastMessage, toastColor, selectedRecurso.value.recursos);
   mensajeActualizacion = "Reservas eliminadas correctamente";
   mensajeColor = "success";
@@ -241,7 +293,20 @@ const borrarReservasRecurso = async() =>
 
 const getRecurso = async () => {
   const data = await getRecursos(isToastOpen, toastMessage, toastColor);
-  recursos.value = data.map((item) => ({ recursos: item.id,}));
+  if (data) {
+    recursos.value = data.map((item) => ({ recursos: item.id, }));
+  }
+  else {
+    mensajeActualizacion = "No existen recursos todavía";
+    mensajeColor = "warning";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+  }
 }
 
 const getCantMax = async () => {
@@ -394,12 +459,14 @@ const cargarRecursos = async () => {
         recursos: item.id,
         cantidad: item.cantidad,
         esCompartible: item.esCompartibleLista,
+        bloqueado: item.bloqueado,
       }));
     } else {
       recursosNoCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
         esCompartible: item.esCompartibleLista,
+        bloqueado: item.bloqueado,
       }));
     }
 
@@ -417,46 +484,18 @@ const cargarRecursos = async () => {
   }
 };
 
-const eliminarRecurso = async (recurso, event) => {
+const bloquearRecurso = async (recurso, bloqueado) => {
   try {
-    event.stopPropagation();
+    await modifyResourceLock(isToastOpen, toastMessage, toastColor, recurso, bloqueado);
+    mensajeActualizacion = "";
 
-    const data = await getReservas(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      recurso
-    );
-
-    // Obtener un array de recursos asignados
-    const recursoEliminar = data.map((item) => item.recurso);
-
-    // Verificar si el recurso está asignado a alguna reserva
-    if (recursoEliminar.includes(recurso)) {
-      mensajeColor = "danger";
-      mensajeActualizacion =
-        "Como existen reservas asignadas a este recurso, no es posible borrarlo";
-      crearToast(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        mensajeColor,
-        mensajeActualizacion
-      );
-      return;
+    if (bloqueado) {
+      mensajeActualizacion = "Recurso bloqueado correctamente";
+    } else {
+      mensajeActualizacion = "Recurso desbloqueado correctamente";
     }
 
-    // Llamar a la API para eliminar el recurso en el backend
-    await deleteRecurso(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      recurso
-    );
-
-    // Mostrar mensaje de éxito
     mensajeColor = "success";
-    mensajeActualizacion = "Recurso eliminado correctamente";
     crearToast(
       toastMessage,
       toastColor,
@@ -464,6 +503,37 @@ const eliminarRecurso = async (recurso, event) => {
       mensajeColor,
       mensajeActualizacion
     );
+    await cargarRecursos();
+  } catch (error) {
+    mensajeActualizacion = "Error al actualizar el recurso";
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+  }
+}
+
+const eliminarRecurso = async (recurso, event) => {
+  try {
+    event.stopPropagation();
+
+    const data = await comprobarEliminacion(toastMessage, toastColor, isToastOpen, recurso);
+
+    if (data) {
+      await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso);
+      mensajeColor = "success";
+      mensajeActualizacion = "Recurso eliminado correctamente";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
+    else {
+      mensajeActualizacion = "No se puede eliminar el recurso, ya que tiene reservas asociadas";
+      mensajeColor = "danger";
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
 
     // Recargar los recursos desde el backend para asegurarse de que todo esté sincronizado
     cargarRecursos();
@@ -485,8 +555,70 @@ const switchRecurso = async () => {
   cargarRecursos();
 };
 
+const paginarLogs = async (pagina) => {
+  try {
+    const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
+    if (data.length >= 0) {
+      const formatearFecha = (fecha) => {
+        const date = new Date(fecha);
+        const pad = (n) => n.toString().padStart(2, '0');
+
+        const dia = pad(date.getDate());
+        const mes = pad(date.getMonth() + 1);
+        const anio = date.getFullYear();
+        const horas = pad(date.getHours());
+        const minutos = pad(date.getMinutes());
+
+        return `${dia}-${mes}-${anio} ${horas}:${minutos}`;
+      };
+
+      logsPaginados.value = data.map((item) => ({
+        numRegistro: item.numRegistro,
+        fecha: formatearFecha(item.fecha),
+        usuario: item.usuario,
+        accion: item.accion,
+        tipo: item.tipo,
+        recurso: item.recurso,
+        locReserva: item.locReserva,
+        superusuario: item.superusuario,
+        countMax: item.countMax,
+      }));
+
+      if (logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax) {
+        disableLogsPaginated.value = false;
+      }
+      else {
+        disableLogsPaginated.value = true;
+      }
+    }
+    else {
+      mensajeActualizacion = "No hay logs disponibles para la página seleccionada";
+      mensajeColor = "warning";
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        mensajeColor,
+        mensajeActualizacion
+      );
+    }
+  }
+  catch (error) {
+    mensajeActualizacion = "Todavía no existen logs disponibles";
+    mensajeColor = "warning";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+  }
+}
+
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
+  await paginarLogs(0);
   await cargarConstantes();
   await cargarRecursos();
   await getRecurso();
@@ -510,9 +642,10 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.form-container-table {
+.form-container-table,
+.form-container-table-logs {
   width: 100%;
-  max-width: 700px;
+  max-width: 50%;
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
@@ -524,6 +657,54 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
+.form-container-table-logs {
+  overflow-x: auto;
+  max-width: 83%;
+  overflow-y: auto;
+  display: block;
+  white-space: nowrap;
+}
+
+.sticky-column {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 2;
+}
+
+.decrementar-button {
+  background-color: #dc3545;
+  float: left;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-right: 10px;
+}
+
+.incrementar-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  float: right;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.numPagina {
+  display: flex;
+  align-items: center;
+  justify-content: block;
+}
+
+.pagina-container {
+  display: flex;
+  padding-top: 2%;
+  justify-content: space-between;
+  width: 100%;
+}
 
 .form-wrapper {
   display: flex;
@@ -687,6 +868,7 @@ tr:hover td {
 
 .title-container {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   position: relative;
   width: 100%;
@@ -767,6 +949,23 @@ input:checked+.slider:before {
   transform: translateX(26px);
 }
 
+.btn-modify-lock {
+  color: white;
+  border: none;
+  margin-left: 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-modify-unlock {
+  background-color: #025ec0;
+  color: white;
+  border: none;
+  margin-left: 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   .form-container {
@@ -776,6 +975,12 @@ input:checked+.slider:before {
   }
 
   .form-container-table {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+    border: 1px solid #444;
+  }
+
+  .form-container-table-logs {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
@@ -799,6 +1004,14 @@ input:checked+.slider:before {
     white-space: nowrap;
   }
 
+  .form-container-table-logs table {
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+    display: block;
+    white-space: nowrap;
+  }
+
   table {
     font-size: 14px;
     width: 100%;
@@ -814,5 +1027,6 @@ input:checked+.slider:before {
   .switch-container {
     margin-left: 0;
   }
+
 }
 </style>

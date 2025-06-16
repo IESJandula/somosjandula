@@ -5,12 +5,17 @@
   <div class="container">
     <span class="valorConstante" v-if="valorConstante">{{ valorConstante }}</span>
     <span class="valorConstante" v-if="logRecursos">{{ logRecursos }}</span>
-    <span class="mensajeInformativo" v-if="mensajeInformativo && valorConstante == ''">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativo"
+      v-if="mensajeInformativo && valorConstante == '' && !recursoSeleccionadoBloqueado">{{ mensajeInformativo }}</span>
+    <span class="mensajeInformativoBloqueo" v-if="recursoSeleccionadoBloqueado">Actualmente el recurso está
+      bloqueado</span>
 
     <div class="date-picker-container">
-      <label for="start">Selecciona una fecha</label>
-      <input type="date" id="start" name="trip-start" :value="fechaActual" :min="fechaInicioCurso" :max="fechaFinCurso"
-        @change="actualizarSemana($event)" />
+      <label class="label-datepicker" for="start">Selecciona una fecha</label>
+      <Datepicker v-model="fechaActual" :auto-apply="true" :disabled-dates="disableWeekends" :enable-time-picker="false" :clearable="false"
+        :highlight="semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso" :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso"
+        @update:model-value="actualizarSemana" id="start" name="trip-start" locale="es"
+        input-class="datepicker-input-custom" menu-class="datepicker-menu-custom" />
     </div>
     <br>
     <!-- Dropdown para seleccionar recurso -->
@@ -41,28 +46,37 @@
           </th>
         </tr>
       </thead>
-      <tbody v-if="valorConstante === ''">
+      <tbody v-if="valorConstante === '' && !recursoSeleccionadoBloqueado">
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="reservaHover" v-for="(dia, index) in diasSemanas" :key="index"
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
                   <div class="reservaFija" v-if="reservas[tramo.id][dia.id].esfija[index]">Fija</div>
+
                   <button
                     v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
                     @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
                     Borrar
                   </button>
+
                   <button
-                    v-else-if="rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && !reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual)"
+                    v-else-if="!reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
                     @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
                     Borrar
                   </button>
+
+                  <button
+                    v-else-if="!reservas[tramo.id][dia.id].esfija[index] && !reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index], !reservas[tramo.id][dia.id].esSemanal[index])">
+                    Borrar
+                  </button>
+
                 </div>
               </template>
             </span>
@@ -76,7 +90,7 @@
             @click="openModal(tramo, dia, reservas[tramo.id]?.[dia.id]?.email)">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
 
@@ -98,7 +112,7 @@
           <td class="reservaBloqueadaHover" v-for="(dia, index) in diasSemanas" :key="index">
             <span v-if="reservas[tramo.id]?.[dia.id] && reservas[tramo.id][dia.id].nalumnos[0] > 0">
               <template v-for="(nombre, index) in reservas[tramo.id][dia.id].nombreYapellidos" :key="index">
-                <div class="div_profesor">
+                <div class="div_profesor" :title="reservas[tramo.id][dia.id].motivoCurso[index]">
                   {{ nombre }} <br>
                   (Alumnos: {{ reservas[tramo.id][dia.id].nalumnos[index] }})
                 </div>
@@ -131,6 +145,11 @@
           placeholder="Número de alumnos" min="0"
           :max="((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))"
           @change="comprobarDisponibilidad()" />
+
+        <label class="custom-motivoCurso" for="motivoCurso">Motivo y Curso:</label>
+        <input class="custom-select-modal" v-model="motivoCurso" type="text" id="motivoCurso"
+          placeholder="Justifica el motivo y curso" />
+
         <label>Opciones de Repetición:</label>
         <select class="custom-select-modal" v-model="opcionRepeticion" @change="comprobarDisponibilidad()">
           <option value="" selected>Ninguna</option>
@@ -138,8 +157,10 @@
         </select>
         <div class="date-picker-container-modal" v-if="opcionRepeticion != ''">
           <label for="start">Limite de Repetición</label>
-          <input type="date" id="start" name="trip-start" v-model="fechaSeleccionada" :min="fechaInicioCurso"
-            :max="fechaFinCurso" @change="fechaModal($event), comprobarDisponibilidad()" :class="{'placeholder-date': !fechaSeleccionada }" />
+          <Datepicker v-model="fechaRepeticion" :auto-apply = "true" :disabled-dates="disableWeekends" :enable-time-picker="false"
+            :clearable="false" :highlight="semanaSeleccionadaRepeticion.length > 0 ? semanaSeleccionadaRepeticion : semanaSeleccionada" :format="'dd-MM-yyyy'" :min-date="fechaInicioCurso"
+            :max-date="fechaFinCurso > fechaMaxima ? fechaMaxima : fechaFinCurso" @update:model-value="sombrearRepeticion(fechaRepeticion)"
+            :input-class="{ 'placeholder-date': !fechaSeleccionada }" />
         </div>
         <span class="custom-message-numAlumno"
           v-if="numAlumnos > ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada))">Máximo
@@ -147,11 +168,12 @@
             cantidadSeleccionada)) }} alumnos</span>
         <span class="custom-message-numAlumno" v-else-if="numAlumnos <= 0" @change="comprobarDisponibilidad()">Mínimo
           permitido: 1 Alumno</span>
+
         <button
-          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
+          v-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && profesorSeleccionado && (opcionRepeticion == '' || fechaActual < fechaSeleccionada) && disponibleSemanal && motivoCurso"
           @click="saveChanges">Reservar</button>
         <button
-          v-else-if="numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
+          v-else-if="motivoCurso && numAlumnos && numAlumnos > 0 && numAlumnos <= ((reservas[currentTramo?.id]?.[currentDia?.id]?.plazasRestantes ?? cantidadSeleccionada)) && rolesUsuario.includes('PROFESOR') && !rolesUsuario.includes('ADMINISTRADOR') && !rolesUsuario.includes('DIRECCION') && (opcionRepeticion == '' || fechaSeleccionada) && disponibleSemanal"
           @click="saveChanges">Reservar</button>
         <button @click="closeModal">Cerrar</button>
       </div>
@@ -176,8 +198,6 @@
     </div>
   </div>
 
-
-
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="3000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
@@ -186,7 +206,9 @@
 import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
 import { useRouter } from 'vue-router';
-import { getWeek, format, startOfWeek, addWeeks, getMonth } from 'date-fns';
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+import { getWeek, format, startOfWeek, addWeeks, getMonth, addDays } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
 import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
@@ -205,9 +227,11 @@ const recursoSeleccionado = ref('')
 const cantidadSeleccionada = ref('')
 const profesorSeleccionado = ref('')
 const recursoSeleccionadoCompartible = ref(false)
+const recursoSeleccionadoBloqueado = ref(false)
 const isModalOpen = ref(false)
 const correoProfesor = ref('')
 const numAlumnos = ref('')
+const motivoCurso = ref('')
 const currentTramo = ref(null)
 const currentDia = ref(null)
 let mensajeActualizacion = ''
@@ -219,6 +243,7 @@ let mensajeInformativo = '';
 let mensajeIncidencia = '';
 const mostrarTabla = ref(true);
 const emailLogged = ref('');
+const valorMaxDays = ref(0);
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -229,9 +254,11 @@ const opcionRepeticion = ref('');
 const disponibleSemanal = ref(false);
 
 //Variables de Fecha
+const fechaMaxima = ref('');
 const fechaActual = ref(new Date().toISOString().slice(0, 10));
 const reseteoFecha = ref('');
-const fechaSeleccionada = ref('')
+const fechaSeleccionada = ref(fechaActual.value);
+const fechaRepeticion = ref(fechaSeleccionada.value);
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
@@ -242,6 +269,8 @@ const day = ref('');
 const month = ref('');
 const preCargaSemana = ref('');
 const fechaLimite = ref('');
+const semanaSeleccionada = ref([]);
+const semanaSeleccionadaRepeticion = ref([]);
 
 // Variables para el modal de confirmación de borrado
 const isDeleteModalOpen = ref(false);
@@ -258,6 +287,11 @@ const closeDeleteModal = () => {
   reservaParaBorrar.value = null;
   getReserva();
 };
+
+function disableWeekends(date) {
+  const day = date.getDay()
+  return day === 0 || day === 6
+}
 
 // Obtener el año actual
 const currentDate = new Date();
@@ -280,16 +314,52 @@ if (currentDate.getMonth() >= 6) {
 fechaInicioCurso.value = new Date(inicioYear, 8, 2).toISOString().slice(0, 10); // 1 de septiembre
 fechaFinCurso.value = new Date(finYear, 5, 31).toISOString().slice(0, 10); // 30 de junio
 
-const actualizarSemana = (event) => {
-  event.stopPropagation();
-  fechaSeleccionada.value = new Date(event.target.value);
+const actualizarSemana = (fecha) => {
+  const selectedDate = new Date(fecha);
+  fechaSeleccionada.value = new Date(fecha);
   fechaActual.value = fechaSeleccionada.value.toISOString().slice(0, 10);
+  const monday = startOfWeek(selectedDate, { weekStartsOn: 1 });
+  const week = [];
+
+  for (let i = 0; i < 7; i++) {
+    week.push(addDays(monday, i));
+  }
+
+  semanaSeleccionada.value = week;
+
+  fechaActual.value = selectedDate.toISOString().slice(0, 10);
 
   semana.value = getWeek(fechaSeleccionada.value);
   mes.value = getMonth(fechaSeleccionada.value);
   validarFecha(); // Añadir validación de fecha
   getReserva();
   incrementarFecha();
+}
+
+function sombrearRepeticion(date) {
+  const selectedDate = new Date(date);
+  const today = new Date(fechaSeleccionada.value);
+  const daysToHighlight = [];
+
+  if (selectedDate < today) {
+    semanaSeleccionadaRepeticion.value = [];
+    return;
+  }
+
+  const startOfWeek = new Date(today);
+  const dayOfWeek = startOfWeek.getDay();
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  startOfWeek.setDate(startOfWeek.getDate() + diffToMonday);
+
+  const current = new Date(startOfWeek);
+  while (current <= selectedDate) {
+    daysToHighlight.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+
+  semanaSeleccionadaRepeticion.value = daysToHighlight;
+  fechaModal({ target: { value: date } });
+  comprobarDisponibilidad();
 }
 
 const resetearSemana = () => {
@@ -316,14 +386,13 @@ const deshabilitarSemanaAnterior = () => {
 }
 
 const deshabilitarSemanaSiguiente = () => {
-  if (parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value))) {
+  if (parseInt(semana.value) === parseInt(getWeek(fechaFinCurso.value > fechaMaxima.value ? fechaMaxima.value : fechaFinCurso.value))) {
     return true;
   }
   return false;
 }
 
 const fechaModal = (event) => {
-  event.stopPropagation();
   fechaSeleccionada.value = new Date(event.target.value).toISOString().slice(0, 10);
   fechaLimite.value = fechaSeleccionada.value;
   semanaLimite.value = getWeek(fechaLimite.value);
@@ -339,7 +408,7 @@ const decrementarSemana = () => {
     semana.value = getWeek(new Date(new Date().getFullYear() - 1, 11, 31 - 7));
   }
   incrementarFecha();
-  validarFecha(); // Añadir validación de fecha
+  validarFecha();
   getReserva();
 }
 
@@ -352,7 +421,7 @@ const incrementarSemana = () => {
     semana.value = 1;
   }
   incrementarFecha();
-  validarFecha(); // Añadir validación de fecha
+  validarFecha();
   getReserva();
 }
 
@@ -398,6 +467,11 @@ const incrementarFecha = () => {
 }
 
 const repetirReserva = async () => {
+  let motivo = '';
+  if (motivoCurso.value != '') {
+    motivo = motivoCurso.value;
+  }
+
   if (opcionRepeticion.value === 'Semanal') {
     do {
       await postReservaTemporary(
@@ -410,7 +484,8 @@ const repetirReserva = async () => {
         currentTramo.value.id,
         numAlumnos.value,
         +semana.value,
-        true
+        true,
+        motivo,
       );
       semana.value = parseInt(semana.value) + 1;
     }
@@ -433,6 +508,7 @@ const verificarConstantes = async () => {
     constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
     const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas temporales');
+    valorMaxDays.value = constantes.value.find(c => c.clave === 'Máximo vista calendario en días').valor - 1;
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {
@@ -449,7 +525,6 @@ const obtenerEmailUsuarioActual = async () => {
 
 // Función para abrir el modal
 const openModal = (tramo, dia, email) => {
-
   if ((!rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION'))) {
     if (email !== undefined && email.includes(emailUsuarioActual.value)) {
       closeModal();
@@ -501,6 +576,13 @@ const saveChanges = async () => {
     return;
   }
 
+  if (motivoCurso.value === '') {
+    mensajeActualizacion = 'El campo "Motivo y Curso" es obligatorio.';
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
   try {
     mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
@@ -518,7 +600,9 @@ const saveChanges = async () => {
       getReserva(recursoSeleccionado);
     }
     else {
-      // Llamar a la API para guardar la reserva
+      if (profesorSeleccionado.value === '') {
+        profesorSeleccionado.value = emailUsuarioActual.value;
+      }
       await postReservaTemporary(
         isToastOpen,
         toastMessage,
@@ -529,7 +613,8 @@ const saveChanges = async () => {
         currentTramo.value.id,
         alumnos,
         +semana.value,
-        false
+        false,
+        motivoCurso.value,
       );
 
       // Actualizar reservas localmente
@@ -538,7 +623,7 @@ const saveChanges = async () => {
       }
 
       reservas.value[currentDia.value.id][currentTramo.value.id] = {
-        email: correoProfesor.value, // Guardamos el email del profesor
+        email: correoProfesor.value,
         nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
         nalumnos: alumnos,
       };
@@ -558,7 +643,8 @@ const saveChanges = async () => {
   }
 
   closeModal();
-  getReserva(recursoSeleccionado); // Actualizar reservas después de guardar
+  motivoCurso.value = '';
+  getReserva(recursoSeleccionado);
 };
 
 
@@ -567,6 +653,7 @@ const getDiasSemanas = async () => {
   try {
     const data = await getDiasSemana(isToastOpen, toastMessage, toastColor)
     diasSemanas.value = data.map((item) => ({ diaSemana: item.diaSemana, id: item.id }))
+    fechaMaxima.value = new Date(new Date().setDate(new Date().getDate() + Number(valorMaxDays.value))).toISOString().slice(0, 10);
   }
   catch (error) {
     mensajeActualizacion = 'Error obteniendo los días de la semana'
@@ -595,13 +682,14 @@ const getTramosHorario = async () => {
 const getRecurso = async () => {
   try {
     const data = await getRecursos(isToastOpen, toastMessage, toastColor)
-    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible }))
+    recursos.value = data.map((item) => ({ recursos: item.id, cantidad: item.cantidad, esCompartible: item.esCompartible, bloqueado: item.bloqueado }))
 
     // Nos aseguraramos que recursos no está vacío antes de asignar
     if (recursos.value.length > 0) {
       recursoSeleccionado.value = recursos.value[0].recursos;
       cantidadSeleccionada.value = recursos.value[0].cantidad;
       recursoSeleccionadoCompartible.value = recursos.value[0].esCompartible;
+      recursoSeleccionadoBloqueado.value = recursos.value[0].bloqueado;
     }
   }
   catch (error) {
@@ -641,16 +729,26 @@ const getReserva = async () => {
       nombreYapellidos: reserva.nombreYapellidos,
       email: reserva.email,
       plazasRestantes: reserva.plazasRestantes,
-      esfija: reserva.esfija
+      esfija: reserva.esfija,
+      motivoCurso: reserva.motivoCurso,
+      esSemanal: reserva.esSemanal,
     }
   }
   reservas.value = estructuraReservas
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija) => {
+const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija, esSemanal) => {
   try {
     event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
 
+    if (esSemanal && esFija) {
+      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value, false)
+      mensajeActualizacion = 'Reserva cancelada correctamente'
+      mensajeColor = 'success'
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+      getReserva(recursoSeleccionado)
+      return;
+    }
     // Llamar a la API para cancelar la reserva
     if (rolesUsuario.value.includes('ADMINISTRADOR') || rolesUsuario.value.includes('DIRECCION')) {
       if (!esFija) {
@@ -661,14 +759,12 @@ const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esF
       }
     }
     else {
-      if (email !== emailUsuarioActual.value)
-      {
+      if (email !== emailUsuarioActual.value) {
         mensajeActualizacion = 'No puedes borrar reservas de otras personas'
         mensajeColor = 'danger'
         crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
       }
-      else
-      {
+      else {
         await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
       }
     }
@@ -691,6 +787,7 @@ watch(recursoSeleccionado, () => {
   );
   cantidadSeleccionada.value = recursoEncontrado ? recursoEncontrado.cantidad : '';
   recursoSeleccionadoCompartible.value = recursoEncontrado ? recursoEncontrado.esCompartible : false;
+  recursoSeleccionadoBloqueado.value = recursoEncontrado ? recursoEncontrado.bloqueado : false;
   isModalOpen.value = false
 
   if (recursoSeleccionadoCompartible.value) {
@@ -736,7 +833,7 @@ const comprobarDisponibilidad = async () => {
       semanas.push(i);  // Se agrega la semana al array
     }
     data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
-    semanas = []; // Se reinicia el array 
+    semanas = []; // Se reinicia el array
   }
   disponibleSemanal.value = data.value;
 }
@@ -744,6 +841,7 @@ const comprobarDisponibilidad = async () => {
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
+  await verificarConstantes()
   await getDiasSemanas()
   await getTramosHorario()
   await getRecurso()
@@ -752,7 +850,6 @@ onMounted(async () => {
   await cargarDatos()
   await verificarRoles()
   await obtenerEmailUsuarioActual()
-  await verificarConstantes()
   emailUserActual = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen)
   semana.value = getWeek(new Date());
   emailLogged.value = emailUserActual;
@@ -778,6 +875,68 @@ onMounted(async () => {
   font-size: 25px;
   font-weight: bold;
   margin-bottom: 15px;
+}
+
+.mensajeInformativoBloqueo {
+  color: #ff9900;
+  padding: 10px;
+  font-size: 25px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+::v-deep(.dp__input) {
+  background-color: #0078d7 !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  text-align: center !important;
+  margin-left: 5px;
+}
+
+::v-deep(.dp__cell_highlight) {
+  background-color: #0078d7 !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+}
+
+::v-deep(.dp__cell_highlight_active) {
+  background-color: #0078d7 !important;
+  color: #ffffff !important;
+  border-radius: 20px !important;
+}
+
+::v-deep(.dp__input_icon) {
+  color: #ffffff !important;
+}
+
+::v-deep(.dp__icon) {
+  color: #ffffff !important;
+}
+
+::v-deep(.dp__active_date) {
+  background-color: #0078d7 !important;
+  color: white !important;
+}
+
+::v-deep(.dp__pointer.dp__input_readonly.dp__input.dp__input_icon_pad.dp__input_reg) {
+  width: 67%;
+}
+
+::v-deep(.dp__input_wrap) {
+  margin-left: 16%;
+  position: relative;
+  width: 100%;
+  box-sizing: unset;
+}
+
+::v-deep(.date-picker-container) {
+  display: flex;
+  width: auto;
+  flex-direction: column;
+  gap: 5px;
+  font-family: Arial, sans-serif;
+  align-items: center;
 }
 
 .container {
@@ -998,17 +1157,17 @@ tr:hover td {
     display: block;
     white-space: nowrap;
   }
-  input[type="date"].placeholder-date::before
-  {
-  content: "Elige una fecha";
-  color: #ffffff;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  font-size: 1rem;
-  white-space: nowrap;
+
+  input[type="date"].placeholder-date::before {
+    content: "Elige una fecha";
+    color: #ffffff;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    font-size: 1rem;
+    white-space: nowrap;
   }
 
   input[type="date"].placeholder-date {
@@ -1017,12 +1176,10 @@ tr:hover td {
     text-align: center;
   }
 
-  /* Hacer que los tramos se mantengan visibles (bloqueados) */
   .sticky-column {
     position: sticky;
     left: 0;
     background: white;
-    /* Para que no se mezcle con otras celdas */
     z-index: 2;
   }
 
@@ -1034,10 +1191,19 @@ tr:hover td {
 /* Estilo para el contenedor del input */
 .date-picker-container {
   display: flex;
+  width: auto;
   flex-direction: column;
-  align-items: flex-start;
   gap: 5px;
   font-family: Arial, sans-serif;
+}
+
+.label-datepicker {
+  font-weight: bold;
+  display: flex;
+  color: #000000;
+  text-align: center;
+  margin-bottom: 5px;
+
 }
 
 /* Etiqueta asociada */
