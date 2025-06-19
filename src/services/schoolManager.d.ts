@@ -300,6 +300,11 @@ export declare function obtenerGruposDeAsignaturas(nombreAsignatura: Ref<string>
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<any>;
 
+/****************************** Validador de datos ******************************/
+export declare function obtenerErroresDatos(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+
 /****************************** Generador de Horarios ******************************/
 export declare function lanzarGeneradorHorarios(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,

@@ -1121,6 +1121,28 @@ export const obtenerGruposDeAsignaturas = async (nombreAsignatura, horasAsignatu
     return await response.json();
   }
 
+/****************************** Validador de datos ******************************/
+export const obtenerErroresDatos = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/validadorDatos/errores',
+      {
+        method: 'GET',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+  }
+
 /****************************** Generador de Horarios ******************************/
 export const lanzarGeneradorHorarios = async (toastMessage, toastColor, isToastOpen) =>
   {
