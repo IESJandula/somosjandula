@@ -2,22 +2,18 @@
   <div class="validador-container">
     <h1 class="t-1">Validador de Datos</h1>
     
-    <!-- Botón para ejecutar validación -->
-    <div class="action-section">
-      <button @click="ejecutarValidacion" class="btn-validar" :disabled="loading">
-        <span v-if="loading">Validando...</span>
-        <span v-else>Ejecutar Validación</span>
+    <!-- Mensaje de estado con botón de recargar -->
+    <div v-if="mensajeEstado" class="mensaje-estado-container">
+      <div class="mensaje-estado" :class="mensajeColor">
+        {{ mensajeEstado }}
+      </div>
+      <button @click="ejecutarValidacion" class="btn-reload" :disabled="loading">
+        <span class="reload-icon" :class="{ 'rotating': loading }">🔄</span>
       </button>
-    </div>
-
-    <!-- Mensaje de estado -->
-    <div v-if="mensajeEstado" class="mensaje-estado" :class="mensajeColor">
-      {{ mensajeEstado }}
     </div>
 
     <!-- Contenedor de errores -->
     <div v-if="errores.length > 0" class="errores-container">
-      <h2 class="t-2">Errores Encontrados</h2>
       
       <!-- Tabs para diferentes tipos de errores -->
       <div class="tabs-container">
@@ -27,48 +23,50 @@
             :key="tipo"
             @click="tabActivo = tipo"
             class="tab-button"
-            :class="{ 'active': tabActivo === tipo }"
+            :class="{ 
+              'active': tabActivo === tipo, 
+              'has-errors': obtenerCantidadErrores(tipo) > 0, 
+              'no-errors': obtenerCantidadErrores(tipo) === 0 
+            }"
+            :disabled="obtenerCantidadErrores(tipo) === 0"
           >
             {{ obtenerTituloTab(tipo) }}
-            <span class="tab-count">({{ obtenerCantidadErrores(tipo) }})</span>
+            <span 
+              class="tab-count"
+              :class="{ 
+                'count-success': obtenerCantidadErrores(tipo) === 0,
+                'count-error': obtenerCantidadErrores(tipo) > 0 
+              }"
+            >
+              ({{ obtenerCantidadErrores(tipo) }})
+            </span>
           </button>
         </div>
 
         <!-- Contenido de los tabs -->
         <div class="tab-content">
           <div v-for="tipo in tiposErrores" :key="tipo" v-show="tabActivo === tipo" class="tab-panel">
-            <ion-card class="card-table">
+            <ion-card class="card-table" :class="obtenerClaseCard(tipo)" @click="seleccionarTitulo(obtenerTituloTab(tipo))">
               <ion-card-header>
                 <ion-card-title class="t-3">
                   {{ obtenerTituloTab(tipo) }}
                 </ion-card-title>
               </ion-card-header>
               <ion-card-content>
-                <div class="table-wrapper">
-                  <table class="table-errores">
-                    <thead>
-                      <tr>
-                        <th class="th th-center">Tipo de Error</th>
-                        <th class="th th-center">Valores Implicados</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(error, index) in obtenerErroresPorTipo(tipo)" :key="index">
-                        <td class="td">{{ error.tipo }}</td>
-                        <td class="td">
-                          <div class="valores-implicados">
-                            <span 
-                              v-for="(valor, valorIndex) in error.valoresImplicados" 
-                              :key="valorIndex"
-                              class="valor-tag"
-                            >
-                              {{ valor }}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div class="valores-implicados-container">
+                  <span 
+                    v-for="(error, index) in obtenerErroresPorTipo(tipo)" 
+                    :key="index"
+                  >
+                    <span 
+                      v-for="(valor, valorIndex) in error.valoresImplicados" 
+                      :key="`${index}-${valorIndex}`"
+                      class="valor-tag"
+                      :class="valor-tag-error"
+                    >
+                      {{ valor }}
+                    </span>
+                  </span>
                 </div>
               </ion-card-content>
             </ion-card>
@@ -84,7 +82,7 @@
           <div class="success-content">
             <ion-icon name="checkmark-circle" class="success-icon"></ion-icon>
             <h3 class="t-3">¡Excelente!</h3>
-            <p>No se han encontrado errores en los datos. El sistema está listo para continuar.</p>
+            <p>No se han encontrado errores en los datos</p>
           </div>
         </ion-card-content>
       </ion-card>
@@ -121,6 +119,9 @@ const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 
+// Variables adicionales
+const tituloSeleccionado = ref('');
+
 // Computed properties
 const tiposErrores = computed(() => {
   const tipos = [...new Set(errores.value.map(error => error.tipo))];
@@ -139,8 +140,21 @@ const ejecutarValidacion = async () => {
     validacionEjecutada.value = true;
     
     if (errores.value.length > 0) {
-      tabActivo.value = tiposErrores.value[0];
-      mensajeEstado.value = `Se encontraron ${errores.value.length} errores en los datos.`;
+      // Buscar la primera pestaña que tenga errores
+      const primeraPestanaConErrores = tiposErrores.value.find(tipo => obtenerCantidadErrores(tipo) > 0);
+      if (primeraPestanaConErrores) {
+        tabActivo.value = primeraPestanaConErrores;
+      }
+      
+      // Calcular el total de valores implicados en todos los errores
+      const totalValoresImplicados = errores.value.reduce((total, error) => {
+        if (error.valoresImplicados && Array.isArray(error.valoresImplicados)) {
+          return total + error.valoresImplicados.length;
+        }
+        return total;
+      }, 0);
+      
+      mensajeEstado.value = `Encontrados ${totalValoresImplicados} errores en los datos`;
       mensajeColor.value = 'warning';
     } else {
       mensajeEstado.value = 'Validación completada. No se encontraron errores.';
@@ -168,15 +182,48 @@ const obtenerTituloTab = (tipo) => {
 };
 
 const obtenerCantidadErrores = (tipo) => {
-  return errores.value.filter(error => error.tipo === tipo).length;
+  const erroresDelTipo = errores.value.filter(error => error.tipo === tipo);
+  const cantidad = erroresDelTipo.reduce((total, error) => {
+    // Verificar que valoresImplicados existe y es un array
+    if (error.valoresImplicados && Array.isArray(error.valoresImplicados)) {
+      return total + error.valoresImplicados.length;
+    }
+    return total;
+  }, 0);
+  
+  return cantidad;
 };
 
 const obtenerErroresPorTipo = (tipo) => {
   return errores.value.filter(error => error.tipo === tipo);
 };
 
+const obtenerTituloError = (tipo) => {
+  const erroresDelTipo = errores.value.filter(error => error.tipo === tipo);
+  if (erroresDelTipo.length > 0) {
+    // Tomar el tipo del primer error del tipo
+    return erroresDelTipo[0].tipo || 'unknown';
+  }
+  return 'unknown';
+};
+
+const obtenerClaseCard = (tipo) => {
+  const tipoError = obtenerTituloError(tipo);
+  if (tipoError === 'warning') {
+    return 'card-warning';
+  } else if (tipoError === 'error') {
+    return 'card-error';
+  }
+  return 'card-success';
+};
+
+const seleccionarTitulo = (titulo) => {
+  tituloSeleccionado.value = titulo;
+};
+
 onMounted(() => {
-  // La validación se ejecuta manualmente
+  // Ejecutar validación automáticamente al cargar la página
+  ejecutarValidacion();
 });
 </script>
 
@@ -196,13 +243,6 @@ onMounted(() => {
   color: #333;
   margin-bottom: 30px;
   text-align: center;
-}
-
-.t-2 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20px;
 }
 
 .t-3 {
@@ -241,38 +281,70 @@ onMounted(() => {
   transform: none;
 }
 
+.mensaje-estado-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  width: 100%;
+  max-width: 800px;
+}
+
 .mensaje-estado {
   padding: 15px 20px;
   border-radius: 8px;
-  margin-bottom: 20px;
   font-weight: bold;
   text-align: center;
-  width: 100%;
-  max-width: 600px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-.mensaje-estado.info {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border: 1px solid #bbdefb;
+.btn-reload {
+  background: transparent;
+  color: #667eea;
+  border: none;
+  padding: 15px;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  flex-shrink: 0;
 }
 
-.mensaje-estado.success {
-  background-color: #e8f5e8;
-  color: #2e7d32;
-  border: 1px solid #c8e6c9;
+.btn-reload:hover:not(:disabled) {
+  transform: translateY(-2px);
+  color: #764ba2;
 }
 
-.mensaje-estado.warning {
-  background-color: #fff3e0;
-  color: #f57c00;
-  border: 1px solid #ffcc02;
+.btn-reload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.mensaje-estado.danger {
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ffcdd2;
+.reload-icon {
+  font-size: 2rem;
+  display: block;
+}
+
+.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .errores-container {
@@ -315,6 +387,61 @@ onMounted(() => {
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
+/* Estilos para botones con errores (contador > 0) */
+.tab-button.has-errors {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  border-color: #ff6b6b;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.tab-button.has-errors:hover {
+  background: linear-gradient(135deg, #ff5252 0%, #d84315 100%);
+  border-color: #ff5252;
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.tab-button.has-errors.active {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  border-color: #ff6b6b;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+/* Estilos para botones sin errores (contador = 0) */
+.tab-button.no-errors {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border-color: #4caf50;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.tab-button.no-errors:hover {
+  background: linear-gradient(135deg, #43a047 0%, #388e3c 100%);
+  border-color: #43a047;
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.tab-button.no-errors.active {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  border-color: #4caf50;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+/* Estilos para botones deshabilitados */
+.tab-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+
+.tab-button:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
 .tab-count {
   font-size: 0.9rem;
   opacity: 0.8;
@@ -338,65 +465,41 @@ onMounted(() => {
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  border-radius: 8px;
+.card-table:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
-.table-errores {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-}
-
-.table-errores th,
-.table-errores td {
-  padding: 15px;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-}
-
-.table-errores th {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  font-weight: bold;
-  color: #495057;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.table-errores tr:hover {
-  background-color: #f8f9fa;
-}
-
-.th {
-  font-weight: bold;
-}
-
-.th-center {
-  text-align: center;
-}
-
-.td {
-  vertical-align: top;
-}
-
-.valores-implicados {
+.valores-implicados-container {
+  max-height: 200px;
+  overflow: auto;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+  padding: 0px 15px;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .valor-tag {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: white;
-  padding: 6px 12px;
-  border-radius: 15px;
-  font-size: 0.9rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 1rem;
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px;
+  word-break: break-word;
 }
 
 .sin-errores {
@@ -443,18 +546,19 @@ onMounted(() => {
     max-width: 300px;
   }
 
-  .table-wrapper {
-    font-size: 0.9rem;
-  }
-
-  .table-errores th,
-  .table-errores td {
-    padding: 10px 8px;
+  .valores-implicados-container {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0px 10px;
+    justify-content: flex-start;
   }
 
   .valor-tag {
     font-size: 0.8rem;
-    padding: 4px 8px;
+    padding: 6px 10px;
+    min-height: 30px;
+    margin: 4px;
+    white-space: normal;
   }
 }
 
@@ -468,17 +572,62 @@ onMounted(() => {
     font-size: 1.3rem;
   }
 
-  .t-2 {
-    font-size: 1.2rem;
+  .valores-implicados-container {
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0px 8px;
+    justify-content: flex-start;
   }
 
-  .table-errores {
-    font-size: 0.8rem;
-  }
-
-  .table-errores th,
-  .table-errores td {
-    padding: 8px 6px;
+  .valor-tag {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    min-height: 28px;
+    margin: 3px;
+    white-space: normal;
   }
 }
+
+/* Estilos para las tarjetas según el tipo */
+.card-warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 2px solid #ffa726;
+  box-shadow: 0 4px 20px rgba(255, 167, 38, 0.2);
+}
+
+.card-error {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border: 2px solid #ff6b6b;
+  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.2);
+}
+
+.card-success {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border: 2px solid #4caf50;
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.2);
+}
+
+/* Estilos para los tags según el tipo */
+.valor-tag-warning {
+  background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 167, 38, 0.3);
+}
+
+.valor-tag-error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+}
+
+.valor-tag-success {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+ion-card-title.t-3 {
+  margin-bottom: 0; /* Elimina el espacio inferior del título */
+}
+
 </style>
