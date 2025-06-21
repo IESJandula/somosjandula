@@ -381,8 +381,8 @@ const mostrarHora = async () => {
 };
 
 const guardarHoras = async (nombreAsignatura) => {
-  if (!horasPorAsignatura.value[nombreAsignatura] || horasPorAsignatura.value[nombreAsignatura] <= 0) {
-    mensajeActualizacion = "Seleccione una asignatura válida y horas mayores a 0.";
+  if (horasPorAsignatura.value[nombreAsignatura] < 0) {
+    mensajeActualizacion = "Asignatura con horas negativas";
     mensajeColor = "danger";
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     return;

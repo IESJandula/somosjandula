@@ -19,51 +19,46 @@
       <div class="tabs-container">
         <div class="tabs-header">
           <button 
-            v-for="tipo in tiposErrores" 
-            :key="tipo"
-            @click="tabActivo = tipo"
+            v-for="titulo in tituloErrores" 
+            :key="titulo"
+            @click="tabActivo = titulo"
             class="tab-button"
-            :class="{ 
-              'active': tabActivo === tipo, 
-              'has-errors': obtenerCantidadErrores(tipo) > 0, 
-              'no-errors': obtenerCantidadErrores(tipo) === 0 
-            }"
-            :disabled="obtenerCantidadErrores(tipo) === 0"
+            :class="obtenerTipoPorTitulo(titulo)"
+            :disabled="obtenerCantidadErrores(titulo) === 0"
           >
-            {{ obtenerTituloTab(tipo) }}
+            {{ titulo }}
             <span 
               class="tab-count"
               :class="{ 
-                'count-success': obtenerCantidadErrores(tipo) === 0,
-                'count-error': obtenerCantidadErrores(tipo) > 0 
+                'count-success': obtenerCantidadErrores(titulo) === 0,
+                'count-error': obtenerCantidadErrores(titulo) > 0 
               }"
             >
-              ({{ obtenerCantidadErrores(tipo) }})
+              <span v-if="obtenerCantidadErrores(titulo) > 0">
+                ({{ obtenerCantidadErrores(titulo) }})
+              </span>
             </span>
           </button>
         </div>
 
         <!-- Contenido de los tabs -->
         <div class="tab-content">
-          <div v-for="tipo in tiposErrores" :key="tipo" v-show="tabActivo === tipo" class="tab-panel">
-            <ion-card class="card-table" :class="obtenerClaseCard(tipo)" @click="seleccionarTitulo(obtenerTituloTab(tipo))">
+          <div v-for="titulo in tituloErrores" :key="titulo" v-show="tabActivo === titulo" class="tab-panel">
+            <ion-card class="card-table card-error" @click="seleccionarTitulo(titulo)">
               <ion-card-header>
                 <ion-card-title class="t-3">
-                  {{ obtenerTituloTab(tipo) }}
+                  {{ titulo }}
                 </ion-card-title>
               </ion-card-header>
               <ion-card-content>
                 <div class="valores-implicados-container">
                   <span 
-                    v-for="(error, index) in obtenerErroresPorTipo(tipo)" 
+                    v-for="(error, index) in obtenerErroresPorTitulo(titulo)"
                     :key="index"
                   >
-                    <span 
-                      v-for="(valor, valorIndex) in error.valoresImplicados" 
-                      :key="`${index}-${valorIndex}`"
-                      class="valor-tag"
-                      :class="valor-tag-error"
-                    >
+                    <span  v-for="(valor, valorIndex) in error.valoresImplicados" 
+                          :key="`${index}-${valorIndex}`"
+                          class="valor-tag">
                       {{ valor }}
                     </span>
                   </span>
@@ -123,9 +118,9 @@ const toastColor = ref('success');
 const tituloSeleccionado = ref('');
 
 // Computed properties
-const tiposErrores = computed(() => {
-  const tipos = [...new Set(errores.value.map(error => error.tipo))];
-  return tipos;
+const tituloErrores = computed(() => {
+  const titulos = [...new Set(errores.value.map(error => error.titulo))];
+  return titulos;
 });
 
 // Métodos
@@ -141,7 +136,7 @@ const ejecutarValidacion = async () => {
     
     if (errores.value.length > 0) {
       // Buscar la primera pestaña que tenga errores
-      const primeraPestanaConErrores = tiposErrores.value.find(tipo => obtenerCantidadErrores(tipo) > 0);
+      const primeraPestanaConErrores = tituloErrores.value.find(titulo => obtenerCantidadErrores(titulo) > 0);
       if (primeraPestanaConErrores) {
         tabActivo.value = primeraPestanaConErrores;
       }
@@ -170,20 +165,21 @@ const ejecutarValidacion = async () => {
   }
 };
 
-const obtenerTituloTab = (tipo) => {
-  const titulos = {
-    'CURSOS_ETAPAS': 'Cursos y Etapas',
-    'DEPARTAMENTOS': 'Departamentos',
-    'ASIGNATURAS': 'Asignaturas',
-    'PROFESORES': 'Profesores',
-    'IMPARTIR': 'Impartición'
-  };
-  return titulos[tipo] || tipo;
+const obtenerTipoPorTitulo = (titulo) => {
+  const erroresDelTitulo = errores.value.filter(error => error.titulo === titulo);
+  if (erroresDelTitulo.length > 0) {
+    if (erroresDelTitulo[0].tipo === 'warning') {
+      return 'tab-button warning';
+    } else if (erroresDelTitulo[0].tipo === 'error') {
+      return 'tab-button error';
+    }
+  }
+  return null;
 };
 
-const obtenerCantidadErrores = (tipo) => {
-  const erroresDelTipo = errores.value.filter(error => error.tipo === tipo);
-  const cantidad = erroresDelTipo.reduce((total, error) => {
+const obtenerCantidadErrores = (titulo) => {
+  const erroresDelTitulo = errores.value.filter(error => error.titulo === titulo);
+  const cantidad = erroresDelTitulo.reduce((total, error) => {
     // Verificar que valoresImplicados existe y es un array
     if (error.valoresImplicados && Array.isArray(error.valoresImplicados)) {
       return total + error.valoresImplicados.length;
@@ -194,28 +190,11 @@ const obtenerCantidadErrores = (tipo) => {
   return cantidad;
 };
 
-const obtenerErroresPorTipo = (tipo) => {
-  return errores.value.filter(error => error.tipo === tipo);
+const obtenerErroresPorTitulo = (titulo) => {
+  return errores.value.filter(error => error.titulo === titulo);
 };
 
-const obtenerTituloError = (tipo) => {
-  const erroresDelTipo = errores.value.filter(error => error.tipo === tipo);
-  if (erroresDelTipo.length > 0) {
-    // Tomar el tipo del primer error del tipo
-    return erroresDelTipo[0].tipo || 'unknown';
-  }
-  return 'unknown';
-};
 
-const obtenerClaseCard = (tipo) => {
-  const tipoError = obtenerTituloError(tipo);
-  if (tipoError === 'warning') {
-    return 'card-warning';
-  } else if (tipoError === 'error') {
-    return 'card-error';
-  }
-  return 'card-success';
-};
 
 const seleccionarTitulo = (titulo) => {
   tituloSeleccionado.value = titulo;
@@ -380,53 +359,18 @@ onMounted(() => {
   border-color: #bbb;
 }
 
-.tab-button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.tab-button.warning {
+  background: linear-gradient(135deg, #d68910 0%, #b7950b 100%);
   color: white;
-  border-color: #667eea;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  border-color: #d68910;
+  box-shadow: 0 4px 15px rgba(214, 137, 16, 0.4);
 }
 
-/* Estilos para botones con errores (contador > 0) */
-.tab-button.has-errors {
+.tab-button.error {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
   color: white;
   border-color: #ff6b6b;
   box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-.tab-button.has-errors:hover {
-  background: linear-gradient(135deg, #ff5252 0%, #d84315 100%);
-  border-color: #ff5252;
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
-}
-
-.tab-button.has-errors.active {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-  color: white;
-  border-color: #ff6b6b;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-/* Estilos para botones sin errores (contador = 0) */
-.tab-button.no-errors {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  color: white;
-  border-color: #4caf50;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-}
-
-.tab-button.no-errors:hover {
-  background: linear-gradient(135deg, #43a047 0%, #388e3c 100%);
-  border-color: #43a047;
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-}
-
-.tab-button.no-errors.active {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-  color: white;
-  border-color: #4caf50;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
 }
 
 /* Estilos para botones deshabilitados */
@@ -588,30 +532,16 @@ onMounted(() => {
   }
 }
 
-/* Estilos para las tarjetas según el tipo */
-.card-warning {
-  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  border: 2px solid #ffa726;
-  box-shadow: 0 4px 20px rgba(255, 167, 38, 0.2);
-}
-
 .card-error {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   border: 2px solid #ff6b6b;
   box-shadow: 0 4px 20px rgba(255, 107, 107, 0.2);
 }
 
-.card-success {
-  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-  border: 2px solid #4caf50;
-  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.2);
-}
-
-/* Estilos para los tags según el tipo */
-.valor-tag-warning {
-  background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(255, 167, 38, 0.3);
+.card-warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 2px solid #ffa726;
+  box-shadow: 0 4px 20px rgba(255, 167, 38, 0.2);
 }
 
 .valor-tag-error {
@@ -620,10 +550,10 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
 }
 
-.valor-tag-success {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+.valor-tag-warning {
+  background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 2px 8px rgba(255, 167, 38, 0.3);
 }
 
 ion-card-title.t-3 {
