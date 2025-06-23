@@ -67,11 +67,11 @@
       <!-- Botón radio -->
       <div class="t-4">Independientemente de la respuesta anterior, elige la opción que desearías:</div>
       <div class="t-5">
-        <input type="radio" class="radio" id="opcion1" name="opcion" :value="false" v-model="trabajarPrimeraHoraSeleccionado">
+        <input type="radio" class="radio" id="opcion1" name="opcion" :value="false" v-model="sinClasePrimeraHoraSeleccionado">
         <label for="opcion1"> No tener clase a primera hora</label>
       </div>
       <div class="t-5">
-        <input type="radio" class="radio" id="opcion2" name="opcion" :value="true" v-model="trabajarPrimeraHoraSeleccionado">
+        <input type="radio" class="radio" id="opcion2" name="opcion" :value="true" v-model="sinClasePrimeraHoraSeleccionado">
         <label for="opcion2"> No tener clase a ultima hora</label>
       </div>
       <hr class="separator-line" />
@@ -248,7 +248,7 @@ const tramoHorarioSeleccionado2 = ref('');
 const tramoHorarioSeleccionado3 = ref('');
 const listaTramoHorarioSeleccionado = ref([]);
 const emailUsuarioActual = ref(null);
-const trabajarPrimeraHoraSeleccionado = ref(false);
+const sinClasePrimeraHoraSeleccionado = ref(false);
 const otrasObservacionesSeleccionado = ref('');
 const listaGrupos = ref([]);
 const constantes = ref([]);
@@ -449,7 +449,7 @@ const asignarReduccion = async () => {
 
 const resetearValores = () => {
       isOn.value = false;
-      trabajarPrimeraHoraSeleccionado.value = false;
+      sinClasePrimeraHoraSeleccionado.value = false;
       otrasObservacionesSeleccionado.value = '';
       tramoHorarioSeleccionado.value = '';
       tramoHorarioSeleccionado2.value = '';
@@ -482,7 +482,7 @@ const obtenerObservaciones = async () => {
     if(datosObservacionesProfesorSeleccionado.value.tieneObservaciones === true){
 
       isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== false;
-      trabajarPrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.trabajarPrimeraHora !== false;
+      sinClasePrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.sinClasePrimeraHora !== false;
       otrasObservacionesSeleccionado.value= datosObservacionesProfesorSeleccionado.value.otrasObservaciones || '';
     }
 
@@ -626,7 +626,7 @@ const actualizarObservacion = async () => {
       if (tramo) {
 
         // Llama al método para enviar los datos al backend
-        response = await actualizarObservaciones(isOn.value, trabajarPrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailDestino,
+        response = await actualizarObservaciones(isOn.value, sinClasePrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailDestino,
           toastMessage, toastColor, isToastOpen);
       }
     }

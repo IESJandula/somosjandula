@@ -962,7 +962,7 @@ export const obtenerDiasTramosTipoHorario = async (toastMessage, toastColor, isT
     return await response.json();
   }
   
-export const actualizarObservaciones = async (conciliacion, trabajarPrimeraHora, otrasObservaciones, dia, tramo, tipoHorario, email, toastMessage, toastColor, isToastOpen) =>
+export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora, otrasObservaciones, dia, tramo, tipoHorario, email, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -973,7 +973,7 @@ export const actualizarObservaciones = async (conciliacion, trabajarPrimeraHora,
         {
           'Authorization': `Bearer ${tokenPropio}`,
           'conciliacion': conciliacion,
-          'trabajarPrimeraHora': trabajarPrimeraHora,
+          'sinClasePrimeraHora': sinClasePrimeraHora,
           'otrasObservaciones': otrasObservaciones,
           'dia': dia,
           'tramo': tramo,
