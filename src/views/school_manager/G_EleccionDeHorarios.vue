@@ -84,7 +84,7 @@
             <option v-for="tramoHorario in tramosFiltrados1" 
               :key="tramoHorario" 
               :value="tramoHorario">
-              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
+              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.horarioMatutino ? 'mañana' : 'tarde' }}
             </option>
           </select>
         </div>
@@ -94,7 +94,7 @@
             <option v-for="tramoHorario in tramosFiltrados2" 
               :key="tramoHorario" 
               :value="tramoHorario">
-              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
+              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.horarioMatutino ? 'mañana' : 'tarde' }}
             </option>
           </select>
         </div>
@@ -104,7 +104,7 @@
             <option v-for="tramoHorario in tramosFiltrados3" 
               :key="tramoHorario" 
               :value="tramoHorario">
-              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.tipoHorario }}
+              {{ tramoHorario.dia }} {{ tramoHorario.tramo }}ª hora - {{ tramoHorario.horarioMatutino ? 'mañana' : 'tarde' }}
             </option>
           </select>
         </div>
@@ -465,12 +465,7 @@ const obtenerObservaciones = async () => {
 
     listaTramoHorarioSeleccionado.value =
         await (async () => {
-          return await obtenerDiasTramosTipoHorario(
-              null,
-              toastMessage,
-              toastColor,
-              isToastOpen
-          );
+            return await obtenerDiasTramosTipoHorario(toastMessage, toastColor, isToastOpen);
         })();
     tramoHorarioSeleccionado.value = '';
     tramoHorarioSeleccionado2.value = '';
@@ -502,12 +497,12 @@ const obtenerObservaciones = async () => {
         const diaNum = Number(tramoH.dia);
         const diaNombre = diaNameMap[diaNum];
         const tramoNum = Number(tramoH.tramo) + 1;
-        const tipoHorario = tramoH.tipoHorario;
+        const horarioMatutino = tramoH.horarioMatutino;
   
         const encontrado = listaTramoHorarioSeleccionado.value.find(item =>
             item.dia === diaNombre &&
             item.tramo === tramoNum &&
-            item.tipoHorario.toLowerCase() === tipoHorario.toLowerCase()
+            item.horarioMatutino === horarioMatutino
         );
   
         contador++;
@@ -626,7 +621,7 @@ const actualizarObservacion = async () => {
       if (tramo) {
 
         // Llama al método para enviar los datos al backend
-        response = await actualizarObservaciones(isOn.value, sinClasePrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.tipoHorario, emailDestino,
+        response = await actualizarObservaciones(isOn.value, sinClasePrimeraHoraSeleccionado.value, otrasObservacionesSeleccionado.value || '', tramo.dia, tramo.tramo, tramo.horarioMatutino, emailDestino,
           toastMessage, toastColor, isToastOpen);
       }
     }

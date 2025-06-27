@@ -41,6 +41,7 @@ import {
   chevronUpOutline,
   refreshOutline,
   closeCircleOutline,
+  checkmarkCircleOutline
 } from "ionicons/icons";
 
 import { initializeApp } from "firebase/app";
@@ -63,7 +64,8 @@ addIcons({
   "chevron-down-outline": chevronDownOutline,
   "chevron-up-outline": chevronUpOutline,
   "refresh-outline": refreshOutline,
-  "close-circle-outline": closeCircleOutline
+  "close-circle-outline": closeCircleOutline,
+  "checkmark-circle-outline": checkmarkCircleOutline
 });
 
 // Variables para el toast

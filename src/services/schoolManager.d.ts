@@ -262,7 +262,7 @@ export declare function actualizarObservaciones(conciliacion: Ref<boolean>,
                                            otrasObservaciones: Ref<string>,
                                            dia: Ref<string>,
                                            tramo: Ref<number>,
-                                           tipoHorario: Ref<string>,
+                                           horarioMatutino: Ref<boolean>,
                                            email: Ref<string>,
                                            toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
@@ -313,3 +313,26 @@ export declare function lanzarGeneradorHorarios(toastMessage: Ref<string>,
 export declare function forzarDetencionGeneradorHorarios(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
+
+/****************************** Actualizar Sesiones ******************************/
+export declare function actualizarSesionBase(email: Ref<string>,
+                                             nombreAsignatura: Ref<string>,
+                                             curso: Ref<number>,
+                                             etapa: Ref<string>,
+                                             grupo: Ref<string>,
+                                             numeroSesion: Ref<number>,
+                                             dia: Ref<number>,
+                                             tramo: Ref<number>,
+                                             toastMessage: Ref<string>,
+                                             toastColor: Ref<string>,
+                                             isToastOpen: Ref<boolean>): Promise<Response>;
+
+/****************************** Obtener Sesiones Base ******************************/
+export declare function obtenerSesionesBase(email: Ref<string>,
+                                            nombreAsignatura: Ref<string>,
+                                            curso: Ref<number>,
+                                            etapa: Ref<string>,
+                                            grupo: Ref<string>,
+                                            toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>): Promise<any>;

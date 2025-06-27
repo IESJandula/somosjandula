@@ -89,7 +89,7 @@
             v-for="asignatura in asignaturasImpartidas" 
             :key="asignatura.id"
             @click="seleccionarAsignatura(asignatura)"
-            :class="{ 'fila-seleccionada': asignaturaSeleccionada?.id === asignatura.id }"
+            :class="{ 'fila-seleccionada': asignaturaSeleccionado?.id === asignatura.id }"
             class="fila-clickeable"
           >
             <td>{{ asignatura.nombre }}</td>
@@ -112,14 +112,15 @@
             <th>Sesión</th>
             <th>Forzar día</th>
             <th>Forzar hora</th>
-            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(sesion, index) in sesionesAsignatura" :key="index">
-            <td>Sesión {{ index + 1 }}</td>
             <td>
-              <select v-model="sesion.forzarDia" class="select-forzar">
+              Sesión {{ index + 1 }}
+            </td>
+            <td>
+              <select v-model="sesion.dia" class="select-forzar" @change="actualizarSesionConDebounce(index)">
                 <option value="Sin forzar">Sin forzar</option>
                 <option value="Lunes">Lunes</option>
                 <option value="Martes">Martes</option>
@@ -129,37 +130,19 @@
               </select>
             </td>
             <td>
-              <select v-model="sesion.forzarHora" class="select-forzar">
+              <select v-model="sesion.tramo" class="select-forzar" @change="actualizarSesionConDebounce(index)">
                 <option value="Sin forzar">Sin forzar</option>
-                <option value="1">1ª hora</option>
-                <option value="2">2ª hora</option>
-                <option value="3">3ª hora</option>
-                <option value="4">4ª hora</option>
-                <option value="5">5ª hora</option>
-                <option value="6">6ª hora</option>
+                <option value="1ª hora">1ª hora</option>
+                <option value="2ª hora">2ª hora</option>
+                <option value="3ª hora">3ª hora</option>
+                <option value="4ª hora">4ª hora</option>
+                <option value="5ª hora">5ª hora</option>
+                <option value="6ª hora">6ª hora</option>
               </select>
-            </td>
-            <td>
-              <button 
-                @click="actualizarSesion(index)"
-                class="btn-actualizar-sesion"
-              >
-                Actualizar
-              </button>
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
-    
-    <!-- Botón actualizar todo -->
-    <div class="container-botones">
-      <button 
-        @click="actualizarTodasSesiones"
-        class="btn-actualizar-todo"
-      >
-        ACTUALIZAR TODO
-      </button>
     </div>
   </div>
 </template>
@@ -175,7 +158,9 @@ import {
   obtenerObservacionesDeUsuario, 
   obtenerPreferenciasDeUsuario,
   actualizarObservaciones,
-  obtenerSolicitudes
+  obtenerSolicitudes,
+  actualizarSesionBase,
+  obtenerSesionesBase
 } from '@/services/schoolManager.js';
 
 // Variables para el toast
@@ -195,6 +180,7 @@ const loadingAsignaturas = ref(false);
 // Variables para sesiones
 const asignaturaSeleccionado = ref(null);
 const sesionesAsignatura = ref([]);
+const debounceTimers = ref({}); // Para evitar múltiples llamadas rápidas
 
 // Mapeo de días (basado en G_EleccionDeHorarios.vue)
 const diaNameMap = {
@@ -203,6 +189,41 @@ const diaNameMap = {
   2: 'Miércoles',
   3: 'Jueves',
   4: 'Viernes'
+};
+
+// Mapeo inverso para convertir nombres a números
+const diaNumberMap = {
+  'Lunes': 0,
+  'Martes': 1,
+  'Miércoles': 2,
+  'Jueves': 3,
+  'Viernes': 4
+};
+
+// Función para convertir día a formato numérico
+const convertirDiaANumerico = (diaTexto) => {
+  if (diaTexto === 'Sin forzar') 
+  {
+    return -1 ;
+  }
+
+  return diaNumberMap[diaTexto] ;
+};
+
+// Función para convertir hora a formato numérico
+const convertirTramoANumerico = (tramoTexto) => {
+  if (tramoTexto === 'Sin forzar')
+  {
+    return -1 ;
+  }
+
+  // Cogemos el número de la hora con un substring
+  const numeroTramo = tramoTexto.substring(0, tramoTexto.length - 2);
+
+  // Le restamos 1 para que sea el número de la hora
+  const numeroTramoNumerico = parseInt(numeroTramo, 10) - 1;
+
+  return numeroTramoNumerico ;
 };
 
 // Cargar todos los profesores con sus preferencias
@@ -272,7 +293,7 @@ const seleccionarProfesor = async (profesor) => {
 };
 
 // Seleccionar asignatura y crear sesiones
-const seleccionarAsignatura = (asignatura) => {
+const seleccionarAsignatura = async (asignatura) => {
   asignaturaSeleccionado.value = asignatura;
   
   // Crear array de sesiones basado en la carga horaria
@@ -280,10 +301,56 @@ const seleccionarAsignatura = (asignatura) => {
   for (let i = 0; i < asignatura.horas; i++) {
     sesionesAsignatura.value.push({
       numero: i + 1,
-      forzarDia: 'Sin forzar',
-      forzarHora: 'Sin forzar',
-      actualizada: false // Flag para marcar si se ha actualizado
+      dia: 'Sin forzar',
+      tramo: 'Sin forzar',
+      cargaInicial: true // Flag para marcar si es la carga inicial
     });
+  }
+
+  // Cargar restricciones existentes si hay un profesor seleccionado
+  if (profesorSeleccionado.value) {
+    await cargarRestriccionesExistentes();
+  }
+};
+
+// Cargar restricciones existentes para la asignatura seleccionada
+const cargarRestriccionesExistentes = async () => {
+  try {
+    const sesionesBase = await obtenerSesionesBase(
+      profesorSeleccionado.value.email,
+      asignaturaSeleccionado.value.nombre,
+      asignaturaSeleccionado.value.curso,
+      asignaturaSeleccionado.value.etapa,
+      asignaturaSeleccionado.value.grupo,
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
+    // Aplicar las restricciones existentes a las sesiones
+    if (sesionesBase && sesionesBase.length > 0) {
+      sesionesBase.forEach(sesionBase => {
+        const sesionIndex = sesionBase.numeroSesion - 1; // Convertir a índice base 0
+        if (sesionIndex >= 0 && sesionIndex < sesionesAsignatura.value.length) {
+          const sesion = sesionesAsignatura.value[sesionIndex];
+          
+          // Convertir día numérico a texto
+          if (sesionBase.dia !== null) {
+            sesion.dia = diaNameMap[sesionBase.dia] || 'Sin forzar';
+          }
+          
+          // Convertir hora numérica a texto
+          if (sesionBase.tramo !== null) {
+            sesion.tramo = `${sesionBase.tramo + 1}ª hora`;
+          }
+          
+          sesion.cargaInicial = false; // Marcar como no carga inicial
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error al cargar restricciones existentes:', error);
+    // No mostrar error al usuario ya que es normal que no haya restricciones configuradas
   }
 };
 
@@ -358,15 +425,13 @@ const obtenerHorasSinClase = (preferencias) => {
     const diaNum = Number(tramo.dia);
     const diaNombre = diaNameMap[diaNum] || `Día ${tramo.dia}`;
     const tramoNum = Number(tramo.tramo) + 1; // Sumar 1 como en el código original
-    const tipoHorario = tramo.tipoHorario;
+    const horarioMatutino = tramo.horarioMatutino;
     
     // Formatear el tipo de horario para que sea más legible
-    const tipoHorarioFormateado = tipoHorario === 'MATUTINO' ? 'mañana' : 
-                                 tipoHorario === 'VESPERTINO' ? 'tarde' : 
-                                 tipoHorario.toLowerCase();
+    const horarioFormateado = horarioMatutino ? 'mañana' : 'tarde';
     
     // Formato: "Martes 1ª hora (mañana)"
-    const horaFormateada = `${diaNombre} ${tramoNum}ª hora (${tipoHorarioFormateado})`;
+    const horaFormateada = `${diaNombre} ${tramoNum}ª hora (${horarioFormateado})`;
     horasFormateadas.push(horaFormateada);
   }
   
@@ -421,56 +486,79 @@ const forzarDetencion = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al forzar la detención del generador.');
   }
 };
+
+// Función con debounce para actualizar sesión automáticamente
+const actualizarSesionConDebounce = (index) => {
+  // Limpiar timer anterior si existe
+  if (debounceTimers.value[index]) {
+    clearTimeout(debounceTimers.value[index]);
+  }
+  
+  // Crear nuevo timer
+  debounceTimers.value[index] = setTimeout(() => {
+    actualizarSesion(index);
+  }, 500); // 500ms de delay
+};
+
 // Actualizar una sesión específica
 const actualizarSesion = async (index) => {
   const sesion = sesionesAsignatura.value[index];
   
   try {
-    // Aquí iría la lógica para actualizar la sesión específica
-    // Por ahora solo marcamos como actualizada
-    sesion.actualizada = true;
-    
-    crearToast(
-      toastMessage, 
-      toastColor, 
-      isToastOpen, 
-      'success', 
-      `Sesión ${index + 1} actualizada correctamente`
-    );
-  } catch (error) {
-    crearToast(
-      toastMessage, 
-      toastColor, 
-      isToastOpen, 
-      'danger', 
-      `Error al actualizar la sesión ${index + 1}`
-    );
-  }
-};
+    // Validar que tenemos todos los datos necesarios
+    if (!profesorSeleccionado.value || !asignaturaSeleccionado.value) {
+      return; // Salir silenciosamente si no hay datos suficientes
+    }
 
-// Actualizar todas las sesiones
-const actualizarTodasSesiones = async () => {
-  try {
-    // Aquí iría la lógica para actualizar todas las sesiones
-    // Por ahora solo marcamos todas como actualizadas
-    sesionesAsignatura.value.forEach(sesion => {
-      sesion.actualizada = true;
-    });
-    
-    crearToast(
-      toastMessage, 
-      toastColor, 
-      isToastOpen, 
-      'success', 
-      'Todas las sesiones actualizadas correctamente'
+    // Convertir los valores a formato numérico
+    const dia = convertirDiaANumerico(sesion.dia);
+    const tramo = convertirTramoANumerico(sesion.tramo);
+
+    // Llamar al servicio para actualizar la restricción
+    const response = await actualizarSesionBase(
+      profesorSeleccionado.value.email,
+      asignaturaSeleccionado.value.nombre,
+      asignaturaSeleccionado.value.curso,
+      asignaturaSeleccionado.value.etapa,
+      asignaturaSeleccionado.value.grupo,
+      sesion.numero,
+      dia,
+      tramo,
+      toastMessage,
+      toastColor,
+      isToastOpen
     );
+
+    if (response.ok) {
+      
+      // Mostrar mensaje de éxito solo si no es la carga inicial
+      if (!sesion.cargaInicial) {
+        crearToast(
+          toastMessage, 
+          toastColor, 
+          isToastOpen, 
+          'success', 
+          `Sesión ${index + 1} actualizada`
+        );
+      }
+    } else {
+      const errorData = await response.json();
+      crearToast(
+        toastMessage, 
+        toastColor, 
+        isToastOpen, 
+        'danger', 
+        `Error: ${errorData.message}`
+      );
+    }
   } catch (error) {
+    console.error('Error al actualizar sesión:', error);
     crearToast(
       toastMessage, 
       toastColor, 
       isToastOpen, 
       'danger', 
-      'Error al actualizar las sesiones'
+      'Error al actualizar la sesión'
     );
   }
 };
@@ -736,80 +824,4 @@ tbody tr:hover {
   }
 }
 
-/* Estilos para botones de actualizar (basados en B_AsignaturaYBloque.vue) */
-.btn-actualizar-sesion {
-  background-color: #0054e9;
-  color: #ffffff;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  height: 45px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
-}
-
-.btn-actualizar-sesion:hover:not(:disabled) {
-  background-color: #1461eb;
-}
-
-.btn-actualizar-sesion:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-actualizar-todo {
-  width: 180px;
-  height: 45px;
-  margin-left: auto;
-  background-color: #0054e9;
-  color: #ffffff;
-  border-radius: 0.375rem;
-  font-size: 1.02rem;
-  font-weight: 550;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn-actualizar-todo:hover:not(:disabled) {
-  background-color: #1461eb;
-}
-
-.btn-actualizar-todo:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.container-botones {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  padding-top: 1rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .btn-actualizar-sesion,
-  .btn-actualizar-todo {
-    color: #000000;
-    background-color: #4782eb;
-  }
-  
-  .btn-actualizar-sesion:hover:not(:disabled),
-  .btn-actualizar-todo:hover:not(:disabled) {
-    background-color: #3476eb;
-  }
-}
-
-@media (max-width: 768px) {
-  .container-botones {
-    flex-direction: row;
-  }
-  
-  .btn-actualizar-todo {
-    width: 100%;
-    margin-left: 0;
-  }
-}
 </style>

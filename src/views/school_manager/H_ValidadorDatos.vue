@@ -44,13 +44,13 @@
         <!-- Contenido de los tabs -->
         <div class="tab-content">
           <div v-for="titulo in tituloErrores" :key="titulo" v-show="tabActivo === titulo" class="tab-panel">
-            <ion-card class="card-table card-error" @click="seleccionarTitulo(titulo)">
-              <ion-card-header>
-                <ion-card-title class="t-3">
+            <div class="card-table card-error" @click="seleccionarTitulo(titulo)">
+              <div class="card-header">
+                <h3 class="t-3">
                   {{ titulo }}
-                </ion-card-title>
-              </ion-card-header>
-              <ion-card-content>
+                </h3>
+              </div>
+              <div class="card-content">
                 <div class="valores-implicados-container">
                   <span 
                     v-for="(error, index) in obtenerErroresPorTitulo(titulo)"
@@ -63,8 +63,8 @@
                     </span>
                   </span>
                 </div>
-              </ion-card-content>
-            </ion-card>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -72,15 +72,15 @@
 
     <!-- Mensaje cuando no hay errores -->
     <div v-else-if="!loading && validacionEjecutada" class="sin-errores">
-      <ion-card class="card-success">
-        <ion-card-content>
+      <div class="card-success">
+        <div class="card-content">
           <div class="success-content">
-            <ion-icon name="checkmark-circle" class="success-icon"></ion-icon>
+            <ion-icon name="checkmark-circle-outline" class="success-icon"></ion-icon>
             <h3 class="t-3">¡Excelente!</h3>
             <p>No se han encontrado errores en los datos</p>
           </div>
-        </ion-card-content>
-      </ion-card>
+        </div>
+      </div>
     </div>
 
     <!-- Toast para notificaciones -->
@@ -97,7 +97,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonToast, IonIcon } from '@ionic/vue';
+import { IonToast, IonIcon } from '@ionic/vue';
 import { obtenerErroresDatos } from '@/services/schoolManager.js';
 import { crearToast } from '@/utils/toast.js';
 
@@ -194,8 +194,6 @@ const obtenerErroresPorTitulo = (titulo) => {
   return errores.value.filter(error => error.titulo === titulo);
 };
 
-
-
 const seleccionarTitulo = (titulo) => {
   tituloSeleccionado.value = titulo;
 };
@@ -225,10 +223,10 @@ onMounted(() => {
 }
 
 .t-3 {
+  margin-bottom: 0; /* Elimina el espacio inferior del título */
   font-size: 1.2rem;
   font-weight: bold;
   color: #333;
-  margin-bottom: 15px;
 }
 
 .action-section {
@@ -411,11 +409,23 @@ onMounted(() => {
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
+  background: white;
+  border: 1px solid #e0e0e0;
 }
 
 .card-table:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  padding: 20px 20px 0 20px;
+  background: transparent;
+}
+
+.card-content {
+  padding: 0 20px 20px 20px;
+  background: transparent;
 }
 
 .valores-implicados-container {

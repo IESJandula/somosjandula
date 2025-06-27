@@ -962,7 +962,7 @@ export const obtenerDiasTramosTipoHorario = async (toastMessage, toastColor, isT
     return await response.json();
   }
   
-export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora, otrasObservaciones, dia, tramo, tipoHorario, email, toastMessage, toastColor, isToastOpen) =>
+export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora, otrasObservaciones, dia, tramo, horarioMatutino, email, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -977,7 +977,7 @@ export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora,
           'otrasObservaciones': otrasObservaciones,
           'dia': dia,
           'tramo': tramo,
-          'tipoHorario': tipoHorario,
+          'horarioMatutino': horarioMatutino,
           'email': email
         },
       });
@@ -1148,7 +1148,7 @@ export const lanzarGeneradorHorarios = async (toastMessage, toastColor, isToastO
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(schoolmanagerApiUrl + '/schoolManager/generadorHorarios/lanzar',
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/lanzar',
     {
       method: 'GET',
       headers:
@@ -1162,7 +1162,7 @@ export const forzarDetencionGeneradorHorarios = async (toastMessage, toastColor,
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(schoolmanagerApiUrl + '/schoolManager/generadorHorarios/forzarDetencion',
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/forzarDetencion',
     {
       method: 'POST',
       headers:
@@ -1170,4 +1170,54 @@ export const forzarDetencionGeneradorHorarios = async (toastMessage, toastColor,
             'Authorization': `Bearer ${tokenPropio}`,
           },
     });
+  }
+
+/****************************** Actualizar Sesiones Base ******************************/
+export const actualizarSesionBase = async (email, nombreAsignatura, curso, etapa, grupo, numeroSesion, dia, tramo, toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/sesionesBase',
+    {
+      method: 'POST',
+      headers:
+          {
+            'Authorization': `Bearer ${tokenPropio}`,
+            'email': email,
+            'nombreAsignatura': nombreAsignatura,
+            'curso': curso,
+            'etapa': etapa,
+            'grupo': grupo,
+            'numeroSesion': numeroSesion,
+            'dia': dia,
+            'tramo': tramo
+          },
+    });
+  }
+
+/****************************** Obtener Sesiones Base ******************************/
+export const obtenerSesionesBase = async (email, nombreAsignatura, curso, etapa, grupo, toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/sesionesBase',
+    {
+      method: 'GET',
+      headers:
+          {
+            'Authorization': `Bearer ${tokenPropio}`,
+            'email': email,
+            'nombreAsignatura': nombreAsignatura,
+            'curso': curso,
+            'etapa': etapa,
+            'grupo': grupo
+          },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
   }
