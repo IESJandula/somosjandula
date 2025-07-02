@@ -251,17 +251,14 @@ export declare function asignarAsignatura(nombre: Ref<string>,
 export declare function obtenerReducciones(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerDiasTramosTipoHorario(toastMessage: Ref<string>,
-                                           toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
-export declare function obtenerDiasTramosTipoHorario(toastMessage: Ref<string>,
+export declare function obtenerListaDiaTramoTipoHorario(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 export declare function actualizarObservaciones(conciliacion: Ref<boolean>,
                                            trabajarPrimeraHora: Ref<boolean>,
                                            otrasObservaciones: Ref<string>,
-                                           dia: Ref<string>,
-                                           tramo: Ref<number>,
+                                           diaDesc: Ref<string>,
+                                           tramoDesc: Ref<string>,
                                            horarioMatutino: Ref<boolean>,
                                            email: Ref<string>,
                                            toastMessage: Ref<string>,
@@ -308,11 +305,15 @@ export declare function obtenerErroresDatos(toastMessage: Ref<string>,
 /****************************** Generador de Horarios ******************************/
 export declare function lanzarGeneradorHorarios(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
 
 export declare function forzarDetencionGeneradorHorarios(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
+
+export declare function obtenerEstadoGeneradorHorarios(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
 
 /****************************** Actualizar Sesiones ******************************/
 export declare function actualizarSesionBase(email: Ref<string>,

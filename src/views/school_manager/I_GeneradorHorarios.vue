@@ -1,9 +1,49 @@
 <template>
   <h1 class="t-1">Generador de horarios</h1>
   <div class="top-section">
-    <!-- Botones existentes -->
-    <button @click="generarHorarios" class="btn-lanzar-generador">Lanzar Generador</button>
-    <button @click="forzarDetencion" class="btn-forzar-detencion">Forzar Detención</button>
+    <!-- Tabla de estado y acciones -->
+    <div class="estado-acciones-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="estado-cell" 
+                :title="tooltipEstado"
+                @mouseenter="mostrarTooltip = true"
+                @mouseleave="mostrarTooltip = false">
+              <span class="estado-text">{{ estadoGeneradorCorto }}</span>
+              <!-- Tooltip personalizado -->
+              <div v-if="mostrarTooltip" class="tooltip-estado">
+                <div class="tooltip-content">
+                  <h4>Estado del Generador</h4>
+                  <p><strong>Estado:</strong> {{ estadoGenerador }}</p>
+                  <p v-if="tiempoInicio"><strong>Iniciado:</strong> {{ fechaInicioFormateada }}</p>
+                  <p v-if="tiempoInicio"><strong>Tiempo transcurrido:</strong> {{ tiempoTranscurridoFormateado }}</p>
+                  <p v-if="!tiempoInicio"><strong>Estado:</strong> Detenido</p>
+                </div>
+              </div>
+            </td>
+            <td class="acciones-cell">
+              <button @click="generarHorarios" class="btn-lanzar-generador-small" title="Lanzar Generador">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </button>
+              <button @click="forzarDetencion" class="btn-forzar-detencion-small" title="Forzar Detención">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 6h12v12H6z"/>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <ion-toast
       :is-open="isToastOpen"
       :message="toastMessage"
@@ -148,12 +188,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { IonToast } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { 
   lanzarGeneradorHorarios, 
   forzarDetencionGeneradorHorarios, 
+  obtenerEstadoGeneradorHorarios,
   obtenerProfesoresHorarios, 
   obtenerObservacionesDeUsuario, 
   obtenerPreferenciasDeUsuario,
@@ -167,6 +208,12 @@ import {
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
+
+// Variables para el estado del generador
+const estadoGenerador = ref('Cargando estado...');
+const tiempoInicio = ref(null);
+const timerInterval = ref(null);
+const mostrarTooltip = ref(false);
 
 // Variables para profesores y preferencias
 const profesoresConPreferencias = ref([]);
@@ -225,6 +272,56 @@ const convertirTramoANumerico = (tramoTexto) => {
 
   return numeroTramoNumerico ;
 };
+
+// Computed properties para el tooltip
+const estadoGeneradorCorto = computed(() => {
+  if (estadoGenerador.value.includes('Ejecutándose')) {
+    return 'Ejecutándose';
+  } else if (estadoGenerador.value.includes('Detenido')) {
+    return 'Detenido';
+  } else if (estadoGenerador.value.includes('Error')) {
+    return 'Error';
+  } else {
+    return 'Cargando...';
+  }
+});
+
+const fechaInicioFormateada = computed(() => {
+  if (!tiempoInicio.value) return '';
+  const fecha = new Date(tiempoInicio.value);
+  return fecha.toLocaleString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+});
+
+const tiempoTranscurridoFormateado = computed(() => {
+  if (!tiempoInicio.value) return '';
+  const tiempoTranscurrido = Date.now() - tiempoInicio.value;
+  const horas = Math.floor(tiempoTranscurrido / 3600000);
+  const minutos = Math.floor((tiempoTranscurrido % 3600000) / 60000);
+  const segundos = Math.floor((tiempoTranscurrido % 60000) / 1000);
+  
+  if (horas > 0) {
+    return `${horas}h ${minutos}m ${segundos}s`;
+  } else if (minutos > 0) {
+    return `${minutos}m ${segundos}s`;
+  } else {
+    return `${segundos}s`;
+  }
+});
+
+const tooltipEstado = computed(() => {
+  if (tiempoInicio.value) {
+    return `Ejecutándose desde ${fechaInicioFormateada.value} (${tiempoTranscurridoFormateado.value})`;
+  } else {
+    return 'Generador detenido';
+  }
+});
 
 // Cargar todos los profesores con sus preferencias
 const cargarProfesoresConPreferencias = async () => {
@@ -442,47 +539,111 @@ const obtenerHorasSinClase = (preferencias) => {
 // Cargar datos al montar el componente
 onMounted(() => {
   cargarProfesoresConPreferencias();
+  obtenerEstadoGenerador();
+});
+
+// Función para obtener el estado del generador
+const obtenerEstadoGenerador = async () => {
+  try {
+    const response = await obtenerEstadoGeneradorHorarios(toastMessage, toastColor, isToastOpen);
+    
+    if (response.ok) {
+      const tiempoInicioLong = await response.text();
+      if (tiempoInicioLong && tiempoInicioLong !== 'null') {
+        tiempoInicio.value = parseInt(tiempoInicioLong);
+        const fechaInicio = new Date(tiempoInicio.value);
+        actualizarTiempoTranscurrido(fechaInicio);
+        // Iniciar temporizador para actualizar el tiempo
+        iniciarTemporizador(fechaInicio);
+      } else {
+        estadoGenerador.value = 'Detenido';
+        tiempoInicio.value = null;
+        detenerTemporizador();
+      }
+    } else {
+      const errorData = await response.json();
+      estadoGenerador.value = `Error: ${errorData.message}`;
+      tiempoInicio.value = null;
+      detenerTemporizador();
+    }
+  } catch (error) {
+    estadoGenerador.value = 'Error al obtener estado';
+    tiempoInicio.value = null;
+    detenerTemporizador();
+  }
+};
+
+// Función para actualizar el tiempo transcurrido
+const actualizarTiempoTranscurrido = (fechaInicio) => {
+  const tiempoTranscurrido = Date.now() - tiempoInicio.value;
+  const minutos = Math.floor(tiempoTranscurrido / 60000);
+  const segundos = Math.floor((tiempoTranscurrido % 60000) / 1000);
+  estadoGenerador.value = `Ejecutándose desde ${fechaInicio.toLocaleTimeString()} (${minutos}m ${segundos}s)`;
+};
+
+// Función para iniciar el temporizador
+const iniciarTemporizador = (fechaInicio) => {
+  detenerTemporizador(); // Detener cualquier temporizador existente
+  timerInterval.value = setInterval(() => {
+    actualizarTiempoTranscurrido(fechaInicio);
+    // Forzar actualización de las computed properties
+    if (mostrarTooltip.value) {
+      // Esto forzará la actualización del tooltip
+      mostrarTooltip.value = false;
+      setTimeout(() => {
+        mostrarTooltip.value = true;
+      }, 10);
+    }
+  }, 1000);
+};
+
+// Función para detener el temporizador
+const detenerTemporizador = () => {
+  if (timerInterval.value) {
+    clearInterval(timerInterval.value);
+    timerInterval.value = null;
+  }
+};
+
+// Limpiar temporizador al desmontar el componente
+onUnmounted(() => {
+  detenerTemporizador();
 });
 
 // Métodos existentes
 const generarHorarios = async () => {
-  try
-  {
+  try {
+    // Primero obtener el estado actual
+    await obtenerEstadoGenerador();
+    
     const response = await lanzarGeneradorHorarios(toastMessage, toastColor, isToastOpen);
 
-    if (response.ok)
-    {
+    if (response.ok) {
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Generador de horarios lanzado con éxito');
-    }
-    else
-    {
+      // Actualizar el estado después de lanzar
+      await obtenerEstadoGenerador();
+    } else {
       const errorData = await response.json();
       crearToast(toastMessage, toastColor, isToastOpen, "danger", errorData.message);
     } 
-  }
-  catch (error)
-  {
+  } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al lanzar el generador de horarios.');
   }
 };
 
 const forzarDetencion = async () => {
-  try
-  {
+  try {
     const response = await forzarDetencionGeneradorHorarios(toastMessage, toastColor, isToastOpen);
 
-    if (response.ok)
-    {
+    if (response.ok) {
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Generador de horarios detenido con éxito');
-    }
-    else
-    {
+      // Actualizar el estado después de detener
+      await obtenerEstadoGenerador();
+    } else {
       const errorData = await response.json();
       crearToast(toastMessage, toastColor, isToastOpen, "danger", errorData.message);
     }
-  }
-  catch (error)
-  {
+  } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al forzar la detención del generador.');
   }
 };
@@ -583,6 +744,175 @@ const actualizarSesion = async (index) => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+  margin-bottom: 2rem;
+}
+
+.estado-acciones-table {
+  background: var(--form-bg-light);
+  border-radius: 10px;
+  box-shadow: rgba(0,0,0,0.15) 0px 5px 15px;
+  overflow: hidden;
+  min-width: 400px;
+}
+
+.estado-acciones-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.estado-acciones-table th {
+  background-color: #f5f5f5;
+  padding: 1rem;
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.estado-acciones-table td {
+  padding: 1rem;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.estado-cell {
+  border-right: 1px solid #e0e0e0;
+  position: relative;
+  cursor: help;
+}
+
+.estado-text {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.acciones-cell {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-lanzar-generador-small {
+  background-color: #10B981;
+  border: none;
+  color: #FFFFFF;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-lanzar-generador-small:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-lanzar-generador-small svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-forzar-detencion-small {
+  background-color: #EF4444;
+  border: none;
+  color: #FFFFFF;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-forzar-detencion-small:hover {
+  background-color: #DC2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-forzar-detencion-small svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .estado-acciones-table {
+    background: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+  }
+  
+  .estado-acciones-table th {
+    background-color: #333;
+    border-bottom-color: #555;
+  }
+  
+  .estado-cell {
+    border-right-color: #555;
+  }
+  
+  .btn-lanzar-generador-small,
+  .btn-forzar-detencion-small {
+    color: white;
+  }
+  
+  .tooltip-content {
+    background: #1a1a1a;
+    border: 1px solid #444;
+  }
+  
+  .tooltip-content::before {
+    border-bottom-color: #1a1a1a;
+  }
+  
+  .tooltip-content h4 {
+    border-bottom-color: #444;
+  }
+}
+
+@media (max-width: 768px) {
+  .estado-acciones-table {
+    min-width: 300px;
+  }
+  
+  .estado-acciones-table th,
+  .estado-acciones-table td {
+    padding: 0.75rem;
+  }
+  
+  .estado-text {
+    font-size: 1rem;
+  }
+  
+  .btn-lanzar-generador-small,
+  .btn-forzar-detencion-small {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .btn-lanzar-generador-small svg,
+  .btn-forzar-detencion-small svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .tooltip-content {
+    min-width: 200px;
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+  
+  .tooltip-content h4 {
+    font-size: 0.9rem;
+  }
 }
 
 .card-preferencias, .card-asignaturas, .card-sesiones {
@@ -786,19 +1116,31 @@ tbody tr:hover {
   color: #FFFFFF;
   font-size: 18px;
   font-weight: 600;
-  border-radius: 0.375rem;
-  padding: 0.75rem 1.5rem;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-lanzar-generador:hover {
   background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-lanzar-generador svg {
+  width: 28px;
+  height: 28px;
 }
 
 @media (prefers-color-scheme: dark) {
   .btn-lanzar-generador {
-    color: black;
+    color: white;
   }
 }
 
@@ -808,20 +1150,87 @@ tbody tr:hover {
   color: #FFFFFF;
   font-size: 18px;
   font-weight: 600;
-  border-radius: 0.375rem;
-  padding: 0.75rem 1.5rem;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-forzar-detencion:hover {
   background-color: #DC2626;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-forzar-detencion svg {
+  width: 28px;
+  height: 28px;
 }
 
 @media (prefers-color-scheme: dark) {
   .btn-forzar-detencion {
-    color: black;
+    color: white;
   }
 }
 
+/* Estilos para el tooltip personalizado */
+.tooltip-estado {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  margin-top: 5px;
+  pointer-events: none;
+}
+
+.tooltip-content {
+  background: #333;
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  min-width: 250px;
+  text-align: left;
+}
+
+.tooltip-content::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid #333;
+}
+
+.tooltip-content h4 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid #555;
+  padding-bottom: 4px;
+}
+
+.tooltip-content p {
+  margin: 4px 0;
+  color: #e0e0e0;
+}
+
+.tooltip-content strong {
+  color: #fff;
+  font-weight: 600;
+}
 </style>

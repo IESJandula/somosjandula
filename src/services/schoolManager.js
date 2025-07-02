@@ -941,7 +941,7 @@ export const obtenerReducciones = async (toastMessage, toastColor, isToastOpen) 
     return await response.json();
   }
 
-export const obtenerDiasTramosTipoHorario = async (toastMessage, toastColor, isToastOpen) =>
+export const obtenerListaDiaTramoTipoHorario = async (toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -962,7 +962,7 @@ export const obtenerDiasTramosTipoHorario = async (toastMessage, toastColor, isT
     return await response.json();
   }
   
-export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora, otrasObservaciones, dia, tramo, horarioMatutino, email, toastMessage, toastColor, isToastOpen) =>
+export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora, otrasObservaciones, diaDesc, tramoDesc, horarioMatutino, email, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -975,8 +975,8 @@ export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora,
           'conciliacion': conciliacion,
           'sinClasePrimeraHora': sinClasePrimeraHora,
           'otrasObservaciones': otrasObservaciones,
-          'dia': dia,
-          'tramo': tramo,
+          'diaDesc': diaDesc,
+          'tramoDesc': tramoDesc,
           'horarioMatutino': horarioMatutino,
           'email': email
         },
@@ -1165,6 +1165,20 @@ export const forzarDetencionGeneradorHorarios = async (toastMessage, toastColor,
     return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/forzarDetencion',
     {
       method: 'POST',
+      headers:
+          {
+            'Authorization': `Bearer ${tokenPropio}`,
+          },
+    });
+  }
+
+export const obtenerEstadoGeneradorHorarios = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/estado',
+    {
+      method: 'GET',
       headers:
           {
             'Authorization': `Bearer ${tokenPropio}`,
