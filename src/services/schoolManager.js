@@ -945,7 +945,7 @@ export const obtenerListaDiaTramoTipoHorario = async (toastMessage, toastColor, 
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones',
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/tramosHorarios',
       {
         method: 'GET',
         headers:
@@ -961,33 +961,79 @@ export const obtenerListaDiaTramoTipoHorario = async (toastMessage, toastColor, 
 
     return await response.json();
   }
-  
-export const actualizarObservaciones = async (conciliacion, sinClasePrimeraHora, otrasObservaciones, diaDesc, tramoDesc, horarioMatutino, email, toastMessage, toastColor, isToastOpen) =>
+
+export const actualizarPreferenciaHoraria = async (email, idSeleccion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) => 
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones',
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/preferenciaHoraria',
       {
         method: 'PUT',
         headers:
         {
           'Authorization': `Bearer ${tokenPropio}`,
-          'conciliacion': conciliacion,
-          'sinClasePrimeraHora': sinClasePrimeraHora,
-          'otrasObservaciones': otrasObservaciones,
+          'email': email,
+          'idSeleccion': idSeleccion,
           'diaDesc': diaDesc,
-          'tramoDesc': tramoDesc,
-          'horarioMatutino': horarioMatutino,
-          'email': email
+          'tramoDesc': tramoDesc
+        },
+      });
+  } 
+
+  export const actualizarOtrasObservaciones = async (email, otrasObservaciones, toastMessage, toastColor, isToastOpen) => 
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/otrasObservaciones',
+      {
+        method: 'PUT',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': email,
+          'otrasObservaciones': otrasObservaciones
         },
       });
   }
 
-export const obtenerObservacionesDeUsuario = async (email, toastMessage, toastColor, isToastOpen) =>
+  export const actualizarSinClasePrimeraHora = async (email, sinClasePrimeraHora, toastMessage, toastColor, isToastOpen) => 
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/sinClasePrimeraHora',
+      {
+        method: 'PUT',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': email,
+          'sinClasePrimeraHora': sinClasePrimeraHora
+        },
+      });
+  }
+
+  export const actualizarConciliacion = async (email, conciliacion, toastMessage, toastColor, isToastOpen) => 
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/conciliacion',
+      {
+        method: 'PUT',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': email,
+          'conciliacion': conciliacion
+        },
+      });
+  }
+
+
+export const obtenerObservaciones = async (email, toastMessage, toastColor, isToastOpen) =>
 {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/usuario',
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones',
         {
             method: 'GET',
             headers:
@@ -1004,29 +1050,6 @@ export const obtenerObservacionesDeUsuario = async (email, toastMessage, toastCo
 
     return await response.json();
 }
-
-export const obtenerPreferenciasDeUsuario = async (email, toastMessage, toastColor, isToastOpen) =>
-{
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/preferencias/usuario',
-        {
-            method: 'GET',
-            headers:
-                {
-                    'Authorization': `Bearer ${tokenPropio}`,
-                    'email': email
-                },
-        });
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-    }
-
-    return await response.json();
-}
-
 
 export const obtenerSolicitudes = async (email, toastMessage, toastColor, isToastOpen) =>
   {  

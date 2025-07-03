@@ -254,13 +254,27 @@ export declare function obtenerReducciones(toastMessage: Ref<string>,
 export declare function obtenerListaDiaTramoTipoHorario(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
-export declare function actualizarObservaciones(conciliacion: Ref<boolean>,
-                                           trabajarPrimeraHora: Ref<boolean>,
+export declare function actualizarConciliacion(email: Ref<string>,
+                                           conciliacion: Ref<boolean>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function actualizarSinClasePrimeraHora(email: Ref<string>,
+                                           sinClasePrimeraHora: Ref<boolean>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;   
+export declare function actualizarPreferenciaHoraria(email: Ref<string>,
+                                           preferencia: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function actualizarOtrasObservaciones(email: Ref<string>,
                                            otrasObservaciones: Ref<string>,
-                                           diaDesc: Ref<string>,
-                                           tramoDesc: Ref<string>,
-                                           horarioMatutino: Ref<boolean>,
-                                           email: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<void>;   
+export declare function obtenerObservaciones(email: Ref<string>,
                                            toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;

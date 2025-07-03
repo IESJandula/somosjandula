@@ -17,7 +17,6 @@
               await obtenerSolicitud();
               await obtenerListaAsignaturas();
             }" class="dropdown-select">
-            <option value="" disabled hidden>Selecciona un profesor</option>
             <option v-for="profesor in listaProfesores" 
               :key="profesor" 
               :value="profesor">
@@ -79,29 +78,29 @@
       <div class="t-6">Elige tres horas que te gustaría no tener clase, exceptuando la última del viernes y la primera del lunes:</div>
       <div class="top-content">
         <div>
-          <select id="tramoHorario-select-1" v-model="tramoHorarioSeleccionado" class="dropdown-select-hours">
-            <option v-for="tramoHorario in tramosFiltrados1" 
+          <select id="tramoHorario-select-1" v-model="tramoHorarioSeleccionado1" class="dropdown-select-hours">
+            <option v-for="tramoHorario in tramosFiltrados" 
               :key="tramoHorario.diaDesc + '-' + tramoHorario.tramoDesc" 
               :value="tramoHorario">
-              {{ tramoHorario.diaDesc }} - {{ tramoHorario.tramoDesc }}
+              {{ tramoHorario.diaDesc === 'Sin Seleccionar' && tramoHorario.tramoDesc === 'Sin Seleccionar' ? 'Sin Seleccionar' : tramoHorario.diaDesc + ' - ' + tramoHorario.tramoDesc }}
             </option>
           </select>
         </div>
         <div>
           <select id="tramoHorario-select-2" v-model="tramoHorarioSeleccionado2" class="dropdown-select-hours">
-            <option v-for="tramoHorario in tramosFiltrados2" 
+            <option v-for="tramoHorario in tramosFiltrados" 
               :key="tramoHorario.diaDesc + '-' + tramoHorario.tramoDesc" 
               :value="tramoHorario">
-              {{ tramoHorario.diaDesc }} - {{ tramoHorario.tramoDesc }}
+              {{ tramoHorario.diaDesc === 'Sin Seleccionar' && tramoHorario.tramoDesc === 'Sin Seleccionar' ? 'Sin Seleccionar' : tramoHorario.diaDesc + ' - ' + tramoHorario.tramoDesc }}
             </option>
           </select>
         </div>
         <div>
           <select id="tramoHorario-select-3" v-model="tramoHorarioSeleccionado3" class="dropdown-select-hours">
-            <option v-for="tramoHorario in tramosFiltrados3" 
+            <option v-for="tramoHorario in tramosFiltrados" 
               :key="tramoHorario.diaDesc + '-' + tramoHorario.tramoDesc" 
               :value="tramoHorario">
-              {{ tramoHorario.diaDesc }} - {{ tramoHorario.tramoDesc }}
+              {{ tramoHorario.diaDesc === 'Sin Seleccionar' && tramoHorario.tramoDesc === 'Sin Seleccionar' ? 'Sin Seleccionar' : tramoHorario.diaDesc + ' - ' + tramoHorario.tramoDesc }}
             </option>
           </select>
         </div>
@@ -116,8 +115,8 @@
         </div>
       </div>
       <ion-input type="text" v-model="otrasObservacionesSeleccionado" placeholder="Observaciones" class="form-input" />
-      <!-- Botón para guardar las observaciónes -->
-      <button @click="actualizarObservacion()" :disabled="isDesabilitado" class="btn-actualizar">Actualizar observaciones</button>
+      <!-- Botón solo para otras observaciones -->
+      <button @click="actualizarOtrasObservacionesVista()" :disabled="isDesabilitado" class="btn-actualizar">Actualizar otras observaciones</button>
     </div>
     <!-- Tabla con todas las asignaturas y reducciones elegidas por el profesor -->
     <div class="card-solicitudes">
@@ -214,7 +213,10 @@ import {IonInput, IonToast} from "@ionic/vue";
 import {crearToast} from '@/utils/toast.js';
 import {obtenerEmailUsuario, obtenerRolesUsuario} from '@/services/firebaseService';
 import {
-  actualizarObservaciones,
+  actualizarConciliacion,
+  actualizarOtrasObservaciones,
+  actualizarPreferenciaHoraria,
+  actualizarSinClasePrimeraHora,
   asignarAsignatura,
   asignarReducciones,
   eliminarSolicitudes,
@@ -222,8 +224,7 @@ import {
   obtenerAsignaturas,
   obtenerListaDiaTramoTipoHorario,
   obtenerGruposDeAsignaturas,
-  obtenerObservacionesDeUsuario,
-  obtenerPreferenciasDeUsuario,
+  obtenerObservaciones,
   obtenerProfesoresHorarios,
   obtenerReducciones,
   obtenerSolicitudes
@@ -240,9 +241,9 @@ const asignaturaSeleccionada = ref('');
 const listaAsignaturas = ref([]);
 const listaAsignaturasReducciones = ref([]);
 const isOn = ref(false)
-const tramoHorarioSeleccionado = ref({ diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' });
-const tramoHorarioSeleccionado2 = ref({ diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' });
-const tramoHorarioSeleccionado3 = ref({ diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' });
+const tramoHorarioSeleccionado1 = ref(null);
+const tramoHorarioSeleccionado2 = ref(null);
+const tramoHorarioSeleccionado3 = ref(null);
 const listaTramoHorarioSeleccionado = ref([]);
 const emailUsuarioActual = ref(null);
 const sinClasePrimeraHoraSeleccionado = ref(false);
@@ -251,8 +252,7 @@ const listaGrupos = ref([]);
 const constantes = ref([]);
 const isDesabilitado = ref(false)
 const valorConstante = ref('')
-const datosObservacionesProfesorSeleccionado = ref(null);
-const preferenciasHorariasProfesorSeleccionado = ref([]);
+const observacionesUsuario = ref(null);
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -311,7 +311,12 @@ const obtenerProfesor = async () => {
     const response = await obtenerProfesoresHorarios(toastMessage, toastColor, isToastOpen);
     listaProfesores.value = response;
 
-    profesorSeleccionado.value = '';
+    // Asignar automáticamente el primer profesor de la lista
+    if (listaProfesores.value.length > 0) {
+      profesorSeleccionado.value = listaProfesores.value[0];
+    } else {
+      profesorSeleccionado.value = '';
+    }
 
     listaAsignaturas.value = [];
 
@@ -448,12 +453,14 @@ const resetearValores = () => {
       isOn.value = false;
       sinClasePrimeraHoraSeleccionado.value = false;
       otrasObservacionesSeleccionado.value = '';
-      tramoHorarioSeleccionado.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-      tramoHorarioSeleccionado2.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-      tramoHorarioSeleccionado3.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
+      if (listaTramoHorarioSeleccionado.value.length > 0) {
+        tramoHorarioSeleccionado1.value = listaTramoHorarioSeleccionado.value[0];
+        tramoHorarioSeleccionado2.value = listaTramoHorarioSeleccionado.value[0];
+        tramoHorarioSeleccionado3.value = listaTramoHorarioSeleccionado.value[0];
+      }
     };
 
-const obtenerObservaciones = async () => {
+const obtenerObservacionesVista = async () => {
   try {
 
     const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
@@ -464,55 +471,69 @@ const obtenerObservaciones = async () => {
         await (async () => {
             return await obtenerListaDiaTramoTipoHorario(toastMessage, toastColor, isToastOpen);
         })();
-    tramoHorarioSeleccionado.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-    tramoHorarioSeleccionado2.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-    tramoHorarioSeleccionado3.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-
-    datosObservacionesProfesorSeleccionado.value = await obtenerObservacionesDeUsuario(emailDestino, toastMessage, toastColor, isToastOpen);
-    preferenciasHorariasProfesorSeleccionado.value= await obtenerPreferenciasDeUsuario(emailDestino, toastMessage, toastColor, isToastOpen);
-
-    if(datosObservacionesProfesorSeleccionado.value.tieneObservaciones === true){
-
-      isOn.value = datosObservacionesProfesorSeleccionado.value.conciliacion !== false;
-      sinClasePrimeraHoraSeleccionado.value = datosObservacionesProfesorSeleccionado.value.sinClasePrimeraHora !== false;
-      otrasObservacionesSeleccionado.value= datosObservacionesProfesorSeleccionado.value.otrasObservaciones || '';
+    
+    // Asignar el primer elemento (Sin Seleccionar) por defecto
+    if (listaTramoHorarioSeleccionado.value.length > 0) {
+      const opcionSinSeleccionar = listaTramoHorarioSeleccionado.value.find(tramo => 
+        tramo.diaDesc === 'Sin Seleccionar' && tramo.tramoDesc === 'Sin Seleccionar'
+      );
+      const valorPorDefecto = opcionSinSeleccionar || listaTramoHorarioSeleccionado.value[0];
+      
+      tramoHorarioSeleccionado1.value = valorPorDefecto;
+      tramoHorarioSeleccionado2.value = valorPorDefecto;
+      tramoHorarioSeleccionado3.value = valorPorDefecto;
     }
 
-    if (preferenciasHorariasProfesorSeleccionado.value.tieneObservaciones === true)  {
-      
+    observacionesUsuario.value = await obtenerObservaciones(emailDestino, toastMessage, toastColor, isToastOpen);
+
+    // Inicializamos todos los valores
+
+    isOn.value = observacionesUsuario.value.conciliacion !== false;
+    sinClasePrimeraHoraSeleccionado.value = observacionesUsuario.value.sinClasePrimeraHora !== false;
+    otrasObservacionesSeleccionado.value = observacionesUsuario.value.otrasObservaciones || '';
+
+    // Inicializamos los tramos horarios a su valor por defecto antes del if
+    tramoHorarioSeleccionado1.value = listaTramoHorarioSeleccionado.value[0] ;
+    tramoHorarioSeleccionado2.value = listaTramoHorarioSeleccionado.value[0] ;
+    tramoHorarioSeleccionado3.value = listaTramoHorarioSeleccionado.value[0] ;
+
+    // Si el tamaño de la lista de tramos horarios es mayor que 0, asignamos el primer tramo horario a los tres campos
+    if (observacionesUsuario.value.tramosHorarios.length > 0) 
+    {  
       let contador = 0;
-      const preferenciasHorarias = preferenciasHorariasProfesorSeleccionado.value.tramosHorarios || [];
       
-      console.log('Preferencias del servidor:', preferenciasHorarias);
-      console.log('Lista local:', listaTramoHorarioSeleccionado.value);
-      
-      for (const tramoH of preferenciasHorarias) {
-        console.log('Buscando tramo:', tramoH);
+      for (const tramoH of observacionesUsuario.value.tramosHorarios)
+      {
   
         const encontrado = listaTramoHorarioSeleccionado.value.find(item => {
-          console.log('Comparando con item:', item);
           return item.diaDesc === tramoH.diaDesc &&
                  item.tramoDesc === tramoH.tramoDesc &&
                  (tramoH.horarioMatutino === null || item.horarioMatutino === tramoH.horarioMatutino);
         });
   
-        contador++;
-        if (encontrado) {
-          switch (contador) {
-            case 1:
-              tramoHorarioSeleccionado.value = encontrado;
+        if (encontrado)
+        {
+          switch (contador)
+          {
+            case 0:
+
+              tramoHorarioSeleccionado1.value = encontrado;
               break;
-            case 2:
+
+            case 1:
+
               tramoHorarioSeleccionado2.value = encontrado;
               break;
-            case 3:
+
+            case 2:
+
               tramoHorarioSeleccionado3.value = encontrado;
-              contador = 0;
               break;
           }
-        } else {
-          console.warn('No se encontró coincidencia para:', tramoH);
         }
+
+        // Incrementamos el contador para el siguiente tramo horario
+        contador++;
       }
     }
   } catch (error) {
@@ -526,8 +547,26 @@ const obtenerObservaciones = async () => {
 const obtenerListaDiaTramoTipoHorarioService = async () => {
   try {
 
-    const response = await obtenerListaDiaTramoTipoHorario(tramoHorarioSeleccionado.value, toastMessage, toastColor, isToastOpen);
+    const response = await obtenerListaDiaTramoTipoHorario(toastMessage, toastColor, isToastOpen);
     listaTramoHorarioSeleccionado.value = response;
+    
+    // Asignar valores por defecto si no están asignados
+    if (listaTramoHorarioSeleccionado.value.length > 0) {
+      const opcionSinSeleccionar = listaTramoHorarioSeleccionado.value.find(tramo => 
+        tramo.diaDesc === 'Sin Seleccionar' && tramo.tramoDesc === 'Sin Seleccionar'
+      );
+      const valorPorDefecto = opcionSinSeleccionar || listaTramoHorarioSeleccionado.value[0];
+      
+      if (!tramoHorarioSeleccionado1.value) {
+        tramoHorarioSeleccionado1.value = valorPorDefecto;
+      }
+      if (!tramoHorarioSeleccionado2.value) {
+        tramoHorarioSeleccionado2.value = valorPorDefecto;
+      }
+      if (!tramoHorarioSeleccionado3.value) {
+        tramoHorarioSeleccionado3.value = valorPorDefecto;
+      }
+    }
 
   } catch (error) {
     mensajeColor = 'danger';
@@ -536,103 +575,105 @@ const obtenerListaDiaTramoTipoHorarioService = async () => {
   }
 };
 
-// Filtramos las opciones que van a estar disponibles vasadas en las selecciones
-const tramosFiltrados1 = computed(() => {
-  return listaTramoHorarioSeleccionado.value.filter(tramo => 
-    tramo !== tramoHorarioSeleccionado2.value && 
-    tramo !== tramoHorarioSeleccionado3.value
+// Mostramos todas las opciones disponibles sin filtrar
+const tramosFiltrados = computed(() => {
+  const opcionSinSeleccionar = listaTramoHorarioSeleccionado.value.find(tramo => 
+    tramo.diaDesc === 'Sin Seleccionar' && tramo.tramoDesc === 'Sin Seleccionar'
   );
-});
-
-const tramosFiltrados2 = computed(() => {
-  return listaTramoHorarioSeleccionado.value.filter(tramo => 
-    tramo !== tramoHorarioSeleccionado.value && 
-    tramo !== tramoHorarioSeleccionado3.value
+  const tramosRestantes = listaTramoHorarioSeleccionado.value.filter(tramo => 
+    !(tramo.diaDesc === 'Sin Seleccionar' && tramo.tramoDesc === 'Sin Seleccionar')
   );
+  return opcionSinSeleccionar ? [opcionSinSeleccionar, ...tramosRestantes] : tramosRestantes;
 });
 
-const tramosFiltrados3 = computed(() => {
-  return listaTramoHorarioSeleccionado.value.filter(tramo => 
-    tramo !== tramoHorarioSeleccionado.value && 
-    tramo !== tramoHorarioSeleccionado2.value
-  );
-});
+// Los watchers se han eliminado para permitir selecciones duplicadas
 
-// Resetea los tramos horarios seleccionados si se selecciona el mismo
-watch(tramoHorarioSeleccionado, (newValue) => {
-  if (newValue === tramoHorarioSeleccionado2.value) {
-    tramoHorarioSeleccionado2.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-  }
-  if (newValue === tramoHorarioSeleccionado3.value) {
-    tramoHorarioSeleccionado3.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-  }
-});
-
-watch(tramoHorarioSeleccionado2, (newValue) => {
-  if (newValue === tramoHorarioSeleccionado.value) {
-    tramoHorarioSeleccionado.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-  }
-  if (newValue === tramoHorarioSeleccionado3.value) {
-    tramoHorarioSeleccionado3.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-  }
-});
-
-watch(tramoHorarioSeleccionado3, (newValue) => {
-  if (newValue === tramoHorarioSeleccionado.value) {
-    tramoHorarioSeleccionado.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-  }
-  if (newValue === tramoHorarioSeleccionado2.value) {
-    tramoHorarioSeleccionado2.value = { diaDesc: 'Sin Seleccionar - Sin Seleccionar', tramoDesc: 'Sin Seleccionar - Sin Seleccionar' };
-  }
-});
-
-const actualizarObservacion = async () => {
+const actualizarConciliacionFamiliar = async () => {
   try {
-
     await verificarConstantes();
 
     const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
       ? profesorSeleccionado.value.email
       : emailUsuarioActual.value;
 
-    // Array con los tramos horarios seleccionados
-    const tramos = [
-      tramoHorarioSeleccionado.value,
-      tramoHorarioSeleccionado2.value,
-      tramoHorarioSeleccionado3.value,
-    ];
+    const response = await actualizarConciliacion(emailDestino, Boolean(isOn.value), toastMessage, toastColor, isToastOpen);
 
-    if (tramos.some(tramo => tramo.diaDesc === 'Sin Seleccionar - Sin Seleccionar')) {
-      mensajeActualizacion = 'Tienes que elegir todos los tramos horarios'
-      mensajeColor = 'warning'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
-      return
-    }
-
-    let response = null;
-
-    // Iteramos sobre los tramos y envíamos una solicitud por cada uno
-    for (const tramo of tramos) {
-      if (tramo && tramo.diaDesc !== 'Sin Seleccionar - Sin Seleccionar') {
-
-        // Llama al método para enviar los datos al backend
-        response = await actualizarObservaciones(Boolean(isOn.value), Boolean(sinClasePrimeraHoraSeleccionado.value), otrasObservacionesSeleccionado.value || '', tramo.diaDesc, tramo.tramoDesc, tramo.horarioMatutino, emailDestino,
-          toastMessage, toastColor, isToastOpen);
-      }
-    }
-
-    if(response.ok) {
-      mensajeActualizacion = "Observaciones actualizadas correctamente.";
-      mensajeColor = "success";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    } else {
+    if(!response.ok) {
       const errorData = await response.json();
       mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
     }
 
   } catch (error) {
-    mensajeActualizacion = 'Error al actualizar las observaciones'
+    mensajeActualizacion = 'Error al actualizar la conciliación familiar'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
+
+const actualizarPrimeraHora = async () => {
+  try {
+    await verificarConstantes();
+
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
+    const response = await actualizarSinClasePrimeraHora(emailDestino, Boolean(sinClasePrimeraHoraSeleccionado.value), toastMessage, toastColor, isToastOpen);
+
+    if(!response.ok) {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al actualizar la preferencia de primera hora'
+    mensajeColor = 'danger'
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
+  }
+}
+
+const actualizarPreferenciaHorariaIndividual = async (idSeleccion, tramo) => {
+  try {
+    await verificarConstantes();
+
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
+    const response = await actualizarPreferenciaHoraria(emailDestino, idSeleccion, tramo.diaDesc, tramo.tramoDesc, toastMessage, toastColor, isToastOpen);
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+  } catch (error) {
+    mensajeActualizacion = `Error al actualizar el tramo horario ${idSeleccion + 1}`;
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+  }
+}
+
+const actualizarOtrasObservacionesVista = async () => {
+  try {
+    await verificarConstantes();
+
+    const emailDestino = (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
+      ? profesorSeleccionado.value.email
+      : emailUsuarioActual.value;
+
+    const response = await actualizarOtrasObservaciones(emailDestino, otrasObservacionesSeleccionado.value || '', toastMessage, toastColor, isToastOpen);
+
+    if(!response.ok) {
+      const errorData = await response.json();
+      mensajeColor = 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+    }
+
+  } catch (error) {
+    mensajeActualizacion = 'Error al actualizar las otras observaciones'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
   }
@@ -887,6 +928,12 @@ onMounted(async () => {
   await obtenerEmailUsuarioActual();
   if (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR')) {
     await obtenerProfesor();
+    // Si se cargó un profesor, cargar sus datos
+    if (profesorSeleccionado.value) {
+      await obtenerListaAsignaturas();
+      await obtenerSolicitud();
+      await obtenerObservacionesVista();
+    }
   }
   await verificarConstantes();
   await obtenerListaReducciones();
@@ -894,9 +941,42 @@ onMounted(async () => {
   if (!(rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))) {
     await obtenerListaAsignaturas();
     await obtenerSolicitud();
-    await obtenerObservaciones();
+    await obtenerObservacionesVista();
   }
 });
+
+// Watcher para actualizar automáticamente la conciliación familiar
+watch(isOn, async (nuevoValor) => {
+  if (!isDesabilitado.value) {
+    await actualizarConciliacionFamiliar();
+  }
+});
+
+// Watcher para actualizar automáticamente la preferencia de primera hora
+watch(sinClasePrimeraHoraSeleccionado, async (nuevoValor) => {
+  if (!isDesabilitado.value) {
+    await actualizarPrimeraHora();
+  }
+});
+
+// Watcher para actualizar automáticamente las preferencias horarias individuales
+watch(tramoHorarioSeleccionado1, async (nuevoValor) => {
+  if (!isDesabilitado.value && nuevoValor) {
+    await actualizarPreferenciaHorariaIndividual(0, nuevoValor);
+  }
+}, { deep: true, immediate: false });
+
+watch(tramoHorarioSeleccionado2, async (nuevoValor) => {
+  if (!isDesabilitado.value && nuevoValor) {
+    await actualizarPreferenciaHorariaIndividual(1, nuevoValor);
+  }
+}, { deep: true, immediate: false });
+
+watch(tramoHorarioSeleccionado3, async (nuevoValor) => {
+  if (!isDesabilitado.value && nuevoValor) {
+    await actualizarPreferenciaHorariaIndividual(2, nuevoValor);
+  }
+}, { deep: true, immediate: false });
 
 watch(profesorSeleccionado, async (nuevoProfesor) => {
   if (
@@ -907,7 +987,7 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
     await obtenerListaAsignaturas();
     await obtenerSolicitud();
     resetearValores();
-    await obtenerObservaciones();
+    await obtenerObservacionesVista();
   }
 });
 
@@ -1297,6 +1377,8 @@ table {
     border: none;
   }
 
+
+
   .separator-line {
     border-top: 1.3px solid #a1a1a1;
   }
@@ -1377,6 +1459,8 @@ table {
     padding: 4px 8px;
     left: -70px;
   }
+
+
 }
 
 @media (max-width: 540px) {

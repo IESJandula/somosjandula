@@ -196,9 +196,8 @@ import {
   forzarDetencionGeneradorHorarios, 
   obtenerEstadoGeneradorHorarios,
   obtenerProfesoresHorarios, 
-  obtenerObservacionesDeUsuario, 
-  obtenerPreferenciasDeUsuario,
-  actualizarObservaciones,
+  obtenerObservaciones,
+  actualizarConciliacion,
   obtenerSolicitudes,
   actualizarSesionBase,
   obtenerSesionesBase
@@ -346,15 +345,7 @@ const cargarProfesoresConPreferencias = async () => {
     for (const profesor of profesoresConPreferencias.value) {
       try {
         // Obtener observaciones (incluye conciliación)
-        const observaciones = await obtenerObservacionesDeUsuario(
-          profesor.email, 
-          toastMessage, 
-          toastColor, 
-          isToastOpen
-        );
-        
-        // Obtener preferencias horarias
-        const preferencias = await obtenerPreferenciasDeUsuario(
+        const observaciones = await obtenerObservaciones(
           profesor.email, 
           toastMessage, 
           toastColor, 
@@ -366,7 +357,7 @@ const cargarProfesoresConPreferencias = async () => {
           conciliacion: observaciones.conciliacion || false,
           sinClasePrimeraHora: observaciones.sinClasePrimeraHora || false,
           observaciones: observaciones.otrasObservaciones || '',
-          tramosHorarios: preferencias.tramosHorarios || [],
+          tramosHorarios: observaciones.tramosHorarios || [],
           cargado: true
         };
       } catch (error) {
@@ -478,24 +469,21 @@ const cargarAsignaturasProfesor = async (email) => {
 // Guardar el cambio en conciliación para un profesor específico
 const guardarConciliacion = async (email, conciliacion) => {
   try {
-    // Buscar el profesor para obtener sus datos actuales
-    const profesor = profesoresConPreferencias.value.find(p => p.email === email);
-    if (!profesor) return;
-    
-    // Usar el endpoint existente que actualiza observaciones
-    await actualizarObservaciones(
-      conciliacion,
-      profesor.preferencias.sinClasePrimeraHora,
-      profesor.preferencias.observaciones,
-      'Lunes', // Valor por defecto, se puede ajustar según necesidades
-      1, // Valor por defecto, se puede ajustar según necesidades
-      'MATUTINO', // Valor por defecto, se puede ajustar según necesidades
+    // Usar el endpoint específico para actualizar conciliación
+    const response = await actualizarConciliacion(
       email,
+      conciliacion,
       toastMessage,
       toastColor,
       isToastOpen
     );
-    crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Conciliación actualizada');
+    
+    if (response.ok) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Conciliación actualizada correctamente');
+    } else {
+      const errorData = await response.json();
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Error: ${errorData.message}`);
+    }
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar la conciliación');
   }
