@@ -264,11 +264,7 @@ export declare function actualizarSinClasePrimeraHora(email: Ref<string>,
                                            toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<void>;   
-export declare function actualizarPreferenciaHoraria(email: Ref<string>,
-                                           preferencia: Ref<string>,
-                                           toastMessage: Ref<string>,
-                                           toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
+
 export declare function actualizarOtrasObservaciones(email: Ref<string>,
                                            otrasObservaciones: Ref<string>,
                                            toastMessage: Ref<string>,
@@ -336,8 +332,8 @@ export declare function actualizarSesionBase(email: Ref<string>,
                                              etapa: Ref<string>,
                                              grupo: Ref<string>,
                                              numeroSesion: Ref<number>,
-                                             dia: Ref<number>,
-                                             tramo: Ref<number>,
+                                             diaDesc: Ref<string>,
+                                             tramoDesc: Ref<string>,
                                              toastMessage: Ref<string>,
                                              toastColor: Ref<string>,
                                              isToastOpen: Ref<boolean>): Promise<Response>;
@@ -351,3 +347,18 @@ export declare function obtenerSesionesBase(email: Ref<string>,
                                             toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
                                             isToastOpen: Ref<boolean>): Promise<any>;
+
+/****************************** Obtener Lista de Días y Tramos ******************************/
+export declare function obtenerListaDiaTramoTipoHorario(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
+
+/****************************** Obtener Lista de Días ******************************/
+export declare function obtenerListaDias(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;
+
+/****************************** Obtener Lista de Tramos ******************************/
+export declare function obtenerListaTramos(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<any>;

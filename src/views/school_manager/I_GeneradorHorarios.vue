@@ -71,7 +71,7 @@
           <tr>
             <th>Profesor</th>
             <th>Conciliación</th>
-            <th>No tener clase ...</th>
+            <th>Sin clase</th>
             <th>Horas sin clase</th>
             <th>Observaciones</th>
           </tr>
@@ -144,8 +144,14 @@
   <div v-if="asignaturaSeleccionado" class="card-sesiones">
     <h2 class="t-2">Sesiones - {{ asignaturaSeleccionado.nombre }}</h2>
     
+    <!-- Loading state para días y tramos -->
+    <div v-if="loadingDias || loadingTramos" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Cargando días y tramos disponibles...</p>
+    </div>
+    
     <!-- Tabla de sesiones -->
-    <div class="tabla-responsive">
+    <div v-else class="tabla-responsive">
       <table>
         <thead>
           <tr>
@@ -160,24 +166,17 @@
               Sesión {{ index + 1 }}
             </td>
             <td>
-              <select v-model="sesion.dia" class="select-forzar" @change="actualizarSesionConDebounce(index)">
-                <option value="Sin forzar">Sin forzar</option>
-                <option value="Lunes">Lunes</option>
-                <option value="Martes">Martes</option>
-                <option value="Miércoles">Miércoles</option>
-                <option value="Jueves">Jueves</option>
-                <option value="Viernes">Viernes</option>
+              <select v-model="sesion.diaDesc" class="select-forzar" @change="actualizarSesionConDebounce(index)" :disabled="loadingDias">
+                <option v-for="dia in diasUnicos" :key="dia" :value="dia">
+                  {{ dia }}
+                </option>
               </select>
             </td>
             <td>
-              <select v-model="sesion.tramo" class="select-forzar" @change="actualizarSesionConDebounce(index)">
-                <option value="Sin forzar">Sin forzar</option>
-                <option value="1ª hora">1ª hora</option>
-                <option value="2ª hora">2ª hora</option>
-                <option value="3ª hora">3ª hora</option>
-                <option value="4ª hora">4ª hora</option>
-                <option value="5ª hora">5ª hora</option>
-                <option value="6ª hora">6ª hora</option>
+              <select v-model="sesion.tramoDesc" class="select-forzar" @change="actualizarSesionConDebounce(index)" :disabled="loadingTramos">
+                <option v-for="tramo in tramosUnicos" :key="tramo" :value="tramo">
+                  {{ tramo }}
+                </option>
               </select>
             </td>
           </tr>
@@ -200,7 +199,9 @@ import {
   actualizarConciliacion,
   obtenerSolicitudes,
   actualizarSesionBase,
-  obtenerSesionesBase
+  obtenerSesionesBase,
+  obtenerListaDias,
+  obtenerListaTramos
 } from '@/services/schoolManager.js';
 
 // Variables para el toast
@@ -228,6 +229,12 @@ const asignaturaSeleccionado = ref(null);
 const sesionesAsignatura = ref([]);
 const debounceTimers = ref({}); // Para evitar múltiples llamadas rápidas
 
+// Variables para días y tramos disponibles
+const listaDias = ref([]);
+const listaTramos = ref([]);
+const loadingDias = ref(false);
+const loadingTramos = ref(false);
+
 // Mapeo de días (basado en G_EleccionDeHorarios.vue)
 const diaNameMap = {
   0: 'Lunes',
@@ -248,28 +255,22 @@ const diaNumberMap = {
 
 // Función para convertir día a formato numérico
 const convertirDiaANumerico = (diaTexto) => {
-  if (diaTexto === 'Sin forzar') 
-  {
-    return -1 ;
+  if (diaTexto === 'Sin Seleccionar') {
+    return -1;
   }
-
-  return diaNumberMap[diaTexto] ;
+  return diaNumberMap[diaTexto];
 };
 
 // Función para convertir hora a formato numérico
 const convertirTramoANumerico = (tramoTexto) => {
-  if (tramoTexto === 'Sin forzar')
-  {
-    return -1 ;
+  if (tramoTexto === 'Sin Seleccionar') {
+    return -1;
   }
-
   // Cogemos el número de la hora con un substring
   const numeroTramo = tramoTexto.substring(0, tramoTexto.length - 2);
-
   // Le restamos 1 para que sea el número de la hora
   const numeroTramoNumerico = parseInt(numeroTramo, 10) - 1;
-
-  return numeroTramoNumerico ;
+  return numeroTramoNumerico;
 };
 
 // Computed properties para el tooltip
@@ -320,6 +321,23 @@ const tooltipEstado = computed(() => {
   } else {
     return 'Generador detenido';
   }
+});
+
+// Computed properties para días y tramos únicos
+const diasUnicos = computed(() => {
+  if (!listaDias.value || listaDias.value.length === 0) {
+    return ['Sin Seleccionar'];
+  }
+  
+  return ['Sin Seleccionar', ...listaDias.value.filter(dia => dia !== 'Sin Seleccionar')];
+});
+
+const tramosUnicos = computed(() => {
+  if (!listaTramos.value || listaTramos.value.length === 0) {
+    return ['Sin Seleccionar'];
+  }
+  
+  return ['Sin Seleccionar', ...listaTramos.value.filter(tramo => tramo !== 'Sin Seleccionar')];
 });
 
 // Cargar todos los profesores con sus preferencias
@@ -389,8 +407,8 @@ const seleccionarAsignatura = async (asignatura) => {
   for (let i = 0; i < asignatura.horas; i++) {
     sesionesAsignatura.value.push({
       numero: i + 1,
-      dia: 'Sin forzar',
-      tramo: 'Sin forzar',
+      diaDesc: 'Sin Seleccionar',
+      tramoDesc: 'Sin Seleccionar',
       cargaInicial: true // Flag para marcar si es la carga inicial
     });
   }
@@ -422,14 +440,12 @@ const cargarRestriccionesExistentes = async () => {
         if (sesionIndex >= 0 && sesionIndex < sesionesAsignatura.value.length) {
           const sesion = sesionesAsignatura.value[sesionIndex];
           
-          // Convertir día numérico a texto
-          if (sesionBase.dia !== null) {
-            sesion.dia = diaNameMap[sesionBase.dia] || 'Sin forzar';
+          // Asignar valores solo si no son null
+          if (sesionBase.diaDesc !== null) {
+            sesion.diaDesc = sesionBase.diaDesc;
           }
-          
-          // Convertir hora numérica a texto
-          if (sesionBase.tramo !== null) {
-            sesion.tramo = `${sesionBase.tramo + 1}ª hora`;
+          if (sesionBase.tramoDesc !== null) {
+            sesion.tramoDesc = sesionBase.tramoDesc;
           }
           
           sesion.cargaInicial = false; // Marcar como no carga inicial
@@ -504,30 +520,53 @@ const obtenerHorasSinClase = (preferencias) => {
   
   for (let i = 0; i < preferencias.tramosHorarios.length; i++) {
     const tramo = preferencias.tramosHorarios[i];
-    if (!tramo) continue;
-    
-    // Formatear usando el mismo método que G_EleccionDeHorarios.vue
-    const diaNum = Number(tramo.dia);
-    const diaNombre = diaNameMap[diaNum] || `Día ${tramo.dia}`;
-    const tramoNum = Number(tramo.tramo) + 1; // Sumar 1 como en el código original
-    const horarioMatutino = tramo.horarioMatutino;
-    
-    // Formatear el tipo de horario para que sea más legible
-    const horarioFormateado = horarioMatutino ? 'mañana' : 'tarde';
-    
-    // Formato: "Martes 1ª hora (mañana)"
-    const horaFormateada = `${diaNombre} ${tramoNum}ª hora (${horarioFormateado})`;
-    horasFormateadas.push(horaFormateada);
+
+    // Verificar si el tramo tiene "Sin Seleccionar"
+    if (tramo.diaDesc !== 'Sin Seleccionar' && tramo.tramoDesc !== 'Sin Seleccionar') {
+      // Formato: "Martes 1ª hora"
+      const horaFormateada = `${tramo.diaDesc} ${tramo.tramoDesc}`;
+
+      // Añadir a la lista de horas formateadas
+      horasFormateadas.push(horaFormateada);
+    }
   }
   
-  // Unir todas las horas con comas
+  // Unir todas las horas con comas y devolver el resultado
   return horasFormateadas.join(', ');
+};
+
+// Cargar días y tramos disponibles
+const cargarDiasTramos = async () => {
+  // Cargar días
+  loadingDias.value = true;
+  try {
+    const dias = await obtenerListaDias(toastMessage, toastColor, isToastOpen);
+    listaDias.value = dias;
+  } catch (error) {
+    console.error('Error al cargar días:', error);
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al cargar los días disponibles');
+  } finally {
+    loadingDias.value = false;
+  }
+
+  // Cargar tramos
+  loadingTramos.value = true;
+  try {
+    const tramos = await obtenerListaTramos(toastMessage, toastColor, isToastOpen);
+    listaTramos.value = tramos;
+  } catch (error) {
+    console.error('Error al cargar tramos:', error);
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al cargar los tramos disponibles');
+  } finally {
+    loadingTramos.value = false;
+  }
 };
 
 // Cargar datos al montar el componente
 onMounted(() => {
   cargarProfesoresConPreferencias();
   obtenerEstadoGenerador();
+  cargarDiasTramos();
 });
 
 // Función para obtener el estado del generador
@@ -659,10 +698,6 @@ const actualizarSesion = async (index) => {
       return; // Salir silenciosamente si no hay datos suficientes
     }
 
-    // Convertir los valores a formato numérico
-    const dia = convertirDiaANumerico(sesion.dia);
-    const tramo = convertirTramoANumerico(sesion.tramo);
-
     // Llamar al servicio para actualizar la restricción
     const response = await actualizarSesionBase(
       profesorSeleccionado.value.email,
@@ -671,26 +706,14 @@ const actualizarSesion = async (index) => {
       asignaturaSeleccionado.value.etapa,
       asignaturaSeleccionado.value.grupo,
       sesion.numero,
-      dia,
-      tramo,
+      sesion.diaDesc,
+      sesion.tramoDesc,
       toastMessage,
       toastColor,
       isToastOpen
     );
 
-    if (response.ok) {
-      
-      // Mostrar mensaje de éxito solo si no es la carga inicial
-      if (!sesion.cargaInicial) {
-        crearToast(
-          toastMessage, 
-          toastColor, 
-          isToastOpen, 
-          'success', 
-          `Sesión ${index + 1} actualizada`
-        );
-      }
-    } else {
+    if (!response.ok) {
       const errorData = await response.json();
       crearToast(
         toastMessage, 
@@ -910,6 +933,7 @@ const actualizarSesion = async (index) => {
   border-radius: 10px;
   box-shadow: rgba(0,0,0,0.15) 0px 5px 15px;
   padding: 1.5rem;
+  overflow: hidden; /* Evitar desbordamiento */
 }
 
 .loading-container {
@@ -937,13 +961,18 @@ const actualizarSesion = async (index) => {
 
 .tabla-responsive {
   overflow-x: auto;
+  overflow-y: auto;
   max-width: 100%;
+  max-height: 400px; /* Altura máxima para scroll vertical */
+  border-radius: 8px;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
 }
 
 table {
   min-width: 800px;
   border-collapse: collapse;
   width: 100%;
+  margin: 0;
 }
 
 th, td {
@@ -959,6 +988,7 @@ th {
   position: sticky;
   top: 0;
   z-index: 10;
+  white-space: nowrap; /* Evitar que el texto se rompa */
 }
 
 .profesor-nombre {
@@ -1017,6 +1047,13 @@ input[type="checkbox"]:disabled {
   box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
+.select-forzar:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 /* Estilos para filas alternadas */
 tbody tr:nth-child(even) {
   background-color: #f9f9f9;
@@ -1026,32 +1063,102 @@ tbody tr:hover {
   background-color: #f0f0f0;
 }
 
-@media (max-width: 768px) {
+/* Estilos para mejorar el scroll */
+.tabla-responsive::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tabla-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.tabla-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.tabla-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .card-preferencias, .card-asignaturas, .card-sesiones {
+    margin: 0.5rem;
+    padding: 0.75rem;
+  }
+  
   .tabla-responsive {
-    max-width: 100vw;
+    max-height: 250px;
   }
+  
   table {
-    min-width: 700px;
+    min-width: 500px;
   }
   
-  .profesor-nombre {
-    min-width: 120px;
-    font-size: 0.9rem;
+  .t-1 {
+    font-size: 1.5rem;
   }
   
-  .horas-sin-clase {
-    max-width: 200px;
-    font-size: 0.85rem;
-  }
-  
-  .select-forzar {
-    min-width: 100px;
-    font-size: 0.8rem;
+  .t-2 {
+    font-size: 1.1rem;
   }
   
   th, td {
-    padding: 0.3rem;
+    padding: 0.2rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .card-preferencias, .card-asignaturas, .card-sesiones {
+    margin: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  .tabla-responsive {
+    max-width: 100%;
+    max-height: 300px; /* Altura menor en móviles */
+    border-radius: 6px;
+  }
+  
+  table {
+    min-width: 600px; /* Ancho mínimo menor en móviles */
+  }
+  
+  .profesor-nombre {
+    min-width: 100px;
     font-size: 0.85rem;
+  }
+  
+  .horas-sin-clase {
+    max-width: 150px;
+    font-size: 0.8rem;
+    word-break: break-word;
+  }
+  
+  .select-forzar {
+    min-width: 80px;
+    font-size: 0.75rem;
+    padding: 0.2rem;
+  }
+  
+  th, td {
+    padding: 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .t-1 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .t-2 {
+    font-size: 1.25rem;
+    margin-top: 1rem;
   }
 }
 
@@ -1060,6 +1167,22 @@ tbody tr:hover {
     background: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
+  }
+  
+  .tabla-responsive {
+    box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.1);
+  }
+  
+  .tabla-responsive::-webkit-scrollbar-track {
+    background: #2a2a2a;
+  }
+  
+  .tabla-responsive::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+  
+  .tabla-responsive::-webkit-scrollbar-thumb:hover {
+    background: #666;
   }
   
   th {
@@ -1095,6 +1218,11 @@ tbody tr:hover {
   
   .select-forzar:focus {
     border-color: #64b5f6;
+  }
+  
+  .select-forzar:disabled {
+    background-color: #2a2a2a;
+    color: #666;
   }
 }
 

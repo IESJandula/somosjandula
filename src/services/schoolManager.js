@@ -938,49 +938,10 @@ export const obtenerReducciones = async (toastMessage, toastColor, isToastOpen) 
       throw new Error(errorData.message);
     }
 
-    return await response.json();
+        return await response.json();
   }
 
-export const obtenerListaDiaTramoTipoHorario = async (toastMessage, toastColor, isToastOpen) =>
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/tramosHorarios',
-      {
-        method: 'GET',
-        headers:
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-        },
-      });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message);
-    }
-
-    return await response.json();
-  }
-
-export const actualizarPreferenciaHoraria = async (email, idSeleccion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) => 
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/preferenciaHoraria',
-      {
-        method: 'PUT',
-        headers:
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-          'email': email,
-          'idSeleccion': idSeleccion,
-          'diaDesc': diaDesc,
-          'tramoDesc': tramoDesc
-        },
-      });
-  } 
-
-  export const actualizarOtrasObservaciones = async (email, otrasObservaciones, toastMessage, toastColor, isToastOpen) => 
+export const actualizarOtrasObservaciones = async (email, otrasObservaciones, toastMessage, toastColor, isToastOpen) => 
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -1210,7 +1171,7 @@ export const obtenerEstadoGeneradorHorarios = async (toastMessage, toastColor, i
   }
 
 /****************************** Actualizar Sesiones Base ******************************/
-export const actualizarSesionBase = async (email, nombreAsignatura, curso, etapa, grupo, numeroSesion, dia, tramo, toastMessage, toastColor, isToastOpen) =>
+export const actualizarSesionBase = async (email, nombreAsignatura, curso, etapa, grupo, numeroSesion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -1226,8 +1187,8 @@ export const actualizarSesionBase = async (email, nombreAsignatura, curso, etapa
             'etapa': etapa,
             'grupo': grupo,
             'numeroSesion': numeroSesion,
-            'dia': dia,
-            'tramo': tramo
+            'diaDesc': diaDesc,
+            'tramoDesc': tramoDesc
           },
     });
   }
@@ -1257,4 +1218,89 @@ export const obtenerSesionesBase = async (email, nombreAsignatura, curso, etapa,
     }
 
     return await response.json();
+  }
+
+/****************************** Obtener Lista de Días y Tramos ******************************/
+export const obtenerListaDiaTramoTipoHorario = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/tramosHorarios',
+      {
+        method: 'GET',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+  }
+
+/****************************** Obtener Lista de Días ******************************/
+export const obtenerListaDias = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/diasSemana',
+      {
+        method: 'GET',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+  }
+
+/****************************** Obtener Lista de Tramos ******************************/
+export const obtenerListaTramos = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/tramosHorarios',
+      {
+        method: 'GET',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+  }
+
+/****************************** Actualizar Preferencia Horaria ******************************/
+export const actualizarPreferenciaHoraria = async (email, idSeleccion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) => 
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/eleccionDeHorarios/observaciones/preferenciaHoraria',
+      {
+        method: 'PUT',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': email,
+          'idSeleccion': idSeleccion,
+          'diaDesc': diaDesc,
+          'tramoDesc': tramoDesc
+        },
+      });
   }
