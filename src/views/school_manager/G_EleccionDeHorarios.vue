@@ -260,6 +260,8 @@ const toastColor = ref('success');
 // Nueva variable reactiva para el mensaje de actualización
 let mensajeActualizacion = "";
 let mensajeColor = "";
+// Bandera para evitar que los watchers se ejecuten durante la carga inicial
+const isInitializing = ref(true);
 
 //FUNCION PARA DESHABILITAR EN FUNCION DE LA CONSTANTE DE LA VENTANA DE ADMINISTRACION
 const verificarConstantes = async () => {
@@ -943,6 +945,8 @@ onMounted(async () => {
     await obtenerSolicitud();
     await obtenerObservacionesVista();
   }
+  // Marcar que la inicialización ha terminado
+  isInitializing.value = false;
 });
 
 // Watcher para actualizar automáticamente la conciliación familiar
@@ -961,19 +965,19 @@ watch(sinClasePrimeraHoraSeleccionado, async (nuevoValor) => {
 
 // Watcher para actualizar automáticamente las preferencias horarias individuales
 watch(tramoHorarioSeleccionado1, async (nuevoValor) => {
-  if (!isDesabilitado.value && nuevoValor) {
+  if (!isDesabilitado.value && nuevoValor && !isInitializing.value) {
     await actualizarPreferenciaHorariaIndividual(0, nuevoValor);
   }
 }, { deep: true, immediate: false });
 
 watch(tramoHorarioSeleccionado2, async (nuevoValor) => {
-  if (!isDesabilitado.value && nuevoValor) {
+  if (!isDesabilitado.value && nuevoValor && !isInitializing.value) {
     await actualizarPreferenciaHorariaIndividual(1, nuevoValor);
   }
 }, { deep: true, immediate: false });
 
 watch(tramoHorarioSeleccionado3, async (nuevoValor) => {
-  if (!isDesabilitado.value && nuevoValor) {
+  if (!isDesabilitado.value && nuevoValor && !isInitializing.value) {
     await actualizarPreferenciaHorariaIndividual(2, nuevoValor);
   }
 }, { deep: true, immediate: false });
@@ -983,11 +987,15 @@ watch(profesorSeleccionado, async (nuevoProfesor) => {
     nuevoProfesor &&
     (rolesUsuario.value.includes('DIRECCION') || rolesUsuario.value.includes('ADMINISTRADOR'))
   ) {
+    // Activar la bandera de inicialización para evitar watchers durante la carga
+    isInitializing.value = true;
     asignaturaSeleccionada.value = '';
     await obtenerListaAsignaturas();
     await obtenerSolicitud();
     resetearValores();
     await obtenerObservacionesVista();
+    // Desactivar la bandera después de cargar los datos
+    isInitializing.value = false;
   }
 });
 
