@@ -8,6 +8,7 @@
           <tr>
             <th>Estado</th>
             <th>Acciones</th>
+            <th>Soluciones</th>
           </tr>
         </thead>
         <tbody>
@@ -17,6 +18,9 @@
                 @mouseenter="mostrarTooltip = true"
                 @mouseleave="mostrarTooltip = false">
               <span class="estado-text">{{ estadoGeneradorCorto }}</span>
+              <div v-if="nuevaSolucionEncontrada" class="nueva-solucion-estado">
+                <span class="nueva-solucion-estado-text">¡Nueva solución!</span>
+              </div>
               <!-- Tooltip personalizado -->
               <div v-if="mostrarTooltip" class="tooltip-estado">
                 <div class="tooltip-content">
@@ -25,6 +29,7 @@
                   <p v-if="tiempoInicio"><strong>Iniciado:</strong> {{ fechaInicioFormateada }}</p>
                   <p v-if="tiempoInicio"><strong>Tiempo transcurrido:</strong> {{ tiempoTranscurridoFormateado }}</p>
                   <p v-if="!tiempoInicio"><strong>Estado:</strong> Detenido</p>
+                  <p v-if="nuevaSolucionEncontrada"><strong>Nueva solución:</strong> Disponible</p>
                 </div>
               </div>
             </td>
@@ -39,6 +44,30 @@
                   <path d="M6 6h12v12H6z"/>
                 </svg>
               </button>
+            </td>
+            <td class="soluciones-cell">
+              <select 
+                v-if="soluciones.length > 0"
+                v-model="solucionSeleccionada" 
+                @change="seleccionarSolucionHandler"
+                class="select-soluciones"
+                :disabled="loadingSoluciones"
+                title="Seleccionar solución encontrada"
+              >
+                <option 
+                  v-for="solucion in soluciones" 
+                  :key="solucion.id" 
+                  :value="solucion.id"
+                >
+                  Puntuación: {{ solucion.puntuacion }}
+                </option>
+              </select>
+              <div v-else-if="!loadingSoluciones" class="no-soluciones">
+                Sin soluciones
+              </div>
+              <div v-if="loadingSoluciones" class="loading-soluciones">
+                <div class="loading-spinner-small"></div>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -201,7 +230,8 @@ import {
   actualizarSesionBase,
   obtenerSesionesBase,
   obtenerListaDias,
-  obtenerListaTramos
+  obtenerListaTramos,
+  seleccionarSolucion
 } from '@/services/schoolManager.js';
 
 // Variables para el toast
@@ -214,6 +244,9 @@ const estadoGenerador = ref('Cargando estado...');
 const tiempoInicio = ref(null);
 const timerInterval = ref(null);
 const mostrarTooltip = ref(false);
+
+// Variable para el intervalo de actualización automática
+const autoUpdateInterval = ref(null);
 
 // Variables para profesores y preferencias
 const profesoresConPreferencias = ref([]);
@@ -235,48 +268,38 @@ const listaTramos = ref([]);
 const loadingDias = ref(false);
 const loadingTramos = ref(false);
 
-// Mapeo de días (basado en G_EleccionDeHorarios.vue)
-const diaNameMap = {
-  0: 'Lunes',
-  1: 'Martes',
-  2: 'Miércoles',
-  3: 'Jueves',
-  4: 'Viernes'
+// Variables para soluciones
+const solucionSeleccionada = ref('');
+const soluciones = ref([]);
+const loadingSoluciones = ref(false);
+const solucionesAnteriores = ref([]); // Para detectar nuevas soluciones
+const nuevaSolucionEncontrada = ref(false); // Indicador de nueva solución
+const cargaInicial = ref(true); // Flag para evitar detectar nuevas soluciones en la carga inicial
+
+// Función auxiliar para formatear fechas en formato DD/MM/YYYY HH:MM:SS
+const formatearFecha = (timestamp) => {
+  if (!timestamp) return '';
+  const fecha = new Date(timestamp);
+  const dia = fecha.getDate().toString().padStart(2, '0');
+  const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+  const año = fecha.getFullYear();
+  const hora = fecha.getHours().toString().padStart(2, '0');
+  const minutos = fecha.getMinutes().toString().padStart(2, '0');
+  const segundos = fecha.getSeconds().toString().padStart(2, '0');
+  
+  return `${dia}/${mes}/${año} ${hora}:${minutos}:${segundos}`;
 };
 
-// Mapeo inverso para convertir nombres a números
-const diaNumberMap = {
-  'Lunes': 0,
-  'Martes': 1,
-  'Miércoles': 2,
-  'Jueves': 3,
-  'Viernes': 4
-};
 
-// Función para convertir día a formato numérico
-const convertirDiaANumerico = (diaTexto) => {
-  if (diaTexto === 'Sin Seleccionar') {
-    return -1;
-  }
-  return diaNumberMap[diaTexto];
-};
-
-// Función para convertir hora a formato numérico
-const convertirTramoANumerico = (tramoTexto) => {
-  if (tramoTexto === 'Sin Seleccionar') {
-    return -1;
-  }
-  // Cogemos el número de la hora con un substring
-  const numeroTramo = tramoTexto.substring(0, tramoTexto.length - 2);
-  // Le restamos 1 para que sea el número de la hora
-  const numeroTramoNumerico = parseInt(numeroTramo, 10) - 1;
-  return numeroTramoNumerico;
-};
 
 // Computed properties para el tooltip
 const estadoGeneradorCorto = computed(() => {
   if (estadoGenerador.value.includes('Ejecutándose')) {
     return 'Ejecutándose';
+  } else if (estadoGenerador.value.includes('Nueva solución encontrada')) {
+    return 'Nueva solución encontrada';
+  } else if (estadoGenerador.value.includes('Finalizado')) {
+    return 'Finalizado';
   } else if (estadoGenerador.value.includes('Detenido')) {
     return 'Detenido';
   } else if (estadoGenerador.value.includes('Error')) {
@@ -288,15 +311,7 @@ const estadoGeneradorCorto = computed(() => {
 
 const fechaInicioFormateada = computed(() => {
   if (!tiempoInicio.value) return '';
-  const fecha = new Date(tiempoInicio.value);
-  return fecha.toLocaleString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  });
+  return formatearFecha(tiempoInicio.value);
 });
 
 const tiempoTranscurridoFormateado = computed(() => {
@@ -316,7 +331,9 @@ const tiempoTranscurridoFormateado = computed(() => {
 });
 
 const tooltipEstado = computed(() => {
-  if (tiempoInicio.value) {
+  if (nuevaSolucionEncontrada.value) {
+    return 'Se ha encontrado una nueva solución. El generador se ha detenido automáticamente.';
+  } else if (tiempoInicio.value) {
     return `Ejecutándose desde ${fechaInicioFormateada.value} (${tiempoTranscurridoFormateado.value})`;
   } else {
     return 'Generador detenido';
@@ -562,39 +579,108 @@ const cargarDiasTramos = async () => {
   }
 };
 
+// Función para actualización automática
+const actualizacionAutomatica = async () => {
+  // No hacer nada si ya hay una nueva solución encontrada
+  if (nuevaSolucionEncontrada.value) {
+    return;
+  }
+  
+  try {
+    // Usar el endpoint consolidado que incluye estado y soluciones
+    await obtenerEstadoGenerador();
+  } catch (error) {
+    console.error('Error en actualización automática:', error);
+  }
+};
+
+// Función para iniciar la actualización automática
+const iniciarActualizacionAutomatica = () => {
+  // Detener cualquier intervalo existente
+  if (autoUpdateInterval.value) {
+    clearInterval(autoUpdateInterval.value);
+  }
+  
+  // Iniciar nuevo intervalo cada 20 segundos
+  autoUpdateInterval.value = setInterval(actualizacionAutomatica, 20000);
+};
+
+// Función para detener la actualización automática
+const detenerActualizacionAutomatica = () => {
+  if (autoUpdateInterval.value) {
+    clearInterval(autoUpdateInterval.value);
+    autoUpdateInterval.value = null;
+  }
+};
+
 // Cargar datos al montar el componente
-onMounted(() => {
+onMounted(async () => {
   cargarProfesoresConPreferencias();
-  obtenerEstadoGenerador();
+  await obtenerEstadoGenerador();
   cargarDiasTramos();
+  
+  // Marcar carga inicial como completada
+  cargaInicial.value = false;
+  
+  // Solo iniciar actualización automática si no hay una nueva solución encontrada
+  if (!nuevaSolucionEncontrada.value) {
+    iniciarActualizacionAutomatica();
+  }
 });
 
 // Función para obtener el estado del generador
 const obtenerEstadoGenerador = async () => {
+  // No hacer nada si hay una nueva solución encontrada
+  if (nuevaSolucionEncontrada.value) {
+    return;
+  }
+  
   try {
     const response = await obtenerEstadoGeneradorHorarios(toastMessage, toastColor, isToastOpen);
     
     if (response.ok) {
-      const tiempoInicioLong = await response.text();
-      if (tiempoInicioLong && tiempoInicioLong !== 'null') {
-        tiempoInicio.value = parseInt(tiempoInicioLong);
+      const estadoData = await response.json();
+      console.log('Estado del generador recibido:', estadoData);
+      
+      // Procesar el estado del generador según la nueva estructura
+      if (estadoData.estado === 'EN_CURSO' && estadoData.fechaInicio) {
+        tiempoInicio.value = parseInt(estadoData.fechaInicio);
         const fechaInicio = new Date(tiempoInicio.value);
+        
+        // Formatear la fecha para el toast
+        const fechaFormateada = formatearFecha(estadoData.fechaInicio);
+        
+        // Mostrar toast con información del generador arrancado
+        crearToast(toastMessage, toastColor, isToastOpen, 'success', `Hay un generador en curso que fue lanzado el ${fechaFormateada}`);
+        
         actualizarTiempoTranscurrido(fechaInicio);
         // Iniciar temporizador para actualizar el tiempo
         iniciarTemporizador(fechaInicio);
+      } else if (estadoData.estado === 'FINALIZADO') {
+        estadoGenerador.value = 'Finalizado';
+        tiempoInicio.value = null;
+        detenerTemporizador();
       } else {
         estadoGenerador.value = 'Detenido';
         tiempoInicio.value = null;
         detenerTemporizador();
       }
+      
+      // Procesar las soluciones si están incluidas en infoPuntuaciones
+      if (estadoData.infoPuntuaciones) {
+        console.log('Procesando infoPuntuaciones:', estadoData.infoPuntuaciones);
+        await procesarSoluciones(estadoData.infoPuntuaciones);
+      }
     } else {
-      const errorData = await response.json();
-      estadoGenerador.value = `Error: ${errorData.message}`;
+      // Si no es OK, probablemente el generador esté parado
+      estadoGenerador.value = 'Detenido';
       tiempoInicio.value = null;
       detenerTemporizador();
     }
   } catch (error) {
-    estadoGenerador.value = 'Error al obtener estado';
+    console.error('Error al obtener estado del generador:', error);
+    // Si hay una excepción, el generador está parado
+    estadoGenerador.value = 'Detenido';
     tiempoInicio.value = null;
     detenerTemporizador();
   }
@@ -602,10 +688,25 @@ const obtenerEstadoGenerador = async () => {
 
 // Función para actualizar el tiempo transcurrido
 const actualizarTiempoTranscurrido = (fechaInicio) => {
+  // No actualizar si hay una nueva solución encontrada
+  if (nuevaSolucionEncontrada.value) {
+    return;
+  }
+  
   const tiempoTranscurrido = Date.now() - tiempoInicio.value;
   const minutos = Math.floor(tiempoTranscurrido / 60000);
   const segundos = Math.floor((tiempoTranscurrido % 60000) / 1000);
-  estadoGenerador.value = `Ejecutándose desde ${fechaInicio.toLocaleTimeString()} (${minutos}m ${segundos}s)`;
+  
+  // Formatear la fecha de inicio en formato DD/MM/YYYY HH:MM:SS
+  const dia = fechaInicio.getDate().toString().padStart(2, '0');
+  const mes = (fechaInicio.getMonth() + 1).toString().padStart(2, '0');
+  const año = fechaInicio.getFullYear();
+  const hora = fechaInicio.getHours().toString().padStart(2, '0');
+  const minutosFecha = fechaInicio.getMinutes().toString().padStart(2, '0');
+  const segundosFecha = fechaInicio.getSeconds().toString().padStart(2, '0');
+  
+  const fechaFormateada = `${dia}/${mes}/${año} ${hora}:${minutosFecha}:${segundosFecha}`;
+  estadoGenerador.value = `Ejecutándose desde ${fechaFormateada} (${minutos}m ${segundos}s)`;
 };
 
 // Función para iniciar el temporizador
@@ -632,27 +733,43 @@ const detenerTemporizador = () => {
   }
 };
 
-// Limpiar temporizador al desmontar el componente
+// Limpiar temporizadores al desmontar el componente
 onUnmounted(() => {
   detenerTemporizador();
+  detenerActualizacionAutomatica();
 });
 
 // Métodos existentes
 const generarHorarios = async () => {
   try {
-    // Primero obtener el estado actual
-    await obtenerEstadoGenerador();
+    // Resetear el indicador de nueva solución
+    nuevaSolucionEncontrada.value = false;
+    // Resetear el flag de carga inicial
+    cargaInicial.value = false;
     
     const response = await lanzarGeneradorHorarios(toastMessage, toastColor, isToastOpen);
 
     if (response.ok) {
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Generador de horarios lanzado con éxito');
+      // Reiniciar la actualización automática
+      iniciarActualizacionAutomatica();
       // Actualizar el estado después de lanzar
       await obtenerEstadoGenerador();
     } else {
       const errorData = await response.json();
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorData.message);
-    } 
+      
+      // Formatear fechas en el mensaje de error si las contiene
+      let mensajeError = errorData.message;
+      if (mensajeError && typeof mensajeError === 'string') {
+        // Buscar timestamps en el mensaje y formatearlos
+        const timestampRegex = /\d{13,}/g; // Buscar números de 13+ dígitos (timestamps)
+        mensajeError = mensajeError.replace(timestampRegex, (match) => {
+          return formatearFecha(parseInt(match));
+        });
+      }
+      
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", mensajeError);
+    }
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al lanzar el generador de horarios.');
   }
@@ -674,6 +791,8 @@ const forzarDetencion = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al forzar la detención del generador.');
   }
 };
+
+
 
 // Función con debounce para actualizar sesión automáticamente
 const actualizarSesionConDebounce = (index) => {
@@ -732,6 +851,148 @@ const actualizarSesion = async (index) => {
       'danger', 
       'Error al actualizar la sesión'
     );
+  }
+};
+
+// Método para seleccionar una solución
+const seleccionarSolucionHandler = async () => {
+  if (!solucionSeleccionada.value) return;
+
+  loadingSoluciones.value = true;
+  try {
+    const response = await seleccionarSolucion(
+      solucionSeleccionada.value,
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
+    if (response.ok) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Solución seleccionada correctamente');
+      // Actualizar el estado de las soluciones localmente sin recargar
+      soluciones.value.forEach(solucion => {
+        solucion.solucionElegida = solucion.id === solucionSeleccionada.value;
+      });
+      // Resetear el indicador de nueva solución
+      nuevaSolucionEncontrada.value = false;
+    } else {
+      const errorData = await response.json();
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Error: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error('Error al seleccionar la solución:', error);
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al seleccionar la solución');
+  } finally {
+    loadingSoluciones.value = false;
+  }
+};
+
+// Función para procesar las soluciones obtenidas del estado del generador
+const procesarSoluciones = async (infoPuntuaciones) => {
+  console.log('Procesando infoPuntuaciones - datos originales:', infoPuntuaciones);
+  
+  // Convertir infoPuntuaciones a array de soluciones
+  const solucionesArray = [];
+  if (infoPuntuaciones && typeof infoPuntuaciones === 'object') {
+    Object.keys(infoPuntuaciones).forEach(id => {
+      const info = infoPuntuaciones[id];
+      if (Array.isArray(info) && info.length > 0) {
+        solucionesArray.push({
+          id: parseInt(id),
+          puntuacion: info[0], // Asumiendo que el primer elemento es la puntuación
+          solucionElegida: false // Por defecto no elegida
+        });
+      }
+    });
+  }
+  
+  console.log('Soluciones convertidas a array:', solucionesArray);
+  
+  // Ordenar las soluciones por puntuación de mayor a menor
+  const solucionesOrdenadas = solucionesArray.sort((a, b) => b.puntuacion - a.puntuacion);
+  console.log('Soluciones ordenadas:', solucionesOrdenadas);
+  
+  // Detectar si hay nuevas soluciones (solo si el generador está ejecutándose y no es carga inicial)
+  if (!cargaInicial.value && tiempoInicio.value && solucionesOrdenadas && solucionesOrdenadas.length > solucionesAnteriores.value.length) {
+    nuevaSolucionEncontrada.value = true;
+    // Detener el timer cuando se encuentra una nueva solución
+    detenerTemporizador();
+    // Detener la actualización automática
+    detenerActualizacionAutomatica();
+    // Cambiar el estado para mostrar que se encontró una nueva solución
+    estadoGenerador.value = 'Nueva solución encontrada';
+    // Mostrar notificación de nueva solución
+    crearToast(toastMessage, toastColor, isToastOpen, 'success', '¡Nueva solución encontrada!');
+    
+    // Actualizar soluciones anteriores
+    solucionesAnteriores.value = solucionesOrdenadas;
+    soluciones.value = solucionesOrdenadas;
+    
+    // Configurar la solución seleccionada
+    if (soluciones.value.length > 0) {
+      const solucionElegida = soluciones.value.find(s => s.solucionElegida);
+      if (solucionElegida) {
+        solucionSeleccionada.value = solucionElegida.id;
+      } else {
+        // Seleccionar la primera solución (que es la de mayor puntuación por estar ordenadas)
+        solucionSeleccionada.value = soluciones.value[0].id;
+      }
+    } else {
+      solucionSeleccionada.value = '';
+    }
+    
+    return; // Salir inmediatamente sin ejecutar más código
+  }
+  
+  // Actualizar soluciones anteriores
+  solucionesAnteriores.value = solucionesOrdenadas;
+  soluciones.value = solucionesOrdenadas;
+  
+  if (soluciones.value.length > 0) {
+    // Si hay una solución ya seleccionada, mostrarla como seleccionada
+    const solucionElegida = soluciones.value.find(s => s.solucionElegida);
+    if (solucionElegida) {
+      solucionSeleccionada.value = solucionElegida.id;
+    } else {
+      // Si no hay solución seleccionada, seleccionar automáticamente la de mayor puntuación
+      solucionSeleccionada.value = soluciones.value[0].id;
+      
+      // Automáticamente seleccionar la solución con mayor puntuación en la base de datos
+      await seleccionarSolucion(
+        soluciones.value[0].id,
+        toastMessage,
+        toastColor,
+        isToastOpen
+      );
+    }
+  } else {
+    solucionSeleccionada.value = '';
+  }
+  
+  console.log('Soluciones finales actualizadas:', soluciones.value);
+  console.log('Solución seleccionada:', solucionSeleccionada.value);
+};
+
+// Cargar soluciones disponibles (ahora usa el endpoint consolidado)
+const cargarSoluciones = async () => {
+  loadingSoluciones.value = true;
+  try {
+    const response = await obtenerEstadoGeneradorHorarios(toastMessage, toastColor, isToastOpen);
+    
+    if (response.ok) {
+      const estadoData = await response.json();
+      
+      // Procesar las soluciones si están incluidas en infoPuntuaciones
+      if (estadoData.infoPuntuaciones) {
+        await procesarSoluciones(estadoData.infoPuntuaciones);
+      }
+    }
+  } catch (error) {
+    console.error('Error al cargar soluciones:', error);
+    soluciones.value = [];
+    solucionSeleccionada.value = '';
+  } finally {
+    loadingSoluciones.value = false;
   }
 };
 </script>
@@ -855,6 +1116,8 @@ const actualizarSesion = async (index) => {
   height: 20px;
 }
 
+
+
 @media (prefers-color-scheme: dark) {
   .estado-acciones-table {
     background: var(--form-bg-dark);
@@ -923,6 +1186,22 @@ const actualizarSesion = async (index) => {
   
   .tooltip-content h4 {
     font-size: 0.9rem;
+  }
+  
+  .soluciones-cell {
+    min-width: 150px;
+  }
+  
+  .select-soluciones {
+    min-width: 140px;
+    font-size: 0.8rem;
+    padding: 0.3rem;
+  }
+  
+  .loading-spinner-small {
+    width: 14px;
+    height: 14px;
+    border-width: 1px;
   }
 }
 
@@ -1349,4 +1628,138 @@ tbody tr:hover {
   color: #fff;
   font-weight: 600;
 }
+
+.soluciones-cell {
+  position: relative;
+  min-width: 200px;
+}
+
+.select-soluciones {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 0.9rem;
+  min-width: 180px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.select-soluciones:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.select-soluciones:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.loading-soluciones {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 0 0 4px 4px;
+  padding: 0.25rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.no-soluciones {
+  padding: 0.5rem;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  font-size: 0.9rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.nueva-solucion-estado {
+  margin-top: 0.5rem;
+  background-color: #10B981;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  animation: pulse 2s infinite;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.nueva-solucion-estado-text {
+  white-space: nowrap;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (prefers-color-scheme: dark) {
+  .select-soluciones {
+    background-color: #333;
+    border-color: #555;
+    color: white;
+  }
+  
+  .select-soluciones:focus {
+    border-color: #64b5f6;
+  }
+  
+  .select-soluciones:disabled {
+    background-color: #2a2a2a;
+    color: #666;
+  }
+  
+  .loading-soluciones {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+  
+  .no-soluciones {
+    background-color: #2a2a2a;
+    color: #999;
+    border-color: #555;
+  }
+  
+  .nueva-solucion-estado {
+    background-color: #059669;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+}
+
+
 </style>

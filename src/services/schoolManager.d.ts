@@ -362,3 +362,9 @@ export declare function obtenerListaDias(toastMessage: Ref<string>,
 export declare function obtenerListaTramos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<any>;
+
+/****************************** Seleccionar Solución ******************************/
+export declare function seleccionarSolucion(idGeneradorInstancia: Ref<number>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
