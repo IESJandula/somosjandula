@@ -581,11 +581,6 @@ const cargarDiasTramos = async () => {
 
 // Función para actualización automática
 const actualizacionAutomatica = async () => {
-  // No hacer nada si ya hay una nueva solución encontrada
-  if (nuevaSolucionEncontrada.value) {
-    return;
-  }
-  
   try {
     // Usar el endpoint consolidado que incluye estado y soluciones
     await obtenerEstadoGenerador();
@@ -601,8 +596,8 @@ const iniciarActualizacionAutomatica = () => {
     clearInterval(autoUpdateInterval.value);
   }
   
-  // Iniciar nuevo intervalo cada 20 segundos
-  autoUpdateInterval.value = setInterval(actualizacionAutomatica, 20000);
+  // Iniciar nuevo intervalo cada 3 segundos
+  autoUpdateInterval.value = setInterval(actualizacionAutomatica, 3000);
 };
 
 // Función para detener la actualización automática
@@ -622,36 +617,22 @@ onMounted(async () => {
   // Marcar carga inicial como completada
   cargaInicial.value = false;
   
-  // Solo iniciar actualización automática si no hay una nueva solución encontrada
-  if (!nuevaSolucionEncontrada.value) {
-    iniciarActualizacionAutomatica();
-  }
+  // Iniciar actualización automática
+  iniciarActualizacionAutomatica();
 });
 
 // Función para obtener el estado del generador
 const obtenerEstadoGenerador = async () => {
-  // No hacer nada si hay una nueva solución encontrada
-  if (nuevaSolucionEncontrada.value) {
-    return;
-  }
-  
   try {
     const response = await obtenerEstadoGeneradorHorarios(toastMessage, toastColor, isToastOpen);
     
     if (response.ok) {
       const estadoData = await response.json();
-      console.log('Estado del generador recibido:', estadoData);
       
       // Procesar el estado del generador según la nueva estructura
       if (estadoData.estado === 'EN_CURSO' && estadoData.fechaInicio) {
         tiempoInicio.value = parseInt(estadoData.fechaInicio);
         const fechaInicio = new Date(tiempoInicio.value);
-        
-        // Formatear la fecha para el toast
-        const fechaFormateada = formatearFecha(estadoData.fechaInicio);
-        
-        // Mostrar toast con información del generador arrancado
-        crearToast(toastMessage, toastColor, isToastOpen, 'success', `Hay un generador en curso que fue lanzado el ${fechaFormateada}`);
         
         actualizarTiempoTranscurrido(fechaInicio);
         // Iniciar temporizador para actualizar el tiempo
@@ -666,10 +647,11 @@ const obtenerEstadoGenerador = async () => {
         detenerTemporizador();
       }
       
-      // Procesar las soluciones si están incluidas en infoPuntuaciones
-      if (estadoData.infoPuntuaciones) {
-        console.log('Procesando infoPuntuaciones:', estadoData.infoPuntuaciones);
-        await procesarSoluciones(estadoData.infoPuntuaciones);
+      // Procesar las soluciones si están incluidas en infoGenerador o soluciones
+      if (estadoData.infoGenerador) {
+        await procesarSoluciones(estadoData.infoGenerador);
+      } else if (estadoData.soluciones) {
+        await procesarSoluciones(estadoData.soluciones);
       }
     } else {
       // Si no es OK, probablemente el generador esté parado
@@ -688,11 +670,6 @@ const obtenerEstadoGenerador = async () => {
 
 // Función para actualizar el tiempo transcurrido
 const actualizarTiempoTranscurrido = (fechaInicio) => {
-  // No actualizar si hay una nueva solución encontrada
-  if (nuevaSolucionEncontrada.value) {
-    return;
-  }
-  
   const tiempoTranscurrido = Date.now() - tiempoInicio.value;
   const minutos = Math.floor(tiempoTranscurrido / 60000);
   const segundos = Math.floor((tiempoTranscurrido % 60000) / 1000);
@@ -746,6 +723,13 @@ const generarHorarios = async () => {
     nuevaSolucionEncontrada.value = false;
     // Resetear el flag de carga inicial
     cargaInicial.value = false;
+    // NO limpiar las soluciones existentes al lanzar un nuevo generador
+    // Las mantendremos hasta que aparezcan nuevas soluciones
+    // soluciones.value = [];
+    // solucionesAnteriores.value = [];
+    // solucionSeleccionada.value = '';
+    // Resetear el estado del generador
+    estadoGenerador.value = 'Iniciando...';
     
     const response = await lanzarGeneradorHorarios(toastMessage, toastColor, isToastOpen);
 
@@ -875,6 +859,12 @@ const seleccionarSolucionHandler = async () => {
       });
       // Resetear el indicador de nueva solución
       nuevaSolucionEncontrada.value = false;
+      // Cambiar el estado a Finalizado si estaba en "Nueva solución encontrada"
+      if (estadoGenerador.value === 'Nueva solución encontrada') {
+        estadoGenerador.value = 'Finalizado';
+      }
+      // Reiniciar la actualización automática para futuras ejecuciones
+      iniciarActualizacionAutomatica();
     } else {
       const errorData = await response.json();
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Error: ${errorData.message}`);
@@ -888,32 +878,38 @@ const seleccionarSolucionHandler = async () => {
 };
 
 // Función para procesar las soluciones obtenidas del estado del generador
-const procesarSoluciones = async (infoPuntuaciones) => {
-  console.log('Procesando infoPuntuaciones - datos originales:', infoPuntuaciones);
+const procesarSoluciones = async (infoGenerador) => {
   
-  // Convertir infoPuntuaciones a array de soluciones
+  // Convertir infoGenerador a array de soluciones
   const solucionesArray = [];
-  if (infoPuntuaciones && typeof infoPuntuaciones === 'object') {
-    Object.keys(infoPuntuaciones).forEach(id => {
-      const info = infoPuntuaciones[id];
-      if (Array.isArray(info) && info.length > 0) {
+  if (infoGenerador && Array.isArray(infoGenerador)) {
+    infoGenerador.forEach(instancia => {
+      // Verificar si tiene idGeneradorInstancia (formato del backend) o id (formato anterior)
+      const id = instancia.idGeneradorInstancia || instancia.id;
+      const puntuacion = instancia.puntuacion;
+      const solucionElegida = instancia.solucionElegida || false;
+      
+      if (id && puntuacion !== undefined) {
         solucionesArray.push({
-          id: parseInt(id),
-          puntuacion: info[0], // Asumiendo que el primer elemento es la puntuación
-          solucionElegida: false // Por defecto no elegida
+          id: id, // Usar el ID correcto de la instancia del generador
+          puntuacion: puntuacion,
+          solucionElegida: solucionElegida
         });
       }
     });
   }
-  
-  console.log('Soluciones convertidas a array:', solucionesArray);
-  
+    
   // Ordenar las soluciones por puntuación de mayor a menor
   const solucionesOrdenadas = solucionesArray.sort((a, b) => b.puntuacion - a.puntuacion);
-  console.log('Soluciones ordenadas:', solucionesOrdenadas);
   
-  // Detectar si hay nuevas soluciones (solo si el generador está ejecutándose y no es carga inicial)
-  if (!cargaInicial.value && tiempoInicio.value && solucionesOrdenadas && solucionesOrdenadas.length > solucionesAnteriores.value.length) {
+  // Detectar si hay nuevas soluciones
+  // Solo si no es carga inicial, no está iniciando, y hay más soluciones que antes
+  const hayNuevasSoluciones = !cargaInicial.value && 
+      estadoGenerador.value !== 'Iniciando...' &&
+      solucionesOrdenadas && 
+      solucionesOrdenadas.length > solucionesAnteriores.value.length;
+  
+  if (hayNuevasSoluciones) {
     nuevaSolucionEncontrada.value = true;
     // Detener el timer cuando se encuentra una nueva solución
     detenerTemporizador();
@@ -944,9 +940,12 @@ const procesarSoluciones = async (infoPuntuaciones) => {
     return; // Salir inmediatamente sin ejecutar más código
   }
   
-  // Actualizar soluciones anteriores
-  solucionesAnteriores.value = solucionesOrdenadas;
-  soluciones.value = solucionesOrdenadas;
+  // Actualizar soluciones anteriores y actuales
+  // Solo si hay soluciones nuevas o si no hay soluciones anteriores
+  if (solucionesOrdenadas.length > 0 || solucionesAnteriores.value.length === 0) {
+    solucionesAnteriores.value = solucionesOrdenadas;
+    soluciones.value = solucionesOrdenadas;
+  }
   
   if (soluciones.value.length > 0) {
     // Si hay una solución ya seleccionada, mostrarla como seleccionada
@@ -958,19 +957,23 @@ const procesarSoluciones = async (infoPuntuaciones) => {
       solucionSeleccionada.value = soluciones.value[0].id;
       
       // Automáticamente seleccionar la solución con mayor puntuación en la base de datos
-      await seleccionarSolucion(
-        soluciones.value[0].id,
-        toastMessage,
-        toastColor,
-        isToastOpen
-      );
+      // Solo si el generador está finalizado y no se está iniciando
+      if (estadoGenerador.value === 'Finalizado' && estadoGenerador.value !== 'Iniciando...') {
+        try {
+          await seleccionarSolucion(
+            soluciones.value[0].id,
+            toastMessage,
+            toastColor,
+            isToastOpen
+          );
+        } catch (error) {
+          console.error('Error al seleccionar automáticamente la solución:', error);
+        }
+      }
     }
   } else {
     solucionSeleccionada.value = '';
   }
-  
-  console.log('Soluciones finales actualizadas:', soluciones.value);
-  console.log('Solución seleccionada:', solucionSeleccionada.value);
 };
 
 // Cargar soluciones disponibles (ahora usa el endpoint consolidado)
@@ -982,9 +985,11 @@ const cargarSoluciones = async () => {
     if (response.ok) {
       const estadoData = await response.json();
       
-      // Procesar las soluciones si están incluidas en infoPuntuaciones
-      if (estadoData.infoPuntuaciones) {
-        await procesarSoluciones(estadoData.infoPuntuaciones);
+      // Procesar las soluciones si están incluidas en infoGenerador o soluciones
+      if (estadoData.infoGenerador) {
+        await procesarSoluciones(estadoData.infoGenerador);
+      } else if (estadoData.soluciones) {
+        await procesarSoluciones(estadoData.soluciones);
       }
     }
   } catch (error) {
