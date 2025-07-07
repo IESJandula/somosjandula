@@ -6,9 +6,12 @@
       <table>
         <thead>
           <tr>
-            <th>Estado</th>
-            <th>Acciones</th>
-            <th>Soluciones</th>
+            <th class="estado-header">Estado</th>
+            <th class="acciones-header">Acciones</th>
+            <th class="soluciones-header">Puntuación</th>
+            <th v-for="columna in columnasGeneradas" :key="columna.key" class="sub-header">
+              {{ columna.titulo }}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -52,14 +55,14 @@
                 @change="seleccionarSolucionHandler"
                 class="select-soluciones"
                 :disabled="loadingSoluciones"
-                title="Seleccionar solución encontrada"
+                title="Seleccionar puntuación"
               >
                 <option 
                   v-for="solucion in soluciones" 
                   :key="solucion.id" 
                   :value="solucion.id"
                 >
-                  Puntuación: {{ solucion.puntuacion }}
+                  {{ solucion.puntuacion }}
                 </option>
               </select>
               <div v-else-if="!loadingSoluciones" class="no-soluciones">
@@ -67,6 +70,14 @@
               </div>
               <div v-if="loadingSoluciones" class="loading-soluciones">
                 <div class="loading-spinner-small"></div>
+              </div>
+            </td>
+            <td class="puntuacion-cell" v-for="columna in columnasGeneradas" :key="columna.key">
+              <div v-if="solucionSeleccionada && solucionSeleccionadaInfo">
+                {{ obtenerPuntuacionPorTipo(solucionSeleccionadaInfo, columna.tipo) }}
+              </div>
+              <div v-else class="no-puntuacion">
+                -
               </div>
             </td>
           </tr>
@@ -103,6 +114,7 @@
             <th>Sin clase</th>
             <th>Horas sin clase</th>
             <th>Observaciones</th>
+            <th v-if="solucionSeleccionada && solucionSeleccionadaInfo">Puntuación</th>
           </tr>
         </thead>
         <tbody>
@@ -128,6 +140,14 @@
             <td>{{ obtenerTextoNoTenerClase(profesor.preferencias) }}</td>
             <td class="horas-sin-clase">{{ obtenerHorasSinClase(profesor.preferencias) }}</td>
             <td>{{ profesor.preferencias.observaciones || '-' }}</td>
+            <td v-if="solucionSeleccionada && solucionSeleccionadaInfo" class="puntuacion-profesor-cell">
+              <div v-if="puntuacionesPorProfesor.get(profesor.email)">
+                {{ puntuacionesPorProfesor.get(profesor.email) }}
+              </div>
+              <div v-else class="no-puntuacion">
+                -
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -216,7 +236,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue';
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue';
 import { IonToast } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { 
@@ -275,6 +295,10 @@ const loadingSoluciones = ref(false);
 const solucionesAnteriores = ref([]); // Para detectar nuevas soluciones
 const nuevaSolucionEncontrada = ref(false); // Indicador de nueva solución
 const cargaInicial = ref(true); // Flag para evitar detectar nuevas soluciones en la carga inicial
+const solucionSeleccionadaInfo = ref(null); // Información detallada de la solución seleccionada
+
+// Variable para almacenar las puntuaciones por profesor
+const puntuacionesPorProfesor = ref(new Map());
 
 // Función auxiliar para formatear fechas en formato DD/MM/YYYY HH:MM:SS
 const formatearFecha = (timestamp) => {
@@ -355,6 +379,46 @@ const tramosUnicos = computed(() => {
   }
   
   return ['Sin Seleccionar', ...listaTramos.value.filter(tramo => tramo !== 'Sin Seleccionar')];
+});
+
+// Computed properties para columnas dinámicas
+const tiposPuntuacionGenerales = computed(() => {
+  if (!solucionSeleccionadaInfo.value || !solucionSeleccionadaInfo.value.puntuacionesDesglosadas) {
+    return [];
+  }
+  
+  // Obtener tipos únicos de puntuaciones generales (excluyendo categoría "Profesor")
+  const tiposUnicos = new Set();
+  
+  solucionSeleccionadaInfo.value.puntuacionesDesglosadas.forEach(puntuacion => {
+    // Solo incluir puntuaciones que NO sean de categoría "Profesor"
+    if (puntuacion.categoria !== 'Profesor') {
+      // Extraer el tipo base (sin "Matutina" o "Vespertina")
+      const tipoBase = puntuacion.tipo.replace(/\s+(Matutina|Vespertina)$/, '');
+      tiposUnicos.add(tipoBase);
+    }
+  });
+  
+
+  return Array.from(tiposUnicos);
+});
+
+
+
+const columnasGeneradas = computed(() => {
+  const columnas = [];
+  
+  // Generar columnas basándose en los tipos reales que llegan del backend
+  tiposPuntuacionGenerales.value.forEach(tipo => {
+    columnas.push({
+      key: tipo,
+      titulo: tipo,
+      tipo: tipo,
+      periodo: 'general'
+    });
+  });
+  
+  return columnas;
 });
 
 // Cargar todos los profesores con sus preferencias
@@ -857,6 +921,8 @@ const seleccionarSolucionHandler = async () => {
       soluciones.value.forEach(solucion => {
         solucion.solucionElegida = solucion.id === solucionSeleccionada.value;
       });
+      // Actualizar la información de la solución seleccionada
+      actualizarSolucionSeleccionadaInfo();
       // Resetear el indicador de nueva solución
       nuevaSolucionEncontrada.value = false;
       // Cambiar el estado a Finalizado si estaba en "Nueva solución encontrada"
@@ -877,6 +943,63 @@ const seleccionarSolucionHandler = async () => {
   }
 };
 
+// Función para obtener la puntuación por tipo de una solución
+const obtenerPuntuacionPorTipo = (solucionInfo, tipo) => {
+  if (!solucionInfo || !solucionInfo.puntuacionesDesglosadas) {
+    return '-';
+  }
+  
+  // Buscar puntuación que NO sea de categoría "Profesor"
+  const puntuacion = solucionInfo.puntuacionesDesglosadas.find(p => 
+    p.tipo === tipo && p.categoria !== 'Profesor'
+  );
+  
+  return puntuacion ? puntuacion.puntuacion : '-';
+};
+
+// Función para actualizar la información de la solución seleccionada
+const actualizarSolucionSeleccionadaInfo = () => {
+  if (!solucionSeleccionada.value || !soluciones.value.length) {
+    solucionSeleccionadaInfo.value = null;
+    puntuacionesPorProfesor.value.clear();
+    return;
+  }
+  
+  // Buscar la solución seleccionada en el array de soluciones
+  const solucion = soluciones.value.find(s => s.id === solucionSeleccionada.value);
+  if (solucion) {
+
+    
+    solucionSeleccionadaInfo.value = solucion;
+    
+    // Procesar puntuaciones por profesor
+    procesarPuntuacionesPorProfesor(solucion);
+  }
+};
+
+// Función para procesar las puntuaciones por profesor
+const procesarPuntuacionesPorProfesor = (solucion) => {
+  puntuacionesPorProfesor.value.clear();
+  
+  if (solucion.puntuacionesDesglosadas) {
+    // Incluir puntuaciones de categoría "Profesor"
+    const puntuacionesProfesor = solucion.puntuacionesDesglosadas.filter(p => 
+      p.categoria === 'Profesor'
+    );
+    
+    puntuacionesProfesor.forEach(puntuacion => {
+      if (puntuacion.emailProfesor) {
+        // Si ya existe una puntuación para este profesor, sumarla
+        const puntuacionExistente = puntuacionesPorProfesor.value.get(puntuacion.emailProfesor) || 0;
+        puntuacionesPorProfesor.value.set(
+          puntuacion.emailProfesor, 
+          puntuacionExistente + puntuacion.puntuacion
+        );
+      }
+    });
+  }
+};
+
 // Función para procesar las soluciones obtenidas del estado del generador
 const procesarSoluciones = async (infoGenerador) => {
   
@@ -888,12 +1011,15 @@ const procesarSoluciones = async (infoGenerador) => {
       const id = instancia.idGeneradorInstancia || instancia.id;
       const puntuacion = instancia.puntuacion;
       const solucionElegida = instancia.solucionElegida || false;
+      const puntuacionesDesglosadas = instancia.puntuacionesDesglosadas || [];
       
       if (id && puntuacion !== undefined) {
+
         solucionesArray.push({
           id: id, // Usar el ID correcto de la instancia del generador
           puntuacion: puntuacion,
-          solucionElegida: solucionElegida
+          solucionElegida: solucionElegida,
+          puntuacionesDesglosadas: puntuacionesDesglosadas
         });
       }
     });
@@ -937,6 +1063,9 @@ const procesarSoluciones = async (infoGenerador) => {
       solucionSeleccionada.value = '';
     }
     
+    // Actualizar la información de la solución seleccionada
+    actualizarSolucionSeleccionadaInfo();
+    
     return; // Salir inmediatamente sin ejecutar más código
   }
   
@@ -974,6 +1103,9 @@ const procesarSoluciones = async (infoGenerador) => {
   } else {
     solucionSeleccionada.value = '';
   }
+  
+  // Actualizar la información de la solución seleccionada
+  actualizarSolucionSeleccionadaInfo();
 };
 
 // Cargar soluciones disponibles (ahora usa el endpoint consolidado)
@@ -1000,6 +1132,18 @@ const cargarSoluciones = async () => {
     loadingSoluciones.value = false;
   }
 };
+
+// Watcher para actualizar puntuaciones por profesor cuando cambie la solución seleccionada
+watch(solucionSeleccionada, () => {
+  if (solucionSeleccionada.value && soluciones.value.length) {
+    const solucion = soluciones.value.find(s => s.id === solucionSeleccionada.value);
+    if (solucion) {
+      procesarPuntuacionesPorProfesor(solucion);
+    }
+  } else {
+    puntuacionesPorProfesor.value.clear();
+  }
+});
 </script>
 
 <style scoped>
@@ -1022,19 +1166,49 @@ const cargarSoluciones = async () => {
   justify-content: center;
   gap: 20px;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .estado-acciones-table {
   background: var(--form-bg-light);
   border-radius: 10px;
   box-shadow: rgba(0,0,0,0.15) 0px 5px 15px;
-  overflow: hidden;
-  min-width: 400px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.estado-acciones-table::-webkit-scrollbar {
+  height: 8px;
+}
+
+.estado-acciones-table::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.estado-acciones-table::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.estado-acciones-table::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Asegurar scroll horizontal en dispositivos móviles */
+@media (max-width: 1024px) {
+  .estado-acciones-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .estado-acciones-table table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .estado-acciones-table th {
@@ -1043,6 +1217,28 @@ const cargarSoluciones = async () => {
   text-align: center;
   font-weight: 600;
   border-bottom: 2px solid #e0e0e0;
+}
+
+
+
+.sub-header {
+  background-color: #f8f9fa !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.estado-header {
+  min-width: 120px;
+}
+
+.acciones-header {
+  min-width: 100px;
+}
+
+.soluciones-header {
+  min-width: 120px;
 }
 
 .estado-acciones-table td {
@@ -1134,6 +1330,14 @@ const cargarSoluciones = async () => {
     border-bottom-color: #555;
   }
   
+
+  
+  .sub-header {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0;
+    border-color: #555;
+  }
+  
   .estado-cell {
     border-right-color: #555;
   }
@@ -1155,20 +1359,54 @@ const cargarSoluciones = async () => {
   .tooltip-content h4 {
     border-bottom-color: #444;
   }
+  
+  .estado-acciones-table::-webkit-scrollbar-track {
+    background: #2a2a2a;
+  }
+  
+  .estado-acciones-table::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+  
+  .estado-acciones-table::-webkit-scrollbar-thumb:hover {
+    background: #666;
+  }
 }
 
 @media (max-width: 768px) {
   .estado-acciones-table {
-    min-width: 300px;
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .estado-acciones-table table {
+    min-width: 700px;
   }
   
   .estado-acciones-table th,
   .estado-acciones-table td {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
   
   .estado-text {
-    font-size: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .sub-header {
+    font-size: 0.75rem;
+    padding: 0.3rem;
+  }
+  
+  .estado-header {
+    min-width: 100px;
+  }
+  
+  .acciones-header {
+    min-width: 80px;
+  }
+  
+  .soluciones-header {
+    min-width: 100px;
   }
   
   .btn-lanzar-generador-small,
@@ -1194,11 +1432,18 @@ const cargarSoluciones = async () => {
   }
   
   .soluciones-cell {
-    min-width: 150px;
+    min-width: 100px;
+  }
+  
+  .puntuacion-cell {
+    min-width: 80px;
+    font-size: 0.8rem;
+    padding: 0.3rem;
   }
   
   .select-soluciones {
-    min-width: 140px;
+    min-width: 80px;
+    max-width: 100px;
     font-size: 0.8rem;
     padding: 0.3rem;
   }
@@ -1288,6 +1533,14 @@ th {
   line-height: 1.4;
 }
 
+.puntuacion-profesor-cell {
+  text-align: center;
+  font-weight: 600;
+  color: #1976d2;
+  background-color: #e3f2fd;
+  border-left: 3px solid #1976d2;
+}
+
 /* Estilos para filas clickeables */
 .fila-clickeable {
   cursor: pointer;
@@ -1369,6 +1622,41 @@ tbody tr:hover {
 
 /* Estilos para pantallas muy pequeñas */
 @media (max-width: 480px) {
+  .estado-acciones-table {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .estado-acciones-table table {
+    min-width: 600px;
+  }
+  
+  .estado-acciones-table th,
+  .estado-acciones-table td {
+    padding: 0.3rem;
+  }
+  
+  .estado-text {
+    font-size: 0.8rem;
+  }
+  
+  .sub-header {
+    font-size: 0.7rem;
+    padding: 0.2rem;
+  }
+  
+  .estado-header {
+    min-width: 80px;
+  }
+  
+  .acciones-header {
+    min-width: 70px;
+  }
+  
+  .soluciones-header {
+    min-width: 100px;
+  }
+  
   .card-preferencias, .card-asignaturas, .card-sesiones {
     margin: 0.5rem;
     padding: 0.75rem;
@@ -1508,6 +1796,12 @@ tbody tr:hover {
     background-color: #2a2a2a;
     color: #666;
   }
+  
+  .puntuacion-profesor-cell {
+    color: #90caf9;
+    background-color: #1a237e;
+    border-left-color: #90caf9;
+  }
 }
 
 .btn-lanzar-generador {
@@ -1636,7 +1930,22 @@ tbody tr:hover {
 
 .soluciones-cell {
   position: relative;
-  min-width: 200px;
+  min-width: 120px;
+  z-index: 100;
+}
+
+.puntuacion-cell {
+  text-align: center;
+  vertical-align: middle;
+  min-width: 120px;
+  padding: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.no-puntuacion {
+  color: #666;
+  font-style: italic;
 }
 
 .select-soluciones {
@@ -1645,9 +1954,12 @@ tbody tr:hover {
   border-radius: 4px;
   background-color: white;
   font-size: 0.9rem;
-  min-width: 180px;
+  min-width: 100px;
+  max-width: 120px;
   cursor: pointer;
   transition: all 0.2s ease;
+  position: relative;
+  z-index: 200;
 }
 
 .select-soluciones:focus {
@@ -1663,6 +1975,20 @@ tbody tr:hover {
   opacity: 0.7;
 }
 
+/* Asegurar que el select no se superponga */
+.select-soluciones option {
+  background-color: white;
+  color: #333;
+}
+
+/* Estilos para el dropdown del select */
+.select-soluciones:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+  z-index: 300;
+}
+
 .loading-soluciones {
   position: absolute;
   top: 100%;
@@ -1674,7 +2000,7 @@ tbody tr:hover {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
+  z-index: 400;
 }
 
 .loading-spinner-small {
@@ -1743,11 +2069,17 @@ tbody tr:hover {
   
   .select-soluciones:focus {
     border-color: #64b5f6;
+    z-index: 300;
   }
   
   .select-soluciones:disabled {
     background-color: #2a2a2a;
     color: #666;
+  }
+  
+  .select-soluciones option {
+    background-color: #333;
+    color: white;
   }
   
   .loading-soluciones {
@@ -1763,6 +2095,10 @@ tbody tr:hover {
   .nueva-solucion-estado {
     background-color: #059669;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  }
+  
+  .no-puntuacion {
+    color: #999;
   }
 }
 
