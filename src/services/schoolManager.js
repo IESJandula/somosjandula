@@ -1302,6 +1302,21 @@ export const seleccionarSolucion = async (idGeneradorInstancia, toastMessage, to
       });
   }
 
+export const borrarSolucion = async (idGeneradorInstancia, toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/soluciones',
+    {
+    method: 'DELETE',
+    headers: 
+    {
+        'Authorization': `Bearer ${tokenPropio}`,
+        'idGeneradorInstancia': idGeneradorInstancia
+      },
+    });
+};
+
 /****************************** Actualizar Preferencia Horaria ******************************/
 export const actualizarPreferenciaHoraria = async (email, idSeleccion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) => 
   {

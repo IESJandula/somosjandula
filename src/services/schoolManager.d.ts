@@ -368,3 +368,9 @@ export declare function seleccionarSolucion(idGeneradorInstancia: Ref<number>,
                                            toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<Response>;
+
+/****************************** Borrar Solución ******************************/
+export declare function borrarSolucion(idGeneradorInstancia: Ref<number>,
+                                       toastMessage: Ref<string>,
+                                       toastColor: Ref<string>,
+                                       isToastOpen: Ref<boolean>): Promise<Response>;

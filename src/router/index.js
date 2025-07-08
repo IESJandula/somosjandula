@@ -23,10 +23,10 @@ import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
 import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
 import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
 import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
-import G_EleccionDeHorarios from '@/views/school_manager/G_EleccionDeHorarios.vue';
-import H_ValidadorDatos from '@/views/school_manager/H_ValidadorDatos.vue';
-import I_GeneradorHorarios from '@/views/school_manager/I_GeneradorHorarios.vue';
-import J_Administracion from '@/views/school_manager/J_Administracion.vue';
+import A_Administracion from '@/views/timetable/A_Administracion.vue';
+import B_EleccionDeHorarios from '@/views/timetable/B_EleccionDeHorarios.vue';
+import C_ValidadorDatos from '@/views/timetable/C_ValidadorDatos.vue';
+import D_GeneradorHorarios from '@/views/timetable/D_GeneradorHorarios.vue';
 
 const routes = [
   {
@@ -174,38 +174,6 @@ const routes = [
         },
       },
       {
-        path: 'school_manager_staff/profesores',
-        component: G_EleccionDeHorarios,
-        name: 'G_EleccionDeHorarios',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'school_manager/validadorDatos',
-        component: H_ValidadorDatos,
-        name: 'H_ValidadorDatos',
-        meta: {
-          role: 'DIRECCION'
-        },
-      },
-      {
-        path: 'school_manager/generadorHorarios',
-        component: I_GeneradorHorarios,
-        name: 'I_GeneradorHorarios',
-        meta: {
-          role: 'DIRECCION'
-        },
-      },
-      {
-        path: 'school_manager/administracion',
-        component: J_Administracion,
-        name: 'J_Administracion',
-        meta: {
-          role: 'DIRECCION'
-        },
-      },
-      {
         path: 'projectors/ControlPanel',
         component: ControlPanel,
         name: 'ControlPanel',
@@ -227,6 +195,38 @@ const routes = [
         name: 'EventsTable',
         meta: { 
           role: 'PROFESOR' 
+        },
+      },
+      {
+        path: 'timetable/admin',
+        component: A_Administracion,
+        name: 'A_Administracion',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'timetable/choice',
+        component: B_EleccionDeHorarios,
+        name: 'B_EleccionDeHorarios',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'timetable/validation',
+        component: C_ValidadorDatos,
+        name: 'C_ValidadorDatos',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'timetable/generator',
+        component: D_GeneradorHorarios,
+        name: 'D_GeneradorHorarios',
+        meta: {
+          role: 'DIRECCION'
         },
       },
     ],

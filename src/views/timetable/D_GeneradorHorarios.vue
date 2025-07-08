@@ -3,13 +3,13 @@
   <div class="top-section">
     <!-- Tabla de estado y acciones -->
     <div class="estado-acciones-table">
-      <table>
+      <table :key="soluciones.length">
         <thead>
           <tr>
             <th class="estado-header">Estado</th>
             <th class="acciones-header">Acciones</th>
             <th class="soluciones-header">Puntuación</th>
-            <th v-for="columna in columnasGeneradas" :key="columna.key" class="sub-header">
+            <th v-if="soluciones.length > 0" v-for="columna in columnasGeneradas" :key="columna.key" class="sub-header">
               {{ columna.titulo }}
             </th>
           </tr>
@@ -49,27 +49,40 @@
               </button>
             </td>
             <td class="soluciones-cell">
-              <select 
-                v-if="soluciones.length > 0"
-                v-model="solucionSeleccionada" 
-                @change="seleccionarSolucionHandler"
-                class="select-soluciones"
-                :disabled="loadingSoluciones"
-                title="Seleccionar puntuación"
-              >
-                <option 
-                  v-for="solucion in soluciones" 
-                  :key="solucion.id" 
-                  :value="solucion.id"
-                >
-                  {{ solucion.puntuacion }}
-                </option>
-              </select>
-              <div v-else-if="!loadingSoluciones" class="no-soluciones">
-                Sin soluciones
-              </div>
-              <div v-if="loadingSoluciones" class="loading-soluciones">
-                <div class="loading-spinner-small"></div>
+              <div class="soluciones-select-wrapper">
+                <template v-if="soluciones.length > 0">
+                  <select 
+                    v-model="solucionSeleccionada" 
+                    @change="seleccionarSolucionHandler"
+                    class="select-soluciones"
+                    :disabled="loadingSoluciones"
+                    title="Seleccionar puntuación"
+                  >
+                    <option 
+                      v-for="solucion in soluciones" 
+                      :key="solucion.id" 
+                      :value="solucion.id"
+                    >
+                      {{ solucion.puntuacion }}
+                    </option>
+                  </select>
+                  <button class="btn-borrar-solucion" @click="borrarSolucionSeleccionada" :disabled="loadingSoluciones" title="Borrar solución seleccionada">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
+                </template>
+                <template v-else-if="!loadingSoluciones">
+                  <div class="no-soluciones">Sin soluciones</div>
+                </template>
+                <template v-if="loadingSoluciones">
+                  <div class="loading-soluciones">
+                    <div class="loading-spinner-small"></div>
+                  </div>
+                </template>
               </div>
             </td>
             <td class="puntuacion-cell" v-for="columna in columnasGeneradas" :key="columna.key">
@@ -106,7 +119,7 @@
     
     <!-- Tabla con todos los profesores -->
     <div v-else class="tabla-responsive">
-      <table>
+      <table :key="soluciones.length">
         <thead>
           <tr>
             <th>Profesor</th>
@@ -114,7 +127,7 @@
             <th>Sin clase</th>
             <th>Horas sin clase</th>
             <th>Observaciones</th>
-            <th v-if="solucionSeleccionada && solucionSeleccionadaInfo">Puntuación</th>
+            <th v-if="soluciones.length > 0" v-for="col in columnasProfesor" :key="col.key">{{ col.titulo }}</th>
           </tr>
         </thead>
         <tbody>
@@ -140,13 +153,8 @@
             <td>{{ obtenerTextoNoTenerClase(profesor.preferencias) }}</td>
             <td class="horas-sin-clase">{{ obtenerHorasSinClase(profesor.preferencias) }}</td>
             <td>{{ profesor.preferencias.observaciones || '-' }}</td>
-            <td v-if="solucionSeleccionada && solucionSeleccionadaInfo" class="puntuacion-profesor-cell">
-              <div v-if="puntuacionesPorProfesor.get(profesor.email)">
-                {{ puntuacionesPorProfesor.get(profesor.email) }}
-              </div>
-              <div v-else class="no-puntuacion">
-                -
-              </div>
+            <td v-for="col in columnasProfesor" :key="col.key">
+              {{ obtenerPuntuacionPorTipoYProfesor(solucionSeleccionadaInfo, col.tipo, profesor.email) }}
             </td>
           </tr>
         </tbody>
@@ -251,7 +259,8 @@ import {
   obtenerSesionesBase,
   obtenerListaDias,
   obtenerListaTramos,
-  seleccionarSolucion
+  seleccionarSolucion,
+  borrarSolucion
 } from '@/services/schoolManager.js';
 
 // Variables para el toast
@@ -406,9 +415,11 @@ const tiposPuntuacionGenerales = computed(() => {
 
 
 const columnasGeneradas = computed(() => {
+  if (!solucionSeleccionadaInfo.value || soluciones.value.length === 0) {
+    console.log('columnasGeneradas: vacío', { soluciones: soluciones.value, solucionSeleccionadaInfo: solucionSeleccionadaInfo.value });
+    return [];
+  }
   const columnas = [];
-  
-  // Generar columnas basándose en los tipos reales que llegan del backend
   tiposPuntuacionGenerales.value.forEach(tipo => {
     columnas.push({
       key: tipo,
@@ -417,7 +428,7 @@ const columnasGeneradas = computed(() => {
       periodo: 'general'
     });
   });
-  
+  console.log('columnasGeneradas:', columnas);
   return columnas;
 });
 
@@ -954,7 +965,15 @@ const obtenerPuntuacionPorTipo = (solucionInfo, tipo) => {
     p.tipo === tipo && p.categoria !== 'Profesor'
   );
   
-  return puntuacion ? puntuacion.puntuacion : '-';
+  if (puntuacion) {
+    // Mostrar puntuación con porcentaje si está disponible
+    if (puntuacion.porcentaje !== undefined && puntuacion.porcentaje !== null) {
+      return `${puntuacion.puntuacion} (${puntuacion.porcentaje.toFixed(1)}%)`;
+    }
+    return puntuacion.puntuacion.toString();
+  }
+  
+  return '-';
 };
 
 // Función para actualizar la información de la solución seleccionada
@@ -987,15 +1006,36 @@ const procesarPuntuacionesPorProfesor = (solucion) => {
       p.categoria === 'Profesor'
     );
     
+    // Agrupar puntuaciones por profesor
+    const puntuacionesAgrupadas = new Map();
+    
     puntuacionesProfesor.forEach(puntuacion => {
       if (puntuacion.emailProfesor) {
-        // Si ya existe una puntuación para este profesor, sumarla
-        const puntuacionExistente = puntuacionesPorProfesor.value.get(puntuacion.emailProfesor) || 0;
-        puntuacionesPorProfesor.value.set(
-          puntuacion.emailProfesor, 
-          puntuacionExistente + puntuacion.puntuacion
-        );
+        if (!puntuacionesAgrupadas.has(puntuacion.emailProfesor)) {
+          puntuacionesAgrupadas.set(puntuacion.emailProfesor, {
+            puntuacionTotal: 0,
+            porcentajeTotal: 0,
+            count: 0
+          });
+        }
+        
+        const datos = puntuacionesAgrupadas.get(puntuacion.emailProfesor);
+        datos.puntuacionTotal += puntuacion.puntuacion;
+        if (puntuacion.porcentaje !== undefined && puntuacion.porcentaje !== null) {
+          datos.porcentajeTotal += puntuacion.porcentaje;
+        }
+        datos.count++;
       }
+    });
+    
+    // Calcular promedio de porcentajes y formatear resultado
+    puntuacionesAgrupadas.forEach((datos, email) => {
+      const porcentajePromedio = datos.count > 0 ? datos.porcentajeTotal / datos.count : 0;
+      const puntuacionFormateada = porcentajePromedio > 0 
+        ? `${datos.puntuacionTotal} (${porcentajePromedio.toFixed(1)}%)`
+        : datos.puntuacionTotal.toString();
+      
+      puntuacionesPorProfesor.value.set(email, puntuacionFormateada);
     });
   }
 };
@@ -1113,21 +1153,34 @@ const cargarSoluciones = async () => {
   loadingSoluciones.value = true;
   try {
     const response = await obtenerEstadoGeneradorHorarios(toastMessage, toastColor, isToastOpen);
-    
     if (response.ok) {
       const estadoData = await response.json();
-      
       // Procesar las soluciones si están incluidas en infoGenerador o soluciones
       if (estadoData.infoGenerador) {
         await procesarSoluciones(estadoData.infoGenerador);
       } else if (estadoData.soluciones) {
         await procesarSoluciones(estadoData.soluciones);
+      } else {
+        // Si no hay infoGenerador ni soluciones, limpiar todo
+        soluciones.value = [];
+        solucionSeleccionada.value = '';
+        solucionSeleccionadaInfo.value = null;
+        puntuacionesPorProfesor.value.clear();
       }
+    } else {
+      // Si la respuesta no es OK, limpiar todo
+      soluciones.value = [];
+      solucionSeleccionada.value = '';
+      solucionSeleccionadaInfo.value = null;
+      puntuacionesPorProfesor.value.clear();
     }
+    console.log('cargarSoluciones -> soluciones:', soluciones.value, 'solucionSeleccionada:', solucionSeleccionada.value, 'solucionSeleccionadaInfo:', solucionSeleccionadaInfo.value);
   } catch (error) {
     console.error('Error al cargar soluciones:', error);
     soluciones.value = [];
     solucionSeleccionada.value = '';
+    solucionSeleccionadaInfo.value = null;
+    puntuacionesPorProfesor.value.clear();
   } finally {
     loadingSoluciones.value = false;
   }
@@ -1144,6 +1197,81 @@ watch(solucionSeleccionada, () => {
     puntuacionesPorProfesor.value.clear();
   }
 });
+
+// 1. Computed para tipos de puntuaciones de profesor
+defineExpose({});
+
+const tiposPuntuacionProfesor = computed(() => {
+  if (!solucionSeleccionadaInfo.value || !solucionSeleccionadaInfo.value.puntuacionesDesglosadas) {
+    return [];
+  }
+  // Extrae los tipos únicos de categoría 'Profesor'
+  const tiposUnicos = new Set();
+  solucionSeleccionadaInfo.value.puntuacionesDesglosadas.forEach(p => {
+    if (p.categoria === 'Profesor') {
+      tiposUnicos.add(p.tipo);
+    }
+  });
+  return Array.from(tiposUnicos);
+});
+
+// 2. Computed para columnas dinámicas de profesor
+const columnasProfesor = computed(() => {
+  if (!solucionSeleccionadaInfo.value || soluciones.value.length === 0) {
+    console.log('columnasProfesor: vacío', { soluciones: soluciones.value, solucionSeleccionadaInfo: solucionSeleccionadaInfo.value });
+    return [];
+  }
+  const cols = tiposPuntuacionProfesor.value.map(tipo => ({
+    key: tipo,
+    titulo: tipo,
+    tipo: tipo,
+    periodo: 'profesor'
+  }));
+  console.log('columnasProfesor:', cols);
+  return cols;
+});
+
+// 3. Función para obtener la puntuación y porcentaje por tipo y profesor
+const obtenerPuntuacionPorTipoYProfesor = (solucionInfo, tipo, emailProfesor) => {
+  if (!solucionInfo || !solucionInfo.puntuacionesDesglosadas) return '-';
+  const p = solucionInfo.puntuacionesDesglosadas.find(
+    x => x.categoria === 'Profesor' && x.tipo === tipo && x.emailProfesor === emailProfesor
+  );
+  if (p) {
+    if (p.porcentaje !== undefined && p.porcentaje !== null) {
+      return `${p.puntuacion} (${p.porcentaje.toFixed(1)}%)`;
+    }
+    return p.puntuacion.toString();
+  }
+  return '-';
+};
+
+const borrarSolucionSeleccionada = async () => {
+  if (!solucionSeleccionada.value) return;
+  try {
+    const response = await borrarSolucion(solucionSeleccionada.value, toastMessage, toastColor, isToastOpen);
+    if (response.ok) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Solución eliminada correctamente');
+      
+      // LIMPIAR INMEDIATAMENTE las variables
+      soluciones.value = [];
+      solucionSeleccionada.value = '';
+      solucionSeleccionadaInfo.value = null;
+      puntuacionesPorProfesor.value.clear();
+      solucionesAnteriores.value = [];
+      
+      // Luego recargar para sincronizar con el backend
+      await cargarSoluciones();
+      
+      console.log('borrarSolucionSeleccionada -> soluciones:', soluciones.value, 'solucionSeleccionada:', solucionSeleccionada.value, 'solucionSeleccionadaInfo:', solucionSeleccionadaInfo.value);
+    } else {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al eliminar la solución');
+    }
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al eliminar la solución');
+  }
+};
+
 </script>
 
 <style scoped>
@@ -1536,9 +1664,6 @@ th {
 .puntuacion-profesor-cell {
   text-align: center;
   font-weight: 600;
-  color: #1976d2;
-  background-color: #e3f2fd;
-  border-left: 3px solid #1976d2;
 }
 
 /* Estilos para filas clickeables */
@@ -1929,9 +2054,15 @@ tbody tr:hover {
 }
 
 .soluciones-cell {
-  position: relative;
-  min-width: 120px;
-  z-index: 100;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.soluciones-select-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
 }
 
 .puntuacion-cell {
@@ -2102,5 +2233,20 @@ tbody tr:hover {
   }
 }
 
+.btn-borrar-solucion {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: #d32f2f;
+  transition: color 0.2s;
+}
+.btn-borrar-solucion:hover:not(:disabled) {
+  color: #b71c1c;
+}
+.btn-borrar-solucion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 </style>

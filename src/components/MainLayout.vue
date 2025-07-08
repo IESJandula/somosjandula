@@ -13,15 +13,6 @@
           </ion-list>
         </ion-list>
         <ion-list>
-          <ion-item button @click="toggleSubMenuSchoolManagerStaff">
-            Personal
-            <ion-icon slot="end" :icon="schoolManagerStaffSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="schoolManagerStaffSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/school_manager_staff/profesores')">Elección de horarios</ion-item>
-          </ion-list>
-        </ion-list>
-        <ion-list>
           <ion-item button @click="toggleSubMenuPrinters">
             Cola de impresión
             <ion-icon slot="end"
@@ -47,6 +38,29 @@
           </ion-list>
         </ion-list>
         <ion-list>
+          <ion-item button @click="toggleSubMenuProjectors">
+            Proyectores
+            <ion-icon slot="end"
+              :icon="projectorsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Control remoto</ion-item>
+            <ion-item v-if="mostrarProjectorsAdmin" button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Administración</ion-item>
+          </ion-list>
+        </ion-list>
+        <ion-list>
+          <ion-item button @click="toggleSubMenuTimetable">
+            Horarios
+            <ion-icon slot="end" :icon="timetableSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="timetableSubmenuVisible" class="submenu">
+            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable/admin')">Administrar</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/timetable/choice')">Elección de horarios</ion-item>
+            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable/validation')">Validación de datos</ion-item>
+            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable/generator')">Generador de horarios</ion-item>
+          </ion-list>
+        </ion-list>
+        <ion-list>
           <ion-item button @click="toggleSubMenuDocuments">
             Documentos
             <ion-icon slot="end"
@@ -65,27 +79,12 @@
               :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/administracion')">0. Administrar</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">1. Carga de matrículas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">2. Asignaturas y bloques</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">3. Creación de grupos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por asignatura</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Asignaturas y departamentos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/validadorDatos')">7. Validador de datos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/generadorHorarios')">8. Generador de horarios</ion-item>
-          </ion-list>
-        </ion-list>
-        <!-- Proyectores -->
-        <ion-list>
-          <ion-item button @click="toggleSubMenuProjectors">
-            Proyectores
-            <ion-icon slot="end"
-              :icon="projectorsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="projectorsSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Control remoto</ion-item>
-            <ion-item v-if="mostrarProjectorsAdmin" button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Administración</ion-item>
           </ion-list>
         </ion-list>
       </ion-content>
@@ -166,13 +165,14 @@ export default defineComponent({
     const mostrarBookingsAdmin = ref(false);
     const mostrarPrintersAdmin = ref(false);
     const mostrarSchoolManager = ref(false);
-    const mostrarProjectorsAdmin = ref(false); 
+    const mostrarProjectorsAdmin = ref(false);
+    const mostrarTimetableAdmin = ref(false);
     const adminSubmenuVisible = ref(false);
     const printersSubmenuVisible = ref(false);
     const bookingsSubmenuVisible = ref(false);
     const documentsSubmenuVisible = ref(false);
     const schoolManagerSubmenuVisible = ref(false);
-    const schoolManagerStaffSubmenuVisible = ref(false);
+    const timetableSubmenuVisible = ref(false);
     const projectorsSubmenuVisible = ref(false);
 
     // Variables para el toast
@@ -206,7 +206,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
-      schoolManagerStaffSubmenuVisible.value = false;
+      timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = false;
     };
 
@@ -216,7 +216,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
-      schoolManagerStaffSubmenuVisible.value = false;
+      timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = false;
     };
 
@@ -226,7 +226,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
-      schoolManagerStaffSubmenuVisible.value = false;
+      timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = false;
     };
 
@@ -237,7 +237,7 @@ export default defineComponent({
       projectorsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
       schoolManagerSubmenuVisible.value = false;
-      schoolManagerStaffSubmenuVisible.value = false;
+      timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = false;
     };
 
@@ -247,16 +247,16 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
-      schoolManagerStaffSubmenuVisible.value = false;
+      timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = false;
     };
-    const toggleSubMenuSchoolManagerStaff = () => {
+    const toggleSubMenuTimetable = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false
       schoolManagerSubmenuVisible.value = false;
-      schoolManagerStaffSubmenuVisible.value = !schoolManagerStaffSubmenuVisible.value;
+      timetableSubmenuVisible.value = !timetableSubmenuVisible.value;
       projectorsSubmenuVisible.value = false;
     };
     const toggleSubMenuProjectors = () => {
@@ -265,7 +265,7 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
-      schoolManagerStaffSubmenuVisible.value = false;
+      timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = !projectorsSubmenuVisible.value;
     };
 
@@ -280,7 +280,8 @@ export default defineComponent({
         mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
         mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
         mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
-        mostrarProjectorsAdmin.value = rolesMenu.mostrarAdmin; // para ocultar menu a administradores.
+        mostrarProjectorsAdmin.value = rolesMenu.mostrarAdmin;
+        mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
       }
       catch (error) {
         crearToast(
@@ -302,19 +303,20 @@ export default defineComponent({
       mostrarBookingsAdmin,
       mostrarSchoolManager,
       mostrarProjectorsAdmin,
+      mostrarTimetableAdmin,
       adminSubmenuVisible,
       printersSubmenuVisible,
       bookingsSubmenuVisible,
       documentsSubmenuVisible,
       schoolManagerSubmenuVisible,
-      schoolManagerStaffSubmenuVisible,
+      timetableSubmenuVisible,
       projectorsSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuPrinters,
       toggleSubMenuBookings,
       toggleSubMenuDocuments,
       toggleSubMenuSchoolManager,
-      toggleSubMenuSchoolManagerStaff,
+      toggleSubMenuTimetable,
       toggleSubMenuProjectors
     };
   },
