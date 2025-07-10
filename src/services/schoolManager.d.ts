@@ -374,3 +374,17 @@ export declare function borrarSolucion(idGeneradorInstancia: Ref<number>,
                                        toastMessage: Ref<string>,
                                        toastColor: Ref<string>,
                                        isToastOpen: Ref<boolean>): Promise<Response>;
+
+/****************************** Obtener Horarios Individuales ******************************/
+export declare function obtenerHorariosIndividuales(email: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;
+
+/****************************** Obtener Horarios Curso Etapa Grupo ******************************/
+export declare function obtenerHorariosCursoEtapaGrupo(curso: Ref<number>,
+                                           etapa: Ref<string>,
+                                           grupo: Ref<string>,
+                                           toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<Response>;

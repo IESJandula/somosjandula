@@ -58,6 +58,8 @@
             <ion-item button @click="navigateAndCloseMenu('/timetable/choice')">Elección de horarios</ion-item>
             <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable/validation')">Validación de datos</ion-item>
             <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable/generator')">Generador de horarios</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/timetable/teachers')">Horario individual</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/timetable/course')">Horario curso</ion-item>
           </ion-list>
         </ion-list>
         <ion-list>

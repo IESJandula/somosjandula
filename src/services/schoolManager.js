@@ -1247,7 +1247,7 @@ export const obtenerListaDias = async (toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/diasSemana',
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/common/diasSemana',
       {
         method: 'GET',
         headers:
@@ -1269,7 +1269,7 @@ export const obtenerListaTramos = async (toastMessage, toastColor, isToastOpen) 
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/tramosHorarios',
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/common/tramosHorarios',
       {
         method: 'GET',
         headers:
@@ -1334,4 +1334,52 @@ export const actualizarPreferenciaHoraria = async (email, idSeleccion, diaDesc, 
           'tramoDesc': tramoDesc
         },
       });
+  }
+
+/****************************** Obtener Horarios Individuales ******************************/
+export const obtenerHorariosIndividuales = async (email, toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/horarios/individual',
+      {
+        method: 'GET',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'email': email
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+  }
+
+/****************************** Obtener Horarios Curso Etapa Grupo ******************************/
+export const obtenerHorariosCursoEtapaGrupo = async (curso, etapa, grupo, toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/horarios/cursoEtapaGrupo',
+      {
+        method: 'GET',
+        headers:
+        {
+          'Authorization': `Bearer ${tokenPropio}`,
+          'curso': curso,
+          'etapa': etapa,
+          'grupo': grupo
+        },
+      });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
   }

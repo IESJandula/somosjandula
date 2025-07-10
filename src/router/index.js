@@ -26,7 +26,9 @@ import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfeso
 import A_Administracion from '@/views/timetable/A_Administracion.vue';
 import B_EleccionDeHorarios from '@/views/timetable/B_EleccionDeHorarios.vue';
 import C_ValidadorDatos from '@/views/timetable/C_ValidadorDatos.vue';
-import D_GeneradorHorarios from '@/views/timetable/D_GeneradorHorarios.vue';
+import D_GeneradorHorarios from '@/views/timetable/D_GeneradorHorarios.vue';  
+import E_HorarioIndividual from '@/views/timetable/E_HorarioIndividual.vue';
+import F_HorarioCursoEtapaGrupo from '@/views/timetable/F_HorarioCursoEtapaGrupo.vue';
 
 const routes = [
   {
@@ -227,6 +229,22 @@ const routes = [
         name: 'D_GeneradorHorarios',
         meta: {
           role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'timetable/teachers',
+        component: E_HorarioIndividual,
+        name: 'E_HorarioIndividual',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'timetable/course',
+        component: F_HorarioCursoEtapaGrupo,
+        name: 'F_HorarioCursoEtapaGrupo',
+        meta: {
+          role: 'PROFESOR'
         },
       },
     ],
