@@ -66,11 +66,11 @@
       <!-- Botón radio -->
       <div class="t-4">Independientemente de la respuesta anterior, elige la opción que desearías:</div>
       <div class="t-5">
-        <input type="radio" class="radio" id="opcion1" name="opcion" :value="false" v-model="sinClasePrimeraHoraSeleccionado">
+        <input type="radio" class="radio" id="opcion1" name="opcion" :value="true" v-model="sinClasePrimeraHoraSeleccionado">
         <label for="opcion1"> No tener clase a primera hora</label>
       </div>
       <div class="t-5">
-        <input type="radio" class="radio" id="opcion2" name="opcion" :value="true" v-model="sinClasePrimeraHoraSeleccionado">
+        <input type="radio" class="radio" id="opcion2" name="opcion" :value="false" v-model="sinClasePrimeraHoraSeleccionado">
         <label for="opcion2"> No tener clase a ultima hora</label>
       </div>
       <hr class="separator-line" />
@@ -246,7 +246,7 @@ const tramoHorarioSeleccionado2 = ref(null);
 const tramoHorarioSeleccionado3 = ref(null);
 const listaTramoHorarioSeleccionado = ref([]);
 const emailUsuarioActual = ref(null);
-const sinClasePrimeraHoraSeleccionado = ref(false);
+const sinClasePrimeraHoraSeleccionado = ref(true);
 const otrasObservacionesSeleccionado = ref('');
 const listaGrupos = ref([]);
 const constantes = ref([]);
@@ -453,7 +453,7 @@ const asignarReduccion = async () => {
 
 const resetearValores = () => {
       isOn.value = false;
-      sinClasePrimeraHoraSeleccionado.value = false;
+      sinClasePrimeraHoraSeleccionado.value = true;
       otrasObservacionesSeleccionado.value = '';
       if (listaTramoHorarioSeleccionado.value.length > 0) {
         tramoHorarioSeleccionado1.value = listaTramoHorarioSeleccionado.value[0];

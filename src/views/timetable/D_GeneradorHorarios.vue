@@ -62,8 +62,9 @@
                       v-for="solucion in soluciones" 
                       :key="solucion.id" 
                       :value="solucion.id"
+                      :data-elegida="solucion.solucionElegida"
                     >
-                      {{ solucion.puntuacion }}
+                      {{ solucion.puntuacion }}{{ solucion.solucionElegida ? ' (Elegida)' : '' }}
                     </option>
                   </select>
                   <button class="btn-borrar-solucion" @click="borrarSolucionSeleccionada" :disabled="loadingSoluciones" title="Borrar solución seleccionada">
@@ -309,6 +310,15 @@ const solucionSeleccionadaInfo = ref(null); // Información detallada de la solu
 // Variable para almacenar las puntuaciones por profesor
 const puntuacionesPorProfesor = ref(new Map());
 
+// Variable para rastrear la solución elegida durante las actualizaciones
+// Esto evita que se pierda la selección del usuario cuando se refresca la lista
+const solucionElegidaPersistente = ref(null);
+
+// Variable para rastrear si el usuario ya ha hecho una selección manual
+// Esto evita que se seleccione automáticamente una nueva solución cuando ya hay una elegida
+// Se marca como true cuando el usuario selecciona manualmente o cuando se detecta una solución elegida
+const usuarioHaSeleccionado = ref(false);
+
 // Función auxiliar para formatear fechas en formato DD/MM/YYYY HH:MM:SS
 const formatearFecha = (timestamp) => {
   if (!timestamp) return '';
@@ -329,10 +339,10 @@ const formatearFecha = (timestamp) => {
 const estadoGeneradorCorto = computed(() => {
   if (estadoGenerador.value.includes('Ejecutándose')) {
     return 'Ejecutándose';
-  } else if (estadoGenerador.value.includes('Nueva solución encontrada')) {
-    return 'Nueva solución encontrada';
   } else if (estadoGenerador.value.includes('Finalizado')) {
     return 'Finalizado';
+  } else if (estadoGenerador.value.includes('Nueva solución encontrada') && nuevaSolucionEncontrada.value) {
+    return 'Nueva solución encontrada';
   } else if (estadoGenerador.value.includes('Detenido')) {
     return 'Detenido';
   } else if (estadoGenerador.value.includes('Error')) {
@@ -416,7 +426,6 @@ const tiposPuntuacionGenerales = computed(() => {
 
 const columnasGeneradas = computed(() => {
   if (!solucionSeleccionadaInfo.value || soluciones.value.length === 0) {
-    console.log('columnasGeneradas: vacío', { soluciones: soluciones.value, solucionSeleccionadaInfo: solucionSeleccionadaInfo.value });
     return [];
   }
   const columnas = [];
@@ -428,7 +437,7 @@ const columnasGeneradas = computed(() => {
       periodo: 'general'
     });
   });
-  console.log('columnasGeneradas:', columnas);
+  
   return columnas;
 });
 
@@ -601,8 +610,8 @@ const guardarConciliacion = async (email, conciliacion) => {
 const obtenerTextoNoTenerClase = (preferencias) => {
   if (!preferencias || !preferencias.cargado) return '';
   return preferencias.sinClasePrimeraHora 
-    ? 'última hora' 
-    : 'primera hora';
+    ? 'primera hora' 
+    : 'última hora';
 };
 
 const obtenerHorasSinClase = (preferencias) => {
@@ -657,8 +666,31 @@ const cargarDiasTramos = async () => {
 // Función para actualización automática
 const actualizacionAutomatica = async () => {
   try {
-    // Usar el endpoint consolidado que incluye estado y soluciones
-    await obtenerEstadoGenerador();
+    // Obtener el estado actual del generador
+    const response = await obtenerEstadoGeneradorHorarios(toastMessage, toastColor, isToastOpen);
+    
+    if (response.ok) {
+      const estadoData = await response.json();
+      
+      // Actualizar el estado del generador
+      if (estadoData.estado === 'EN_CURSO' && estadoData.fechaInicio) {
+        tiempoInicio.value = parseInt(estadoData.fechaInicio);
+        actualizarTiempoTranscurrido(new Date(tiempoInicio.value));
+      } else if (estadoData.estado === 'FINALIZADO') {
+        estadoGenerador.value = 'Finalizado';
+        tiempoInicio.value = null;
+        detenerTemporizador();
+      } else {
+        estadoGenerador.value = 'Detenido';
+        tiempoInicio.value = null;
+        detenerTemporizador();
+      }
+      
+      // Procesar las soluciones si están incluidas
+      if (estadoData.infoGenerador || estadoData.soluciones) {
+        await procesarSoluciones(estadoData.infoGenerador || estadoData.soluciones);
+      }
+    }
   } catch (error) {
     console.error('Error en actualización automática:', error);
   }
@@ -691,6 +723,9 @@ onMounted(async () => {
   
   // Marcar carga inicial como completada
   cargaInicial.value = false;
+  
+  // Sincronizar el estado de solución elegida después de la carga inicial
+  await sincronizarSolucionElegida();
   
   // Iniciar actualización automática
   iniciarActualizacionAutomatica();
@@ -932,14 +967,17 @@ const seleccionarSolucionHandler = async () => {
       soluciones.value.forEach(solucion => {
         solucion.solucionElegida = solucion.id === solucionSeleccionada.value;
       });
+      // Actualizar la solución elegida persistente
+      solucionElegidaPersistente.value = solucionSeleccionada.value;
+      // Marcar que el usuario ha hecho una selección manual
+      usuarioHaSeleccionado.value = true;
+      
       // Actualizar la información de la solución seleccionada
       actualizarSolucionSeleccionadaInfo();
       // Resetear el indicador de nueva solución
       nuevaSolucionEncontrada.value = false;
-      // Cambiar el estado a Finalizado si estaba en "Nueva solución encontrada"
-      if (estadoGenerador.value === 'Nueva solución encontrada') {
-        estadoGenerador.value = 'Finalizado';
-      }
+      // Cambiar el estado a Finalizado
+      estadoGenerador.value = 'Finalizado';
       // Reiniciar la actualización automática para futuras ejecuciones
       iniciarActualizacionAutomatica();
     } else {
@@ -1040,23 +1078,62 @@ const procesarPuntuacionesPorProfesor = (solucion) => {
   }
 };
 
-// Función para procesar las soluciones obtenidas del estado del generador
-const procesarSoluciones = async (infoGenerador) => {
+// Función para sincronizar el estado de solución elegida con la base de datos
+// Esto asegura que si el backend ha seleccionado automáticamente una solución,
+// el frontend refleje correctamente ese estado
+const sincronizarSolucionElegida = async () => {
+  if (soluciones.value.length === 0) return;
   
+  if (estadoGenerador.value === 'Finalizado' && !solucionSeleccionada.value) {
+    try {
+      // Obtener el estado actual del generador para verificar la solución elegida
+      const response = await obtenerEstadoGeneradorHorarios(toastMessage, toastColor, isToastOpen);
+      if (response.ok) {
+        const estadoData = await response.json();
+        
+        // Buscar la solución elegida en los datos del backend
+        if (estadoData.infoGenerador && Array.isArray(estadoData.infoGenerador)) {
+          
+          const solucionElegidaBackend = estadoData.infoGenerador.find(s => s.solucionElegida);
+          if (solucionElegidaBackend) {
+            
+            // Actualizar el estado local para reflejar la solución elegida del backend
+            soluciones.value.forEach(solucion => {
+              solucion.solucionElegida = solucion.id === solucionElegidaBackend.idGeneradorInstancia;
+            });
+            
+            // Actualizar la solución seleccionada
+            solucionSeleccionada.value = solucionElegidaBackend.idGeneradorInstancia;
+            
+            // Actualizar la solución elegida persistente
+            solucionElegidaPersistente.value = solucionElegidaBackend.idGeneradorInstancia;
+            
+            // Actualizar la información de la solución seleccionada
+            actualizarSolucionSeleccionadaInfo();
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error al sincronizar solución elegida:', error);
+    }
+  }
+};
+
+// Función para procesar las soluciones obtenidas del estado del generador
+// Maneja el campo solucionElegida que indica cuál es la solución seleccionada por el usuario
+const procesarSoluciones = async (infoGenerador) => {
   // Convertir infoGenerador a array de soluciones
-  const solucionesArray = [];
+  soluciones.value  = [];
   if (infoGenerador && Array.isArray(infoGenerador)) {
     infoGenerador.forEach(instancia => {
-      // Verificar si tiene idGeneradorInstancia (formato del backend) o id (formato anterior)
       const id = instancia.idGeneradorInstancia || instancia.id;
       const puntuacion = instancia.puntuacion;
       const solucionElegida = instancia.solucionElegida || false;
       const puntuacionesDesglosadas = instancia.puntuacionesDesglosadas || [];
       
       if (id && puntuacion !== undefined) {
-
-        solucionesArray.push({
-          id: id, // Usar el ID correcto de la instancia del generador
+        soluciones.value.push({
+          id: id,
           puntuacion: puntuacion,
           solucionElegida: solucionElegida,
           puntuacionesDesglosadas: puntuacionesDesglosadas
@@ -1064,87 +1141,54 @@ const procesarSoluciones = async (infoGenerador) => {
       }
     });
   }
-    
-  // Ordenar las soluciones por puntuación de mayor a menor
-  const solucionesOrdenadas = solucionesArray.sort((a, b) => b.puntuacion - a.puntuacion);
-  
-  // Detectar si hay nuevas soluciones
-  // Solo si no es carga inicial, no está iniciando, y hay más soluciones que antes
-  const hayNuevasSoluciones = !cargaInicial.value && 
-      estadoGenerador.value !== 'Iniciando...' &&
-      solucionesOrdenadas && 
-      solucionesOrdenadas.length > solucionesAnteriores.value.length;
-  
-  if (hayNuevasSoluciones) {
-    nuevaSolucionEncontrada.value = true;
-    // Detener el timer cuando se encuentra una nueva solución
-    detenerTemporizador();
-    // Detener la actualización automática
-    detenerActualizacionAutomatica();
-    // Cambiar el estado para mostrar que se encontró una nueva solución
-    estadoGenerador.value = 'Nueva solución encontrada';
-    // Mostrar notificación de nueva solución
-    crearToast(toastMessage, toastColor, isToastOpen, 'success', '¡Nueva solución encontrada!');
-    
-    // Actualizar soluciones anteriores
-    solucionesAnteriores.value = solucionesOrdenadas;
-    soluciones.value = solucionesOrdenadas;
-    
-    // Configurar la solución seleccionada
-    if (soluciones.value.length > 0) {
-      const solucionElegida = soluciones.value.find(s => s.solucionElegida);
-      if (solucionElegida) {
-        solucionSeleccionada.value = solucionElegida.id;
-      } else {
-        // Seleccionar la primera solución (que es la de mayor puntuación por estar ordenadas)
-        solucionSeleccionada.value = soluciones.value[0].id;
-      }
-    } else {
-      solucionSeleccionada.value = '';
-    }
-    
-    // Actualizar la información de la solución seleccionada
-    actualizarSolucionSeleccionadaInfo();
-    
-    return; // Salir inmediatamente sin ejecutar más código
-  }
-  
-  // Actualizar soluciones anteriores y actuales
-  // Solo si hay soluciones nuevas o si no hay soluciones anteriores
-  if (solucionesOrdenadas.length > 0 || solucionesAnteriores.value.length === 0) {
-    solucionesAnteriores.value = solucionesOrdenadas;
-    soluciones.value = solucionesOrdenadas;
-  }
-  
+
+  // Actualizar las soluciones (sin activar "Nueva solución encontrada")
   if (soluciones.value.length > 0) {
-    // Si hay una solución ya seleccionada, mostrarla como seleccionada
+    // Guardar la solución elegida actual antes de actualizar
+    const solucionElegidaAnterior = soluciones.value.find(s => s.solucionElegida);
+
+    nuevaSolucionEncontrada.value = soluciones.value.length > solucionesAnteriores.value.length;
+    if (nuevaSolucionEncontrada.value)
+    {
+      detenerTemporizador();
+      detenerActualizacionAutomatica();
+      estadoGenerador.value = 'Nueva solución encontrada';
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', '¡Nueva solución encontrada!');
+    }
+
+    solucionesAnteriores.value = soluciones.value;
+    
+    // Buscar la solución elegida en las nuevas soluciones
     const solucionElegida = soluciones.value.find(s => s.solucionElegida);
-    if (solucionElegida) {
+    
+    if (solucionElegida)
+    {
+      // Si hay una solución marcada como elegida en el backend, usarla
       solucionSeleccionada.value = solucionElegida.id;
-    } else {
-      // Si no hay solución seleccionada, seleccionar automáticamente la de mayor puntuación
+    }
+    else
+    {
+      // Solo si el generador está finalizado y no hay selección previa
       solucionSeleccionada.value = soluciones.value[0].id;
-      
-      // Automáticamente seleccionar la solución con mayor puntuación en la base de datos
-      // Solo si el generador está finalizado y no se está iniciando
-      if (estadoGenerador.value === 'Finalizado' && estadoGenerador.value !== 'Iniciando...') {
-        try {
-          await seleccionarSolucion(
-            soluciones.value[0].id,
-            toastMessage,
-            toastColor,
-            isToastOpen
-          );
-        } catch (error) {
-          console.error('Error al seleccionar automáticamente la solución:', error);
-        }
+      try {
+        await seleccionarSolucion(
+          soluciones.value[0].id,
+          toastMessage,
+          toastColor,
+          isToastOpen
+        );
+        soluciones.value.forEach(s => {
+          s.solucionElegida = s.id === soluciones.value[0].id;
+        });
+      } catch (error) {
+        console.error('Error al seleccionar automáticamente la solución:', error);
       }
     }
   } else {
+    soluciones.value = [];
     solucionSeleccionada.value = '';
   }
-  
-  // Actualizar la información de la solución seleccionada
+   
   actualizarSolucionSeleccionadaInfo();
 };
 
@@ -1174,7 +1218,6 @@ const cargarSoluciones = async () => {
       solucionSeleccionadaInfo.value = null;
       puntuacionesPorProfesor.value.clear();
     }
-    console.log('cargarSoluciones -> soluciones:', soluciones.value, 'solucionSeleccionada:', solucionSeleccionada.value, 'solucionSeleccionadaInfo:', solucionSeleccionadaInfo.value);
   } catch (error) {
     console.error('Error al cargar soluciones:', error);
     soluciones.value = [];
@@ -1218,7 +1261,6 @@ const tiposPuntuacionProfesor = computed(() => {
 // 2. Computed para columnas dinámicas de profesor
 const columnasProfesor = computed(() => {
   if (!solucionSeleccionadaInfo.value || soluciones.value.length === 0) {
-    console.log('columnasProfesor: vacío', { soluciones: soluciones.value, solucionSeleccionadaInfo: solucionSeleccionadaInfo.value });
     return [];
   }
   const cols = tiposPuntuacionProfesor.value.map(tipo => ({
@@ -1227,7 +1269,6 @@ const columnasProfesor = computed(() => {
     tipo: tipo,
     periodo: 'profesor'
   }));
-  console.log('columnasProfesor:', cols);
   return cols;
 });
 
@@ -1248,22 +1289,57 @@ const obtenerPuntuacionPorTipoYProfesor = (solucionInfo, tipo, emailProfesor) =>
 
 const borrarSolucionSeleccionada = async () => {
   if (!solucionSeleccionada.value) return;
+  
+  // Desactivar inmediatamente el estado de "Nueva solución encontrada"
+  nuevaSolucionEncontrada.value = false;
+  if (estadoGenerador.value === 'Nueva solución encontrada') {
+    estadoGenerador.value = 'Finalizado';
+  }
+  
+  // Verificar si la solución a borrar es la elegida
+  const solucionABorrar = soluciones.value.find(s => s.id === solucionSeleccionada.value);
+  const esSolucionElegida = solucionABorrar && solucionABorrar.solucionElegida;
+  
   try {
     const response = await borrarSolucion(solucionSeleccionada.value, toastMessage, toastColor, isToastOpen);
+
     if (response.ok) {
-      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Solución eliminada correctamente');
-      
-      // LIMPIAR INMEDIATAMENTE las variables
-      soluciones.value = [];
-      solucionSeleccionada.value = '';
-      solucionSeleccionadaInfo.value = null;
-      puntuacionesPorProfesor.value.clear();
-      solucionesAnteriores.value = [];
-      
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Solución eliminada correctamente');      
       // Luego recargar para sincronizar con el backend
       await cargarSoluciones();
       
-      console.log('borrarSolucionSeleccionada -> soluciones:', soluciones.value, 'solucionSeleccionada:', solucionSeleccionada.value, 'solucionSeleccionadaInfo:', solucionSeleccionadaInfo.value);
+      // Si la solución borrada era la elegida, seleccionar la siguiente con mayor puntuación
+      if (esSolucionElegida && soluciones.value.length > 0) {
+        // Ordenar por puntuación de mayor a menor
+        const siguienteSolucion = soluciones[0];
+        
+        if (siguienteSolucion) {
+          try {
+            // Seleccionar la siguiente solución en el backend
+            await seleccionarSolucion(
+              siguienteSolucion.id,
+              toastMessage,
+              toastColor,
+              isToastOpen
+            );
+            
+            // Actualizar el estado local
+            solucionSeleccionada.value = siguienteSolucion.id;
+            soluciones.value.forEach(s => {
+              s.solucionElegida = s.id === siguienteSolucion.id;
+            });
+            
+            // Actualizar la información de la solución seleccionada
+            actualizarSolucionSeleccionadaInfo();
+            
+            // NO activar el estado de "Nueva solución encontrada"
+            // Solo mostrar el toast informativo
+            crearToast(toastMessage, toastColor, isToastOpen, 'success', `Solución con puntuación ${siguienteSolucion.puntuacion} seleccionada automáticamente`);
+          } catch (error) {
+            console.error('Error al seleccionar automáticamente la siguiente solución:', error);
+          }
+        }
+      }
     } else {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al eliminar la solución');
     }
@@ -2247,6 +2323,20 @@ tbody tr:hover {
 .btn-borrar-solucion:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Estilos para destacar la solución elegida en el select */
+.select-soluciones option[data-elegida="true"] {
+  font-weight: bold;
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+@media (prefers-color-scheme: dark) {
+  .select-soluciones option[data-elegida="true"] {
+    background-color: #1a237e;
+    color: #90caf9;
+  }
 }
 
 </style>
