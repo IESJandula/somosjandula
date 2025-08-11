@@ -88,7 +88,7 @@
             </td>
             <td class="puntuacion-cell" v-for="columna in columnasGeneradas" :key="columna.key">
               <div v-if="solucionSeleccionada && solucionSeleccionadaInfo">
-                {{ obtenerPuntuacionPorTipo(solucionSeleccionadaInfo, columna.tipo) }}
+                <span v-html="obtenerPuntuacionPorTipo(solucionSeleccionadaInfo, columna.tipo)"></span>
               </div>
               <div v-else class="no-puntuacion">
                 -
@@ -151,11 +151,11 @@
                 @click.stop
               />
             </td>
-            <td>{{ obtenerTextoNoTenerClase(profesor.preferencias) }}</td>
-            <td class="horas-sin-clase">{{ obtenerHorasSinClase(profesor.preferencias) }}</td>
+            <td class="sin-clase-cell" v-html="textoSinClaseComputed(profesor.preferencias, profesor.email)"></td>
+            <td class="horas-sin-clase" v-html="obtenerHorasSinClase(profesor.preferencias, profesor.email)"></td>
             <td>{{ profesor.preferencias.observaciones || '-' }}</td>
-            <td v-for="col in columnasProfesor" :key="col.key">
-              {{ obtenerPuntuacionPorTipoYProfesor(solucionSeleccionadaInfo, col.tipo, profesor.email) }}
+            <td v-for="col in columnasProfesor" :key="col.key" class="puntuacion-profesor-cell">
+              <span v-html="obtenerPuntuacionPorTipoYProfesor(solucionSeleccionadaInfo, col.tipo, profesor.email)"></span>
             </td>
           </tr>
         </tbody>
@@ -352,6 +352,43 @@ const estadoGeneradorCorto = computed(() => {
   }
 });
 
+// Computed para el texto de "Sin clase" que se actualiza automáticamente
+const textoSinClaseComputed = computed(() => {
+  // Solo se ejecuta cuando cambian las dependencias relevantes
+  const solucionInfo = solucionSeleccionadaInfo.value;
+  
+  return (preferencias, emailProfesor) => {
+    if (!preferencias || !preferencias.cargado) {
+      return '';
+    }
+    
+    // Texto base estático
+    const textoBase = preferencias.sinClasePrimeraHora 
+      ? 'primera hora' 
+      : 'última hora';
+    
+    // Si hay información del generador y una solución seleccionada, combinar con puntuaciones
+    if (solucionInfo && solucionInfo.puntuacionesDesglosadas) {
+      // Buscar la puntuación "Sin clase" para este profesor
+      const puntuacion = solucionInfo.puntuacionesDesglosadas.find(p => 
+        p.categoria === 'Profesor' && 
+        p.tipo === 'Sin clase' && 
+        p.emailProfesor === emailProfesor
+      );
+      
+      if (puntuacion) {
+        // Combinar texto base + salto de línea + puntuación en negrita con porcentaje de 2 decimales
+        return `${textoBase}<br><strong>${puntuacion.puntuacion} (${puntuacion.porcentaje.toFixed(2)}%)</strong>`;
+      }
+    }
+    
+    // Si no hay puntuación, devolver solo el texto base
+    return textoBase;
+  };
+});
+
+
+
 const fechaInicioFormateada = computed(() => {
   if (!tiempoInicio.value) return '';
   return formatearFecha(tiempoInicio.value);
@@ -480,11 +517,12 @@ const cargarProfesoresConPreferencias = async () => {
           cargado: true
         };
       } catch (error) {
-        console.error(`Error cargando preferencias para ${profesor.email}:`, error);
+        console.error(`❌ Error cargando preferencias para ${profesor.email}:`, error);
         profesor.preferencias.cargado = true; // Marcar como cargado aunque haya error
       }
     }
   } catch (error) {
+    console.error('💥 Error general al cargar profesores:', error);
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al cargar los profesores');
   } finally {
     loading.value = false;
@@ -614,7 +652,7 @@ const obtenerTextoNoTenerClase = (preferencias) => {
     : 'última hora';
 };
 
-const obtenerHorasSinClase = (preferencias) => {
+const obtenerHorasSinClase = (preferencias, emailProfesor) => {
   if (!preferencias || !preferencias.cargado || !preferencias.tramosHorarios) return '';
   
   const horasFormateadas = [];
@@ -632,8 +670,28 @@ const obtenerHorasSinClase = (preferencias) => {
     }
   }
   
-  // Unir todas las horas con comas y devolver el resultado
-  return horasFormateadas.join(', ');
+  // Texto base con las horas de preferencias
+  const textoBase = horasFormateadas.length > 0 
+    ? horasFormateadas.join(', ') 
+    : 'Sin preferencias';
+  
+  // Si hay información del generador y una solución seleccionada, combinar con puntuaciones
+  if (solucionSeleccionadaInfo.value && solucionSeleccionadaInfo.value.puntuacionesDesglosadas) {
+    // Buscar la puntuación "Horas sin clase" para este profesor
+    const puntuacion = solucionSeleccionadaInfo.value.puntuacionesDesglosadas.find(p => 
+      p.categoria === 'Profesor' && 
+      p.tipo === 'Horas sin clase' && 
+      p.emailProfesor === emailProfesor
+    );
+    
+    if (puntuacion) {
+      // Combinar texto base + salto de línea + puntuación en negrita con porcentaje de 2 decimales
+      return `${textoBase}<br><strong>${puntuacion.puntuacion} (${puntuacion.porcentaje.toFixed(2)}%)</strong>`;
+    }
+  }
+  
+  // Si no hay puntuación, devolver solo el texto base
+  return textoBase;
 };
 
 // Cargar días y tramos disponibles
@@ -1006,7 +1064,7 @@ const obtenerPuntuacionPorTipo = (solucionInfo, tipo) => {
   if (puntuacion) {
     // Mostrar puntuación con porcentaje si está disponible
     if (puntuacion.porcentaje !== undefined && puntuacion.porcentaje !== null) {
-      return `${puntuacion.puntuacion} (${puntuacion.porcentaje.toFixed(1)}%)`;
+      return `<strong>${puntuacion.puntuacion} (${puntuacion.porcentaje.toFixed(2)}%)</strong>`;
     }
     return puntuacion.puntuacion.toString();
   }
@@ -1047,7 +1105,7 @@ const procesarPuntuacionesPorProfesor = (solucion) => {
     // Agrupar puntuaciones por profesor
     const puntuacionesAgrupadas = new Map();
     
-    puntuacionesProfesor.forEach(puntuacion => {
+    puntuacionesProfesor.forEach((puntuacion) => {
       if (puntuacion.emailProfesor) {
         if (!puntuacionesAgrupadas.has(puntuacion.emailProfesor)) {
           puntuacionesAgrupadas.set(puntuacion.emailProfesor, {
@@ -1070,7 +1128,7 @@ const procesarPuntuacionesPorProfesor = (solucion) => {
     puntuacionesAgrupadas.forEach((datos, email) => {
       const porcentajePromedio = datos.count > 0 ? datos.porcentajeTotal / datos.count : 0;
       const puntuacionFormateada = porcentajePromedio > 0 
-        ? `${datos.puntuacionTotal} (${porcentajePromedio.toFixed(1)}%)`
+        ? `<strong>${datos.puntuacionTotal} (${porcentajePromedio.toFixed(2)}%)</strong>`
         : datos.puntuacionTotal.toString();
       
       puntuacionesPorProfesor.value.set(email, puntuacionFormateada);
@@ -1119,13 +1177,13 @@ const sincronizarSolucionElegida = async () => {
   }
 };
 
-// Función para procesar las soluciones obtenidas del estado del generador
+// Función para procesar las soluciones obtenidas del generador
 // Maneja el campo solucionElegida que indica cuál es la solución seleccionada por el usuario
 const procesarSoluciones = async (infoGenerador) => {
   // Convertir infoGenerador a array de soluciones
   soluciones.value  = [];
   if (infoGenerador && Array.isArray(infoGenerador)) {
-    infoGenerador.forEach(instancia => {
+    infoGenerador.forEach((instancia, index) => {
       const id = instancia.idGeneradorInstancia || instancia.id;
       const puntuacion = instancia.puntuacion;
       const solucionElegida = instancia.solucionElegida || false;
@@ -1248,10 +1306,11 @@ const tiposPuntuacionProfesor = computed(() => {
   if (!solucionSeleccionadaInfo.value || !solucionSeleccionadaInfo.value.puntuacionesDesglosadas) {
     return [];
   }
-  // Extrae los tipos únicos de categoría 'Profesor'
+  // Extrae los tipos únicos de categoría 'Profesor', excluyendo "Sin clase" y "Horas sin clase"
+  // ya que esta información se muestra en las columnas estáticas
   const tiposUnicos = new Set();
   solucionSeleccionadaInfo.value.puntuacionesDesglosadas.forEach(p => {
-    if (p.categoria === 'Profesor') {
+    if (p.categoria === 'Profesor' && p.tipo !== 'Sin clase' && p.tipo !== 'Horas sin clase') {
       tiposUnicos.add(p.tipo);
     }
   });
@@ -1280,7 +1339,7 @@ const obtenerPuntuacionPorTipoYProfesor = (solucionInfo, tipo, emailProfesor) =>
   );
   if (p) {
     if (p.porcentaje !== undefined && p.porcentaje !== null) {
-      return `${p.puntuacion} (${p.porcentaje.toFixed(1)}%)`;
+      return `<strong>${p.puntuacion} (${p.porcentaje.toFixed(2)}%)</strong>`;
     }
     return p.puntuacion.toString();
   }
@@ -1661,7 +1720,7 @@ const borrarSolucionSeleccionada = async () => {
 
 .card-preferencias, .card-asignaturas, .card-sesiones {
   margin: 2rem auto;
-  max-width: 1200px;
+  max-width: 1400px;
   background: var(--form-bg-light);
   border-radius: 10px;
   box-shadow: rgba(0,0,0,0.15) 0px 5px 15px;
@@ -1702,7 +1761,7 @@ const borrarSolucionSeleccionada = async () => {
 }
 
 table {
-  min-width: 800px;
+  min-width: 1000px;
   border-collapse: collapse;
   width: 100%;
   margin: 0;
@@ -1733,6 +1792,23 @@ th {
 .horas-sin-clase {
   text-align: center;
   max-width: 300px;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* Estilos para las columnas de puntuación por profesor (Huecos, etc.) */
+.puntuacion-profesor-cell {
+  text-align: center;
+  font-weight: 600;
+  min-width: 120px;
+  max-width: 150px;
+}
+
+/* Estilos específicos para la columna "Sin clase" */
+.sin-clase-cell {
+  text-align: center;
+  min-width: 150px;
+  max-width: 200px;
   word-wrap: break-word;
   line-height: 1.4;
 }
@@ -1868,7 +1944,7 @@ tbody tr:hover {
   }
   
   table {
-    min-width: 500px;
+    min-width: 600px;
   }
   
   .t-1 {
@@ -1882,6 +1958,18 @@ tbody tr:hover {
   th, td {
     padding: 0.2rem;
     font-size: 0.75rem;
+  }
+  
+  .sin-clase-cell {
+    min-width: 100px;
+    max-width: 120px;
+    font-size: 0.7rem;
+  }
+  
+  .puntuacion-profesor-cell {
+    min-width: 60px;
+    max-width: 80px;
+    font-size: 0.7rem;
   }
 }
 
@@ -1899,7 +1987,7 @@ tbody tr:hover {
   }
   
   table {
-    min-width: 600px; /* Ancho mínimo menor en móviles */
+    min-width: 800px; /* Ancho mínimo ajustado para tablets */
   }
   
   .profesor-nombre {
@@ -1911,6 +1999,18 @@ tbody tr:hover {
     max-width: 150px;
     font-size: 0.8rem;
     word-break: break-word;
+  }
+  
+  .sin-clase-cell {
+    min-width: 120px;
+    max-width: 150px;
+    font-size: 0.8rem;
+  }
+  
+  .puntuacion-profesor-cell {
+    min-width: 80px;
+    max-width: 100px;
+    font-size: 0.8rem;
   }
   
   .select-forzar {
