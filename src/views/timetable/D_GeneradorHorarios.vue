@@ -125,8 +125,8 @@
           <tr>
             <th>Profesor</th>
             <th>Conciliación</th>
-            <th>Sin clase</th>
-            <th>Horas sin clase</th>
+            <th>Preferencias diarias</th>
+            <th>Preferencias concretas</th>
             <th>Observaciones</th>
             <th v-if="soluciones.length > 0" v-for="col in columnasProfesor" :key="col.key">{{ col.titulo }}</th>
           </tr>
@@ -152,7 +152,7 @@
               />
             </td>
             <td class="sin-clase-cell" v-html="textoSinClaseComputed(profesor.preferencias, profesor.email)"></td>
-            <td class="horas-sin-clase" v-html="obtenerHorasSinClase(profesor.preferencias, profesor.email)"></td>
+            <td class="horas-sin-clase" v-html="obtenerPreferencias(profesor.preferencias, profesor.email)"></td>
             <td>{{ profesor.preferencias.observaciones || '-' }}</td>
             <td v-for="col in columnasProfesor" :key="col.key" class="puntuacion-profesor-cell">
               <span v-html="obtenerPuntuacionPorTipoYProfesor(solucionSeleccionadaInfo, col.tipo, profesor.email)"></span>
@@ -352,7 +352,7 @@ const estadoGeneradorCorto = computed(() => {
   }
 });
 
-// Computed para el texto de "Sin clase" que se actualiza automáticamente
+// Computed para el texto de "Preferencias diarias" que se actualiza automáticamente
 const textoSinClaseComputed = computed(() => {
   // Solo se ejecuta cuando cambian las dependencias relevantes
   const solucionInfo = solucionSeleccionadaInfo.value;
@@ -364,15 +364,15 @@ const textoSinClaseComputed = computed(() => {
     
     // Texto base estático
     const textoBase = preferencias.sinClasePrimeraHora 
-      ? 'primera hora' 
-      : 'última hora';
+      ? 'Evitar primera hora' 
+      : 'Evitar última hora';
     
     // Si hay información del generador y una solución seleccionada, combinar con puntuaciones
     if (solucionInfo && solucionInfo.puntuacionesDesglosadas) {
-      // Buscar la puntuación "Sin clase" para este profesor
+      // Buscar la puntuación "Preferencias diarias" para este profesor
       const puntuacion = solucionInfo.puntuacionesDesglosadas.find(p => 
         p.categoria === 'Profesor' && 
-        p.tipo === 'Sin clase' && 
+        p.tipo === 'Preferencias diarias' && 
         p.emailProfesor === emailProfesor
       );
       
@@ -644,15 +644,7 @@ const guardarConciliacion = async (email, conciliacion) => {
   }
 };
 
-// Métodos auxiliares para mostrar los datos (basados en G_EleccionDeHorarios.vue)
-const obtenerTextoNoTenerClase = (preferencias) => {
-  if (!preferencias || !preferencias.cargado) return '';
-  return preferencias.sinClasePrimeraHora 
-    ? 'primera hora' 
-    : 'última hora';
-};
-
-const obtenerHorasSinClase = (preferencias, emailProfesor) => {
+const obtenerPreferencias = (preferencias, emailProfesor) => {
   if (!preferencias || !preferencias.cargado || !preferencias.tramosHorarios) return '';
   
   const horasFormateadas = [];
@@ -677,10 +669,10 @@ const obtenerHorasSinClase = (preferencias, emailProfesor) => {
   
   // Si hay información del generador y una solución seleccionada, combinar con puntuaciones
   if (solucionSeleccionadaInfo.value && solucionSeleccionadaInfo.value.puntuacionesDesglosadas) {
-    // Buscar la puntuación "Horas sin clase" para este profesor
+    // Buscar la puntuación "Preferencias concretas" para este profesor
     const puntuacion = solucionSeleccionadaInfo.value.puntuacionesDesglosadas.find(p => 
       p.categoria === 'Profesor' && 
-      p.tipo === 'Horas sin clase' && 
+      p.tipo === 'Preferencias concretas' && 
       p.emailProfesor === emailProfesor
     );
     
@@ -1306,11 +1298,11 @@ const tiposPuntuacionProfesor = computed(() => {
   if (!solucionSeleccionadaInfo.value || !solucionSeleccionadaInfo.value.puntuacionesDesglosadas) {
     return [];
   }
-  // Extrae los tipos únicos de categoría 'Profesor', excluyendo "Sin clase" y "Horas sin clase"
+  // Extrae los tipos únicos de categoría 'Profesor', excluyendo "Preferencias diarias" y "Preferencias concretas"
   // ya que esta información se muestra en las columnas estáticas
   const tiposUnicos = new Set();
   solucionSeleccionadaInfo.value.puntuacionesDesglosadas.forEach(p => {
-    if (p.categoria === 'Profesor' && p.tipo !== 'Sin clase' && p.tipo !== 'Horas sin clase') {
+    if (p.categoria === 'Profesor' && p.tipo !== 'Preferencias diarias' && p.tipo !== 'Preferencias concretas') {
       tiposUnicos.add(p.tipo);
     }
   });
@@ -1804,7 +1796,7 @@ th {
   max-width: 150px;
 }
 
-/* Estilos específicos para la columna "Sin clase" */
+/* Estilos específicos para la columna "Preferencias diarias" */
 .sin-clase-cell {
   text-align: center;
   min-width: 150px;
