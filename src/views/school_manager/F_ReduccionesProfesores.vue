@@ -12,38 +12,53 @@
             <ion-input type="number" v-model.number="horas" min="0" max="50" step="1" class="form-input-numer"/>
           </label>
         </div>
-        <label class="form-label">
-          <input 
-            type="checkbox"
-            class="checkbox"
-            v-model="decideDireccion"/> Decide dirección
-        </label>
+                 <label class="form-label">
+           <input 
+             type="checkbox"
+             class="checkbox"
+             v-model="decideDireccion"/> Decide dirección
+         </label>
+         <div class="texto-instruccion">
+            Si posee docencia, elige un grupo:
+          </div>
+                   <FilterCursoEtapaGrupo 
+            v-model="cursosEtapasGruposSeleccionado" 
+            @actualizar-select="actualizarCurso(cursosEtapasGruposSeleccionado)" 
+            selectClass="select-sm" 
+            class="texto-dropdown"
+          />
         <!-- Aqui se guarda en la tabla de reducciones -->
         <button @click="crearReduccion(nombre, horas, decideDireccion)" class="btn-guardar">Guardar</button>
       </div>
       <!-- Tabla con todas las reducciones que existen -->
       <div class="card-cargar-reduccion">
         <div class="t-2">Tabla de reducciones</div>
-        <table>
-         <thead>
-           <tr>
-             <th class="columna">Nombre</th>
-             <th class="columna">Horas</th>
-             <th class="columna">Asigna dirección</th>
-             <th class="columna">Acción</th>
-           </tr>
-         </thead>
-         <tbody>
-            <tr v-for="(reduccion, index) in listaReducciones" :key="index">
-              <td class="columna">{{ reduccion.nombre }}</td>
-              <td class="columna">{{ reduccion.horas }}</td>
-              <td class="columna">{{ reduccion.decideDireccion === true ? 'Si' : 'No' }}</td>
-              <td class="columna">
-                <button @click="borrarReduccion(index)" class="btn-eliminar">&times;</button>
-              </td>
+                 <table>
+          <thead>
+            <tr>
+              <th class="columna">Nombre</th>
+              <th class="columna">Horas</th>
+              <th class="columna">Asigna dirección</th>
+              <th class="columna">Curso/Etapa/Grupo</th>
+              <th class="columna">Acción</th>
             </tr>
-         </tbody>
-        </table>
+          </thead>
+          <tbody>
+             <tr v-for="(reduccion, index) in listaReducciones" :key="index">
+               <td class="columna">{{ reduccion.nombre }}</td>
+               <td class="columna">{{ reduccion.horas }}</td>
+               <td class="columna">{{ reduccion.decideDireccion === true ? 'Si' : 'No' }}</td>
+               <td class="columna">
+                 {{ reduccion.curso && reduccion.etapa && reduccion.grupo 
+                    ? `${reduccion.curso}º ${reduccion.etapa} ${reduccion.grupo}` 
+                    : 'No asignado' }}
+               </td>
+               <td class="columna">
+                 <button @click="borrarReduccion(index)" class="btn-eliminar">&times;</button>
+               </td>
+             </tr>
+          </tbody>
+         </table>
       </div>
     </div>
     <div class="top-section-dos">
@@ -125,6 +140,7 @@ import { onMounted, ref } from 'vue';
 import { IonInput, IonToast } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { cargarReducciones, crearReducciones, borrarReducciones, obtenerProfesores, asignarReducciones, obtenerReduccionesProfesores, borrarReduccionesProfesores } from '@/services/schoolManager.js';
+import FilterCursoEtapaGrupo from '@/components/school_manager/FilterCursoEtapaGrupo.vue';
 
 const listaReducciones = ref([]);
 const decideDireccion = ref(false);
@@ -134,6 +150,7 @@ const listaProfesores = ref([]);
 const profesorSeleccionado = ref('');
 const reduccionSeleccionada = ref('');
 const listaReduccionesAsignadas = ref([]);
+const cursosEtapasGruposSeleccionado = ref('');
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -160,8 +177,22 @@ const crearReduccion = async (nombreRe, horasRe, decideDireccionRe) => {
       return;
     }
 
-    const response = await crearReducciones(nombreRe, horasRe, decideDireccionRe, toastMessage, toastColor, isToastOpen);
-    
+         let curso = undefined;
+     let etapa = undefined;
+     let grupo = undefined;
+
+     if (cursosEtapasGruposSeleccionado.value && cursosEtapasGruposSeleccionado.value !== '') {
+       curso = cursosEtapasGruposSeleccionado.value.curso;
+       etapa = cursosEtapasGruposSeleccionado.value.etapa;
+       grupo = cursosEtapasGruposSeleccionado.value.grupo;
+     }
+
+    const response = await crearReducciones(nombreRe, horasRe, decideDireccionRe, 
+                                            curso,
+                                            etapa,
+                                            grupo,
+                                            toastMessage, toastColor, isToastOpen);
+  
     if (response.ok) {
       mensajeActualizacion = "Reducción creada correctamente.";
       mensajeColor = "success";
@@ -187,7 +218,8 @@ const cargarReduccion = async () => {
 
     const response = await cargarReducciones(toastMessage, toastColor, isToastOpen);
     listaReducciones.value = response;
-    decideDireccion.value = false;
+         decideDireccion.value = false;
+     cursosEtapasGruposSeleccionado.value = '';
     
   } catch (error) {
     mensajeColor = 'danger';
@@ -446,16 +478,32 @@ onMounted(async () => {
   margin-left: 5rem;
 }
 
-.form-input-numer {
-  min-width: 60px;
-  text-align: center;
-  background: transparent;
-  border: none;
-  outline: none;
-  border-bottom: 1px solid black;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
-}
+ .form-input-numer {
+   min-width: 60px;
+   text-align: center;
+   background: transparent;
+   border: none;
+   outline: none;
+   border-bottom: 1px solid black;
+   padding: 0.5rem;
+   margin-bottom: 1rem;
+ }
+
+ .texto-instruccion {
+   text-align: left;
+   margin-top: 0.5rem;
+   margin-bottom: 0.5rem;
+   margin-left: 25px;
+   font-size: 0.9rem;
+   color: #666;
+   font-style: italic;
+ }
+
+ .texto-dropdown {
+   display: flex;
+   justify-content: center;
+   width: 100%;
+ }
 
 .btn-guardar {
   background-color: #0054e9;
@@ -474,20 +522,20 @@ onMounted(async () => {
   background-color: #2563EB;
 }
 
-.card-cargar-reduccion {
-  min-width: 590px;
-  min-height: 400px;
-  height: auto;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: auto;
-  height: 300px;
-}
+ .card-cargar-reduccion {
+   min-width: 700px;
+   min-height: 400px;
+   height: auto;
+   background-color: var(--form-bg-light);
+   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+   border-radius: 10px;
+   padding: 20px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   overflow: auto;
+   height: 300px;
+ }
 
 table{
   width: 100%;
@@ -495,15 +543,15 @@ table{
   margin-top: 1.5rem;
 }
 
-.columna {
-  width: 33%;
-  border: 1px solid currentColor;
-  padding-left: 0.5rem; 
-  padding-right: 0.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  text-align: center;
-}
+ .columna {
+   width: 20%;
+   border: 1px solid currentColor;
+   padding-left: 0.5rem; 
+   padding-right: 0.5rem;
+   padding-top: 0.5rem;
+   padding-bottom: 0.5rem;
+   text-align: center;
+ }
 
 .btn-eliminar {
   color: #EF4444;
@@ -558,10 +606,14 @@ table{
     border: 1px solid #444;
   }
 
-  .form-input,
-  .form-input-numer {
-    border-bottom: 1px solid #D1D5DB
-  }
+     .form-input,
+   .form-input-numer {
+     border-bottom: 1px solid #D1D5DB
+   }
+
+   .texto-instruccion {
+     color: #AAA;
+   }
 
   .btn-guardar {
     color: black;

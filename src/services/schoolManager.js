@@ -740,20 +740,26 @@ export const asignarAsignaturasADepartamentos = async (curso, etapa, grupo, nomb
   }
 
 /****************************** Ventana 6 Reducciones ******************************/
-export const crearReducciones = async (nombre, horas, decideDireccion, toastMessage, toastColor, isToastOpen) =>
+export const crearReducciones = async (nombre, horas, decideDireccion, curso, etapa, grupo, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const headers = {
+      'Authorization': `Bearer ${tokenPropio}`,
+      'nombre': nombre,
+      'horas': horas,
+      'decideDireccion': decideDireccion
+    };
+
+    // Solo agregar los headers si los valores están definidos
+    if (curso !== undefined) headers.curso = curso;
+    if (etapa !== undefined) headers.etapa = etapa;
+    if (grupo !== undefined) headers.grupo = grupo;
 
     return await fetch(schoolmanagerApiUrl + '/schoolManager/crearReducciones/reducciones',
       {
         method: 'POST',
-        headers:
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-          'nombre': nombre,
-          'horas': horas,
-          'decideDireccion': decideDireccion
-        },
+        headers: headers
       });
   }
 

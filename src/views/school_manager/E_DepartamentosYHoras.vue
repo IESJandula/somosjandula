@@ -5,18 +5,7 @@
     <div class="card-asignacion">
       <div class="t-2">Asignar asignaturas a departamentos</div>
       <div class="top-container">
-        <select 
-            id="profesor-select"
-            v-model="cursosYetapasSeleccionado" @change="actualizarCurso(cursosYetapasSeleccionado)"
-            class="dropdown-select">
-            <option value="" disabled hidden>Selecciona un curso-etapa-grupo</option>
-            <option
-                v-for="item in cursosYetapas"
-                :key="`${item.curso}-${item.etapa}-${item.grupo}`"
-                :value="item">
-              {{ item.curso }} - {{ item.etapa }} - {{ item.grupo }}
-            </option>
-        </select>
+        <FilterCursoEtapaGrupo v-model="cursosEtapasGruposSeleccionado" @actualizar-select="actualizarCurso(cursosEtapasGruposSeleccionado)" selectClass="select-sm" class="texto-dropdown"/>
         <div class="top-section">
           <ul class="lista-asignaturas p-2">
             <li v-for="asignatura in asignaturas" :key="asignatura.id" class="p-2 transparente ">
@@ -176,18 +165,18 @@ import { IonInput, IonToast } from "@ionic/vue";
 import { asignarAsignaturasADepartamentos, 
          asignarProfesoresADepartamentos, 
          obtenerAsignaturasPorCursoEtapaGrupo, 
-         obtenerCursosEtapasGrupos, 
          obtenerDatosDepartamentosConAsignaturas, 
          obtenerDepartamentos, 
          obtenerTodasLasAsignaturas, 
          quitarAsignaturasDeDepartamentos } from '@/services/schoolManager.js';
+import FilterCursoEtapaGrupo from '@/components/school_manager/FilterCursoEtapaGrupo.vue';
 import { crearToast } from '@/utils/toast.js';
 
 const departamentos = ref([]);
 const departamentoSeleccionado = ref('');
 const plantillaPorAsignatura = ref('');
-const cursosYetapas = ref([]);
-const cursosYetapasSeleccionado = ref('');
+const cursosEtapasGrupos = ref([]);
+const cursosEtapasGruposSeleccionado = ref('');
 const asignaturas = ref([]);
 const asignaturaSeleccionada = ref([]);
 const depPropietarioSeleccionado = ref('');
@@ -277,28 +266,14 @@ const obtenerDatosDepartamentoConAsignatura = async () => {
   }
 };
 
-const obtenerCursoEtapaGrupo = async () => {
-
-  try {
-
-    const response = await obtenerCursosEtapasGrupos(toastMessage, toastColor, isToastOpen);
-    cursosYetapas.value = response;
-
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
-    console.error(error);
-  }
-};
-
 //Asignaturas sin departamento propietario asignado
 const obtenerAsignaturas = async () => {
-  if (cursosYetapasSeleccionado.value) {
+  if (cursosEtapasGruposSeleccionado.value) {
     try {
       const response = await obtenerAsignaturasPorCursoEtapaGrupo(
-        cursosYetapasSeleccionado.value.curso,
-        cursosYetapasSeleccionado.value.etapa,
-        cursosYetapasSeleccionado.value.grupo,
+        cursosEtapasGruposSeleccionado.value.curso,
+        cursosEtapasGruposSeleccionado.value.etapa,
+        cursosEtapasGruposSeleccionado.value.grupo,
         toastMessage,
         toastColor,
         isToastOpen
@@ -334,7 +309,7 @@ const obtenerAsignaturasCompletas = async () => {
 };
 
 const actualizarCurso = (parametro) => {
-  cursosYetapasSeleccionado.value = parametro;
+  cursosEtapasGruposSeleccionado.value = parametro;
   obtenerAsignaturas()
 };
 
@@ -412,9 +387,9 @@ const asignarDepPropietario = async () => {
     {
       const nombreAsignatura = asignatura.nombreAsignaturas;
       response = await asignarAsignaturasADepartamentos(
-        cursosYetapasSeleccionado.value.curso,
-        cursosYetapasSeleccionado.value.etapa,
-        cursosYetapasSeleccionado.value.grupo,
+        cursosEtapasGruposSeleccionado.value.curso,
+        cursosEtapasGruposSeleccionado.value.etapa,
+        cursosEtapasGruposSeleccionado.value.grupo,
         nombreAsignatura,
         depPropietarioSeleccionado.value,
         depReceptorSeleccionado.value,
@@ -453,7 +428,6 @@ const asignarDepPropietario = async () => {
 
 onMounted(async () => {
   await obtenerDepartamento();
-  await obtenerCursoEtapaGrupo();
   await obtenerAsignaturasCompletas();
   await obtenerDatosDepartamentoConAsignatura();
 });

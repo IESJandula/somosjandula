@@ -204,15 +204,18 @@ export declare function asignarAsignaturasADepartamentos(curso: Ref<number>,
                                            isToastOpen: Ref<boolean>): Promise<void>;
 
 /****************************** Ventana 6 Reducciones ******************************/
-export declare function cargarReducciones(nombre: Ref<string>,
-                                           horas: Ref<number>,
-                                           decideDireccion: Ref<boolean>,
-                                           toastMessage: Ref<string>,
-                                           toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
-export declare function crearReducciones(toastMessage: Ref<string>,
-                                           toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>): Promise<void>;
+export declare function cargarReducciones(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>): Promise<any>;
+export declare function crearReducciones(nombre: Ref<string>,
+                                         horas: Ref<number>,
+                                         decideDireccion: Ref<boolean>,
+                                         curso: Ref<number>,
+                                         etapa: Ref<string>,
+                                         grupo: Ref<string>,
+                                         toastMessage: Ref<string>,
+                                         toastColor: Ref<string>,
+                                         isToastOpen: Ref<boolean>): Promise<void>;
 export declare function borrarReducciones(nombre: Ref<string>,
                                            horas: Ref<number>,
                                            decideDireccion: Ref<boolean>,
