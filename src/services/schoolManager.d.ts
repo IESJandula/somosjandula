@@ -328,28 +328,50 @@ export declare function obtenerEstadoGeneradorHorarios(toastMessage: Ref<string>
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<Response>;
 
-/****************************** Actualizar Sesiones ******************************/
-export declare function actualizarSesionBase(email: Ref<string>,
-                                             nombreAsignatura: Ref<string>,
-                                             curso: Ref<number>,
-                                             etapa: Ref<string>,
-                                             grupo: Ref<string>,
-                                             numeroSesion: Ref<number>,
-                                             diaDesc: Ref<string>,
-                                             tramoDesc: Ref<string>,
-                                             toastMessage: Ref<string>,
-                                             toastColor: Ref<string>,
-                                             isToastOpen: Ref<boolean>): Promise<Response>;
+/****************************** Actualizar Restricciones Impartir ******************************/
+export declare function actualizarRestriccionesImpartir(email: Ref<string>,
+                                                        nombreAsignatura: Ref<string>,
+                                                        curso: Ref<number>,
+                                                        etapa: Ref<string>,
+                                                        grupo: Ref<string>,
+                                                        numeroSesion: Ref<number>,
+                                                        diaDesc: Ref<string>,
+                                                        tramoDesc: Ref<string>,
+                                                        toastMessage: Ref<string>,
+                                                        toastColor: Ref<string>,
+                                                        isToastOpen: Ref<boolean>): Promise<Response>;
 
-/****************************** Obtener Sesiones Base ******************************/
-export declare function obtenerSesionesBase(email: Ref<string>,
-                                            nombreAsignatura: Ref<string>,
-                                            curso: Ref<number>,
-                                            etapa: Ref<string>,
-                                            grupo: Ref<string>,
-                                            toastMessage: Ref<string>,
-                                            toastColor: Ref<string>,
-                                            isToastOpen: Ref<boolean>): Promise<any>;
+/****************************** Obtener Restricciones Impartir ******************************/
+export declare function obtenerRestriccionesImpartir(email: Ref<string>,
+                                                     nombreAsignatura: Ref<string>,
+                                                     curso: Ref<number>,
+                                                     etapa: Ref<string>,
+                                                     grupo: Ref<string>,
+                                                     toastMessage: Ref<string>,
+                                                     toastColor: Ref<string>,
+                                                     isToastOpen: Ref<boolean>): Promise<any>;
+
+/****************************** Actualizar Restricciones Reduccion ******************************/
+
+export declare function actualizarRestriccionesReduccion(email: Ref<string>,
+                                                         nombreReduccion: Ref<string>,
+                                                         curso: Ref<number>,
+                                                         etapa: Ref<string>,
+                                                         grupo: Ref<string>,
+                                                         numeroSesion: Ref<number>,
+                                                         diaDesc: Ref<string>,
+                                                         tramoDesc: Ref<string>,
+                                                         toastMessage: Ref<string>,
+                                                         toastColor: Ref<string>,
+                                                         isToastOpen: Ref<boolean>): Promise<Response>;
+
+/****************************** Obtener Restricciones Reduccion ******************************/
+
+export declare function obtenerRestriccionesReduccion(email: Ref<string>,
+                                                     nombreReduccion: Ref<string>,
+                                                     toastMessage: Ref<string>,
+                                                     toastColor: Ref<string>,
+                                                     isToastOpen: Ref<boolean>): Promise<any>;
 
 /****************************** Obtener Lista de Días y Tramos ******************************/
 export declare function obtenerListaDiaTramoTipoHorario(toastMessage: Ref<string>,

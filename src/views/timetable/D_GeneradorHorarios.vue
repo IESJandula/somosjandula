@@ -198,7 +198,7 @@
     </div>
   </div>
 
-  <!-- Tarjeta de sesiones -->
+  <!-- Tarjeta de sesiones de asignaturas -->
   <div v-if="asignaturaSeleccionado" class="card-sesiones">
     <h2 class="t-2">Sesiones - {{ asignaturaSeleccionado.nombre }}</h2>
     
@@ -224,14 +224,58 @@
               Sesión {{ index + 1 }}
             </td>
             <td>
-              <select v-model="sesion.diaDesc" class="select-forzar" @change="actualizarSesionConDebounce(index)" :disabled="loadingDias">
+              <select v-model="sesion.diaDesc" class="select-forzar" @change="actualizarRestriccionImpartirSesionConDebounce(index)" :disabled="loadingDias">
                 <option v-for="dia in diasUnicos" :key="dia" :value="dia">
                   {{ dia }}
                 </option>
               </select>
             </td>
             <td>
-              <select v-model="sesion.tramoDesc" class="select-forzar" @change="actualizarSesionConDebounce(index)" :disabled="loadingTramos">
+              <select v-model="sesion.tramoDesc" class="select-forzar" @change="actualizarRestriccionImpartirSesionConDebounce(index)" :disabled="loadingTramos">
+                <option v-for="tramo in tramosUnicos" :key="tramo" :value="tramo">
+                  {{ tramo }}
+                </option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Tarjeta de sesiones de reducciones -->
+  <div v-if="reduccionSeleccionado" class="card-sesiones">
+    <h2 class="t-2">Reducciones - {{ reduccionSeleccionado.nombre }}</h2>
+    
+    <!-- Loading state para días y tramos -->
+    <div v-if="loadingDias || loadingTramos" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Cargando días y tramos disponibles...</p>
+    </div>
+    
+    <!-- Tabla de sesiones -->
+    <div v-else class="tabla-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Sesión</th>
+            <th>Forzar día</th>
+            <th>Forzar hora</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(sesion, index) in sesionesReduccion" :key="index">
+            <td>
+              Sesión {{ index + 1 }}
+            </td>
+            <td>
+              <select v-model="sesion.diaDesc" class="select-forzar" @change="actualizarRestriccionReduccionSesionConDebounce(index)" :disabled="loadingDias">
+                <option v-for="dia in diasUnicos" :key="dia" :value="dia">
+                  {{ dia }}
+                </option>
+              </select>
+            </td>
+            <td>
+              <select v-model="sesion.tramoDesc" class="select-forzar" @change="actualizarRestriccionReduccionSesionConDebounce(index)" :disabled="loadingTramos">
                 <option v-for="tramo in tramosUnicos" :key="tramo" :value="tramo">
                   {{ tramo }}
                 </option>
@@ -256,8 +300,10 @@ import {
   obtenerObservaciones,
   actualizarConciliacion,
   obtenerSolicitudes,
-  actualizarSesionBase,
-  obtenerSesionesBase,
+  actualizarRestriccionesImpartir,
+  obtenerRestriccionesImpartir,
+  actualizarRestriccionesReduccion,
+  obtenerRestriccionesReduccion,
   obtenerListaDias,
   obtenerListaTramos,
   seleccionarSolucion,
@@ -290,6 +336,8 @@ const loadingAsignaturas = ref(false);
 // Variables para sesiones
 const asignaturaSeleccionado = ref(null);
 const sesionesAsignatura = ref([]);
+const reduccionSeleccionado = ref(null);
+const sesionesReduccion = ref([]);
 const debounceTimers = ref({}); // Para evitar múltiples llamadas rápidas
 
 // Variables para días y tramos disponibles
@@ -561,7 +609,7 @@ const seleccionarAsignatura = async (asignatura) => {
 // Cargar restricciones existentes para la asignatura seleccionada
 const cargarRestriccionesExistentes = async () => {
   try {
-    const sesionesBase = await obtenerSesionesBase(
+    const restriccionesImpartir = await obtenerRestriccionesImpartir(
       profesorSeleccionado.value.email,
       asignaturaSeleccionado.value.nombre,
       asignaturaSeleccionado.value.curso,
@@ -573,18 +621,18 @@ const cargarRestriccionesExistentes = async () => {
     );
 
     // Aplicar las restricciones existentes a las sesiones
-    if (sesionesBase && sesionesBase.length > 0) {
-      sesionesBase.forEach(sesionBase => {
-        const sesionIndex = sesionBase.numeroSesion - 1; // Convertir a índice base 0
-        if (sesionIndex >= 0 && sesionIndex < sesionesAsignatura.value.length) {
-          const sesion = sesionesAsignatura.value[sesionIndex];
+    if (restriccionesImpartir && restriccionesImpartir.length > 0) {
+      restriccionesImpartir.forEach(restriccionImpartir => {
+        const restriccionImpartirIndex = restriccionImpartir.numeroRestriccion - 1; // Convertir a índice base 0
+        if (restriccionImpartirIndex >= 0 && restriccionImpartirIndex < sesionesAsignatura.value.length) {
+          const sesion = sesionesAsignatura.value[restriccionImpartirIndex];
           
           // Asignar valores solo si no son null
-          if (sesionBase.diaDesc !== null) {
-            sesion.diaDesc = sesionBase.diaDesc;
+          if (restriccionImpartir.diaDesc !== null) {
+            sesion.diaDesc = restriccionImpartir.diaDesc;
           }
-          if (sesionBase.tramoDesc !== null) {
-            sesion.tramoDesc = sesionBase.tramoDesc;
+          if (restriccionImpartir.tramoDesc !== null) {
+            sesion.tramoDesc = restriccionImpartir.tramoDesc;
           }
           
           sesion.cargaInicial = false; // Marcar como no carga inicial
@@ -939,7 +987,7 @@ const forzarDetencion = async () => {
 
 
 // Función con debounce para actualizar sesión automáticamente
-const actualizarSesionConDebounce = (index) => {
+const actualizarRestriccionImpartirSesionConDebounce = (index) => {
   // Limpiar timer anterior si existe
   if (debounceTimers.value[index]) {
     clearTimeout(debounceTimers.value[index]);
@@ -947,12 +995,12 @@ const actualizarSesionConDebounce = (index) => {
   
   // Crear nuevo timer
   debounceTimers.value[index] = setTimeout(() => {
-    actualizarSesion(index);
+    actualizarRestriccionImpartirSesion(index);
   }, 500); // 500ms de delay
 };
 
-// Actualizar una sesión específica
-const actualizarSesion = async (index) => {
+// Actualizar una sesión de restricción de asignatura específica
+const actualizarRestriccionImpartirSesion = async (index) => {
   const sesion = sesionesAsignatura.value[index];
   
   try {
@@ -962,13 +1010,13 @@ const actualizarSesion = async (index) => {
     }
 
     // Llamar al servicio para actualizar la restricción
-    const response = await actualizarSesionBase(
+    const response = await actualizarRestriccionesImpartir(
       profesorSeleccionado.value.email,
       asignaturaSeleccionado.value.nombre,
       asignaturaSeleccionado.value.curso,
       asignaturaSeleccionado.value.etapa,
       asignaturaSeleccionado.value.grupo,
-      sesion.numero,
+      sesion.numeroRestriccion,
       sesion.diaDesc,
       sesion.tramoDesc,
       toastMessage,
@@ -995,6 +1043,54 @@ const actualizarSesion = async (index) => {
       'danger', 
       'Error al actualizar la sesión'
     );
+  }
+};
+
+// Función con debounce para actualizar sesión automáticamente
+const actualizarRestriccionReduccionSesionConDebounce = (index) => {
+  // Limpiar timer anterior si existe
+  if (debounceTimers.value[index]) {
+    clearTimeout(debounceTimers.value[index]);
+  }
+  
+  // Crear nuevo timer
+  debounceTimers.value[index] = setTimeout(() => {
+    actualizarRestriccionReduccionSesion(index);
+  }, 500); // 500ms de delay
+};
+
+// Actualizar una sesión de restricción de reducción específica
+const actualizarRestriccionReduccionSesion = async (index) => {
+  const sesion = sesionesReduccion.value[index];
+  
+  try {
+    // Validar que tenemos todos los datos necesarios
+    if (!profesorSeleccionado.value || !reduccionSeleccionado.value) {
+      return; // Salir silenciosamente si no hay datos suficientes
+    }
+
+    // Llamar al servicio para actualizar la restricción
+    const response = await actualizarRestriccionesReduccion(
+      profesorSeleccionado.value.email,
+      reduccionSeleccionado.value.nombre,
+      reduccionSeleccionado.value.curso,
+      reduccionSeleccionado.value.etapa,
+      reduccionSeleccionado.value.grupo,
+      sesion.numeroRestriccion,
+      sesion.diaDesc,
+      sesion.tramoDesc,
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Error: ${errorData.message}`);
+    }
+  } catch (error) {
+    console.error('Error al actualizar la restricción de reducción:', error);
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar la restricción de reducción');
   }
 };
 

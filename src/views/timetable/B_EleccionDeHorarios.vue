@@ -673,6 +673,12 @@ const actualizarOtrasObservacionesVista = async () => {
       mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
     }
+    else
+    {
+      mensajeActualizacion = 'Otras observaciones actualizadas correctamente';
+      mensajeColor = 'success';
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    }
 
   } catch (error) {
     mensajeActualizacion = 'Error al actualizar las otras observaciones'

@@ -1176,12 +1176,12 @@ export const obtenerEstadoGeneradorHorarios = async (toastMessage, toastColor, i
     });
   }
 
-/****************************** Actualizar Sesiones Base ******************************/
-export const actualizarSesionBase = async (email, nombreAsignatura, curso, etapa, grupo, numeroSesion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) =>
+/****************************** Actualizar Restricciones Impartir ******************************/
+export const actualizarRestriccionesImpartir = async (email, nombreAsignatura, curso, etapa, grupo, numeroRestriccion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/sesionesBase',
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/restricciones_impartir',
     {
       method: 'POST',
       headers:
@@ -1192,19 +1192,19 @@ export const actualizarSesionBase = async (email, nombreAsignatura, curso, etapa
             'curso': curso,
             'etapa': etapa,
             'grupo': grupo,
-            'numeroSesion': numeroSesion,
+            'numeroRestriccion': numeroRestriccion,
             'diaDesc': diaDesc,
             'tramoDesc': tramoDesc
           },
     });
   }
 
-/****************************** Obtener Sesiones Base ******************************/
-export const obtenerSesionesBase = async (email, nombreAsignatura, curso, etapa, grupo, toastMessage, toastColor, isToastOpen) =>
+/****************************** Obtener Restricciones Impartir ******************************/
+export const obtenerRestriccionesImpartir = async (email, nombreAsignatura, curso, etapa, grupo, toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/sesionesBase',
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/restricciones_impartir',
     {
       method: 'GET',
       headers:
@@ -1225,6 +1225,53 @@ export const obtenerSesionesBase = async (email, nombreAsignatura, curso, etapa,
 
     return await response.json();
   }
+
+/****************************** Actualizar Restricciones Reduccion ******************************/  
+export const actualizarRestriccionesReduccion = async (email, nombreReduccion, curso, etapa, grupo, numeroRestriccion, diaDesc, tramoDesc, toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(schoolmanagerApiUrl + '/schoolManager/generador/restricciones_reduccion',
+    {
+      method: 'POST',
+      headers:
+          {
+            'Authorization': `Bearer ${tokenPropio}`,
+            'email': email,
+            'nombreReduccion': nombreReduccion,
+            'curso': curso,
+            'etapa': etapa,
+            'grupo': grupo,
+            'numeroRestriccion': numeroRestriccion,
+            'diaDesc': diaDesc,
+            'tramoDesc': tramoDesc
+          },
+    });
+  }
+
+/****************************** Obtener Restricciones Reduccion ******************************/
+export const obtenerRestriccionesReduccion = async (email, nombreReduccion, toastMessage, toastColor, isToastOpen) =>
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolmanagerApiUrl + '/schoolManager/generador/restricciones_reduccion',
+    {
+      method: 'GET',
+      headers:
+          {
+            'Authorization': `Bearer ${tokenPropio}`,
+            'email': email,
+            'nombreReduccion': nombreReduccion,
+          },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+  } 
 
 /****************************** Obtener Lista de Días y Tramos ******************************/
 export const obtenerListaDiaTramoTipoHorario = async (toastMessage, toastColor, isToastOpen) =>
