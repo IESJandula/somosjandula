@@ -31,11 +31,11 @@
         <tr v-for="(tramo, index) in tramosHorarios" :key="index">
           <td class="sticky-column">{{ tramo.tramoHorario }}</td>
           <td class="celda-horario" v-for="(dia, index) in diasSemanas" :key="index">
-            <span v-if="horarioProfesor[tramo.id]?.[dia.id]">
+            <span v-if="horarioProfesor[tramo.tramoHorario]?.[dia.diaSemana]">
               <div class="asignatura-info">
-                {{ horarioProfesor[tramo.id][dia.id].nombreAsignatura }} <br>
+                {{ horarioProfesor[tramo.tramoHorario][dia.diaSemana].nombreAsignatura }} <br>
                 <span class="curso-etapa-grupo-info">
-                  {{ horarioProfesor[tramo.id][dia.id].curso }}º {{ horarioProfesor[tramo.id][dia.id].etapa }} {{ horarioProfesor[tramo.id][dia.id].grupo }}
+                  {{ horarioProfesor[tramo.tramoHorario][dia.diaSemana].curso }}º {{ horarioProfesor[tramo.tramoHorario][dia.diaSemana].etapa }} {{ horarioProfesor[tramo.tramoHorario][dia.diaSemana].grupo }}
                 </span>
               </div>
             </span>
@@ -174,6 +174,7 @@ const filtrarTramosPorSesiones = (sesiones) => {
   // Extraer los tramos únicos que tiene el profesor
   const tramosDelProfesor = [...new Set(sesiones.map(sesion => sesion.tramoDesc))];
   console.log('Tramos únicos del profesor:', tramosDelProfesor);
+  console.log('Formato de tramos:', tramosDelProfesor.map(t => ({ tramo: t, hora: t.split(':')[0], parsed: parseInt(t.split(':')[0]) })));
   
   // Determinar si tiene sesiones de mañana y/o tarde
   const tieneSesionesManana = tramosDelProfesor.some(tramo => {
@@ -186,6 +187,7 @@ const filtrarTramosPorSesiones = (sesiones) => {
   const tieneSesionesTarde = tramosDelProfesor.some(tramo => {
     // Buscar tramos que empiecen a las 15:00 o después (tarde)
     const horaInicio = parseInt(tramo.split(':')[0]);
+    console.log(`Analizando tramo: ${tramo}, hora inicio: ${horaInicio}`);
     return horaInicio >= 15;
   });
   
@@ -211,6 +213,12 @@ const filtrarTramosPorSesiones = (sesiones) => {
     return false;
   });
   
+  console.log('=== RESUMEN FILTRADO ===');
+  console.log('Tiene sesiones mañana:', tieneSesionesManana);
+  console.log('Tiene sesiones tarde:', tieneSesionesTarde);
+  console.log('Tramos completos originales:', tramosHorariosCompletos.value);
+  console.log('Tramos filtrados:', tramosFiltrados);
+  
   console.log('Tramos filtrados finales:', tramosFiltrados);
   tramosHorarios.value = tramosFiltrados;
 };
@@ -235,7 +243,7 @@ const cargarHorarioProfesor = async () => {
     // Filtrar tramos según las sesiones que realmente tiene el profesor
     filtrarTramosPorSesiones(data);
     
-    // Reestructurar los datos del horario
+    // Reestructurar los datos del horario usando el tramo como clave
     const horarioEstructurado = {};
     
     for (const sesion of data) {
@@ -244,11 +252,15 @@ const cargarHorarioProfesor = async () => {
       const diaIndex = diasSemanas.value.findIndex(d => d.diaSemana === sesion.diaDesc);
       
       if (tramoIndex !== -1 && diaIndex !== -1) {
-        if (!horarioEstructurado[tramoIndex]) {
-          horarioEstructurado[tramoIndex] = {};
+        // Usar el tramo como clave en lugar del índice
+        const tramoKey = sesion.tramoDesc;
+        const diaKey = sesion.diaDesc;
+        
+        if (!horarioEstructurado[tramoKey]) {
+          horarioEstructurado[tramoKey] = {};
         }
         
-        horarioEstructurado[tramoIndex][diaIndex] = {
+        horarioEstructurado[tramoKey][diaKey] = {
           nombreAsignatura: sesion.asignatura,
           curso: sesion.curso || '',
           etapa: sesion.etapa || '',
@@ -257,6 +269,11 @@ const cargarHorarioProfesor = async () => {
         };
       }
     }
+    
+    console.log('=== HORARIO ESTRUCTURADO ===');
+    console.log('Tramos filtrados:', tramosHorarios.value);
+    console.log('Horario estructurado:', horarioEstructurado);
+    console.log('Estructura de claves:', Object.keys(horarioEstructurado));
     
     horarioProfesor.value = horarioEstructurado;
     mostrarTabla.value = true;
