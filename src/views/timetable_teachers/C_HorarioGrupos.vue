@@ -1,5 +1,5 @@
 <template>
-  <h1 class="titulo-pagina">Horario por Curso, Etapa y Grupo</h1>
+  <h1 class="titulo-pagina">Horario de grupos</h1>
   <div class="container">
     <!-- Dropdown para seleccionar curso / etapa / grupo -->
     <div class="curso-selector">
@@ -149,12 +149,10 @@ const obtenerTramosHorarios = async () => {
   }
 };
 
-// Función para filtrar tramos según horario matutino
+// Función para filtrar tramos según horario matutino del curso seleccionado
 const filtrarTramosPorHorario = (esHorarioMatutino) => {
   if (!tramosHorariosCompletos.value.length) return;
   
-  // Definir qué tramos son de mañana y cuáles de tarde
-  // Asumiendo que los primeros tramos son de mañana y los últimos de tarde
   const totalTramos = tramosHorariosCompletos.value.length;
   const mitadTramos = Math.ceil(totalTramos / 2);
   
@@ -175,8 +173,8 @@ const cargarHorarioCursoEtapaGrupo = async () => {
       return;
     }
 
-    // Filtrar tramos según el horario matutino del curso seleccionado
-    const esHorarioMatutino = cursoEtapaGrupoSeleccionado.value.horarioMatutino;
+    // Filtrar tramos según el horario del curso seleccionado
+    const esHorarioMatutino = !!cursoEtapaGrupoSeleccionado.value.horarioMatutino;
     filtrarTramosPorHorario(esHorarioMatutino);
 
     const data = await obtenerHorariosCursoEtapaGrupo(
@@ -192,16 +190,16 @@ const cargarHorarioCursoEtapaGrupo = async () => {
     const horarioEstructurado = {};
     
     for (const sesion of data) {
-      // Buscar el índice del tramo y día basado en las descripciones
-      const tramoIndex = tramosHorarios.value.findIndex(t => t.tramoHorario === sesion.tramoDesc);
-      const diaIndex = diasSemanas.value.findIndex(d => d.diaSemana === sesion.diaDesc);
+      // Mapear por IDs usados en la tabla (tramo.id y dia.id)
+      const tramo = tramosHorarios.value.find(t => t.tramoHorario === sesion.tramoDesc);
+      const dia = diasSemanas.value.find(d => d.diaSemana === sesion.diaDesc);
       
-      if (tramoIndex !== -1 && diaIndex !== -1) {
-        if (!horarioEstructurado[tramoIndex]) {
-          horarioEstructurado[tramoIndex] = {};
+      if (tramo && dia) {
+        if (!horarioEstructurado[tramo.id]) {
+          horarioEstructurado[tramo.id] = {};
         }
         
-        horarioEstructurado[tramoIndex][diaIndex] = {
+        horarioEstructurado[tramo.id][dia.id] = {
           nombreAsignatura: sesion.asignatura,
           nombreProfesor: sesion.nombreProfesor || '',
           apellidosProfesor: sesion.apellidosProfesor || ''
@@ -271,6 +269,20 @@ onMounted(async () => {
 }
 
 .curso-selector label {
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.horario-selector {
+  width: 80%;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.horario-selector label {
   margin-bottom: 10px;
   font-weight: bold;
   font-size: 16px;

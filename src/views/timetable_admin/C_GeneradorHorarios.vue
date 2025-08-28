@@ -593,7 +593,7 @@ const seleccionarAsignatura = async (asignatura) => {
   sesionesAsignatura.value = [];
   for (let i = 0; i < asignatura.horas; i++) {
     sesionesAsignatura.value.push({
-      numero: i + 1,
+      numeroRestriccion: i + 1,
       diaDesc: 'Sin Seleccionar',
       tramoDesc: 'Sin Seleccionar',
       cargaInicial: true // Flag para marcar si es la carga inicial

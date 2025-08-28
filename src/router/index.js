@@ -1,36 +1,46 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { ref } from 'vue';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { obtenerRolesUsuario } from '@/services/firebaseService';
+
 import LoginPage from '@/views/LoginPage.vue';
 import MainLayout from '@/components/MainLayout.vue';
+
+import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
+
 import AdminFirebasePage from '@/views/admin/AdminFirebasePage.vue';
+
 import PrintersAdminPage from '@/views/printers/PrintersAdminPage.vue';
 import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
+
 import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
 import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
 import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
+
 import AbsencesPage from '@/views/documents/AbsencesPage.vue';
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
-import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
+
 import ControlPanel from '@/views/projectors/ControlPanel.vue';
 import RemoteControl from '@/views/projectors/RemoteControl.vue';
 import EventsTable from '@/views/projectors/EventsTable.vue';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { obtenerRolesUsuario } from '@/services/firebaseService';
+
 import A_CargaMatriculas from '@/views/school_manager/A_CargaMatriculas.vue';
 import B_AsignaturaYBloque from '@/views/school_manager/B_AsignaturaYBloque.vue';
 import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
 import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
 import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
 import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
-import A_Administracion from '@/views/timetable/A_Administracion.vue';
-import B_EleccionDeHorarios from '@/views/timetable/B_EleccionDeHorarios.vue';
-import C_ValidadorDatos from '@/views/timetable/C_ValidadorDatos.vue';
-import D_GeneradorHorarios from '@/views/timetable/D_GeneradorHorarios.vue';  
-import E_HorarioIndividual from '@/views/timetable/E_HorarioIndividual.vue';
-import F_HorarioCursoEtapaGrupo from '@/views/timetable/F_HorarioCursoEtapaGrupo.vue';
 
-const routes = [
+import A_Administracion from '@/views/timetable_admin/A_Administracion.vue';
+import B_ValidadorDatos from '@/views/timetable_admin/B_ValidadorDatos.vue';
+import C_GeneradorHorarios from '@/views/timetable_admin/C_GeneradorHorarios.vue';
+
+import A_EleccionDeHorarios from '@/views/timetable_teachers/A_EleccionDeHorarios.vue';
+import B_HorarioPersonal from '@/views/timetable_teachers/B_HorarioPersonal.vue';
+import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
+
+const routes = [  
   {
     path: '/',
     redirect: '/login',
@@ -200,7 +210,7 @@ const routes = [
         },
       },
       {
-        path: 'timetable/admin',
+        path: 'timetable_admin/admin',
         component: A_Administracion,
         name: 'A_Administracion',
         meta: {
@@ -208,41 +218,41 @@ const routes = [
         },
       },
       {
-        path: 'timetable/choice',
-        component: B_EleccionDeHorarios,
-        name: 'B_EleccionDeHorarios',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'timetable/validation',
-        component: C_ValidadorDatos,
-        name: 'C_ValidadorDatos',
+        path: 'timetable_admin/validation',
+        component: B_ValidadorDatos,
+        name: 'B_ValidadorDatos',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
-        path: 'timetable/generator',
-        component: D_GeneradorHorarios,
-        name: 'D_GeneradorHorarios',
+        path: 'timetable_admin/generator',
+        component: C_GeneradorHorarios,
+        name: 'C_GeneradorHorarios',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
-        path: 'timetable/teachers',
-        component: E_HorarioIndividual,
-        name: 'E_HorarioIndividual',
+        path: 'timetable_teachers/choice',
+        component: A_EleccionDeHorarios,
+        name: 'A_EleccionDeHorarios',
         meta: {
           role: 'PROFESOR'
         },
       },
       {
-        path: 'timetable/course',
-        component: F_HorarioCursoEtapaGrupo,
-        name: 'F_HorarioCursoEtapaGrupo',
+        path: 'timetable_teachers/personal',
+        component: B_HorarioPersonal,
+        name: 'B_HorarioPersonal',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'timetable_teachers/groups',
+        component: C_HorarioGrupos,
+        name: 'C_HorarioGrupos',
         meta: {
           role: 'PROFESOR'
         },
