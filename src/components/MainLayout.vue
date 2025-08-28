@@ -16,7 +16,7 @@
           </ion-list>
         </ion-list>
         <ion-list>
-          <ion-item button @click="toggleSubMenuTimetableAdmin">
+          <ion-item v-if="mostrarTimetableAdmin" button @click="toggleSubMenuTimetableAdmin">
             Administración de horarios
             <ion-icon slot="end" :icon="timetableAdminSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
@@ -57,7 +57,7 @@
           </ion-list>
         </ion-list>
         <ion-list>
-          <ion-item button @click="toggleSubMenuTimetableTeachers">
+          <ion-item v-if="mostrarTimetableTeachers" button @click="toggleSubMenuTimetableTeachers">
             Horarios
             <ion-icon slot="end" :icon="timetableTeachersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
