@@ -1,7 +1,7 @@
 <template>
   <div class="file-drop-area" @dragover.prevent="handleDragOver" @dragleave.prevent="handleDragLeave"
     @drop.prevent="handleDrop" @click="triggerFileInput" :class="{ 'dragging': isDragging }">
-    <p v-if="!file">Arrastra un archivo aquí o haz clic para seleccionar</p>
+    <p v-if="!file">Arrastra un archivo o haz clic aquí</p>
     <p v-else>Archivo seleccionado: {{ file.name }}</p>
     <input ref="fileInput" type="file" class="hidden" @change="handleFileChange" />
   </div>
@@ -60,11 +60,21 @@ defineExpose({
 .file-drop-area {
   position: relative;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 64px;
   border: 2px dashed var(--button-border-light);
   border-radius: 10px;
   padding: 20px;
   cursor: pointer;
   background-color: var(--form-bg-light);
+}
+
+.file-drop-area p {
+  margin: 0;
+  width: 100%;
+  text-align: center;
 }
 
 .file-drop-area:hover {

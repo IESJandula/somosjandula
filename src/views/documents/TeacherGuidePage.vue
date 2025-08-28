@@ -17,7 +17,7 @@
   
   // URL del documento de Google Docs que deseas embeber
   const googleDocUrl = ref(
-    'https://docs.google.com/document/d/1uLGTRioelHaEF15n7GxekRCLHv9CoCmPfYp82jrzpJQ/preview'
+    'https://docs.google.com/document/d/19gYlWfXGjtuqHJXxb0cI6BZoy3DvTImh2ohbtDJ86HI/preview'
   );
 </script>
 <style scoped>

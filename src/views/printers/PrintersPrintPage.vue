@@ -1,216 +1,231 @@
 <template>
   <div class="container">
-    <!-- Fila superior: Formulario de Envío de PDF y Tabla de Resultados -->
-    <div class="top-section">
-      <!-- Columna derecha: Formulario de Envío de PDF -->
-      <div class="form-container">
-        <h1 class="title">Enviar PDF a Imprimir</h1>
-        <form @submit.prevent="submitForm" enctype="multipart/form-data">
-          <div class="form-section">
-            <!-- Usa el componente de carga de archivos -->
-            <FileUpload @file-selected="handleFileSelected" />
-            
-            <!-- Configuración de impresión -->
-            <ion-card class="printer-settings-card">
-              <ion-grid>
-                <!-- Primera Fila: Selector de impresora -->
-                <ion-row>
-                  <ion-col size="12">
-                    <ion-item>
-                      <ion-label position="stacked">Destino:</ion-label>
-                      <ion-select v-model="formData.printerSelected">
-                        <ion-select-option v-for="printer in printers" :key="printer.name" :value="printer.name">
-                          {{ printer.name }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
+         <!-- Fila superior: Formulario + PDF Preview O Tabla -->
+     <div class="top-section">
+       <!-- Columna izquierda: Formulario de Envío de PDF -->
+       <div class="form-container" ref="formContainerRef">
+         <h1 class="title">Enviar PDF a Imprimir</h1>
+         <form @submit.prevent="submitForm" enctype="multipart/form-data">
+           <div class="form-section">
+             <!-- Usa el componente de carga de archivos -->
+            <div class="file-upload-wrapper">
+              <FileUpload @file-selected="handleFileSelected" />
+            </div>
+             
+             <!-- Configuración de impresión -->
+             <ion-card class="printer-settings-card">
+               <ion-grid>
+                 <!-- Primera Fila: Selector de impresora -->
+                 <ion-row>
+                   <ion-col size="12">
+                     <ion-item>
+                       <ion-label position="stacked">Destino</ion-label>
+                       <ion-select v-model="formData.printerSelected">
+                         <ion-select-option v-for="printer in printers" :key="printer.name" :value="printer.name">
+                           {{ printer.name }}
+                         </ion-select-option>
+                       </ion-select>
+                     </ion-item>
+                   </ion-col>
+                 </ion-row>
 
-                <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
-                <ion-row>
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Copias:</ion-label>
-                      <ion-input type="number"
-                                  v-model="formData.copiesSelected"
-                                  min="1"
-                                  max="50"
-                                  step="1"
-                                  @input="validateCopiesInput"></ion-input>
-                    </ion-item>
-                  </ion-col>
+                 <!-- Segunda Fila: Copias, Color, Orientación y Caras -->
+                 <ion-row>
+                   <ion-col size="12" size-md="3">
+                     <ion-item>
+                       <ion-label position="stacked">Copias</ion-label>
+                       <ion-input type="number"
+                                   v-model="formData.copiesSelected"
+                                   min="1"
+                                   max="50"
+                                   step="1"
+                                   @input="validateCopiesInput"></ion-input>
+                     </ion-item>
+                   </ion-col>
 
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Color:</ion-label>
-                      <ion-select v-model="formData.colorSelected">
-                        <ion-select-option v-for="color in colors" :key="color" :value="color">
-                          {{ color }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
+                   <ion-col size="12" size-md="3">
+                     <ion-item>
+                       <ion-label position="stacked">Color</ion-label>
+                       <ion-select v-model="formData.colorSelected">
+                         <ion-select-option v-for="color in colors" :key="color" :value="color">
+                           {{ color }}
+                         </ion-select-option>
+                       </ion-select>
+                     </ion-item>
+                   </ion-col>
 
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Orientación:</ion-label>
-                      <ion-select v-model="formData.orientationSelected">
-                        <ion-select-option v-for="orientation in orientations" :key="orientation" :value="orientation">
-                          {{ orientation }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
+                   <ion-col size="12" size-md="3">
+                     <ion-item>
+                       <ion-label position="stacked">Orientación</ion-label>
+                       <ion-select v-model="formData.orientationSelected">
+                         <ion-select-option v-for="orientation in orientations" :key="orientation" :value="orientation">
+                           {{ orientation }}
+                         </ion-select-option>
+                       </ion-select>
+                     </ion-item>
+                   </ion-col>
 
-                  <ion-col size="12" size-md="3">
-                    <ion-item>
-                      <ion-label position="stacked">Caras:</ion-label>
-                      <ion-select v-model="formData.sidesSelected">
-                        <ion-select-option v-for="side in sides" :key="side" :value="side">
-                          {{ side }}
-                        </ion-select-option>
-                      </ion-select>
-                    </ion-item>
-                  </ion-col>
-                </ion-row>
+                   <ion-col size="12" size-md="3">
+                     <ion-item>
+                       <ion-label position="stacked">Caras</ion-label>
+                       <ion-select v-model="formData.sidesSelected">
+                         <ion-select-option v-for="side in sides" :key="side" :value="side">
+                           {{ side }}
+                         </ion-select-option>
+                       </ion-select>
+                     </ion-item>
+                   </ion-col>
+                 </ion-row>
 
-                <!-- Nueva fila: Selección de páginas -->
-                <ion-row v-if="pdfPreviewUrl && pagesToPrint > 0">
-                  <ion-col size="12">
-                    <div class="page-selection-controls">
-                      <h4>Selección de páginas</h4>
-                      <div class="selection-mode">
-                        <ion-segment v-model="selectionMode" @ionChange="updateSelectedPages">
-                          <ion-segment-button value="all">
-                            <ion-label>Todas págs.</ion-label>
-                          </ion-segment-button>
-                          <ion-segment-button value="range">
-                            <ion-label>Rango</ion-label>
-                          </ion-segment-button>
-                          <ion-segment-button value="custom">
-                            <ion-label>Personalizado</ion-label>
-                          </ion-segment-button>
-                        </ion-segment>
-                      </div>
+                 <!-- Nueva fila: Selección de páginas -->
+                 <ion-row v-if="pdfPreviewUrl && pagesToPrint > 0">
+                   <ion-col size="12">
+                     <div class="page-selection-controls">
+                       <h6>Selección de páginas</h6>
+                       <div class="selection-mode">
+                         <ion-segment v-model="selectionMode" @ionChange="updateSelectedPages">
+                           <ion-segment-button value="all">
+                             <ion-label>Todas</ion-label>
+                           </ion-segment-button>
+                           <ion-segment-button value="range">
+                             <ion-label>Rango</ion-label>
+                           </ion-segment-button>
+                           <ion-segment-button value="custom">
+                             <ion-label>Personalizado</ion-label>
+                           </ion-segment-button>
+                         </ion-segment>
+                       </div>
 
-                      <div v-if="selectionMode === 'range'" class="range-selector">
-                        <ion-item>
-                          <ion-label position="stacked">Desde página:</ion-label>
-                          <ion-input 
-                            v-model="pageRangeStart" 
-                            type="number" 
-                            min="1" 
-                            :max="pagesToPrint" 
-                            @ionChange="validateRangeInputs"
-                          ></ion-input>
-                        </ion-item>
-                        <ion-item>
-                          <ion-label position="stacked">Hasta página:</ion-label>
-                          <ion-input 
-                            v-model="pageRangeEnd" 
-                            type="number" 
-                            min="1" 
-                            :max="pagesToPrint" 
-                            @ionChange="validateRangeInputs"
-                          ></ion-input>
-                        </ion-item>
-                      </div>
+                       <div v-if="selectionMode === 'range'" class="range-selector">
+                         <ion-item>
+                           <ion-label position="stacked">Desde página:</ion-label>
+                           <ion-input 
+                             v-model="pageRangeStart" 
+                             type="number" 
+                             min="1" 
+                             :max="pagesToPrint" 
+                             @ionChange="validateRangeInputs"
+                           ></ion-input>
+                         </ion-item>
+                         <ion-item>
+                           <ion-label position="stacked">Hasta página:</ion-label>
+                           <ion-input 
+                             v-model="pageRangeEnd" 
+                             type="number" 
+                             min="1" 
+                             :max="pagesToPrint" 
+                             @ionChange="validateRangeInputs"
+                           ></ion-input>
+                         </ion-item>
+                       </div>
 
-                      <div v-if="selectionMode === 'custom'" class="custom-selector">
-                        <ion-item>
-                          <ion-label position="stacked">Páginas específicas:</ion-label>
-                          <ion-input 
-                            v-model="customPages"
-                            placeholder="Ej: 1,3,5-7,10" 
-                            @ionChange="validateCustomPages"
-                          ></ion-input>
-                          <ion-note>Usa comas para separar páginas y guiones para rangos (ej: 1,3,5-7,10)</ion-note>
-                        </ion-item>
-                      </div>
+                       <div v-if="selectionMode === 'custom'" class="custom-selector">
+                         <ion-item>
+                           <ion-label position="stacked">Páginas específicas:</ion-label>
+                           <ion-input 
+                             v-model="customPages"
+                             placeholder="Ejemplo: 1,3,5-7,10" 
+                             @ionChange="validateCustomPages"
+                           ></ion-input>
+                         </ion-item>
+                       </div>
 
-                      <div class="page-summary">
-                        <p>Se imprimirán {{ selectedPageCount }} páginas de {{ pagesToPrint }}.</p>
-                      </div>
-                    </div>
-                  </ion-col>
-                </ion-row>
+                       <div class="page-summary">
+                         <p>Se imprimirán {{ selectedPageCount }} páginas de {{ pagesToPrint }}.</p>
+                       </div>
+                     </div>
+                   </ion-col>
+                 </ion-row>
 
-                <!-- Tercera Fila: Mensaje de error -->
-                <ion-row v-if="mensajeError">
-                  <ion-col size="12">
-                    <ion-text color="warning" class="status-text">
-                      {{ mensajeError }}
-                    </ion-text>
-                  </ion-col>
-                </ion-row>
+                 <!-- Tercera Fila: Mensaje de error -->
+                 <ion-row v-if="mensajeError">
+                   <ion-col size="12">
+                     <ion-text color="warning" class="status-text">
+                       {{ mensajeError }}
+                     </ion-text>
+                   </ion-col>
+                 </ion-row>
 
-                <!-- Cuarta Fila: Información de la impresión -->
-                <ion-row v-if="formData.file">
-                  <ion-col size="12">
-                    <ion-text color="primary" class="folio-text">
-                      {{ mensajeImpresion }}
-                    </ion-text>
-                  </ion-col>
-                </ion-row>
+                 <!-- Cuarta Fila: Información de la impresión -->
+                 <ion-row v-if="formData.file">
+                   <ion-col size="12">
+                     <ion-text color="primary" class="folio-text">
+                       {{ mensajeImpresion }}
+                     </ion-text>
+                   </ion-col>
+                 </ion-row>
 
-                <!-- Quinta Fila: Información de páginas seleccionadas (si no son todas) 
-                <ion-row v-if="selectedPages.length > 0 && selectedPages.length !== pagesToPrint">
-                  <ion-col size="12">
-                    <ion-text color="secondary" class="pages-text">
-                      Se imprimirán únicamente {{ selectedPages.length }} de {{ pagesToPrint }} páginas.
-                    </ion-text>
-                  </ion-col>
-                </ion-row>-->
+                 <!-- Botón de Imprimir -->
+                 <ion-row class="ion-justify-content-center ion-padding-top">
+                   <ion-col size="auto">
+                     <ion-button type="submit" color="primary" expand="block" :disabled="isButtonDisabled">
+                       {{ buttonText }}
+                     </ion-button>
+                     <!-- Mensaje de incidencias -->
+                     <div class="incidence-message">
+                       ¿Algún problema? Crea una incidencia <a @click.prevent="navigateToIssues">aquí</a>
+                     </div>
+                   </ion-col>
+                 </ion-row>
 
-                <!-- Botón de Imprimir -->
-                <ion-row class="ion-justify-content-center ion-padding-top">
-                  <ion-col size="auto">
-                    <ion-button type="submit" color="primary" expand="block" :disabled="isButtonDisabled">
-                      {{ buttonText }}
-                    </ion-button>
-                    <!-- Mensaje de incidencias -->
-                    <div class="incidence-message">
-                      ¿Crees que sucede algún problema? Crea una incidencia <a @click.prevent="navigateToIssues">aquí</a>
-                    </div>
-                  </ion-col>
-                </ion-row>
+               </ion-grid>
+             </ion-card>
+           </div>
+         </form>
+       </div>
 
-              </ion-grid>
-            </ion-card>
-          </div>
-        </form>
-      </div>
-      <!-- Visor PDF cuando haya selección -->
-      <div v-if="pdfPreviewUrl" class="pdf-preview-container">
-        <ion-button fill="clear" class="close-preview-btn" @click="closePdfPreview">
-          <ion-icon :icon="closeOutline" size="small"></ion-icon>
-        </ion-button>
-        <PdfViewer 
-          :pdf-url="pdfPreviewUrl" 
-          @pages-counted="handlePagesCount" 
-          @selection-changed="handlePageSelectionChanged"
-        />
-      </div>
+       <!-- Columna derecha: PDF Preview O Tabla de resultados -->
+       <div v-if="pdfPreviewUrl" class="pdf-preview-container" ref="pdfContainerRef" :style="previewMaxHeight ? { maxHeight: previewMaxHeight + 'px' } : {}">
+         <ion-button fill="clear" class="close-preview-btn" @click="closePdfPreview">
+           <ion-icon :icon="closeOutline" size="small"></ion-icon>
+         </ion-button>
+         <div class="pdf-viewer-wrapper">
+           <PdfViewer 
+             :pdf-url="pdfPreviewUrl" 
+             @pages-counted="handlePagesCount" 
+             @selection-changed="handlePageSelectionChanged"
+           />
+         </div>
+       </div>
 
-      <!-- Tabla de resultados -->
-      <div class="table-container">
-        <h2 class="title">Mis impresiones</h2>
-        <div class="table-content">
-          <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="actualizarTabla" />
-        </div>
-        <!-- Botón de Actualizar centrado -->
-        <ion-row class="ion-justify-content-center">
-          <ion-col size="auto">
-            <ion-button color="primary" expand="block" @click="actualizarTabla">Actualizar</ion-button>
-          </ion-col>
-        </ion-row>
-      </div>
-    </div>
+       <div v-else class="table-container">
+         <h2 class="title">Mis impresiones</h2>
+         <div class="table-content">
+           <div class="table-scroll-inner">
+             <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="actualizarTabla" />
+           </div>
+         </div>
+         <!-- Botón de Actualizar centrado -->
+         <ion-row class="ion-justify-content-center">
+           <ion-col size="auto">
+             <ion-button color="primary" expand="block" @click="actualizarTabla">Actualizar</ion-button>
+           </ion-col>
+         </ion-row>
+       </div>
+     </div>
+
+     <!-- Fila inferior: Tabla de resultados (solo visible cuando SÍ hay PDF) -->
+     <div v-if="pdfPreviewUrl" class="bottom-section">
+       <div class="table-container full-width">
+         <h2 class="title">Mis impresiones</h2>
+         <div class="table-content">
+           <div class="table-scroll-inner">
+             <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="actualizarTabla" />
+           </div>
+         </div>
+         <!-- Botón de Actualizar centrado -->
+         <ion-row class="ion-justify-content-center">
+           <ion-col size="auto">
+             <ion-button color="primary" expand="block" @click="actualizarTabla">Actualizar</ion-button>
+           </ion-col>
+         </ion-row>
+       </div>
+     </div>
   </div>
 </template>
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
+import { onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
@@ -226,6 +241,12 @@ import { closeOutline } from 'ionicons/icons';
 
 // Configuramos la URL del Worker
 GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+
+const fileUploadRef = ref(null);
+const formContainerRef = ref(null);
+const pdfContainerRef = ref(null);
+const previewMaxHeight = ref(null);
+let formResizeObserver = null;
 
 const formData = ref({
   printerSelected: '',
@@ -295,15 +316,34 @@ const handleFileSelected = (selectedFile) => {
     pageRangeEnd.value = 1;
     customPages.value = '';
     selectedPageCount.value = 0;
+
+    nextTick(() => syncPreviewHeight());
+  }
+};
+
+// Sincroniza la altura del preview con la altura del formulario
+const syncPreviewHeight = () => {
+  try {
+    if (formContainerRef?.value) {
+      const rect = formContainerRef.value.getBoundingClientRect();
+      // Restar padding si es necesario (20px arriba y abajo -> 40)
+      previewMaxHeight.value = Math.max(0, rect.height);
+    }
+  } catch (e) {
+    // noop
   }
 };
 
 // Cierra la vista previa del PDF
 const closePdfPreview = () => {
+  console.log('❌ closePdfPreview llamado');
+  console.log('📊 Estado antes de cerrar - pdfPreviewUrl:', pdfPreviewUrl.value ? 'SÍ' : 'NO');
   if (pdfPreviewUrl.value) {
     URL.revokeObjectURL(pdfPreviewUrl.value);
     pdfPreviewUrl.value = '';
+    console.log('🗑️ PDF Preview cerrado, pdfPreviewUrl limpiado');
   }
+  console.log('📊 Estado después de cerrar - pdfPreviewUrl:', pdfPreviewUrl.value ? 'SÍ' : 'NO');
 };
 
 // Recibe el conteo de páginas desde el componente PdfViewer
@@ -388,6 +428,24 @@ watch(
     validatePrint();
   }
 );
+
+// Watcher para monitorear cambios en pdfPreviewUrl
+watch(pdfPreviewUrl, (newValue, oldValue) => {
+  console.log('👀 pdfPreviewUrl cambió:', { 
+    anterior: oldValue ? 'SÍ' : 'NO', 
+    actual: newValue ? 'SÍ' : 'NO',
+    valor: newValue 
+  });
+  nextTick(() => syncPreviewHeight());
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', syncPreviewHeight);
+  if (formResizeObserver) {
+    try { formResizeObserver.disconnect(); } catch { /* noop */ }
+    formResizeObserver = null;
+  }
+});
 
 // Función para verificar el estado de la impresora seleccionada
 const checkPrinterStatus = () => {
@@ -485,6 +543,9 @@ const submitForm = async () =>
         mensajeError.value = 'PDF enviado con éxito';
         await actualizarTabla();
         startCountdown();  // Inicia la cuenta regresiva solo si la respuesta es exitosa
+        // Restablecer layout: ocultar preview y volver tabla a la derecha
+        console.log('🔄 Llamando a closePdfPreview para resetear layout...');
+        closePdfPreview();
       }
       else
       {
@@ -531,6 +592,16 @@ onMounted(async () => {
   await obtenerConstantesInit(); // Llama a la función que obtendrá las constantes
   await nextTick(); // Asegura que Vue haya procesado los cambios antes de verificar el estado de la impresora
   checkPrinterStatus(); // Verifica el estado de la impresora inicial
+  syncPreviewHeight();
+  window.addEventListener('resize', syncPreviewHeight);
+
+  // Observa cambios de tamaño del formulario para ajustar el preview en caliente
+  if (window.ResizeObserver && formContainerRef?.value) {
+    formResizeObserver = new ResizeObserver(() => {
+      syncPreviewHeight();
+    });
+    formResizeObserver.observe(formContainerRef.value);
+  }
 });
 
 const obtenerDatos = async () => {
@@ -711,15 +782,16 @@ watch(
 
 .top-section {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 20px;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 16px;
 }
 
 .form-container {
-  flex: 1 1 45%;
-  min-width: 300px;
-  max-width: 600px;
+  flex: 0 1 38%;
+  min-width: 280px;
+  max-width: none;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -749,9 +821,9 @@ ion-input {
 }
 
 .table-container {
-  flex: 1 1 55%;
-  min-width: 300px;
-  max-width: 90%;
+  flex: 1 1 62%;
+  min-width: 380px;
+  max-width: none;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px;
   border-radius: 10px;
@@ -761,11 +833,28 @@ ion-input {
   justify-content: space-between;
 }
 
+.table-container.full-width {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
 .table-content {
   flex-grow: 1;
   max-height: 400px;
   overflow-y: auto;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Forzar scroll horizontal cuando la tabla tenga muchas columnas */
+.table-content table {
+  width: 100%;
+  min-width: 1600px;
+}
+ 
+.table-scroll-inner {
+  width: 100%;
+  min-width: 1600px; /* fuerza scroll si el contenedor es más estrecho */
 }
 
 .title {
@@ -844,9 +933,9 @@ ion-input {
 }
 
 .pdf-preview-container {
-  flex: 1 1 55%;
-  min-width: 300px;
-  max-width: 90%;
+  flex: 1 1 62%;
+  min-width: 380px;
+  max-width: none;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -854,6 +943,7 @@ ion-input {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  height: 100%;
 }
 
 .close-preview-btn {
@@ -863,6 +953,12 @@ ion-input {
   z-index: 5;
   --padding-start: 5px;
   --padding-end: 5px;
+}
+
+.pdf-viewer-wrapper {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 /* Modo oscuro */
@@ -928,8 +1024,25 @@ ion-input {
   margin-top: 20px;
 }
 
+.page-selection-controls h6 {
+  margin-bottom: 2px;
+}
+
 .selection-mode {
-  margin-bottom: 10px;
+  margin-top: 0;
+  margin-bottom: 4px;
+}
+
+/* Reducir tamaño de texto de las opciones del segmento (TODAS PÁGS., RANGO, PERSONALIZA) */
+.selection-mode ion-label {
+  font-size: 13px;
+  text-transform: none;
+}
+
+/* Ionic aplica mayúsculas a los botones del segmento; lo anulamos */
+.selection-mode :deep(.segment-button) {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .range-selector,
@@ -951,10 +1064,35 @@ ion-input {
   }
 
   .form-container,
-  .table-container {
+  .table-container,
+  .pdf-preview-container {
     flex: 1 1 100%;
     max-width: 100%;
     min-width: unset;
+  }
+
+  .bottom-section {
+    margin-top: 20px;
+  }
+}
+
+/* Estilos para la nueva estructura */
+.bottom-section {
+  margin-top: 20px;
+}
+
+.table-container.full-width {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+
+.file-upload-wrapper {
+  max-width: 420px;
+}
+
+@media (max-width: 768px) {
+  .file-upload-wrapper {
+    max-width: 100%;
   }
 }
 </style>

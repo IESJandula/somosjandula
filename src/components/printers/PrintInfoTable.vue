@@ -1,27 +1,27 @@
 <template>
-  <div class="p-10 bg-gray-200 rounded-2xl shadow-md shadow-gray-500 h-[38rem] overflow-auto overflow-x-auto">
-    <table class="table-fixed w-full">
+  <div class="p-10 bg-gray-200 rounded-2xl shadow-md shadow-gray-500 overflow-auto overflow-x-auto">
+    <table class="table-auto w-full">
       <thead>
         <tr class="py-5">
-          <th class="w-1/12 text-left pb-3 text-lg">Fecha</th>
-          <th v-if="adminRole" class="w-1/12 text-left pb-3 text-lg">Usuario</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Fichero</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Estado</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Impresora</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Copias</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Color</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Orientación</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Caras</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Tamaño (KB)</th>
-          <th class="w-1/6 text-left pb-3 text-lg">Páginas PDF</th>
-          <th class="w-1/12 text-left pb-3 text-lg">Hojas totales</th>
+          <th class="w-[10%] text-left pb-3 text-lg">Fecha</th>
+          <th v-if="adminRole" class="w-[12%] text-left pb-3 text-lg">Usuario</th>
+          <th class="w-[12%] text-left pb-3 text-lg">Fichero</th>
+          <th class="w-[7%] text-left pb-3 text-lg">Estado</th>
+          <th class="w-[12%] text-left pb-3 text-lg">Impresora</th>
+          <th class="w-[5%] text-left pb-3 text-lg">Copias</th>
+          <th class="w-[7%] text-left pb-3 text-lg">Color</th>
+          <th class="w-[9%] text-left pb-3 text-lg">Orientación</th>
+          <th class="w-[5%] text-left pb-3 text-lg">Caras</th>
+          <th class="w-[9%] text-left pb-3 text-lg">Tamaño (KB)</th>
+          <th class="w-[6%] text-left pb-3 text-lg">Páginas PDF</th>
+          <th class="w-[6%] text-left pb-3 text-lg">Hojas totales</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(print, index) in info" :key="index">
-          <td class="truncate text-left pl-1">{{ formatDate(print.date) }}</td>
-          <td v-if="adminRole" class="truncate text-left pl-1">{{ print.user }}</td>
-          <td class="truncate text-left pl-1">{{ print.fileName }}</td>
+          <td class="truncate text-left pl-1" :title="formatDate(print.date)">{{ formatDate(print.date) }}</td>
+          <td v-if="adminRole" class="truncate text-left pl-1" :title="print.user">{{ print.user }}</td>
+          <td class="truncate text-left pl-1" :title="print.fileName">{{ print.fileName }}</td>
           <td :title="print.errorMessage" class="truncate text-left pl-1">
             {{ print.status }}
             <ion-icon v-if="print.status === 'Pendiente'"
@@ -181,5 +181,6 @@ export default defineComponent({
     color: #76c7c0;
   }
 }
+/* Columna fichero se controla por porcentaje arriba; mantener truncado */
 </style>
 

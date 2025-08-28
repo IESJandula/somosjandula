@@ -69,7 +69,11 @@
 
       <!-- Tabla de resultados -->
       <div class="table-container">
-        <PrintInfoTable :info="filteredInfo" :adminRole="true" @actualizar-tabla="submitForm" />
+        <div class="table-content">
+          <div class="table-scroll-inner">
+            <PrintInfoTable :info="filteredInfo" :adminRole="true" @actualizar-tabla="submitForm" />
+          </div>
+        </div>
       </div>
     </div>
 
@@ -355,8 +359,19 @@ onMounted(() => {
   border-radius: 10px;
   padding: 20px;
   max-height: 400px;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.table-content {
   overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 360px;
+}
+
+.table-scroll-inner {
+  min-width: 1600px;
+  width: 100%;
 }
 
 .printer-status-table {
