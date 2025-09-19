@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import LoginPage from '@/views/LoginPage.vue';
 import MainLayout from '@/components/MainLayout.vue';
 import AdminFirebasePage from '@/views/admin/AdminFirebasePage.vue';
+import AdminNotificacionesPage from '@/views/admin/AdminNotificacionesPage.vue';
 import PrintersAdminPage from '@/views/printers/PrintersAdminPage.vue';
 import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
 import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
@@ -23,6 +24,7 @@ import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
 import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
 import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
 import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
+import G_PonteAlDia from '@/views/school_manager/G_PonteAlDia.vue';
 import A_Administracion from '@/views/timetable/A_Administracion.vue';
 import B_EleccionDeHorarios from '@/views/timetable/B_EleccionDeHorarios.vue';
 import C_ValidadorDatos from '@/views/timetable/C_ValidadorDatos.vue';
@@ -59,6 +61,14 @@ const routes = [
         path: 'admin/firebase',
         component: AdminFirebasePage,
         name: 'AdminFirebase',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: 'admin/notificaciones',
+        component: AdminNotificacionesPage,
+        name: 'AdminNotificaciones',
         meta: {
           role: 'ADMINISTRADOR'
         },
@@ -131,6 +141,14 @@ const routes = [
         path: 'school_manager/cargaMatriculas',
         component: A_CargaMatriculas,
         name: 'A_CargaMatriculas',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'school_manager/ponteAlDia',
+        component: G_PonteAlDia,
+        name: 'Ponte_Al_Dia',
         meta: {
           role: 'DIRECCION'
         },

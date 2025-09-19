@@ -11,6 +11,9 @@
           <ion-list v-if="adminSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
           </ion-list>
+          <ion-list v-if="adminSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/admin/notificaciones')">Notificaciones</ion-item>
+          </ion-list>
         </ion-list>
         <ion-list>
           <ion-item button @click="toggleSubMenuPrinters">
@@ -79,6 +82,9 @@
             Gestión de matriculas
             <ion-icon slot="end"
               :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-item button @click="navigateAndCloseMenu('/school_manager/ponteAlDia')">
+            Ponte al día
           </ion-item>
           <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">1. Carga de matrículas</ion-item>
