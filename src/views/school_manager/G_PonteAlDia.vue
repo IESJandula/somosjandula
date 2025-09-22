@@ -6,9 +6,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <!-- ion-content centrado -->
     <ion-content class="ion-padding content-center">
-
       <div class="carousel">
         <div class="carousel-content">
           <img :src="slides[currentIndex].image" alt="slide" />
@@ -19,7 +17,6 @@
         <ion-button fill="clear" class="arrow left" @click="prevSlide">‹</ion-button>
         <ion-button fill="clear" class="arrow right" @click="nextSlide">›</ion-button>
       </div>
-
     </ion-content>
   </ion-page>
 </template>
@@ -51,7 +48,7 @@ export default defineComponent({
     onMounted(() => {
       intervalId = setInterval(() => {
         nextSlide();
-      }, 6000); // cada 6s pasa de slide
+      }, 6000);
     });
 
     onBeforeUnmount(() => {
@@ -69,50 +66,53 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/* Centrado del contenido dentro de ion-content */
+/* Centrado dentro de ion-content */
 .content-center {
   display: flex;
-  justify-content: center;  /* centro horizontal */
-  align-items: center;      /* centro vertical */
+  justify-content: center;
+  align-items: center;
   min-height: 100%;
 }
 
 .carousel {
   position: relative;
   width: 100%;
-  max-width: 800px;
+  max-width: 900px;
   margin: auto;
   text-align: center;
 }
 
 .carousel-content {
   width: 100%;
-  height: 400px; /* altura fija */
+  height: 50vh; /* altura relativa a pantalla */
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: #000; /* fondo para las franjas */
-  border-radius: 10px;
+  background: #000;
+  border-radius: 12px;
+  padding: 10px;
 }
 
 .carousel-content img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain; /* encuadra la imagen completa */
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* mantiene proporción */
   border-radius: 10px;
 }
 
 .carousel-content p {
   margin-top: 12px;
-  font-size: 18px;
+  font-size: 2.5vw; /* texto relativo */
   font-weight: bold;
   color: white;
 }
 
+/* Botones flecha */
 .arrow {
   position: absolute;
-  top: 45%;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 32px;
   --color: white;
   z-index: 10;
@@ -122,5 +122,42 @@ export default defineComponent({
 }
 .right {
   right: 10px;
+}
+
+/* 📱 Móviles */
+@media (max-width: 600px) {
+  .carousel-content {
+    height: 40vh;
+  }
+  .carousel-content p {
+    font-size: 14px;
+    padding: 0 8px;
+  }
+  .arrow {
+    font-size: 24px;
+  }
+}
+
+/* 📟 Tablets */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .carousel-content {
+    height: 45vh;
+  }
+  .carousel-content p {
+    font-size: 18px;
+  }
+  .arrow {
+    font-size: 28px;
+  }
+}
+
+/* 💻 Escritorio */
+@media (min-width: 1025px) {
+  .carousel-content {
+    height: 500px;
+  }
+  .carousel-content p {
+    font-size: 20px;
+  }
 }
 </style>

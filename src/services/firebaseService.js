@@ -3,6 +3,7 @@ import { crearToast } from '@/utils/toast.js';
 import { getAuth } from "firebase/auth";
 import { SESSION_JWT_TOKEN } from '@/utils/constants' ;
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios' ;
 
 export async function importarUsuarios(toastMessage, toastColor, isToastOpen, file)
 {
@@ -252,4 +253,66 @@ export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
           'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
       }
   }).then(res => res.json());
+}
+
+export async function crearNotificacionWeb(toastMessage, toastColor, isToastOpen, notificacion) {
+  try {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      client_id: "app123",
+      nombre: "MiAplicacionDePrueba",
+      texto: notificacion.texto,
+      fecha_inicio: notificacion.fechaInicio,
+      fecha_fin: notificacion.fechaFin,
+      nivel: notificacion.nivel,
+      roles: notificacion.roles.join(","),
+      imagen: notificacion.imagen || ""
+    };
+
+    await axios.post(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, null, { headers });
+
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación creada correctamente");
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen) {
+  try {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const { data } = await axios.get(`${firebaseApiUrl}/notifications_web/obtenerNotificacionesHoy`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        usuario: "admin" 
+      }
+    });
+    if (!data || data.length === 0) {
+      crearToast(toastMessage, toastColor, isToastOpen, "warning", "No hay notificaciones hoy");
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+export async function eliminarNotificacionWeb(toastMessage, toastColor, isToastOpen, id) {
+  try {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    await axios.delete(`${firebaseApiUrl}/notifications_web/eliminarNotificacionWeb/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación eliminada");
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
 }

@@ -22,6 +22,16 @@ export interface NombreYApellidos {
   apellidos: string
 }
 
+export interface NotificacionWeb {
+  id?: number;
+  texto: string;
+  fechaInicio: string;
+  fechaFin: string;
+  nivel: string;
+  roles: string[];
+  imagen?: string;
+}
+
 export function validarRolesMenu(toastMessage: Ref<string>,
                                  toastColor: Ref<string>,
                                  isToastOpen: Ref<boolean>): Promise<RolesMenu>;
@@ -49,3 +59,17 @@ export async function obtenerTokenJWTValido(toastMessage: Ref<string>,
 export async function obtenerInfoUsuarios(toastMessage: Ref<string>,
                                           toastColor: Ref<string>,
                                           isToastOpen: Ref<boolean>): Promise<[]>;
+
+export declare function crearNotificacionWeb(toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>,
+                                            notificacion: NotificacionWeb): Promise<void>;
+
+export declare function obtenerNotificacionesHoy(toastMessage: Ref<string>,
+                                                toastColor: Ref<string>,
+                                                isToastOpen: Ref<boolean>): Promise<NotificacionWeb[]>;
+
+export declare function eliminarNotificacionWeb(toastMessage: Ref<string>,
+                                               toastColor: Ref<string>,
+                                               isToastOpen: Ref<boolean>,
+                                               idNotificacion: number): Promise<void>;

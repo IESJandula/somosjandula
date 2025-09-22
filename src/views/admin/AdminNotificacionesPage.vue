@@ -137,9 +137,12 @@ import {
   IonToast,
   IonDatetime,
 } from "@ionic/vue";
-import axios from "axios";
-import { crearToast } from "@/utils/toast.js";
-//import { Auth } from 'firebase/auth';
+
+import {
+  crearNotificacionWeb,
+  obtenerNotificacionesHoy,
+  eliminarNotificacionWeb,
+} from "@/services/firebaseService";
 
 const texto = ref("");
 const fechaInicio = ref("");
@@ -149,7 +152,7 @@ const roles = ref([]);
 const imagen = ref(null);
 
 const notificaciones = ref([]);
-const rolesDisponibles = ["ADMINISTRADOR", "PROFESOR", "APLICACION"]; // ⚡ cámbialo por los roles de tu proyecto base
+const rolesDisponibles = ["ADMINISTRADOR", "PROFESOR", "DIRECCIÓN"]; 
 
 // Toast
 const isToastOpen = ref(false);
@@ -161,56 +164,25 @@ const onFileChange = (e) => {
 };
 
 const crearNotificacion = async () => {
-  try {
-    const headers = {
-      client_id: "app123",
-      nombre: "MiAplicacionDePrueba",
-      texto: texto.value,
-      fecha_inicio: fechaInicio.value.split("T")[0], // yyyy-MM-dd
-      fecha_fin: fechaFin.value.split("T")[0],
-      nivel: nivel.value,
-      roles: roles.value.join(","),
-      imagen: imagen.value ? imagen.value.name : "",
-      Authorization: "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhcHAxMjMiLCJyb2xlcyI6WyJST0xFX0FQTElDQUNJT04iXSwibm9tYnJlIjoiTWlBcGxpY2FjaW9uRGVQcnVlYmEifQ.IPuStT6qTcVmOdbUjbDV888Ihd4k7kaSfTHizkPqgNaWFqnd_9T31bdtLod0ZU20yYrkkcJDK7BRDpjijiHaK4s2BUxINolTSQE5sEnE00lWfOZYa4yZ1h487LW7x9dT2uhzxYVNMIg-dCtdl-lBxHl0uxWfoBiq1gPGJUFbHbn2BDYMjoJAY747mdYc85a046GdhwIG3uoCllT925bsHiECyoThPlWNBN9VP3RDiU49NX7PxSPyV_t9S9xW1PS1c-gO_iO-JN522rf1Cgzo9Hp5UBlTgaeilpLmf7lp8u7z8iVjSSg-iq-utcgGR6zDkv_QVHQh81Sg1YeBwa6Hbw"
-    };
-
-    await axios.post("http://localhost:8083/notifications_web/crearNotificacionWeb", null, { headers });
-
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación creada correctamente");
-    cargarNotificaciones();
-  } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
-  }
+  await crearNotificacionWeb(toastMessage, toastColor, isToastOpen, {
+    texto: texto.value,
+    fechaInicio: fechaInicio.value.split("T")[0],
+    fechaFin: fechaFin.value.split("T")[0],
+    nivel: nivel.value,
+    roles: roles.value,
+    imagen: imagen.value ? imagen.value.name : ""
+  });
+  await cargarNotificaciones();
 };
 
 const cargarNotificaciones = async () => {
-  try {
-    const { data } = await axios.get("http://localhost:8083/notifications_web/obtenerNotificacionesHoy", {
-      headers: { 
-        usuario: "admin", 
-        Authorization: "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhcHAxMjMiLCJyb2xlcyI6WyJST0xFX0FQTElDQUNJT04iXSwibm9tYnJlIjoiTWlBcGxpY2FjaW9uRGVQcnVlYmEifQ.IPuStT6qTcVmOdbUjbDV888Ihd4k7kaSfTHizkPqgNaWFqnd_9T31bdtLod0ZU20yYrkkcJDK7BRDpjijiHaK4s2BUxINolTSQE5sEnE00lWfOZYa4yZ1h487LW7x9dT2uhzxYVNMIg-dCtdl-lBxHl0uxWfoBiq1gPGJUFbHbn2BDYMjoJAY747mdYc85a046GdhwIG3uoCllT925bsHiECyoThPlWNBN9VP3RDiU49NX7PxSPyV_t9S9xW1PS1c-gO_iO-JN522rf1Cgzo9Hp5UBlTgaeilpLmf7lp8u7z8iVjSSg-iq-utcgGR6zDkv_QVHQh81Sg1YeBwa6Hbw"
-      },
-    });
-    notificaciones.value = data;
-  } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
-  }
+  notificaciones.value = await obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen);
 };
 
 const eliminarNotificacion = async (n) => {
-  try {
-    await axios.delete(`http://localhost:8083/notifications_web/eliminarNotificacionWeb/${n.id}`, {
-      headers: {
-        Authorization: "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhcHAxMjMiLCJyb2xlcyI6WyJST0xFX0FQTElDQUNJT04iXSwibm9tYnJlIjoiTWlBcGxpY2FjaW9uRGVQcnVlYmEifQ.IPuStT6qTcVmOdbUjbDV888Ihd4k7kaSfTHizkPqgNaWFqnd_9T31bdtLod0ZU20yYrkkcJDK7BRDpjijiHaK4s2BUxINolTSQE5sEnE00lWfOZYa4yZ1h487LW7x9dT2uhzxYVNMIg-dCtdl-lBxHl0uxWfoBiq1gPGJUFbHbn2BDYMjoJAY747mdYc85a046GdhwIG3uoCllT925bsHiECyoThPlWNBN9VP3RDiU49NX7PxSPyV_t9S9xW1PS1c-gO_iO-JN522rf1Cgzo9Hp5UBlTgaeilpLmf7lp8u7z8iVjSSg-iq-utcgGR6zDkv_QVHQh81Sg1YeBwa6Hbw"
-      }
-    });
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación eliminada");
-    cargarNotificaciones();
-  } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
-  }
+  await eliminarNotificacionWeb(toastMessage, toastColor, isToastOpen, n.id);
+  await cargarNotificaciones();
 };
-
 
 onMounted(() => {
   cargarNotificaciones();
@@ -218,7 +190,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Puedes reutilizar los estilos de tu vista de recursos */
 .form-container {
   width: 100%;
   max-width: 500px;
