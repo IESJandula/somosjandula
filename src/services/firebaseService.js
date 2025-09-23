@@ -291,7 +291,6 @@ export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToast
       }
     });
     if (!data || data.length === 0) {
-      crearToast(toastMessage, toastColor, isToastOpen, "warning", "No hay notificaciones hoy");
       return [];
     }
 
