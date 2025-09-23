@@ -17,18 +17,18 @@
       </ion-row>
 
       <ion-row>
-        <ion-col size="6">
-          <ion-item>
-            <ion-label position="stacked">Fecha Inicio</ion-label>
-            <ion-datetime v-model="fechaInicio" presentation="date-time"></ion-datetime>
-          </ion-item>
-        </ion-col>
-        <ion-col size="6">
-          <ion-item>
-            <ion-label position="stacked">Fecha Fin</ion-label>
-            <ion-datetime v-model="fechaFin" presentation="date-time"></ion-datetime>
-          </ion-item>
-        </ion-col>
+        <div class="date-picker-container">
+          <label class="label-datepicker" for="start">Fecha de inicio</label>
+            <Datepicker v-model="fechaInicio" :auto-apply="true" :enable-time-picker="true"
+                        :clearable="false" :format="'dd-MM-yyyy HH:mm'" id="start" name="trip-start" locale="es" 
+                        input-class="datepicker-input-custom" menu-class="datepicker-menu-custom" />
+        </div>
+        <div class="date-picker-container">
+          <label class="label-datepicker" for="start">Fecha fin</label>
+          <Datepicker v-model="fechaFin" :auto-apply="true" :enable-time-picker="true"
+                        :clearable="false" :format="'dd-MM-yyyy HH:mm'" id="start" name="trip-start" locale="es" 
+                        input-class="datepicker-input-custom" menu-class="datepicker-menu-custom" />
+        </div>
       </ion-row>
 
       <ion-row>
@@ -95,7 +95,9 @@
               <tr v-for="(n, index) in notificaciones" :key="index">
                 <td>{{ n.texto }}</td>
                 <td>{{ n.fechaInicio }}</td>
+                <td>{{ n.horaInicio }}</td>
                 <td>{{ n.fechaFin }}</td>
+                <td>{{ n.horaFin }}</td>
                 <td>{{ n.nivel }}</td>
                 <td>{{ n.roles }}</td>
                 <td>
@@ -138,6 +140,9 @@ import {
   IonDatetime,
 } from "@ionic/vue";
 
+import Datepicker from '@vuepic/vue-datepicker';
+import '@vuepic/vue-datepicker/dist/main.css';
+
 import {
   crearNotificacionWeb,
   obtenerNotificacionesHoy,
@@ -146,7 +151,9 @@ import {
 
 const texto = ref("");
 const fechaInicio = ref("");
+const horaInicio = ref("");
 const fechaFin = ref("");
+const horaFin = ref("");
 const nivel = ref("GLOBAL");
 const roles = ref([]);
 const imagen = ref(null);
@@ -164,14 +171,15 @@ const onFileChange = (e) => {
 };
 
 const crearNotificacion = async () => {
-  await crearNotificacionWeb(toastMessage, toastColor, isToastOpen, {
-    texto: texto.value,
-    fechaInicio: fechaInicio.value.split("T")[0],
-    fechaFin: fechaFin.value.split("T")[0],
-    nivel: nivel.value,
-    roles: roles.value,
-    imagen: imagen.value ? imagen.value.name : ""
-  });
+  await crearNotificacionWeb(toastMessage, toastColor, isToastOpen, 
+                             texto.value,
+                             fechaInicio.value,
+                             horaInicio.value,
+                             fechaFin.value,
+                             horaFin.value,
+                             nivel.value, 
+                             roles.value.join(","), 
+                             imagen.value ? imagen.value.name : "");
   await cargarNotificaciones();
 };
 
@@ -235,5 +243,13 @@ button {
   border: none;
   padding: 5px 10px;
   cursor: pointer;
+}
+
+.date-picker-container {
+  display: flex;
+  width: auto;
+  flex-direction: column;
+  gap: 5px;
+  font-family: Arial, sans-serif;
 }
 </style>

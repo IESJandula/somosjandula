@@ -60,10 +60,21 @@ export async function obtenerInfoUsuarios(toastMessage: Ref<string>,
                                           toastColor: Ref<string>,
                                           isToastOpen: Ref<boolean>): Promise<[]>;
 
+/******************************************************/
+/** Funciones relacionadas con las notificaciones web */
+/******************************************************/
+
 export declare function crearNotificacionWeb(toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
                                             isToastOpen: Ref<boolean>,
-                                            notificacion: NotificacionWeb): Promise<void>;
+                                            inputTexto: string,
+                                            inputFechaInicio: string,
+                                            inputHoraInicio: string,
+                                            inputFechaFin: string,
+                                            inputHoraFin: string,
+                                            inputNivel: string,
+                                            inputRoles: string[],
+                                            inputImagen: string): Promise<void>;
 
 export declare function obtenerNotificacionesHoy(toastMessage: Ref<string>,
                                                 toastColor: Ref<string>,

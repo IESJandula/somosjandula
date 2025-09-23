@@ -255,7 +255,14 @@ export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
   }).then(res => res.json());
 }
 
-export async function crearNotificacionWeb(toastMessage, toastColor, isToastOpen, notificacion) {
+/******************************************************/
+/** Funciones relacionadas con las notificaciones web */
+/******************************************************/
+
+export async function crearNotificacionWeb(toastMessage, toastColor, isToastOpen, inputTexto, 
+                                           inputFechaInicio, inputHoraInicio, 
+                                           inputFechaFin, inputHoraFin,
+                                           inputNivel, inputRoles, inputImagen) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -263,12 +270,14 @@ export async function crearNotificacionWeb(toastMessage, toastColor, isToastOpen
       Authorization: `Bearer ${token}`,
       client_id: "app123",
       nombre: "MiAplicacionDePrueba",
-      texto: notificacion.texto,
-      fecha_inicio: notificacion.fechaInicio,
-      fecha_fin: notificacion.fechaFin,
-      nivel: notificacion.nivel,
-      roles: notificacion.roles.join(","),
-      imagen: notificacion.imagen || ""
+      texto: inputTexto,
+      fecha_inicio: inputFechaInicio,
+      hora_inicio: inputHoraInicio,
+      fecha_fin: inputFechaFin,
+      hora_fin: inputHoraFin,
+      nivel: inputNivel,
+      roles: inputRoles,
+      imagen: inputImagen
     };
 
     await axios.post(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, null, { headers });
