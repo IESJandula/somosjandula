@@ -4,6 +4,15 @@
       <ion-toolbar>
         <ion-title>Ponte al día</ion-title>
       </ion-toolbar>
+
+      <!-- Carrusel secundario de mensajes -->
+      <ion-toolbar class="secondary-toolbar">
+        <div class="secondary-carousel">
+          <transition-group name="fade" tag="div" class="messages">
+            <p :key="secondaryIndex">{{ secondaryMessages[secondaryIndex] }}</p>
+          </transition-group>
+        </div>
+      </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding content-center">
@@ -29,6 +38,7 @@ export default defineComponent({
   name: 'GPonteAlDia',
   components: { IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButton },
   setup() {
+    /** 📌 Carrusel principal */
     const currentIndex = ref(0);
     const slides = ref([
       { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFsKkRntJMedhnBBlpc33N7EjoLcibufJ6TA&s", text: "Únete a nuestra FP de DAM o DAW." },
@@ -55,11 +65,37 @@ export default defineComponent({
       clearInterval(intervalId);
     });
 
+    /** 📌 Carrusel de mensajes secundarios */
+    const secondaryIndex = ref(0);
+    const secondaryMessages = ref([
+      "⚡ Nueva convocatoria de becas disponible.",
+      "📢 Jornada de puertas abiertas el próximo lunes.",
+      "✅ Consulta los horarios de tutoría actualizados.",
+      "🎉 ¡Bienvenidos al nuevo curso académico!"
+    ]);
+    let secondaryInterval = null;
+
+    const nextSecondary = () => {
+      secondaryIndex.value = (secondaryIndex.value + 1) % secondaryMessages.value.length;
+    };
+
+    onMounted(() => {
+      secondaryInterval = setInterval(() => {
+        nextSecondary();
+      }, 4000); // cada 4 segundos cambia
+    });
+
+    onBeforeUnmount(() => {
+      clearInterval(secondaryInterval);
+    });
+
     return {
       currentIndex,
       slides,
       nextSlide,
-      prevSlide
+      prevSlide,
+      secondaryIndex,
+      secondaryMessages
     };
   }
 });
@@ -84,7 +120,7 @@ export default defineComponent({
 
 .carousel-content {
   width: 100%;
-  height: 50vh; /* altura relativa a pantalla */
+  height: 50vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -97,13 +133,13 @@ export default defineComponent({
 .carousel-content img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* mantiene proporción */
+  object-fit: contain;
   border-radius: 10px;
 }
 
 .carousel-content p {
   margin-top: 12px;
-  font-size: 2.5vw; /* texto relativo */
+  font-size: 2.5vw;
   font-weight: bold;
   color: white;
 }
@@ -124,7 +160,35 @@ export default defineComponent({
   right: 10px;
 }
 
-/* 📱 Móviles */
+/* 🎯 Carrusel secundario */
+.secondary-toolbar {
+  --background: #222;
+  height: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.secondary-carousel {
+  overflow: hidden;
+  text-align: center;
+  flex: 1;
+}
+.secondary-carousel p {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.6s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 📱 Responsive */
 @media (max-width: 600px) {
   .carousel-content {
     height: 40vh;
@@ -136,28 +200,8 @@ export default defineComponent({
   .arrow {
     font-size: 24px;
   }
-}
-
-/* 📟 Tablets */
-@media (min-width: 601px) and (max-width: 1024px) {
-  .carousel-content {
-    height: 45vh;
-  }
-  .carousel-content p {
-    font-size: 18px;
-  }
-  .arrow {
-    font-size: 28px;
-  }
-}
-
-/* 💻 Escritorio */
-@media (min-width: 1025px) {
-  .carousel-content {
-    height: 500px;
-  }
-  .carousel-content p {
-    font-size: 20px;
+  .secondary-carousel p {
+    font-size: 12px;
   }
 }
 </style>
