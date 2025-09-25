@@ -259,32 +259,42 @@ export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
 /** Funciones relacionadas con las notificaciones web */
 /******************************************************/
 
-export async function crearNotificacionWeb(toastMessage, toastColor, isToastOpen, inputTexto, 
-                                           inputFechaInicio, inputHoraInicio, 
-                                           inputFechaFin, inputHoraFin,
-                                           inputNivel, inputRoles, inputImagen) {
+export async function crearNotificacionWeb(
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  inputTexto,
+  inputFechaInicio,
+  inputHoraInicio,
+  inputFechaFin,
+  inputHoraFin,
+  inputNivel,
+  inputRoles,
+  inputImagen
+) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     const headers = {
       Authorization: `Bearer ${token}`,
-      client_id: "app123",
-      nombre: "MiAplicacionDePrueba",
+      client_id: 'app123',                 // ⚡ cámbialo por el clientId real
+      nombre: 'MiAplicacionDePrueba',      // ⚡ cámbialo por el nombre real
       texto: inputTexto,
-      fecha_inicio: inputFechaInicio,
-      hora_inicio: inputHoraInicio,
+      fecha_inicio: inputFechaInicio,      // formato YYYY-MM-DD
+      hora_inicio: inputHoraInicio,        // formato HH:mm:ss
       fecha_fin: inputFechaFin,
       hora_fin: inputHoraFin,
-      nivel: inputNivel,
-      roles: inputRoles,
-      imagen: inputImagen
+      nivel: inputNivel,                   // GLOBAL o SECUNDARIO
+      roles: inputRoles,                   // ADMINISTRADOR / DIRECCION / PROFESOR
+      imagen: inputImagen || ''            // opcional
     };
 
     await axios.post(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, null, { headers });
 
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación creada correctamente");
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "✅ Notificación creada correctamente");
   } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    console.error("❌ Error creando notificación:", error);
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.response?.data || error.message);
     throw error;
   }
 }

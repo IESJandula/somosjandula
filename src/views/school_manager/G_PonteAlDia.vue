@@ -4,22 +4,20 @@
       <ion-toolbar>
         <ion-title>Ponte al día</ion-title>
       </ion-toolbar>
-
-      <!-- Carrusel secundario de mensajes -->
-      <ion-toolbar class="secondary-toolbar">
-        <div class="secondary-carousel">
-          <transition-group name="fade" tag="div" class="messages">
-            <p :key="secondaryIndex">{{ secondaryMessages[secondaryIndex] }}</p>
-          </transition-group>
-        </div>
-      </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding content-center">
       <div class="carousel">
         <div class="carousel-content">
-          <img :src="slides[currentIndex].image" alt="slide" />
-          <p>{{ slides[currentIndex].text }}</p>
+          <!-- Grid: imagen arriba, texto debajo -->
+          <div class="carousel-grid">
+            <div class="carousel-image">
+              <img :src="slides[currentIndex].image" alt="slide" />
+            </div>
+            <div class="carousel-text">
+              <p>{{ slides[currentIndex].text }}</p>
+            </div>
+          </div>
         </div>
 
         <!-- Botones -->
@@ -65,44 +63,17 @@ export default defineComponent({
       clearInterval(intervalId);
     });
 
-    /** 📌 Carrusel de mensajes secundarios */
-    const secondaryIndex = ref(0);
-    const secondaryMessages = ref([
-      "⚡ Nueva convocatoria de becas disponible.",
-      "📢 Jornada de puertas abiertas el próximo lunes.",
-      "✅ Consulta los horarios de tutoría actualizados.",
-      "🎉 ¡Bienvenidos al nuevo curso académico!"
-    ]);
-    let secondaryInterval = null;
-
-    const nextSecondary = () => {
-      secondaryIndex.value = (secondaryIndex.value + 1) % secondaryMessages.value.length;
-    };
-
-    onMounted(() => {
-      secondaryInterval = setInterval(() => {
-        nextSecondary();
-      }, 4000); // cada 4 segundos cambia
-    });
-
-    onBeforeUnmount(() => {
-      clearInterval(secondaryInterval);
-    });
-
     return {
       currentIndex,
       slides,
       nextSlide,
-      prevSlide,
-      secondaryIndex,
-      secondaryMessages
+      prevSlide
     };
   }
 });
 </script>
 
 <style scoped>
-/* Centrado dentro de ion-content */
 .content-center {
   display: flex;
   justify-content: center;
@@ -121,27 +92,52 @@ export default defineComponent({
 .carousel-content {
   width: 100%;
   height: 50vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
   background: #000;
   border-radius: 12px;
   padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.carousel-content img {
+/* Grid 1 columna, 2 filas */
+.carousel-grid {
+  display: grid;
+  grid-template-rows: 1fr 60px; 
+  width: 100%;
+  height: 100%;
+}
+
+/* Imagen arriba */
+.carousel-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.carousel-image img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   border-radius: 10px;
 }
 
-.carousel-content p {
-  margin-top: 12px;
-  font-size: 2.5vw;
-  font-weight: bold;
+/* Texto debajo con espacio fijo */
+.carousel-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #111;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+.carousel-text p {
+  margin: 0;
+  font-size: 16px; 
+  font-weight: 600;
   color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Botones flecha */
@@ -160,48 +156,16 @@ export default defineComponent({
   right: 10px;
 }
 
-/* 🎯 Carrusel secundario */
-.secondary-toolbar {
-  --background: #222;
-  height: 35px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.secondary-carousel {
-  overflow: hidden;
-  text-align: center;
-  flex: 1;
-}
-.secondary-carousel p {
-  margin: 0;
-  color: #fff;
-  font-size: 14px;
-  white-space: nowrap;
-}
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.6s;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* 📱 Responsive */
+/* Responsive */
 @media (max-width: 600px) {
   .carousel-content {
     height: 40vh;
   }
-  .carousel-content p {
-    font-size: 14px;
-    padding: 0 8px;
+  .carousel-text p {
+    font-size: 12px;
   }
   .arrow {
     font-size: 24px;
-  }
-  .secondary-carousel p {
-    font-size: 12px;
   }
 }
 </style>

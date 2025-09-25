@@ -15,6 +15,7 @@
             <ion-item button @click="navigateAndCloseMenu('/admin/notificaciones')">Notificaciones</ion-item>
           </ion-list>
         </ion-list>
+
         <ion-list>
           <ion-item button @click="toggleSubMenuPrinters">
             Cola de impresión
@@ -27,6 +28,7 @@
             <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprimir</ion-item>
           </ion-list>
         </ion-list>
+
         <ion-list>
           <ion-item button @click="toggleSubMenuBookings">
             Reservas
@@ -40,6 +42,7 @@
             <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">Temporales</ion-item>
           </ion-list>
         </ion-list>
+
         <ion-list>
           <ion-item button @click="toggleSubMenuProjectors">
             Proyectores
@@ -51,6 +54,7 @@
             <ion-item v-if="mostrarProjectorsAdmin" button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Administración</ion-item>
           </ion-list>
         </ion-list>
+
         <ion-list>
           <ion-item button @click="toggleSubMenuTimetable">
             Horarios
@@ -65,6 +69,7 @@
             <ion-item button @click="navigateAndCloseMenu('/timetable/course')">Horario curso</ion-item>
           </ion-list>
         </ion-list>
+
         <ion-list>
           <ion-item button @click="toggleSubMenuDocuments">
             Documentos
@@ -77,6 +82,7 @@
             <ion-item button @click="navigateAndCloseMenu('/documents/itIssues')">Crear incidencia TIC</ion-item>
           </ion-list>
         </ion-list>
+
         <ion-list>
           <ion-item v-if="mostrarSchoolManager" button @click="toggleSubMenuSchoolManager">
             Gestión de matriculas
@@ -106,6 +112,13 @@
           <ion-buttons slot="start">
             <ion-menu-button autoHide="false"></ion-menu-button>
           </ion-buttons>
+
+          <!-- 🎯 Carrusel secundario de mensajes -->
+          <div class="secondary-carousel">
+            <transition-group name="fade" tag="div" class="messages">
+              <p :key="secondaryIndex">{{ secondaryMessages[secondaryIndex] }}</p>
+            </transition-group>
+          </div>
 
           <!-- Contenedor de usuario y botón de desconectar -->
           <div class="end-section" slot="end">
@@ -142,9 +155,9 @@ import {
   IonIcon,
   IonApp,
 } from '@ionic/vue';
-import { defineComponent, ref, onMounted } from 'vue';
+import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import { menuController } from '@ionic/vue'; // Importa el controlador del menú
+import { menuController } from '@ionic/vue';
 import { getAuth, signOut } from 'firebase/auth';
 import { validarRolesMenu, obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast';
@@ -188,16 +201,58 @@ export default defineComponent({
     const toastMessage = ref('');
     const toastColor = ref('success');
 
+    /** 📌 Carrusel de mensajes secundarios */
+    const secondaryIndex = ref(0);
+    const secondaryMessages = ref([
+      "⚡ Nueva convocatoria de becas disponible.",
+      "📢 Jornada de puertas abiertas el próximo lunes.",
+      "✅ Consulta los horarios de tutoría actualizados.",
+      "🎉 ¡Bienvenidos al nuevo curso académico!"
+    ]);
+    let secondaryInterval = null;
+
+    const nextSecondary = () => {
+      secondaryIndex.value = (secondaryIndex.value + 1) % secondaryMessages.value.length;
+    };
+
+    onMounted(() => {
+      secondaryInterval = setInterval(() => {
+        nextSecondary();
+      }, 4000);
+
+      obtenerNombreYApellidosUsuario(toastMessage, toastColor, isToastOpen).then(userInfo => {
+        userName.value = userInfo.nombre;
+      });
+
+      validarRolesMenu(isToastOpen, toastMessage, toastColor).then(rolesMenu => {
+        mostrarAdmin.value = rolesMenu.mostrarAdmin;
+        mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
+        mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
+        mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
+        mostrarProjectorsAdmin.value = rolesMenu.mostrarAdmin;
+        mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
+      }).catch(error => {
+        crearToast(
+          toastMessage,
+          toastColor,
+          isToastOpen,
+          'danger',
+          `Error al obtener los roles del usuario: ${error.message}`
+        );
+      });
+    });
+
+    onBeforeUnmount(() => {
+      clearInterval(secondaryInterval);
+    });
+
     const desconectar = async () => {
       try {
         const auth = getAuth();
         await signOut(auth);
-
-        // Eliminamos el token de la sesión previa
-        localStorage.removeItem(SESSION_JWT_TOKEN) ;
-
+        localStorage.removeItem(SESSION_JWT_TOKEN);
         router.replace({ name: 'Login' });
-        window.location.reload(); // Forzar la recarga para limpiar cualquier estado residual
+        window.location.reload();
       } catch (error) {
         console.error('Error al cerrar sesión:', error);
       }
@@ -246,27 +301,28 @@ export default defineComponent({
       documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
       schoolManagerSubmenuVisible.value = false;
       timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
     };
 
     const toggleSubMenuSchoolManager = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false
+      documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
       timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = false;
     };
+
     const toggleSubMenuTimetable = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false
+      documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
       timetableSubmenuVisible.value = !timetableSubmenuVisible.value;
       projectorsSubmenuVisible.value = false;
     };
+
     const toggleSubMenuProjectors = () => {
       adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = false;
@@ -276,31 +332,6 @@ export default defineComponent({
       timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = !projectorsSubmenuVisible.value;
     };
-
-    onMounted(async () => {
-      try {
-        const userInfo = await obtenerNombreYApellidosUsuario(toastMessage, toastColor, isToastOpen);
-        userName.value = userInfo.nombre;
-
-        const rolesMenu = await validarRolesMenu(isToastOpen, toastMessage, toastColor);
-
-        mostrarAdmin.value = rolesMenu.mostrarAdmin;
-        mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
-        mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
-        mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
-        mostrarProjectorsAdmin.value = rolesMenu.mostrarAdmin;
-        mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
-      }
-      catch (error) {
-        crearToast(
-          toastMessage,
-          toastColor,
-          isToastOpen,
-          'danger',
-          `Error al obtener los roles del usuario: ${error.message}`
-        );
-      }
-    });
 
     return {
       userName,
@@ -325,11 +356,14 @@ export default defineComponent({
       toggleSubMenuDocuments,
       toggleSubMenuSchoolManager,
       toggleSubMenuTimetable,
-      toggleSubMenuProjectors
+      toggleSubMenuProjectors,
+      secondaryIndex,
+      secondaryMessages
     };
   },
 });
 </script>
+
 <style scoped>
 .submenu {
   padding-left: 20px;
@@ -345,33 +379,22 @@ ion-button {
   --color: white;
   border-radius: 8px;
   opacity: 1;
-  /* Asegúrate de que sea visible */
 }
 
 ion-icon {
   font-size: 24px;
 }
 
-.menu-button {
-  margin-right: auto;
-  /* Empuja el botón de menú hacia la izquierda */
-}
-
 ion-toolbar {
   display: flex;
   justify-content: space-between;
-  /* Distribuye los elementos entre los extremos */
   align-items: center;
-  /* Alinea verticalmente en el centro */
 }
 
 .end-section {
   display: flex;
-  /* Utiliza flexbox para alinear elementos horizontalmente */
   align-items: center;
-  /* Alinea los elementos verticalmente al centro */
   gap: 10px;
-  /* Espacio entre el nombre del usuario y el botón de Logout */
 }
 
 .user-name {
@@ -386,25 +409,42 @@ ion-menu {
 .top-bar {
   display: flex;
   justify-content: flex-end;
-  /* Alinea los botones a la derecha */
   align-items: center;
-  /* Centrar los botones verticalmente */
   padding: 0 10px;
-  /* Espacio alrededor del contenido */
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  /* Sombra para dar separación */
 }
 
 .button-container {
   display: flex;
   gap: 10px;
-  /* Espacio entre los botones */
 }
 
-/* Ajuste del contenido principal */
 ion-content {
   padding-top: 60px;
-  /* Ajusta este valor según la altura de tu toolbar */
+}
+
+/* 🎯 Carrusel secundario dentro del header */
+.secondary-carousel {
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  color: #000;
+}
+
+.secondary-carousel p {
+  margin: 0;
+  color: #000;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.6s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 @media (min-width: 768px) {
