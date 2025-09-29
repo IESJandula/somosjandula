@@ -124,9 +124,9 @@
           <div class="end-section" slot="end">
             <span v-if="userName" class="user-name">{{ userName }}</span>
             <div class="top-bar">
-              <div class="button-container">
+              <!-- <div class="button-container">
                 <ion-button @click="desconectar">Desconectar</ion-button>
-              </div>
+              </div> -->
             </div>
           </div>
         </ion-toolbar>

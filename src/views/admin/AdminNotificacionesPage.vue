@@ -52,10 +52,10 @@
         </div>
       </div>
 
-      <div class="form-group">
+      <!-- <div class="form-group">
         <label>Imagen</label>
         <input type="file" @change="onFileChange" />
-      </div>
+      </div> -->
 
       <button class="btn-primary" @click="crearNotificacion">
         Crear Notificación
@@ -73,25 +73,17 @@
             <th>Fin</th>
             <th>Nivel</th>
             <th>Roles</th>
-            <th>Imagen</th>
+            <th>Eliminar</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="n in notificaciones" :key="n.id || n.texto">
             <td>{{ n.texto }}</td>
-            <td>{{ n.fechaInicio }} {{ n.horaInicio }}</td>
-            <td>{{ n.fechaFin }} {{ n.horaFin }}</td>
+            <td>{{ n.fechaInicio }}</td>
+            <td>{{ n.fechaFin }}</td>
             <td>{{ n.nivel }}</td>
             <td>{{ n.roles }}</td>
-            <td>
-              <img
-                v-if="n.imagen"
-                :src="`/uploads/${n.imagen}`"
-                alt="imagen"
-                width="50"
-              />
-            </td>
             <td>
               <button class="btn-danger" @click="eliminarNotificacion(n)">X</button>
             </td>
@@ -125,7 +117,7 @@
 import { ref, onMounted } from "vue";
 import Datepicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
-import { format, parse, isValid } from "date-fns";
+import { format, parseISO, isValid, parse } from "date-fns";
 import {
   crearNotificacionWeb,
   obtenerNotificacionesHoy,
@@ -148,7 +140,7 @@ const toastColor = ref("success");
 const isToastOpen = ref(false);
 
 const showToastLocal = (msg, color = "success") => {
-  isToastOpen.value = false; // reset rápido
+  isToastOpen.value = false;
   toastMessage.value = msg;
   toastColor.value = color;
   isToastOpen.value = true;
@@ -158,6 +150,17 @@ const showToastLocal = (msg, color = "success") => {
 const onFileChange = (e) => {
   imagen.value = e.target.files[0];
 };
+
+// 🔹 Función para convertir fecha + hora a Date y formatear en DD/MM/YYYY HH:mm
+function formatDateTime(fecha, hora) {
+  try {
+    if (!fecha || !hora) return "";
+    const dateTime = parseISO(`${fecha}T${hora}`);
+    return isValid(dateTime) ? format(dateTime, "dd/MM/yyyy HH:mm") : "";
+  } catch {
+    return "";
+  }
+}
 
 function toDateObject(val) {
   if (!val) return null;
@@ -209,13 +212,11 @@ const crearNotificacion = async () => {
     showToastLocal("Notificación creada correctamente", "success");
     await cargarNotificaciones();
 
-    // Limpiar formulario
     texto.value = "";
     fechaInicio.value = null;
     fechaFin.value = null;
     nivel.value = "GLOBAL";
     roles.value = [];
-    imagen.value = null;
   } catch (err) {
     console.error(err);
     showToastLocal("Error creando la notificación", "error");
@@ -232,13 +233,10 @@ const cargarNotificaciones = async () => {
     notificaciones.value = data.map((n) => ({
       id: n.id,
       texto: n.texto ? n.texto.replace(/\n?\[Imagen:.*?\]/, "").trim() : "",
-      fechaInicio: n.fechaInicio || n.fecha_inicio || "",
-      horaInicio: n.horaInicio || n.hora_inicio || "",
-      fechaFin: n.fechaFin || n.fecha_fin || "",
-      horaFin: n.horaFin || n.hora_fin || "",
+      fechaInicio: formatDateTime(n.fechaInicio || n.fecha_inicio, n.horaInicio || n.hora_inicio),
+      fechaFin: formatDateTime(n.fechaFin || n.fecha_fin, n.horaFin || n.hora_fin),
       nivel: n.nivel || "",
       roles: Array.isArray(n.roles) ? n.roles.join(", ") : n.roles || "",
-      imagen: n.imagen || n.imagenUrl || n.texto?.match(/\[Imagen:\s*(.*?)\]/)?.[1]?.trim() || "",
     }));
   } catch (err) {
     console.error(err);
@@ -368,12 +366,12 @@ button {
   gap: 8px;
 }
 
-/* Ajustes de tabla */
 table {
   width: 100%;
   border-collapse: collapse;
 }
-th, td {
+th,
+td {
   padding: 8px 12px;
   border-bottom: 1px solid #ddd;
   text-align: left;
@@ -385,8 +383,7 @@ td img {
 }
 td .btn-danger {
   display: block;
-  margin: 6px auto; /* separa del borde y de la imagen */
+  margin: 6px auto;
   padding: 4px 10px;
 }
-
 </style>

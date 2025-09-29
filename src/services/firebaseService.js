@@ -273,6 +273,37 @@ export async function crearNotificacionWeb(
   inputImagen
 ) {
   try {
+    // ✅ Validaciones antes de enviar al backend
+    if (!inputTexto || inputTexto.trim() === "") {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ El campo 'Texto' es obligatorio");
+      return;
+    }
+    if (!inputFechaInicio) {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Fecha de inicio' es obligatoria");
+      return;
+    }
+    if (!inputHoraInicio) {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Hora de inicio' es obligatoria");
+      return;
+    }
+    if (!inputFechaFin) {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Fecha de fin' es obligatoria");
+      return;
+    }
+    if (!inputHoraFin) {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Hora de fin' es obligatoria");
+      return;
+    }
+    if (!inputNivel) {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ El 'Nivel' es obligatorio");
+      return;
+    }
+    if (!inputRoles || inputRoles.length === 0) {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ Debes seleccionar al menos un 'Rol'");
+      return;
+    }
+
+    // ✅ Si pasa las validaciones, seguimos con el envío
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     const headers = {
@@ -280,13 +311,13 @@ export async function crearNotificacionWeb(
       client_id: 'app123',                 // ⚡ cámbialo por el clientId real
       nombre: 'MiAplicacionDePrueba',      // ⚡ cámbialo por el nombre real
       texto: inputTexto,
-      fecha_inicio: inputFechaInicio,      // formato YYYY-MM-DD
-      hora_inicio: inputHoraInicio,        // formato HH:mm:ss
+      fecha_inicio: inputFechaInicio,
+      hora_inicio: inputHoraInicio,
       fecha_fin: inputFechaFin,
       hora_fin: inputHoraFin,
-      nivel: inputNivel,                   // GLOBAL o SECUNDARIO
-      roles: inputRoles,                   // ADMINISTRADOR / DIRECCION / PROFESOR
-      imagen: inputImagen || ''            // opcional
+      nivel: inputNivel,
+      roles: inputRoles,
+      imagen: inputImagen || ''
     };
 
     await axios.post(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, null, { headers });
@@ -298,6 +329,7 @@ export async function crearNotificacionWeb(
     throw error;
   }
 }
+
 
 export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen) {
   try {
