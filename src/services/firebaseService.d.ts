@@ -74,7 +74,7 @@ export declare function crearNotificacionWeb(toastMessage: Ref<string>,
                                             inputHoraFin: string,
                                             inputNivel: string,
                                             inputRoles: string[],
-                                            inputImagen: string): Promise<void>;
+                                            inputImagen?: string): Promise<void>;
 
 export declare function obtenerNotificacionesHoy(toastMessage: Ref<string>,
                                                 toastColor: Ref<string>,
@@ -83,4 +83,6 @@ export declare function obtenerNotificacionesHoy(toastMessage: Ref<string>,
 export declare function eliminarNotificacionWeb(toastMessage: Ref<string>,
                                                toastColor: Ref<string>,
                                                isToastOpen: Ref<boolean>,
-                                               idNotificacion: number): Promise<void>;
+                                               idNotificacion: number,
+                                               nivel: string): Promise<void>;
+

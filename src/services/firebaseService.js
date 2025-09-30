@@ -320,6 +320,10 @@ export async function crearNotificacionWeb(
       imagen: inputImagen || ''
     };
 
+    if (inputNivel === "GLOBAL" && inputImagen) {
+      headers.imagen = inputImagen;
+    }
+
     await axios.post(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, null, { headers });
 
     crearToast(toastMessage, toastColor, isToastOpen, "success", "✅ Notificación creada correctamente");
@@ -331,14 +335,15 @@ export async function crearNotificacionWeb(
 }
 
 
-export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen) {
+export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     const { data } = await axios.get(`${firebaseApiUrl}/notifications_web/obtenerNotificacionesHoy`, {
       headers: {
         Authorization: `Bearer ${token}`,
-        usuario: "admin" 
+        usuario: "admin",
+        nivel: nivel
       }
     });
     if (!data || data.length === 0) {

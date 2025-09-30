@@ -10,12 +10,11 @@
           </ion-item>
           <ion-list v-if="adminSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
-          </ion-list>
-          <ion-list v-if="adminSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/admin/notificaciones')">Notificaciones</ion-item>
           </ion-list>
         </ion-list>
 
+        <!-- Menú de Cola de impresión -->
         <ion-list>
           <ion-item button @click="toggleSubMenuPrinters">
             Cola de impresión
@@ -23,12 +22,12 @@
               :icon="printersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="printersSubmenuVisible" class="submenu">
-            <ion-item v-if="mostrarPrintersAdmin" button
-              @click="navigateAndCloseMenu('/printers/admin')">Administrar</ion-item>
+            <ion-item v-if="mostrarPrintersAdmin" button @click="navigateAndCloseMenu('/printers/admin')">Administrar</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprimir</ion-item>
           </ion-list>
         </ion-list>
 
+        <!-- Menú Reservas -->
         <ion-list>
           <ion-item button @click="toggleSubMenuBookings">
             Reservas
@@ -36,13 +35,13 @@
               :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="bookingsSubmenuVisible" class="submenu">
-            <ion-item v-if="mostrarBookingsAdmin" button
-              @click="navigateAndCloseMenu('/bookings/admin')">Administrar</ion-item>
+            <ion-item v-if="mostrarBookingsAdmin" button @click="navigateAndCloseMenu('/bookings/admin')">Administrar</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">Fijas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">Temporales</ion-item>
           </ion-list>
         </ion-list>
 
+        <!-- Menú Proyectores -->
         <ion-list>
           <ion-item button @click="toggleSubMenuProjectors">
             Proyectores
@@ -55,6 +54,7 @@
           </ion-list>
         </ion-list>
 
+        <!-- Menú Horarios -->
         <ion-list>
           <ion-item button @click="toggleSubMenuTimetable">
             Horarios
@@ -70,11 +70,11 @@
           </ion-list>
         </ion-list>
 
+        <!-- Menú Documentos -->
         <ion-list>
           <ion-item button @click="toggleSubMenuDocuments">
             Documentos
-            <ion-icon slot="end"
-              :icon="documentsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="documentsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="documentsSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/documents/absences')">Ausencias</ion-item>
@@ -83,6 +83,7 @@
           </ion-list>
         </ion-list>
 
+        <!-- Menú Gestión de matriculas -->
         <ion-list>
           <ion-item v-if="mostrarSchoolManager" button @click="toggleSubMenuSchoolManager">
             Gestión de matriculas
@@ -113,26 +114,21 @@
             <ion-menu-button autoHide="false"></ion-menu-button>
           </ion-buttons>
 
-          <!-- 🎯 Carrusel secundario de mensajes -->
+          <!-- 🎯 Carrusel secundario de mensajes dinámico -->
           <div class="secondary-carousel">
             <transition-group name="fade" tag="div" class="messages">
-              <p :key="secondaryIndex">{{ secondaryMessages[secondaryIndex] }}</p>
+              <p v-for="(msg, index) in secondaryMessages" :key="index" v-show="index === secondaryIndex">{{ msg }}</p>
             </transition-group>
           </div>
 
-          <!-- Contenedor de usuario y botón de desconectar -->
+          <!-- Contenedor de usuario -->
           <div class="end-section" slot="end">
             <span v-if="userName" class="user-name">{{ userName }}</span>
-            <div class="top-bar">
-              <!-- <div class="button-container">
-                <ion-button @click="desconectar">Desconectar</ion-button>
-              </div> -->
-            </div>
           </div>
         </ion-toolbar>
       </ion-header>
 
-      <!-- Contenido con outlet debajo del header -->
+      <!-- Contenido principal -->
       <ion-content class="ion-padding" fullscreen>
         <router-view></router-view>
       </ion-content>
@@ -159,7 +155,7 @@ import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { menuController } from '@ionic/vue';
 import { getAuth, signOut } from 'firebase/auth';
-import { validarRolesMenu, obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
+import { validarRolesMenu, obtenerNombreYApellidosUsuario, obtenerNotificacionesHoy } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast';
 import { SESSION_JWT_TOKEN } from '@/utils/constants';
 
@@ -201,30 +197,40 @@ export default defineComponent({
     const toastMessage = ref('');
     const toastColor = ref('success');
 
-    /** 📌 Carrusel de mensajes secundarios */
+    /** 🎯 Carrusel de mensajes secundarios */
     const secondaryIndex = ref(0);
-    const secondaryMessages = ref([
-      "⚡ Nueva convocatoria de becas disponible.",
-      "📢 Jornada de puertas abiertas el próximo lunes.",
-      "✅ Consulta los horarios de tutoría actualizados.",
-      "🎉 ¡Bienvenidos al nuevo curso académico!"
-    ]);
+    const secondaryMessages = ref([]);
     let secondaryInterval = null;
 
     const nextSecondary = () => {
-      secondaryIndex.value = (secondaryIndex.value + 1) % secondaryMessages.value.length;
+      if (secondaryMessages.value.length > 0) {
+        secondaryIndex.value = (secondaryIndex.value + 1) % secondaryMessages.value.length;
+      }
+    };
+
+    /** 🔔 Actualiza las notificaciones dinámicamente cada minuto */
+    const actualizarMensajes = async () => {
+      try {
+        const notificaciones = await obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, 'SECUNDARIO');
+        secondaryMessages.value = notificaciones.map(n => n.texto);
+        secondaryIndex.value = 0;
+      } catch (error) {
+        console.error('Error al obtener notificaciones:', error);
+      }
     };
 
     onMounted(() => {
-      secondaryInterval = setInterval(() => {
-        nextSecondary();
-      }, 4000);
+      actualizarMensajes();
+      secondaryInterval = setInterval(actualizarMensajes, 60000);
+      setInterval(nextSecondary, 5000);
 
+      // Obtener nombre de usuario
       obtenerNombreYApellidosUsuario(toastMessage, toastColor, isToastOpen).then(userInfo => {
         userName.value = userInfo.nombre;
       });
 
-      validarRolesMenu(isToastOpen, toastMessage, toastColor).then(rolesMenu => {
+      // Validar roles
+      validarRolesMenu(toastMessage, toastColor, isToastOpen).then(rolesMenu => {
         mostrarAdmin.value = rolesMenu.mostrarAdmin;
         mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
         mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
@@ -232,13 +238,7 @@ export default defineComponent({
         mostrarProjectorsAdmin.value = rolesMenu.mostrarAdmin;
         mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
       }).catch(error => {
-        crearToast(
-          toastMessage,
-          toastColor,
-          isToastOpen,
-          'danger',
-          `Error al obtener los roles del usuario: ${error.message}`
-        );
+        crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Error al obtener los roles del usuario: ${error.message}`);
       });
     });
 
@@ -263,75 +263,14 @@ export default defineComponent({
       await menuController.close('main-menu');
     };
 
-    const toggleSubMenuAdmin = () => {
-      adminSubmenuVisible.value = !adminSubmenuVisible.value;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuPrinters = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = !printersSubmenuVisible.value;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuBookings = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuDocuments = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuSchoolManager = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuTimetable = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = !timetableSubmenuVisible.value;
-      projectorsSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuProjectors = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = !projectorsSubmenuVisible.value;
-    };
+    // Funciones toggle submenús (igual que tu código original)
+    const toggleSubMenuAdmin = () => { adminSubmenuVisible.value = !adminSubmenuVisible.value; printersSubmenuVisible.value = false; bookingsSubmenuVisible.value = false; documentsSubmenuVisible.value = false; schoolManagerSubmenuVisible.value = false; timetableSubmenuVisible.value = false; projectorsSubmenuVisible.value = false; };
+    const toggleSubMenuPrinters = () => { adminSubmenuVisible.value = false; printersSubmenuVisible.value = !printersSubmenuVisible.value; bookingsSubmenuVisible.value = false; documentsSubmenuVisible.value = false; schoolManagerSubmenuVisible.value = false; timetableSubmenuVisible.value = false; projectorsSubmenuVisible.value = false; };
+    const toggleSubMenuBookings = () => { adminSubmenuVisible.value = false; printersSubmenuVisible.value = false; bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value; documentsSubmenuVisible.value = false; schoolManagerSubmenuVisible.value = false; timetableSubmenuVisible.value = false; projectorsSubmenuVisible.value = false; };
+    const toggleSubMenuDocuments = () => { adminSubmenuVisible.value = false; printersSubmenuVisible.value = false; bookingsSubmenuVisible.value = false; projectorsSubmenuVisible.value = false; documentsSubmenuVisible.value = !documentsSubmenuVisible.value; schoolManagerSubmenuVisible.value = false; timetableSubmenuVisible.value = false; };
+    const toggleSubMenuSchoolManager = () => { adminSubmenuVisible.value = false; printersSubmenuVisible.value = false; bookingsSubmenuVisible.value = false; documentsSubmenuVisible.value = false; schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value; timetableSubmenuVisible.value = false; projectorsSubmenuVisible.value = false; };
+    const toggleSubMenuTimetable = () => { adminSubmenuVisible.value = false; printersSubmenuVisible.value = false; bookingsSubmenuVisible.value = false; documentsSubmenuVisible.value = false; schoolManagerSubmenuVisible.value = false; timetableSubmenuVisible.value = !timetableSubmenuVisible.value; projectorsSubmenuVisible.value = false; };
+    const toggleSubMenuProjectors = () => { adminSubmenuVisible.value = false; printersSubmenuVisible.value = false; bookingsSubmenuVisible.value = false; documentsSubmenuVisible.value = false; schoolManagerSubmenuVisible.value = false; timetableSubmenuVisible.value = false; projectorsSubmenuVisible.value = !projectorsSubmenuVisible.value; };
 
     return {
       userName,
@@ -365,96 +304,16 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.submenu {
-  padding-left: 20px;
-}
-
-ion-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  padding: 10px 20px;
-  --background: #3880ff;
-  --color: white;
-  border-radius: 8px;
-  opacity: 1;
-}
-
-ion-icon {
-  font-size: 24px;
-}
-
-ion-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.end-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-name {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-ion-menu {
-  z-index: 9999 !important;
-}
-
-.top-bar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 0 10px;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.button-container {
-  display: flex;
-  gap: 10px;
-}
-
-ion-content {
-  padding-top: 60px;
-}
-
-/* 🎯 Carrusel secundario dentro del header */
-.secondary-carousel {
-  flex: 1;
-  text-align: center;
-  overflow: hidden;
-  color: #000;
-}
-
-.secondary-carousel p {
-  margin: 0;
-  color: #000;
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.6s;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-@media (min-width: 768px) {
-  ion-button {
-    padding: 10px 30px;
-    font-size: 18px;
-  }
-
-  ion-icon {
-    font-size: 28px;
-  }
-}
+.submenu { padding-left: 20px; }
+ion-button { display: flex; align-items: center; justify-content: center; font-size: 16px; padding: 10px 20px; --background: #3880ff; --color: white; border-radius: 8px; opacity: 1; }
+ion-icon { font-size: 24px; }
+ion-toolbar { display: flex; justify-content: space-between; align-items: center; }
+.end-section { display: flex; align-items: center; gap: 10px; }
+.user-name { font-size: 16px; font-weight: bold; }
+ion-menu { z-index: 9999 !important; }
+.secondary-carousel { flex: 1; text-align: center; overflow: hidden; color: #000; }
+.secondary-carousel p { margin: 0; color: #000; font-size: 14px; white-space: nowrap; }
+.fade-enter-active, .fade-leave-active { transition: opacity 0.6s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+@media (min-width: 768px) { ion-button { padding: 10px 30px; font-size: 18px; } ion-icon { font-size: 28px; } }
 </style>

@@ -2,7 +2,7 @@
   <h1 class="titulo-pagina">Ponte al día</h1>
   <div class="page">
     <main class="content-center">
-      <div class="carousel">
+      <div class="carousel" v-if="slides.length > 0">
         <div class="carousel-content">
           <div class="carousel-grid">
             <div class="carousel-image">
@@ -14,43 +14,74 @@
           </div>
         </div>
 
-        <!-- Botones -->
+        <!-- Botones de navegación -->
         <button class="arrow left" @click="prevSlide">‹</button>
         <button class="arrow right" @click="nextSlide">›</button>
       </div>
+      <p v-else>No hay notificaciones activas</p>
     </main>
   </div>
 </template>
 
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { obtenerNotificacionesHoy } from '@/services/firebaseService.js';
 
 export default {
   name: 'GPonteAlDia',
   setup() {
     const currentIndex = ref(0);
-    const slides = ref([
-      { image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFsKkRntJMedhnBBlpc33N7EjoLcibufJ6TA&s", text: "Únete a nuestra FP de DAM o DAW." },
-      { image: "https://blogsaverroes.juntadeandalucia.es/iesjandula/files/2025/06/Formacion_Profesional.png", text: "Únete a nuestro Ciclo de Grado Medio de SMR." },
-      { image: "https://www.juntadeandalucia.es/educacion/portals/delegate/thumbnail/abaco_album/61885cdd-cd30-47b5-a9e5-62c0e9f9cac4", text: "No te quedes sin plaza." }
-    ]);
+    const slides = ref([]);
 
-    let intervalId = null;
+    let carouselInterval = null;
+    let fetchInterval = null;
 
+    // Función para obtener las notificaciones del servidor
+    const fetchNotificaciones = async () => {
+      try {
+        const notis = await obtenerNotificacionesHoy(
+          ref(''), 
+          ref(''), 
+          ref(false),
+          'GLOBAL'
+        );
+
+        // Vaciar la lista actual y actualizar con las nuevas notificaciones
+        slides.value = notis.map(n => ({
+          text: n.texto,
+          image: n.imagen || 'https://via.placeholder.com/800x400?text=Imagen+Dummy'
+        }));
+
+        currentIndex.value = 0;
+      } catch (err) {
+        console.error('Error obteniendo notificaciones:', err);
+      }
+    };
+
+    // Funciones de navegación del carrusel
     const nextSlide = () => {
-      currentIndex.value = (currentIndex.value + 1) % slides.value.length;
+      if (slides.value.length > 0) {
+        currentIndex.value = (currentIndex.value + 1) % slides.value.length;
+      }
     };
 
     const prevSlide = () => {
-      currentIndex.value = (currentIndex.value - 1 + slides.value.length) % slides.value.length;
+      if (slides.value.length > 0) {
+        currentIndex.value = (currentIndex.value - 1 + slides.value.length) % slides.value.length;
+      }
     };
 
     onMounted(() => {
-      intervalId = setInterval(nextSlide, 6000);
+      fetchNotificaciones();
+
+      fetchInterval = setInterval(fetchNotificaciones, 60000);
+
+      carouselInterval = setInterval(nextSlide, 6000);
     });
 
     onBeforeUnmount(() => {
-      clearInterval(intervalId);
+      clearInterval(carouselInterval);
+      clearInterval(fetchInterval);
     });
 
     return {
@@ -68,14 +99,8 @@ export default {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: #000;
-  color: white;
-}
-
-.header {
-  background: #111;
-  padding: 1rem;
-  text-align: center;
+  background: #fff;
+  color: black;
 }
 
 .content-center {
@@ -88,15 +113,15 @@ export default {
 .carousel {
   position: relative;
   width: 100%;
-  max-width: 1100px; /* ajusta si lo quieres más ancho */
+  max-width: 1100px;
   margin: auto;
   text-align: center;
 }
 
 .carousel-content {
   width: 100%;
-  height: 50vh; /* altura fija para que ocupe el rectángulo que marcaste */
-  background: #000;
+  height: 50vh;
+  background: #fff;
   border-radius: 12px;
   overflow: hidden;
   position: relative;
@@ -105,7 +130,6 @@ export default {
   align-items: center;
 }
 
-/* Imagen centrada y completa */
 .carousel-image {
   width: 100%;
   height: 100%;
@@ -116,29 +140,27 @@ export default {
 .carousel-image img {
   max-width: 100%;
   max-height: 100%;
-  object-fit: contain; /* muestra la imagen entera sin deformar */
+  object-fit: contain;
   border-radius: 12px;
 }
 
-/* Texto debajo del carrusel */
 .carousel-text {
   margin-top: 10px;
   text-align: center;
 }
 .carousel-text p {
   margin: 0;
-  font-size: 18px; 
+  font-size: 18px;
   font-weight: 600;
-  color: white;
+  color: black;
 }
 
-/* Botones flecha */
 .arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   font-size: 32px;
-  color: white;
+  color: black;
   background: none;
   border: none;
   cursor: pointer;
@@ -162,7 +184,7 @@ export default {
 /* Responsive */
 @media (max-width: 600px) {
   .carousel-content {
-    height: 35vh; /* más pequeño en móviles */
+    height: 35vh;
   }
   .carousel-text p {
     font-size: 14px;
@@ -175,5 +197,3 @@ export default {
   }
 }
 </style>
-
-

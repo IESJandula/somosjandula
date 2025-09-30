@@ -52,10 +52,10 @@
         </div>
       </div>
 
-      <!-- <div class="form-group">
+      <div v-if="nivel === 'GLOBAL'" class="form-group">
         <label>Imagen</label>
         <input type="file" @change="onFileChange" />
-      </div> -->
+      </div>
 
       <button class="btn-primary" @click="crearNotificacion">
         Crear Notificación
@@ -225,7 +225,7 @@ const crearNotificacion = async () => {
 
 const cargarNotificaciones = async () => {
   try {
-    const data = await obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen);
+    const data = await obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel.value);
     if (!data || data.length === 0) {
       notificaciones.value = [];
       return;
