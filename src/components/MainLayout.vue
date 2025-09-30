@@ -48,12 +48,31 @@
           </ion-item>
           <ion-list v-if="utilitiesSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprime documentos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">Realiza reservas fijas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">Realiza reservas temporales</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/absences')">Comprueba tus guardias</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/itIssues')">Crea incidencias TIC</ion-item>
+          </ion-list>
+        </ion-list>
+        <!-- Reservas -->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuBookings">
+            Reservas
+            <ion-icon slot="end" :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="bookingsSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">Realiza reservas fijas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">Realiza reservas temporales</ion-item>
+          </ion-list>
+        </ion-list>
+        <!-- Guardias -->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuAbsences">
+            Guardias
+            <ion-icon slot="end" :icon="absencesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="absencesSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/absences/review')">Comprueba tus guardias</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/absences/tasks')">Revisa las tareas de guardia</ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
@@ -146,11 +165,15 @@ export default defineComponent({
     const mostrarTimetableAdmin = ref(false);
     const mostrarTimetableTeachers = ref(false);
     const mostrarSchoolManager = ref(false);
+
     const adminSubmenuVisible = ref(false);
     const timetableAdminSubmenuVisible = ref(false);
     const schoolManagerSubmenuVisible = ref(false);
     const timetableTeachersSubmenuVisible = ref(false);
+
     const utilitiesSubmenuVisible = ref(false);
+    const bookingsSubmenuVisible = ref(false);
+    const absencesSubmenuVisible = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -183,6 +206,7 @@ export default defineComponent({
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuTimetableAdmin = () => {
@@ -191,6 +215,8 @@ export default defineComponent({
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuTimetableTeachers = () => {
@@ -199,6 +225,8 @@ export default defineComponent({
       timetableTeachersSubmenuVisible.value = !timetableTeachersSubmenuVisible.value;
       schoolManagerSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
     };
     const toggleSubMenuSchoolManager = () => {
       adminSubmenuVisible.value = false;
@@ -206,6 +234,8 @@ export default defineComponent({
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
       utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuUtilities = () => {
@@ -214,6 +244,28 @@ export default defineComponent({
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = !utilitiesSubmenuVisible.value;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
+    };
+
+    const toggleSubMenuBookings = () => {
+      adminSubmenuVisible.value = false;
+      timetableAdminSubmenuVisible.value = false;
+      timetableTeachersSubmenuVisible.value = false;
+      schoolManagerSubmenuVisible.value = false;
+      utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
+      absencesSubmenuVisible.value = false;
+    };
+
+    const toggleSubMenuAbsences = () => {
+      adminSubmenuVisible.value = false;
+      timetableAdminSubmenuVisible.value = false;
+      timetableTeachersSubmenuVisible.value = false;
+      schoolManagerSubmenuVisible.value = false;
+      utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = !absencesSubmenuVisible.value;
     };
 
     onMounted(async () => {
@@ -254,11 +306,15 @@ export default defineComponent({
       timetableAdminSubmenuVisible,
       timetableTeachersSubmenuVisible,
       utilitiesSubmenuVisible,
+      bookingsSubmenuVisible,
+      absencesSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuTimetableAdmin,
       toggleSubMenuTimetableTeachers,
       toggleSubMenuSchoolManager,
       toggleSubMenuUtilities,
+      toggleSubMenuBookings,
+      toggleSubMenuAbsences,
     };
   },
 });

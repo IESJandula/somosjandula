@@ -17,7 +17,9 @@ import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
 import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
 import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
 
-import AbsencesPage from '@/views/documents/AbsencesPage.vue';
+import AbsencesReviewPage from '@/views/absences/AbsencesReviewPage.vue';
+import AbsencesTasksPage from '@/views/absences/AbsencesTasksPage.vue';
+
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 
@@ -114,9 +116,17 @@ const routes = [
         },
       },
       {
-        path: 'documents/absences',
-        component: AbsencesPage,
-        name: 'DocumentsAbsences',
+        path: 'absences/review',
+        component: AbsencesReviewPage,
+        name: 'AbsencesReview',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'absences/tasks',
+        component: AbsencesTasksPage,
+        name: 'AbsencesTasks',
         meta: {
           role: 'PROFESOR'
         },
