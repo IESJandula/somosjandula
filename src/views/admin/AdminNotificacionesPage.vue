@@ -73,7 +73,7 @@
             <th>Fin</th>
             <th>Nivel</th>
             <th>Roles</th>
-            <th>Eliminar</th>
+            <th>Acciones</th>
             <th></th>
           </tr>
         </thead>
@@ -267,34 +267,48 @@ onMounted(() => cargarNotificaciones());
   padding: 20px;
   display: flex;
   flex-direction: column;
+  align-items: center; /* 🔹 Centra las tarjetas */
   gap: 24px;
 }
+
+/* 🔹 Tarjetas más estrechas y centradas */
 .card {
   background: #fff;
   border: 1px solid #ccc;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 900px; /* ancho máximo */
+  min-width: 600px; /* ancho mínimo igual al de la tabla */
 }
+
 h2 {
   margin-bottom: 16px;
   color: #333;
 }
+
 .form-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 14px;
 }
+
 .form-row {
   display: flex;
   gap: 16px;
 }
+
+/* 🔹 Inputs y selects adaptados al ancho de la tarjeta */
 input,
 select {
   padding: 6px 10px;
   border: 1px solid #bbb;
   border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 button {
   padding: 8px 14px;
   border-radius: 6px;
@@ -302,20 +316,24 @@ button {
   cursor: pointer;
   font-weight: bold;
 }
+
 .btn-primary {
   background: #007bff;
   color: white;
 }
+
 .btn-danger {
   background: #dc3545;
   color: white;
 }
+
 .no-data {
   margin-top: 12px;
   color: #666;
   font-style: italic;
 }
 
+/* 🔹 Toast */
 .toast {
   position: fixed;
   top: 50%;
@@ -327,18 +345,21 @@ button {
   color: white;
   z-index: 2000;
 }
+
 .toast.success {
   background: #28a745;
 }
+
 .toast.error {
   background: #dc3545;
 }
+
 .toast.warning {
   background: #ffc107;
   color: #000;
 }
 
-/* Modal roles */
+/* 🔹 Modal roles */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -351,6 +372,7 @@ button {
   align-items: center;
   z-index: 1500;
 }
+
 .modal {
   background: #fff;
   padding: 20px;
@@ -360,16 +382,24 @@ button {
   flex-direction: column;
   gap: 10px;
 }
+
 .roles-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+/* 🔹 Tabla con scroll horizontal y vertical */
 table {
   width: 100%;
   border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 400px;
+  white-space: nowrap;
 }
+
 th,
 td {
   padding: 8px 12px;
@@ -377,13 +407,33 @@ td {
   text-align: left;
   vertical-align: middle;
 }
+
 td img {
   display: block;
   margin: 0 auto;
 }
+
 td .btn-danger {
   display: block;
   margin: 6px auto;
   padding: 4px 10px;
 }
+
+/* 🔹 Mejor comportamiento responsive */
+@media (max-width: 768px) {
+  .card {
+    max-width: 95%;
+    min-width: auto;
+    padding: 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  table {
+    font-size: 14px;
+  }
+}
 </style>
+

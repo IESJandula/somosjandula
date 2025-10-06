@@ -3,7 +3,6 @@ import { crearToast } from '@/utils/toast.js';
 import { getAuth } from "firebase/auth";
 import { SESSION_JWT_TOKEN } from '@/utils/constants' ;
 import { jwtDecode } from 'jwt-decode';
-import axios from 'axios' ;
 
 export async function importarUsuarios(toastMessage, toastColor, isToastOpen, file)
 {
@@ -308,8 +307,8 @@ export async function crearNotificacionWeb(
 
     const headers = {
       Authorization: `Bearer ${token}`,
-      client_id: 'app123',                 // ⚡ cámbialo por el clientId real
-      nombre: 'MiAplicacionDePrueba',      // ⚡ cámbialo por el nombre real
+      client_id: 'app123',                 
+      nombre: 'MiAplicacionDePrueba',      
       texto: inputTexto,
       fecha_inicio: inputFechaInicio,
       hora_inicio: inputHoraInicio,
@@ -324,12 +323,20 @@ export async function crearNotificacionWeb(
       headers.imagen = inputImagen;
     }
 
-    await axios.post(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, null, { headers });
+    const response = await fetch(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, {
+      method: 'POST',
+      headers: headers
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage || 'Error al crear notificación');
+    }
 
     crearToast(toastMessage, toastColor, isToastOpen, "success", "✅ Notificación creada correctamente");
   } catch (error) {
     console.error("❌ Error creando notificación:", error);
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.response?.data || error.message);
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
     throw error;
   }
 }
@@ -339,13 +346,21 @@ export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToast
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const { data } = await axios.get(`${firebaseApiUrl}/notifications_web/obtenerNotificacionesHoy`, {
+    const response = await fetch(`${firebaseApiUrl}/notifications_web/obtenerNotificacionesHoy`, {
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
         usuario: "admin",
         nivel: nivel
       }
     });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage || 'Error al obtener notificaciones');
+    }
+
+    const data = await response.json();
     if (!data || data.length === 0) {
       return [];
     }
@@ -361,9 +376,15 @@ export async function eliminarNotificacionWeb(toastMessage, toastColor, isToastO
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    await axios.delete(`${firebaseApiUrl}/notifications_web/eliminarNotificacionWeb/${id}`, {
+    const response = await fetch(`${firebaseApiUrl}/notifications_web/eliminarNotificacionWeb/${id}`, {
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error(errorMessage || 'Error al eliminar notificación');
+    }
 
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación eliminada");
   } catch (error) {
