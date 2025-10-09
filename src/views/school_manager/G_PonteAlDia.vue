@@ -103,18 +103,31 @@ export default {
   color: black;
 }
 
+/* 🔹 Centrado del contenido principal */
 .content-center {
   flex: 1;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start; /* antes estaba 'center', bajaba el carrusel */
   align-items: center;
+  padding-top: 10px; /* 🔹 pequeño margen superior */
 }
 
+/* 🔹 Título principal */
+.titulo-pagina {
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 10px; /* 🔹 antes 30px, reducido para subir la imagen */
+}
+
+/* 🔹 Carrusel */
 .carousel {
   position: relative;
   width: 100%;
   max-width: 1100px;
-  margin: auto;
+  margin: 0 auto;
   text-align: center;
 }
 
@@ -130,6 +143,7 @@ export default {
   align-items: center;
 }
 
+/* 🔹 Imagen */
 .carousel-image {
   width: 100%;
   height: 100%;
@@ -137,6 +151,7 @@ export default {
   justify-content: center;
   align-items: center;
 }
+
 .carousel-image img {
   max-width: 100%;
   max-height: 100%;
@@ -144,10 +159,12 @@ export default {
   border-radius: 12px;
 }
 
+/* 🔹 Texto del carrusel */
 .carousel-text {
-  margin-top: 10px;
+  margin-top: 8px;
   text-align: center;
 }
+
 .carousel-text p {
   margin: 0;
   font-size: 18px;
@@ -155,6 +172,7 @@ export default {
   color: black;
 }
 
+/* 🔹 Flechas de navegación */
 .arrow {
   position: absolute;
   top: 50%;
@@ -165,35 +183,59 @@ export default {
   border: none;
   cursor: pointer;
   z-index: 10;
+  transition: color 0.2s ease;
 }
+
+.arrow:hover {
+  color: #007bff;
+}
+
 .left {
   left: 10px;
 }
+
 .right {
   right: 10px;
 }
 
-.titulo-pagina {
-  text-align: center;
-  font-size: 30px;
-  font-weight: bold;
-  margin-top: 20px;
-  margin-bottom: 30px;
+/* 🔹 Responsive */
+@media (max-width: 768px) {
+  .carousel-content {
+    height: 40vh;
+  }
+
+  .carousel-text p {
+    font-size: 15px;
+  }
+
+  .arrow {
+    font-size: 26px;
+  }
+
+  .titulo-pagina {
+    font-size: 24px;
+    margin-top: 16px;
+    margin-bottom: 6px; /* 🔹 aún más compacto en móvil */
+  }
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+@media (max-width: 480px) {
   .carousel-content {
     height: 35vh;
   }
+
   .carousel-text p {
     font-size: 14px;
   }
+
   .arrow {
-    font-size: 24px;
+    font-size: 22px;
   }
+
   .titulo-pagina {
-    margin-bottom: 20px;
+    font-size: 22px;
+    margin-bottom: 4px;
   }
 }
 </style>
+

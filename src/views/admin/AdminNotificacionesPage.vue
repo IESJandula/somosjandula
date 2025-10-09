@@ -133,18 +133,18 @@ const imagen = ref(null);
 const showRolesModal = ref(false);
 
 const notificaciones = ref([]);
-const rolesDisponibles = ["ADMINISTRADOR", "PROFESOR", "DIRECCIÓN"];
+const rolesDisponibles = ["ADMINISTRADOR", "PROFESOR", "DIRECCION"];
 
 const toastMessage = ref("");
 const toastColor = ref("success");
 const isToastOpen = ref(false);
 
 const showToastLocal = (msg, color = "success") => {
-  isToastOpen.value = false;
   toastMessage.value = msg;
   toastColor.value = color;
   isToastOpen.value = true;
-  setTimeout(() => (isToastOpen.value = false), 2500);
+  clearTimeout(window._toastTimeout);
+  window._toastTimeout = setTimeout(() => (isToastOpen.value = false), 2500);
 };
 
 const onFileChange = (e) => {
@@ -197,9 +197,7 @@ const crearNotificacion = async () => {
 
   try {
     await crearNotificacionWeb(
-      toastMessage,
-      toastColor,
-      isToastOpen,
+      showToastLocal,
       texto.value,
       inicio.date,
       inicio.time,
@@ -267,20 +265,24 @@ onMounted(() => cargarNotificaciones());
   padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center; /* 🔹 Centra las tarjetas */
+  align-items: center;
   gap: 24px;
+  background: #f5f5f5;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
-/* 🔹 Tarjetas más estrechas y centradas */
+/* 🔹 Tarjetas */
 .card {
   background: #fff;
   border: 1px solid #ccc;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 900px; /* ancho máximo */
-  min-width: 600px; /* ancho mínimo igual al de la tabla */
+  max-width: 900px;
+  min-width: 600px;
+  box-sizing: border-box;
 }
 
 h2 {
@@ -299,32 +301,40 @@ h2 {
   gap: 16px;
 }
 
-/* 🔹 Inputs y selects adaptados al ancho de la tarjeta */
+/* 🔹 Inputs y selects */
 input,
-select {
-  padding: 6px 10px;
-  border: 1px solid #bbb;
+select,
+button {
+  padding: 8px 12px;
   border-radius: 6px;
-  width: 100%;
+  border: 1px solid #bbb;
+  font-size: 14px;
   box-sizing: border-box;
 }
 
 button {
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .btn-primary {
   background: #007bff;
-  color: white;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
 }
 
 .btn-danger {
   background: #dc3545;
-  color: white;
+  color: #fff;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: #a71d2a;
 }
 
 .no-data {
@@ -342,7 +352,7 @@ button {
   padding: 12px 20px;
   border-radius: 6px;
   font-weight: bold;
-  color: white;
+  color: #fff;
   z-index: 2000;
 }
 
@@ -371,25 +381,45 @@ button {
   justify-content: center;
   align-items: center;
   z-index: 1500;
+  padding: 10px; 
 }
 
 .modal {
   background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
+  padding: 20px 25px;
+  border-radius: 12px;
+  width: 320px;
+  max-width: 95%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.2s ease-in-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .roles-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 5px; 
 }
 
-/* 🔹 Tabla con scroll horizontal y vertical */
+.roles-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* 🔹 Tabla con scroll */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -398,6 +428,7 @@ table {
   overflow-y: auto;
   max-height: 400px;
   white-space: nowrap;
+  background: #fff;
 }
 
 th,

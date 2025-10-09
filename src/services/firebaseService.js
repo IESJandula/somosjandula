@@ -259,9 +259,7 @@ export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
 /******************************************************/
 
 export async function crearNotificacionWeb(
-  toastMessage,
-  toastColor,
-  isToastOpen,
+  showToast,          // <- función para mostrar el toast
   inputTexto,
   inputFechaInicio,
   inputHoraInicio,
@@ -273,42 +271,42 @@ export async function crearNotificacionWeb(
 ) {
   try {
     // ✅ Validaciones antes de enviar al backend
-    if (!inputTexto || inputTexto.trim() === "") {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ El campo 'Texto' es obligatorio");
+    if (!inputTexto || String(inputTexto).trim() === "") {
+      showToast("⚠️ El campo 'Texto' es obligatorio", "warning");
       return;
     }
     if (!inputFechaInicio) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Fecha de inicio' es obligatoria");
+      showToast("⚠️ La 'Fecha de inicio' es obligatoria", "warning");
       return;
     }
     if (!inputHoraInicio) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Hora de inicio' es obligatoria");
+      showToast("⚠️ La 'Hora de inicio' es obligatoria", "warning");
       return;
     }
     if (!inputFechaFin) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Fecha de fin' es obligatoria");
+      showToast("⚠️ La 'Fecha de fin' es obligatoria", "warning");
       return;
     }
     if (!inputHoraFin) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ La 'Hora de fin' es obligatoria");
+      showToast("⚠️ La 'Hora de fin' es obligatoria", "warning");
       return;
     }
     if (!inputNivel) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ El 'Nivel' es obligatorio");
+      showToast("⚠️ El 'Nivel' es obligatorio", "warning");
       return;
     }
     if (!inputRoles || inputRoles.length === 0) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "⚠️ Debes seleccionar al menos un 'Rol'");
+      showToast("⚠️ Debes seleccionar al menos un 'Rol'", "warning");
       return;
     }
 
     // ✅ Si pasa las validaciones, seguimos con el envío
-    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+    const token = await obtenerTokenJWTValido();
 
     const headers = {
       Authorization: `Bearer ${token}`,
-      client_id: 'app123',                 
-      nombre: 'MiAplicacionDePrueba',      
+      client_id: 'app123',
+      nombre: 'MiAplicacionDePrueba',
       texto: inputTexto,
       fecha_inicio: inputFechaInicio,
       hora_inicio: inputHoraInicio,
@@ -333,14 +331,13 @@ export async function crearNotificacionWeb(
       throw new Error(errorMessage || 'Error al crear notificación');
     }
 
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "✅ Notificación creada correctamente");
+    showToast("✅ Notificación creada correctamente", "success");
   } catch (error) {
     console.error("❌ Error creando notificación:", error);
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    showToast(error.message, "error");
     throw error;
   }
 }
-
 
 export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel) {
   try {
