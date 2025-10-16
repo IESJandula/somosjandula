@@ -37,16 +37,17 @@ export default {
     let fetchInterval = null;
 
     // Función para obtener las notificaciones del servidor
+    // GPonteAlDia.vue - setup
     const fetchNotificaciones = async () => {
       try {
         const notis = await obtenerNotificacionesHoy(
-          ref(''), 
-          ref(''), 
-          ref(false),
-          'GLOBAL'
+          '',       // toastMessage
+          '',       // toastColor
+          false,    // isToastOpen
+          'GLOBAL', // nivel
+          ''        // usuarioEmail vacío
         );
 
-        // Vaciar la lista actual y actualizar con las nuevas notificaciones
         slides.value = notis.map(n => ({
           text: n.texto,
           image: n.imagen || 'https://via.placeholder.com/800x400?text=Imagen+Dummy'
@@ -57,6 +58,7 @@ export default {
         console.error('Error obteniendo notificaciones:', err);
       }
     };
+
 
     // Funciones de navegación del carrusel
     const nextSlide = () => {
