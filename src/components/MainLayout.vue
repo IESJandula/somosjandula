@@ -187,6 +187,11 @@
               @click="navigateAndCloseMenu('/documents/itIssues')"
               >Crear incidencia TIC</ion-item
             >
+            <ion-item
+              button
+              @click="navigateAndCloseMenu('/documents/pdisTraining')"
+              >Formación PDIs</ion-item
+            >
           </ion-list>
         </ion-list>
 
