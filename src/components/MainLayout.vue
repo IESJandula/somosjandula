@@ -3,6 +3,7 @@
     <!-- Menú lateral -->
     <ion-menu content-id="main-content" side="start" id="main-menu">
       <ion-content>
+        <!-- Menú Administración -->
         <ion-list>
           <ion-item v-if="mostrarAdmin" button @click="toggleSubMenuAdmin">
             Administración
@@ -19,11 +20,29 @@
             <ion-item button @click="navigateAndCloseMenu('/admin/firebase')"
               >Firebase</ion-item
             >
-            <ion-item
-              button
-              @click="navigateAndCloseMenu('/admin/notificaciones')"
-              >Notificaciones</ion-item
-            >
+          </ion-list>
+        </ion-list>
+
+        <!-- Menú Notificaciones -->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuNotificaciones">
+            Notificaciones
+            <ion-icon
+              slot="end"
+              :icon="
+                notificacionesSubmenuVisible
+                  ? 'chevron-up-outline'
+                  : 'chevron-down-outline'
+              "
+            ></ion-icon>
+          </ion-item>
+          <ion-list v-if="notificacionesSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/admin/notificaciones')">
+              Crea tus notificaciones
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/admin/ponte-al-dia')">
+              Ponte al día
+            </ion-item>
           </ion-list>
         </ion-list>
 
@@ -194,63 +213,6 @@
             >
           </ion-list>
         </ion-list>
-
-        <!-- Menú Gestión de matriculas -->
-        <ion-list>
-          <ion-item
-            v-if="mostrarSchoolManager"
-            button
-            @click="toggleSubMenuSchoolManager"
-          >
-            Gestión de matriculas
-            <ion-icon
-              slot="end"
-              :icon="
-                schoolManagerSubmenuVisible
-                  ? 'chevron-up-outline'
-                  : 'chevron-down-outline'
-              "
-            ></ion-icon>
-          </ion-item>
-          <ion-item
-            button
-            @click="navigateAndCloseMenu('/school_manager/ponteAlDia')"
-          >
-            Ponte al día
-          </ion-item>
-          <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
-            <ion-item
-              button
-              @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')"
-              >1. Carga de matrículas</ion-item
-            >
-            <ion-item
-              button
-              @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')"
-              >2. Asignaturas y bloques</ion-item
-            >
-            <ion-item
-              button
-              @click="navigateAndCloseMenu('/school_manager/crearGrupos')"
-              >3. Creación de grupos</ion-item
-            >
-            <ion-item
-              button
-              @click="navigateAndCloseMenu('/school_manager/tablaResumen')"
-              >4. Resumen por asignatura</ion-item
-            >
-            <ion-item
-              button
-              @click="navigateAndCloseMenu('/school_manager/departamentos')"
-              >5. Asignaturas y departamentos</ion-item
-            >
-            <ion-item
-              button
-              @click="navigateAndCloseMenu('/school_manager/reducciones')"
-              >6. Reducciones</ion-item
-            >
-          </ion-list>
-        </ion-list>
       </ion-content>
     </ion-menu>
 
@@ -258,12 +220,10 @@
     <ion-page id="main-content">
       <ion-header>
         <ion-toolbar>
-          <!-- Botón de Menú -->
           <ion-buttons slot="start">
             <ion-menu-button autoHide="false"></ion-menu-button>
           </ion-buttons>
 
-          <!-- 🎯 Carrusel secundario de mensajes dinámico -->
           <div class="secondary-carousel">
             <transition-group name="fade" tag="div" class="messages">
               <p
@@ -276,7 +236,6 @@
             </transition-group>
           </div>
 
-          <!-- Contenedor de usuario y botón de desconexión -->
           <div class="end-section" slot="end">
             <div class="top-bar">
               <div
@@ -285,7 +244,6 @@
                 @mouseleave="showTooltip = false"
               >
                 <ion-button @click="desconectar">Desconectar</ion-button>
-                <!-- Tooltip con el nombre del usuario -->
                 <div v-if="showTooltip && userName" class="tooltip">
                   {{ userName }}
                 </div>
@@ -295,7 +253,6 @@
         </ion-toolbar>
       </ion-header>
 
-      <!-- Contenido principal -->
       <ion-content class="ion-padding" fullscreen>
         <router-view></router-view>
       </ion-content>
@@ -326,6 +283,7 @@ import {
   validarRolesMenu,
   obtenerNombreYApellidosUsuario,
   obtenerNotificacionesHoy,
+  obtenerEmailUsuario,
 } from "@/services/firebaseService";
 import { crearToast } from "@/utils/toast";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
@@ -353,9 +311,9 @@ export default defineComponent({
     const mostrarAdmin = ref(false);
     const mostrarBookingsAdmin = ref(false);
     const mostrarPrintersAdmin = ref(false);
-    const mostrarSchoolManager = ref(false);
     const mostrarProjectorsAdmin = ref(false);
     const mostrarTimetableAdmin = ref(false);
+
     const adminSubmenuVisible = ref(false);
     const printersSubmenuVisible = ref(false);
     const bookingsSubmenuVisible = ref(false);
@@ -363,13 +321,8 @@ export default defineComponent({
     const schoolManagerSubmenuVisible = ref(false);
     const timetableSubmenuVisible = ref(false);
     const projectorsSubmenuVisible = ref(false);
+    const notificacionesSubmenuVisible = ref(false);
 
-    // Variables para el toast
-    const isToastOpen = ref(false);
-    const toastMessage = ref("");
-    const toastColor = ref("success");
-
-    /** 🎯 Carrusel de mensajes secundarios */
     const secondaryIndex = ref(0);
     const secondaryMessages = ref([]);
     let secondaryInterval = null;
@@ -381,14 +334,12 @@ export default defineComponent({
       }
     };
 
-    /** 🔔 Actualiza las notificaciones dinámicamente cada minuto */
     const actualizarMensajes = async () => {
       try {
+        const usuarioEmail = await obtenerEmailUsuario();
         const notificaciones = await obtenerNotificacionesHoy(
-          toastMessage,
-          toastColor,
-          isToastOpen,
-          "SECUNDARIO"
+          "SECUNDARIO",
+          usuarioEmail
         );
         secondaryMessages.value = notificaciones.map((n) => n.texto);
         secondaryIndex.value = 0;
@@ -402,31 +353,20 @@ export default defineComponent({
       secondaryInterval = setInterval(actualizarMensajes, 60000);
       setInterval(nextSecondary, 5000);
 
-      obtenerNombreYApellidosUsuario(
-        toastMessage,
-        toastColor,
-        isToastOpen
-      ).then((userInfo) => {
+      obtenerNombreYApellidosUsuario().then((userInfo) => {
         userName.value = userInfo.nombre;
       });
 
-      validarRolesMenu(toastMessage, toastColor, isToastOpen)
+      validarRolesMenu()
         .then((rolesMenu) => {
           mostrarAdmin.value = rolesMenu.mostrarAdmin;
           mostrarPrintersAdmin.value = rolesMenu.mostrarDireccion;
           mostrarBookingsAdmin.value = rolesMenu.mostrarDireccion;
-          mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
           mostrarProjectorsAdmin.value = rolesMenu.mostrarAdmin;
           mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
         })
         .catch((error) => {
-          crearToast(
-            toastMessage,
-            toastColor,
-            isToastOpen,
-            "danger",
-            `Error al obtener los roles del usuario: ${error.message}`
-          );
+          console.error(error);
         });
     });
 
@@ -451,68 +391,51 @@ export default defineComponent({
       await menuController.close("main-menu");
     };
 
+    // Toggle submenus
     const toggleSubMenuAdmin = () => {
       adminSubmenuVisible.value = !adminSubmenuVisible.value;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
+      closeOthers("admin");
     };
     const toggleSubMenuPrinters = () => {
-      adminSubmenuVisible.value = false;
       printersSubmenuVisible.value = !printersSubmenuVisible.value;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
+      closeOthers("printers");
     };
     const toggleSubMenuBookings = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
+      closeOthers("bookings");
     };
     const toggleSubMenuDocuments = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
       documentsSubmenuVisible.value = !documentsSubmenuVisible.value;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
+      closeOthers("documents");
     };
     const toggleSubMenuSchoolManager = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
-      timetableSubmenuVisible.value = false;
-      projectorsSubmenuVisible.value = false;
+      closeOthers("schoolManager");
     };
     const toggleSubMenuTimetable = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
       timetableSubmenuVisible.value = !timetableSubmenuVisible.value;
-      projectorsSubmenuVisible.value = false;
+      closeOthers("timetable");
     };
     const toggleSubMenuProjectors = () => {
-      adminSubmenuVisible.value = false;
-      printersSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      documentsSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      timetableSubmenuVisible.value = false;
       projectorsSubmenuVisible.value = !projectorsSubmenuVisible.value;
+      closeOthers("projectors");
+    };
+    const toggleSubMenuNotificaciones = () => {
+      notificacionesSubmenuVisible.value = !notificacionesSubmenuVisible.value;
+      closeOthers("notificaciones");
+    };
+
+    const closeOthers = (current) => {
+      if (current !== "admin") adminSubmenuVisible.value = false;
+      if (current !== "printers") printersSubmenuVisible.value = false;
+      if (current !== "bookings") bookingsSubmenuVisible.value = false;
+      if (current !== "documents") documentsSubmenuVisible.value = false;
+      if (current !== "schoolManager")
+        schoolManagerSubmenuVisible.value = false;
+      if (current !== "timetable") timetableSubmenuVisible.value = false;
+      if (current !== "projectors") projectorsSubmenuVisible.value = false;
+      if (current !== "notificaciones")
+        notificacionesSubmenuVisible.value = false;
     };
 
     return {
@@ -523,7 +446,6 @@ export default defineComponent({
       mostrarAdmin,
       mostrarPrintersAdmin,
       mostrarBookingsAdmin,
-      mostrarSchoolManager,
       mostrarProjectorsAdmin,
       mostrarTimetableAdmin,
       adminSubmenuVisible,
@@ -533,6 +455,7 @@ export default defineComponent({
       schoolManagerSubmenuVisible,
       timetableSubmenuVisible,
       projectorsSubmenuVisible,
+      notificacionesSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuPrinters,
       toggleSubMenuBookings,
@@ -540,6 +463,7 @@ export default defineComponent({
       toggleSubMenuSchoolManager,
       toggleSubMenuTimetable,
       toggleSubMenuProjectors,
+      toggleSubMenuNotificaciones,
       secondaryIndex,
       secondaryMessages,
     };
@@ -575,13 +499,6 @@ ion-toolbar {
   align-items: center;
   gap: 10px;
 }
-.user-name {
-  font-size: 16px;
-  font-weight: bold;
-}
-ion-menu {
-  z-index: 9999 !important;
-}
 .secondary-carousel {
   flex: 1;
   text-align: center;
@@ -602,10 +519,9 @@ ion-menu {
 .fade-leave-to {
   opacity: 0;
 }
-
 .tooltip {
   position: absolute;
-  top: -5px; /* lo coloca debajo del botón */
+  top: -5px;
   left: 50%;
   transform: translateX(-50%);
   background: #333;
@@ -617,15 +533,12 @@ ion-menu {
   pointer-events: none;
   z-index: 10000;
   opacity: 0.95;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
-
-
 .button-container {
   position: relative;
   display: inline-block;
 }
-
 @media (min-width: 768px) {
   ion-button {
     padding: 10px 30px;

@@ -258,8 +258,13 @@ export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
 /** Funciones relacionadas con las notificaciones web */
 /******************************************************/
 
+/**
+ * Crea una nueva notificación web.
+ */
 export async function crearNotificacionWeb(
-  showToast,          // <- función para mostrar el toast
+  toastMessage,
+  toastColor,
+  isToastOpen,
   inputTexto,
   inputFechaInicio,
   inputHoraInicio,
@@ -270,76 +275,67 @@ export async function crearNotificacionWeb(
   inputImagen
 ) {
   try {
-    // ✅ Validaciones antes de enviar al backend
-    if (!inputTexto || String(inputTexto).trim() === "") {
-      showToast("⚠️ El campo 'Texto' es obligatorio", "warning");
-      return;
-    }
-    if (!inputFechaInicio) {
-      showToast("⚠️ La 'Fecha de inicio' es obligatoria", "warning");
-      return;
-    }
-    if (!inputHoraInicio) {
-      showToast("⚠️ La 'Hora de inicio' es obligatoria", "warning");
-      return;
-    }
-    if (!inputFechaFin) {
-      showToast("⚠️ La 'Fecha de fin' es obligatoria", "warning");
-      return;
-    }
-    if (!inputHoraFin) {
-      showToast("⚠️ La 'Hora de fin' es obligatoria", "warning");
-      return;
-    }
-    if (!inputNivel) {
-      showToast("⚠️ El 'Nivel' es obligatorio", "warning");
-      return;
-    }
-    if (!inputRoles || inputRoles.length === 0) {
-      showToast("⚠️ Debes seleccionar al menos un 'Rol'", "warning");
-      return;
-    }
+    // ✅ Validaciones de campos obligatorios
+    if (!inputTexto || String(inputTexto).trim() === "")
+      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ El campo 'Texto' es obligatorio");
 
-    // ✅ Si pasa las validaciones, seguimos con el envío
-    const token = await obtenerTokenJWTValido();
+    if (!inputFechaInicio)
+      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Fecha de inicio' es obligatoria");
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      client_id: 'app123',
-      nombre: 'MiAplicacionDePrueba',
-      texto: inputTexto,
-      fecha_inicio: inputFechaInicio,
-      hora_inicio: inputHoraInicio,
-      fecha_fin: inputFechaFin,
-      hora_fin: inputHoraFin,
-      nivel: inputNivel,
-      roles: inputRoles,
-      imagen: inputImagen || ''
-    };
+    if (!inputHoraInicio)
+      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Hora de inicio' es obligatoria");
 
-    if (inputNivel === "GLOBAL" && inputImagen) {
-      headers.imagen = inputImagen;
-    }
+    if (!inputFechaFin)
+      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Fecha de fin' es obligatoria");
 
+    if (!inputHoraFin)
+      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Hora de fin' es obligatoria");
+
+    if (!inputNivel)
+      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ El 'Nivel' es obligatorio");
+
+    if (!inputRoles || inputRoles.length === 0)
+      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ Debes seleccionar al menos un 'Rol'");
+
+    // ✅ Obtenemos token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // ✅ Envío al backend
     const response = await fetch(`${firebaseApiUrl}/notifications_web/crearNotificacionWeb`, {
-      method: 'POST',
-      headers: headers
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        client_id: "app123",
+        nombre: "MiAplicacionDePrueba",
+        texto: inputTexto,
+        fecha_inicio: inputFechaInicio,
+        hora_inicio: inputHoraInicio,
+        fecha_fin: inputFechaFin,
+        hora_fin: inputHoraFin,
+        nivel: inputNivel,
+        roles: inputRoles,
+        imagen: inputImagen || "",
+      },
     });
 
     if (!response.ok) {
       const errorMessage = await response.text();
-      throw new Error(errorMessage || 'Error al crear notificación');
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage);
+      throw new Error(errorMessage || "Error al crear notificación");
     }
 
-    showToast("✅ Notificación creada correctamente", "success");
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "✅ Notificación creada correctamente");
   } catch (error) {
     console.error("❌ Error creando notificación:", error);
-    showToast(error.message, "error");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
     throw error;
   }
 }
 
-export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel) {
+/**
+ * Obtiene todas las notificaciones web almacenadas.
+ */
+export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel, usuarioEmail) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -347,7 +343,7 @@ export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToast
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
-        usuario: "admin",
+        usuario: usuarioEmail,
         nivel: nivel
       }
     });
@@ -369,13 +365,19 @@ export async function obtenerNotificacionesHoy(toastMessage, toastColor, isToast
   }
 }
 
-export async function eliminarNotificacionWeb(toastMessage, toastColor, isToastOpen, id) {
+/**
+ * Elimina una notificación web por ID.
+ */
+export async function eliminarNotificacionWeb(toastMessage, toastColor, isToastOpen, id, usuarioEmail, nivel) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     const response = await fetch(`${firebaseApiUrl}/notifications_web/eliminarNotificacionWeb/${id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { 
+        Authorization: `Bearer ${token}`, 
+        usuario: usuarioEmail,
+        nivel: nivel}
     });
 
     if (!response.ok) {
@@ -389,3 +391,4 @@ export async function eliminarNotificacionWeb(toastMessage, toastColor, isToastO
     throw error;
   }
 }
+

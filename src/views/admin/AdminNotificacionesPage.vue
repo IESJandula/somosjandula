@@ -110,6 +110,16 @@
         <button class="btn-primary" @click="showRolesModal = false">Aceptar</button>
       </div>
     </div>
+
+    <ion-toast
+      :is-open="isToastOpen"
+      :message="toastMessage"
+      :color="toastColor"
+      duration="2000"
+      position="top"
+      @did-dismiss="() => (isToastOpen = false)">
+    </ion-toast>
+
   </div>
 </template>
 
@@ -117,6 +127,8 @@
 import { ref, onMounted } from "vue";
 import Datepicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
+import { IonToast } from "@ionic/vue";
+import { crearToast } from '@/utils/toast.js';
 import { format, parseISO, isValid, parse } from "date-fns";
 import {
   crearNotificacionWeb,
@@ -135,17 +147,20 @@ const showRolesModal = ref(false);
 const notificaciones = ref([]);
 const rolesDisponibles = ["ADMINISTRADOR", "PROFESOR", "DIRECCION"];
 
+const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
-const isToastOpen = ref(false);
 
-const showToastLocal = (msg, color = "success") => {
-  toastMessage.value = msg;
-  toastColor.value = color;
-  isToastOpen.value = true;
-  clearTimeout(window._toastTimeout);
-  window._toastTimeout = setTimeout(() => (isToastOpen.value = false), 2500);
-};
+/* La función crearToast se importa desde '@/utils/toast.js' */
+
+
+// const showToastLocal = (msg, color = "success") => {
+//   toastMessage.value = msg;
+//   toastColor.value = color;
+//   isToastOpen.value = true;
+//   clearTimeout(window._toastTimeout);
+//   window._toastTimeout = setTimeout(() => (isToastOpen.value = false), 2500);
+// };
 
 const onFileChange = (e) => {
   imagen.value = e.target.files[0];
@@ -181,23 +196,25 @@ function formatDateAndTime(val) {
 
 const crearNotificacion = async () => {
   if (!texto.value) {
-    showToastLocal("Falta el texto de la notificación", "warning");
+    crearToast(toastMessage, toastColor, isToastOpen, "warning", "El texto no puede estar vacío");
     return;
   }
   const inicio = formatDateAndTime(fechaInicio.value);
   const fin = formatDateAndTime(fechaFin.value);
   if (!inicio.date || !inicio.time || !fin.date || !fin.time) {
-    showToastLocal("Falta seleccionar fecha/hora inicio o fin", "warning");
+    crearToast(toastMessage, toastColor, isToastOpen, "warning", "Fechas de inicio y fin inválidas");
     return;
   }
   if (roles.value.length === 0) {
-    showToastLocal("Debes seleccionar al menos un rol", "warning");
+    crearToast(toastMessage, toastColor, isToastOpen, "warning", "Selecciona al menos un rol");
     return;
   }
 
   try {
     await crearNotificacionWeb(
-      showToastLocal,
+      toastMessage,
+      toastColor,  
+      isToastOpen, 
       texto.value,
       inicio.date,
       inicio.time,
@@ -207,7 +224,7 @@ const crearNotificacion = async () => {
       roles.value.join(","),
       imagen.value ? imagen.value.name : ""
     );
-    showToastLocal("Notificación creada correctamente", "success");
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación creada correctamente");
     await cargarNotificaciones();
 
     texto.value = "";
@@ -217,17 +234,22 @@ const crearNotificacion = async () => {
     roles.value = [];
   } catch (err) {
     console.error(err);
-    showToastLocal("Error creando la notificación", "error");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al obtener notificaciones");
   }
 };
 
+import { obtenerEmailUsuario } from "@/services/firebaseService";
+
 const cargarNotificaciones = async () => {
   try {
-    const data = await obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel.value);
+    const usuarioEmail = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
+    const data = await obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel.value, usuarioEmail);
+    
     if (!data || data.length === 0) {
       notificaciones.value = [];
       return;
     }
+
     notificaciones.value = data.map((n) => ({
       id: n.id,
       texto: n.texto ? n.texto.replace(/\n?\[Imagen:.*?\]/, "").trim() : "",
@@ -238,22 +260,24 @@ const cargarNotificaciones = async () => {
     }));
   } catch (err) {
     console.error(err);
-    showToastLocal("Error al obtener notificaciones", "error");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al obtener notificaciones");
   }
 };
 
+
 const eliminarNotificacion = async (n) => {
   if (!n || !n.id) {
-    showToastLocal("Notificación inválida", "warning");
+    crearToast(toastMessage, toastColor, isToastOpen, "warning", "Notificación inválida");
     return;
   }
   try {
-    await eliminarNotificacionWeb(toastMessage, toastColor, isToastOpen, n.id);
-    showToastLocal("Notificación eliminada", "success");
+    const usuarioEmail = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
+    await eliminarNotificacionWeb(toastMessage, toastColor, isToastOpen, n.id, usuarioEmail, nivel.value);
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Notificación eliminada");
     await cargarNotificaciones();
   } catch (err) {
     console.error(err);
-    showToastLocal("Error al eliminar notificación", "error");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al eliminar notificacion");
   }
 };
 

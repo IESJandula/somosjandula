@@ -25,13 +25,13 @@ import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
 import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
 import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
 import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
-import G_PonteAlDia from '@/views/school_manager/G_PonteAlDia.vue';
 import A_Administracion from '@/views/timetable/A_Administracion.vue';
 import B_EleccionDeHorarios from '@/views/timetable/B_EleccionDeHorarios.vue';
 import C_ValidadorDatos from '@/views/timetable/C_ValidadorDatos.vue';
 import D_GeneradorHorarios from '@/views/timetable/D_GeneradorHorarios.vue';  
 import E_HorarioIndividual from '@/views/timetable/E_HorarioIndividual.vue';
 import F_HorarioCursoEtapaGrupo from '@/views/timetable/F_HorarioCursoEtapaGrupo.vue';
+import GPonteAlDia from '@/views/school_manager/G_PonteAlDia.vue';
 
 const routes = [
   {
@@ -155,11 +155,11 @@ const routes = [
         },
       },
       {
-        path: 'school_manager/ponteAlDia',
-        component: G_PonteAlDia,
-        name: 'Ponte_Al_Dia',
+        path: '/admin/ponte-al-dia',
+        component: GPonteAlDia,
+        name: 'GPonteAlDia',
         meta: {
-          role: 'DIRECCION'
+          role: 'DIRECCION', 
         },
       },
       {
