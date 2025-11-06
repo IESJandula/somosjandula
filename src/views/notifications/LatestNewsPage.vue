@@ -25,10 +25,10 @@
 
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { obtenerNotificacionesHoy } from '@/services/firebaseService.js';
+import { obtenerNotificacionesVigentesPorNivel } from '@/services/notifications.js';
 
 export default {
-  name: 'GPonteAlDia',
+  name: 'LatestNewsPage',
   setup() {
     const currentIndex = ref(0);
     const slides = ref([]);
@@ -36,17 +36,16 @@ export default {
     let carouselInterval = null;
     let fetchInterval = null;
 
+    // Variables para el toast
+    const isToastOpen = ref(false);
+    const toastMessage = ref('');
+    const toastColor = ref('success');
+
     // Función para obtener las notificaciones del servidor
     // GPonteAlDia.vue - setup
     const fetchNotificaciones = async () => {
       try {
-        const notis = await obtenerNotificacionesHoy(
-          '',       // toastMessage
-          '',       // toastColor
-          false,    // isToastOpen
-          'GLOBAL', // nivel
-          ''        // usuarioEmail vacío
-        );
+        const notis = await obtenerNotificacionesVigentesPorNivel(  toastMessage, toastColor, isToastOpen, 'Global');
 
         slides.value = notis.map(n => ({
           text: n.texto,

@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import LoginPage from '@/views/LoginPage.vue';
 import MainLayout from '@/components/MainLayout.vue';
 import AdminFirebasePage from '@/views/admin/AdminFirebasePage.vue';
-import AdminNotificacionesPage from '@/views/admin/AdminNotificacionesPage.vue';
 import PrintersAdminPage from '@/views/printers/PrintersAdminPage.vue';
 import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
 import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
@@ -31,7 +30,8 @@ import C_ValidadorDatos from '@/views/timetable/C_ValidadorDatos.vue';
 import D_GeneradorHorarios from '@/views/timetable/D_GeneradorHorarios.vue';  
 import E_HorarioIndividual from '@/views/timetable/E_HorarioIndividual.vue';
 import F_HorarioCursoEtapaGrupo from '@/views/timetable/F_HorarioCursoEtapaGrupo.vue';
-import GPonteAlDia from '@/views/school_manager/G_PonteAlDia.vue';
+import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';  
+import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
 
 const routes = [
   {
@@ -62,14 +62,6 @@ const routes = [
         path: 'admin/firebase',
         component: AdminFirebasePage,
         name: 'AdminFirebase',
-        meta: {
-          role: 'ADMINISTRADOR'
-        },
-      },
-      {
-        path: 'admin/notificaciones',
-        component: AdminNotificacionesPage,
-        name: 'AdminNotificaciones',
         meta: {
           role: 'ADMINISTRADOR'
         },
@@ -155,11 +147,19 @@ const routes = [
         },
       },
       {
-        path: '/admin/ponte-al-dia',
-        component: GPonteAlDia,
-        name: 'GPonteAlDia',
+        path: 'notifications/latestNews',
+        component: LatestNewsPage,
+        name: 'LatestNews',
         meta: {
-          role: 'DIRECCION', 
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'notifications/manager',
+        component: ManageNotificationsPage,
+        name: 'ManageNotificationsPage',
+        meta: {
+          role: 'PROFESOR', 
         },
       },
       {

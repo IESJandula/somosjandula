@@ -17,7 +17,7 @@
             :auto-apply="true"
             :enable-time-picker="true"
             :clearable="false"
-            :format="'dd-MM-yyyy HH:mm'"
+            :format="'dd/MM/yyyy HH:mm'"
             locale="es"
           />
         </div>
@@ -29,7 +29,7 @@
             :auto-apply="true"
             :enable-time-picker="true"
             :clearable="false"
-            :format="'dd-MM-yyyy HH:mm'"
+            :format="'dd/MM/yyyy HH:mm'"
             locale="es"
           />
         </div>
@@ -39,8 +39,7 @@
         <div class="form-group">
           <label>Nivel</label>
           <select v-model="nivel">
-            <option value="GLOBAL">Global</option>
-            <option value="SECUNDARIO">Secundario</option>
+            <option v-for="nivel in nivelesDisponibles" :key="nivel" :value="nivel">{{ nivel }}</option>
           </select>
         </div>
 
@@ -52,7 +51,7 @@
         </div>
       </div>
 
-      <div v-if="nivel === 'GLOBAL'" class="form-group">
+      <div v-if="nivel === 'Global'" class="form-group">
         <label>Imagen</label>
         <input type="file" @change="onFileChange" />
       </div>
@@ -85,7 +84,7 @@
             <td>{{ n.nivel }}</td>
             <td>{{ n.roles }}</td>
             <td>
-              <button class="btn-danger" @click="eliminarNotificacion(n)">X</button>
+              <button class="btn-danger" @click="cambiarEstadoNotificacion(n)">X</button>
             </td>
           </tr>
         </tbody>
@@ -103,7 +102,7 @@
       <div class="modal">
         <h3>Selecciona Roles</h3>
         <div class="roles-list">
-          <label v-for="rol in rolesDisponibles" :key="rol">
+          <label v-for="rol in rolesDisponibles" :key="rol" @click="addRole(rol)">
             <input type="checkbox" :value="rol" v-model="roles" /> {{ rol }}
           </label>
         </div>
@@ -132,35 +131,27 @@ import { crearToast } from '@/utils/toast.js';
 import { format, parseISO, isValid, parse } from "date-fns";
 import {
   crearNotificacionWeb,
-  obtenerNotificacionesHoy,
-  eliminarNotificacionWeb,
-} from "@/services/firebaseService";
+  obtenerNotificacionesVigentesPorUsuario,
+  cambiarEstadoNotificacionWeb,
+  obtenerRolesUsuario,
+  obtenerNivelesNotificaciones,
+} from "@/services/notifications";
 
 const texto = ref("");
 const fechaInicio = ref(null);
 const fechaFin = ref(null);
-const nivel = ref("GLOBAL");
+const nivel = ref("");
 const roles = ref([]);
 const imagen = ref(null);
 const showRolesModal = ref(false);
 
 const notificaciones = ref([]);
-const rolesDisponibles = ["ADMINISTRADOR", "PROFESOR", "DIRECCION"];
+const rolesDisponibles = ref([]);
+const nivelesDisponibles = ref([]);
 
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
-
-/* La función crearToast se importa desde '@/utils/toast.js' */
-
-
-// const showToastLocal = (msg, color = "success") => {
-//   toastMessage.value = msg;
-//   toastColor.value = color;
-//   isToastOpen.value = true;
-//   clearTimeout(window._toastTimeout);
-//   window._toastTimeout = setTimeout(() => (isToastOpen.value = false), 2500);
-// };
 
 const onFileChange = (e) => {
   imagen.value = e.target.files[0];
@@ -230,7 +221,7 @@ const crearNotificacion = async () => {
     texto.value = "";
     fechaInicio.value = null;
     fechaFin.value = null;
-    nivel.value = "GLOBAL";
+    nivel.value = nivelesDisponibles.value[0];
     roles.value = [];
   } catch (err) {
     console.error(err);
@@ -238,12 +229,9 @@ const crearNotificacion = async () => {
   }
 };
 
-import { obtenerEmailUsuario } from "@/services/firebaseService";
-
 const cargarNotificaciones = async () => {
   try {
-    const usuarioEmail = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
-    const data = await obtenerNotificacionesHoy(toastMessage, toastColor, isToastOpen, nivel.value, usuarioEmail);
+    const data = await obtenerNotificacionesVigentesPorUsuario(toastMessage, toastColor, isToastOpen);
     
     if (!data || data.length === 0) {
       notificaciones.value = [];
@@ -265,23 +253,31 @@ const cargarNotificaciones = async () => {
 };
 
 
-const eliminarNotificacion = async (n) => {
+const cambiarEstadoNotificacion = async (n) => {
   if (!n || !n.id) {
     crearToast(toastMessage, toastColor, isToastOpen, "warning", "Notificación inválida");
     return;
   }
   try {
-    const usuarioEmail = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
-    await eliminarNotificacionWeb(toastMessage, toastColor, isToastOpen, n.id, usuarioEmail, nivel.value);
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Notificación eliminada");
+    await cambiarEstadoNotificacionWeb(toastMessage, toastColor, isToastOpen, n.id);
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Estado cambiado correctamente");
     await cargarNotificaciones();
   } catch (err) {
     console.error(err);
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al eliminar notificacion");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al cambiar el estado de la notificación");
   }
 };
 
-onMounted(() => cargarNotificaciones());
+onMounted(() => {
+  cargarNotificaciones();
+  obtenerRolesUsuario(toastMessage, toastColor, isToastOpen).then((roles) => {
+    rolesDisponibles.value = roles;
+  });
+  obtenerNivelesNotificaciones(toastMessage, toastColor, isToastOpen).then((niveles) => {
+    nivelesDisponibles.value = niveles;
+    nivel.value = niveles[0];
+  });
+});
 </script>
 
 <style scoped>

@@ -37,11 +37,11 @@
             ></ion-icon>
           </ion-item>
           <ion-list v-if="notificacionesSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/admin/notificaciones')">
-              Crea tus notificaciones
+            <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">
+              ¡Crea noticias!
             </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/admin/ponte-al-dia')">
-              Ponte al día
+            <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">
+              Ver últimas noticias
             </ion-item>
           </ion-list>
         </ion-list>
@@ -279,14 +279,9 @@ import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { menuController } from "@ionic/vue";
 import { getAuth, signOut } from "firebase/auth";
-import {
-  validarRolesMenu,
-  obtenerNombreYApellidosUsuario,
-  obtenerNotificacionesHoy,
-  obtenerEmailUsuario,
-} from "@/services/firebaseService";
-import { crearToast } from "@/utils/toast";
+import { validarRolesMenu, obtenerNombreYApellidosUsuario } from "@/services/firebaseService";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
+import { obtenerNotificacionesVigentesPorNivel } from "@/services/notifications";
 
 export default defineComponent({
   name: "MainLayout",
@@ -323,6 +318,11 @@ export default defineComponent({
     const projectorsSubmenuVisible = ref(false);
     const notificacionesSubmenuVisible = ref(false);
 
+    // Variables para el toast
+    const isToastOpen = ref(false);
+    const toastMessage = ref('');
+    const toastColor = ref('success');
+
     const secondaryIndex = ref(0);
     const secondaryMessages = ref([]);
     let secondaryInterval = null;
@@ -336,12 +336,8 @@ export default defineComponent({
 
     const actualizarMensajes = async () => {
       try {
-        const usuarioEmail = await obtenerEmailUsuario();
-        const notificaciones = await obtenerNotificacionesHoy(
-          "SECUNDARIO",
-          usuarioEmail
-        );
-        secondaryMessages.value = notificaciones.map((n) => n.texto);
+        const notificacionesPorNivelSecundario = await obtenerNotificacionesVigentesPorNivel(toastMessage, toastColor, isToastOpen, "Secundario");
+        secondaryMessages.value = notificacionesPorNivelSecundario.map((n) => n.texto);
         secondaryIndex.value = 0;
       } catch (error) {
         console.error("Error al obtener notificaciones:", error);
@@ -430,12 +426,10 @@ export default defineComponent({
       if (current !== "printers") printersSubmenuVisible.value = false;
       if (current !== "bookings") bookingsSubmenuVisible.value = false;
       if (current !== "documents") documentsSubmenuVisible.value = false;
-      if (current !== "schoolManager")
-        schoolManagerSubmenuVisible.value = false;
+      if (current !== "schoolManager") schoolManagerSubmenuVisible.value = false;
       if (current !== "timetable") timetableSubmenuVisible.value = false;
       if (current !== "projectors") projectorsSubmenuVisible.value = false;
-      if (current !== "notificaciones")
-        notificacionesSubmenuVisible.value = false;
+      if (current !== "notificaciones") notificacionesSubmenuVisible.value = false;
     };
 
     return {
@@ -546,6 +540,24 @@ ion-toolbar {
   }
   ion-icon {
     font-size: 28px;
+  }
+}
+
+/* Estilos para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .secondary-carousel {
+    color: #fff;
+  }
+  .secondary-carousel p {
+    color: #fff;
+  }
+  ion-button {
+    --background: #4c8dff;
+    --color: white;
+  }
+  .tooltip {
+    background: #1a1a1a;
+    color: #fff;
   }
 }
 </style>
