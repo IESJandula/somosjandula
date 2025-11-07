@@ -25,7 +25,7 @@
 
 <script>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { obtenerNotificacionesVigentesPorNivel } from '@/services/notifications.js';
+import { obtenerNotificacionesVigentesPorTipo } from '@/services/notifications.js';
 
 export default {
   name: 'LatestNewsPage',
@@ -45,7 +45,7 @@ export default {
     // GPonteAlDia.vue - setup
     const fetchNotificaciones = async () => {
       try {
-        const notis = await obtenerNotificacionesVigentesPorNivel(  toastMessage, toastColor, isToastOpen, 'Global');
+        const notis = await obtenerNotificacionesVigentesPorTipo(toastMessage, toastColor, isToastOpen, 'Texto e imagen');
 
         slides.value = notis.map(n => ({
           text: n.texto,

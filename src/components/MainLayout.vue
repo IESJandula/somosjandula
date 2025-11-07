@@ -224,12 +224,12 @@
             <ion-menu-button autoHide="false"></ion-menu-button>
           </ion-buttons>
 
-          <div class="secondary-carousel">
-            <transition-group name="fade" tag="div" class="messages">
+          <div class="notificacionesSoloTexto-carousel">
+            <transition-group name="fade" tag="div" class="notificacionesSoloTexto">
               <p
-                v-for="(msg, index) in secondaryMessages"
+                v-for="(msg, index) in notificacionesSoloTexto"
                 :key="index"
-                v-show="index === secondaryIndex"
+                v-show="index === notificacionesSoloTextoIndex"
               >
                 {{ msg }}
               </p>
@@ -281,7 +281,7 @@ import { menuController } from "@ionic/vue";
 import { getAuth, signOut } from "firebase/auth";
 import { validarRolesMenu, obtenerNombreYApellidosUsuario } from "@/services/firebaseService";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
-import { obtenerNotificacionesVigentesPorNivel } from "@/services/notifications";
+import { obtenerNotificacionesVigentesPorTipo } from "@/services/notifications";
 
 export default defineComponent({
   name: "MainLayout",
@@ -323,31 +323,34 @@ export default defineComponent({
     const toastMessage = ref('');
     const toastColor = ref('success');
 
-    const secondaryIndex = ref(0);
-    const secondaryMessages = ref([]);
-    let secondaryInterval = null;
+    const notificacionesSoloTextoIndex = ref(0);
+    const notificacionesSoloTexto = ref([]);
+    let notificacionesSoloTextoInterval = null;
 
-    const nextSecondary = () => {
-      if (secondaryMessages.value.length > 0) {
-        secondaryIndex.value =
-          (secondaryIndex.value + 1) % secondaryMessages.value.length;
+    const nextNotificacionesSoloTexto = () => {
+      if (notificacionesSoloTexto.value.length > 0) {
+        notificacionesSoloTextoIndex.value =
+          (notificacionesSoloTextoIndex.value + 1) % notificacionesSoloTexto.value.length;
       }
     };
 
-    const actualizarMensajes = async () => {
+    const actualizarNotificacionesSoloTexto = async () => {
       try {
-        const notificacionesPorNivelSecundario = await obtenerNotificacionesVigentesPorNivel(toastMessage, toastColor, isToastOpen, "Secundario");
-        secondaryMessages.value = notificacionesPorNivelSecundario.map((n) => n.texto);
-        secondaryIndex.value = 0;
+        const notificacionesPorTipoSoloTexto = await obtenerNotificacionesVigentesPorTipo(toastMessage, toastColor, isToastOpen, "Solo texto");
+        notificacionesSoloTexto.value = notificacionesPorTipoSoloTexto.map(({
+          creador,
+          texto
+        }) => `${creador}: ${texto}`);
+        notificacionesSoloTextoIndex.value = 0;
       } catch (error) {
         console.error("Error al obtener notificaciones:", error);
       }
     };
 
     onMounted(() => {
-      actualizarMensajes();
-      secondaryInterval = setInterval(actualizarMensajes, 60000);
-      setInterval(nextSecondary, 5000);
+      actualizarNotificacionesSoloTexto();
+      notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
+      setInterval(nextNotificacionesSoloTexto, 5000);
 
       obtenerNombreYApellidosUsuario().then((userInfo) => {
         userName.value = userInfo.nombre;
@@ -367,7 +370,7 @@ export default defineComponent({
     });
 
     onBeforeUnmount(() => {
-      clearInterval(secondaryInterval);
+      clearInterval(notificacionesSoloTextoInterval);
     });
 
     const desconectar = async () => {
@@ -458,8 +461,8 @@ export default defineComponent({
       toggleSubMenuTimetable,
       toggleSubMenuProjectors,
       toggleSubMenuNotificaciones,
-      secondaryIndex,
-      secondaryMessages,
+      notificacionesSoloTextoIndex,
+      notificacionesSoloTexto,
     };
   },
 });
@@ -493,13 +496,13 @@ ion-toolbar {
   align-items: center;
   gap: 10px;
 }
-.secondary-carousel {
+.notificacionesSoloTexto-carousel {
   flex: 1;
   text-align: center;
   overflow: hidden;
   color: #000;
 }
-.secondary-carousel p {
+.notificacionesSoloTexto-carousel p {
   margin: 0;
   color: #000;
   font-size: 14px;
@@ -545,10 +548,10 @@ ion-toolbar {
 
 /* Estilos para modo oscuro */
 @media (prefers-color-scheme: dark) {
-  .secondary-carousel {
+  .notificacionesSoloTexto-carousel {
     color: #fff;
   }
-  .secondary-carousel p {
+  .notificacionesSoloTexto-carousel p {
     color: #fff;
   }
   ion-button {

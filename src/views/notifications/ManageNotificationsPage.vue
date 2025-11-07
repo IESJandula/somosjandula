@@ -2,7 +2,7 @@
   <div class="page-wrapper">
     <!-- Crear Notificación -->
     <div class="card">
-      <h2>Crear Notificación</h2>
+      <h2>Formulario para crear una notificación</h2>
 
       <div class="form-group">
         <label>Texto</label>
@@ -11,7 +11,7 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>Fecha inicio</label>
+          <label>¿Desde cuándo?</label>
           <Datepicker
             v-model="fechaInicio"
             :auto-apply="true"
@@ -23,7 +23,7 @@
         </div>
 
         <div class="form-group">
-          <label>Fecha fin</label>
+          <label>¿Hasta cuándo?</label>
           <Datepicker
             v-model="fechaFin"
             :auto-apply="true"
@@ -37,21 +37,21 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label>Nivel</label>
-          <select v-model="nivel">
-            <option v-for="nivel in nivelesDisponibles" :key="nivel" :value="nivel">{{ nivel }}</option>
+          <label>¿Dónde la mostrarás?</label>
+          <select v-model="tipo">
+            <option v-for="tipo in tiposDisponibles" :key="tipo" :value="tipo">{{ tipo }}</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>Roles</label>
-          <button class="btn-primary" @click="showRolesModal = true">
-            {{ roles.length ? roles.join(", ") : "Seleccionar roles" }}
-          </button>
+          <label>¿Quién la recibirá?</label>
+          <select v-model="rol">
+            <option v-for="rol in rolesDisponibles" :key="rol" :value="rol">{{ rol }}</option>
+          </select>
         </div>
       </div>
 
-      <div v-if="nivel === 'Global'" class="form-group">
+      <div v-if="tipo === 'Texto e imagen'" class="form-group">
         <label>Imagen</label>
         <input type="file" @change="onFileChange" />
       </div>
@@ -67,22 +67,24 @@
       <table v-if="notificaciones.length > 0">
         <thead>
           <tr>
+            <th>Creador</th>
             <th>Texto</th>
             <th>Inicio</th>
             <th>Fin</th>
-            <th>Nivel</th>
-            <th>Roles</th>
+            <th>Receptor</th>
+            <th>Tipo</th>
             <th>Acciones</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="n in notificaciones" :key="n.id || n.texto">
+            <td>{{ n.creador }}</td>
             <td>{{ n.texto }}</td>
-            <td>{{ n.fechaInicio }}</td>
-            <td>{{ n.fechaFin }}</td>
-            <td>{{ n.nivel }}</td>
-            <td>{{ n.roles }}</td>
+            <td>{{ n.fechaHoraInicio }}</td>
+            <td>{{ n.fechaHoraFin }}</td>
+            <td>{{ n.rol }}</td>
+            <td>{{ n.tipo }}</td>
             <td>
               <button class="btn-danger" @click="cambiarEstadoNotificacion(n)">X</button>
             </td>
@@ -95,19 +97,6 @@
     <!-- Toast -->
     <div v-if="isToastOpen" :class="['toast', toastColor]">
       {{ toastMessage }}
-    </div>
-
-    <!-- Modal de Roles -->
-    <div v-if="showRolesModal" class="modal-backdrop" @click.self="showRolesModal = false">
-      <div class="modal">
-        <h3>Selecciona Roles</h3>
-        <div class="roles-list">
-          <label v-for="rol in rolesDisponibles" :key="rol" @click="addRole(rol)">
-            <input type="checkbox" :value="rol" v-model="roles" /> {{ rol }}
-          </label>
-        </div>
-        <button class="btn-primary" @click="showRolesModal = false">Aceptar</button>
-      </div>
     </div>
 
     <ion-toast
@@ -127,108 +116,130 @@ import { ref, onMounted } from "vue";
 import Datepicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
 import { IonToast } from "@ionic/vue";
+import { format } from "date-fns";
+
 import { crearToast } from '@/utils/toast.js';
-import { format, parseISO, isValid, parse } from "date-fns";
 import {
   crearNotificacionWeb,
   obtenerNotificacionesVigentesPorUsuario,
   cambiarEstadoNotificacionWeb,
   obtenerRolesUsuario,
-  obtenerNivelesNotificaciones,
+  obtenerTiposNotificaciones,
 } from "@/services/notifications";
 
-const texto = ref("");
-const fechaInicio = ref(null);
-const fechaFin = ref(null);
-const nivel = ref("");
-const roles = ref([]);
-const imagen = ref(null);
-const showRolesModal = ref(false);
-
-const notificaciones = ref([]);
+// Roles y niveles disponibles
 const rolesDisponibles = ref([]);
-const nivelesDisponibles = ref([]);
+const tiposDisponibles = ref([]);
+
+// Variables en la creación de la notificación
+const texto = ref("");
+const fechaInicio = ref("");
+const fechaFin = ref("");
+const rol = ref("");
+const tipo = ref("");
+const imagen = ref(null);
+
+// Variables para la lista de notificaciones
+const notificaciones = ref([]);
 
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
-const onFileChange = (e) => {
+const onFileChange = (e) =>
+{
   imagen.value = e.target.files[0];
 };
 
-// 🔹 Función para convertir fecha + hora a Date y formatear en DD/MM/YYYY HH:mm
-function formatDateTime(fecha, hora) {
-  try {
-    if (!fecha || !hora) return "";
-    const dateTime = parseISO(`${fecha}T${hora}`);
-    return isValid(dateTime) ? format(dateTime, "dd/MM/yyyy HH:mm") : "";
-  } catch {
-    return "";
+// Función para crear una notificación
+const crearNotificacion = async () =>
+{
+  try
+  {
+    // Realizamos las validaciones previas
+    await crearNotificacionValidacionesPrevias();
+
+    const fechaHoraInicio = { fecha: format(fechaInicio.value, "dd/MM/yyyy"), hora: format(fechaInicio.value, "HH:mm") } ;
+    const fechaHoraFin    = { fecha: format(fechaFin.value, "dd/MM/yyyy"),    hora: format(fechaFin.value, "HH:mm") } ;
+
+    // Creamos la notificacion en el servidor
+    await crearNotificacionWebInternal(texto.value, fechaHoraInicio, fechaHoraFin, tipo.value, rol.value, imagen.value);
+  }
+  catch (err)
+  {
+    // Mostramos mensaje de error
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", err.message);
+  }
+};
+
+const crearNotificacionValidacionesPrevias = async () =>
+{
+  // Validamos si se ha escrito texto
+  if (!texto.value || String(texto.value).trim() === "")
+  {
+    throw new Error("El texto no puede estar vacío");
+  }
+
+  // Validamos si se ha seleccionado la fecha de inicio
+  if (!fechaInicio.value || String(fechaInicio.value).trim() === "")
+  {
+    throw new Error("La fecha de inicio no puede estar vacía");
+  }
+
+  // Validamos si se ha seleccionado la fecha de fin
+  if (!fechaFin.value || String(fechaFin.value).trim() === "")
+  {
+    throw new Error("La fecha de fin no puede estar vacía");
   }
 }
 
-function toDateObject(val) {
-  if (!val) return null;
-  if (val instanceof Date && isValid(val)) return val;
-  try {
-    const parsed = parse(val, "dd-MM-yyyy HH:mm", new Date());
-    if (isValid(parsed)) return parsed;
-  } catch {
-    const iso = new Date(val);
-    return isValid(iso) ? iso : null;
-  }
-}
-
-function formatDateAndTime(val) {
-  const d = toDateObject(val);
-  return d ? { date: format(d, "yyyy-MM-dd"), time: format(d, "HH:mm") } : { date: "", time: "" };
-}
-
-const crearNotificacion = async () => {
-  if (!texto.value) {
-    crearToast(toastMessage, toastColor, isToastOpen, "warning", "El texto no puede estar vacío");
-    return;
-  }
-  const inicio = formatDateAndTime(fechaInicio.value);
-  const fin = formatDateAndTime(fechaFin.value);
-  if (!inicio.date || !inicio.time || !fin.date || !fin.time) {
-    crearToast(toastMessage, toastColor, isToastOpen, "warning", "Fechas de inicio y fin inválidas");
-    return;
-  }
-  if (roles.value.length === 0) {
-    crearToast(toastMessage, toastColor, isToastOpen, "warning", "Selecciona al menos un rol");
-    return;
-  }
-
-  try {
+// Función interna para crear una notificación
+const crearNotificacionWebInternal = async (texto, fechaHoraInicio, fechaHoraFin, tipo, rol, imagen) =>
+{
+  try
+  {
+    // Creamos la notificacion en el servidor
     await crearNotificacionWeb(
       toastMessage,
       toastColor,  
       isToastOpen, 
-      texto.value,
-      inicio.date,
-      inicio.time,
-      fin.date,
-      fin.time,
-      nivel.value,
-      roles.value.join(","),
-      imagen.value ? imagen.value.name : ""
+      texto,
+      fechaHoraInicio.fecha,
+      fechaHoraInicio.hora,
+      fechaHoraFin.fecha,
+      fechaHoraFin.hora,
+      rol,
+      tipo,
+      imagen ? imagen.value.name : ""
     );
+
+    // Mostramos mensaje de éxito
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación creada correctamente");
+
+    // Recargamos la lista de notificaciones
     await cargarNotificaciones();
 
-    texto.value = "";
-    fechaInicio.value = null;
-    fechaFin.value = null;
-    nivel.value = nivelesDisponibles.value[0];
-    roles.value = [];
-  } catch (err) {
-    console.error(err);
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al obtener notificaciones");
+    // Limpiamos los campos de la notificación
+    limpiarCamposNotificacion();
   }
-};
+  catch (err)
+  {
+    // Mostramos mensaje de error
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al crear la notificación");
+  }
+}
 
+// Función para limpiar los campos de la notificación
+const limpiarCamposNotificacion = () =>
+{
+  texto.value = "";
+  fechaInicio.value = null;
+  fechaFin.value = null;
+  tipo.value = tiposDisponibles.value[0];
+  rol.value  = rolesDisponibles.value[0];
+}
+
+// Función para cargar las notificaciones
 const cargarNotificaciones = async () => {
   try {
     const data = await obtenerNotificacionesVigentesPorUsuario(toastMessage, toastColor, isToastOpen);
@@ -240,18 +251,19 @@ const cargarNotificaciones = async () => {
 
     notificaciones.value = data.map((n) => ({
       id: n.id,
-      texto: n.texto ? n.texto.replace(/\n?\[Imagen:.*?\]/, "").trim() : "",
-      fechaInicio: formatDateTime(n.fechaInicio || n.fecha_inicio, n.horaInicio || n.hora_inicio),
-      fechaFin: formatDateTime(n.fechaFin || n.fecha_fin, n.horaFin || n.hora_fin),
-      nivel: n.nivel || "",
-      roles: Array.isArray(n.roles) ? n.roles.join(", ") : n.roles || "",
+      creador: n.creador,
+      texto: n.texto,
+      fechaHoraInicio: n.fechaHoraInicio,
+      fechaHoraFin: n.fechaHoraFin,
+      rol: n.rol,
+      tipo: n.tipo,
     }));
-  } catch (err) {
-    console.error(err);
+  } 
+  catch (err)
+  {
     crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al obtener notificaciones");
   }
 };
-
 
 const cambiarEstadoNotificacion = async (n) => {
   if (!n || !n.id) {
@@ -263,7 +275,6 @@ const cambiarEstadoNotificacion = async (n) => {
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Estado cambiado correctamente");
     await cargarNotificaciones();
   } catch (err) {
-    console.error(err);
     crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al cambiar el estado de la notificación");
   }
 };
@@ -272,10 +283,11 @@ onMounted(() => {
   cargarNotificaciones();
   obtenerRolesUsuario(toastMessage, toastColor, isToastOpen).then((roles) => {
     rolesDisponibles.value = roles;
+    rol.value = roles[0];
   });
-  obtenerNivelesNotificaciones(toastMessage, toastColor, isToastOpen).then((niveles) => {
-    nivelesDisponibles.value = niveles;
-    nivel.value = niveles[0];
+  obtenerTiposNotificaciones(toastMessage, toastColor, isToastOpen).then((tipos) => {
+    tiposDisponibles.value = tipos;
+    tipo.value = tipos[0];
   });
 });
 </script>

@@ -31,10 +31,10 @@ export async function obtenerRolesUsuario(toastMessage, toastColor, isToastOpen)
 /**
  * Obtiene los niveles de notificaciones.
  */
-export async function obtenerNivelesNotificaciones(toastMessage, toastColor, isToastOpen) {
+export async function obtenerTiposNotificaciones(toastMessage, toastColor, isToastOpen) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(notificationsApiUrl + '/notifications_web/levels', {
+    const response = await fetch(notificationsApiUrl + '/notifications_web/types', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`
@@ -43,7 +43,7 @@ export async function obtenerNivelesNotificaciones(toastMessage, toastColor, isT
 
     if (!response.ok) {
       const errorMessage = await response.text();
-      throw new Error(errorMessage || 'Error al obtener niveles de notificaciones');
+      throw new Error(errorMessage || 'Error al obtener tipos de notificaciones');
     }
 
     const data = await response.json();
@@ -66,32 +66,11 @@ export async function crearNotificacionWeb(
   inputHoraInicio,
   inputFechaFin,
   inputHoraFin,
-  inputNivel,
-  inputRoles
+  inputRol,
+  inputTipo
 ) {
-  try {
-    // ✅ Validaciones de campos obligatorios
-    if (!inputTexto || String(inputTexto).trim() === "")
-      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ El campo 'Texto' es obligatorio");
-
-    if (!inputFechaInicio)
-      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Fecha de inicio' es obligatoria");
-
-    if (!inputHoraInicio)
-      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Hora de inicio' es obligatoria");
-
-    if (!inputFechaFin)
-      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Fecha de fin' es obligatoria");
-
-    if (!inputHoraFin)
-      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ La 'Hora de fin' es obligatoria");
-
-    if (!inputNivel)
-      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ El 'Nivel' es obligatorio");
-
-    if (!inputRoles || inputRoles.length === 0)
-      return crearToast(toastMessage, toastColor, isToastOpen, "warning", "⚠️ Debes seleccionar al menos un 'Rol'");
-
+  try
+  {
     // ✅ Obtenemos token JWT válido
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -105,9 +84,10 @@ export async function crearNotificacionWeb(
         horaInicio: inputHoraInicio,
         fechaFin: inputFechaFin,
         horaFin: inputHoraFin,
-        nivel: inputNivel,
-        roles: inputRoles
+        rol: inputRol,
+        tipo: inputTipo
       },
+
     });
 
     if (!response.ok) {
@@ -125,23 +105,23 @@ export async function crearNotificacionWeb(
 }
 
 /**
- * Obtiene todas las notificaciones web de usuario vigentes por nivel.
+ * Obtiene todas las notificaciones web de usuario vigentes por tipo.
  */
-export async function obtenerNotificacionesVigentesPorNivel(toastMessage, toastColor, isToastOpen, nivel) {
+export async function obtenerNotificacionesVigentesPorTipo(toastMessage, toastColor, isToastOpen, tipo) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(notificationsApiUrl + '/notifications_web/level', {
+    const response = await fetch(notificationsApiUrl + '/notifications_web/search_by_type', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
-        nivel: nivel
+        tipo: tipo
       }
     });
 
     if (!response.ok) {
       const errorMessage = await response.text();
-      throw new Error(errorMessage || 'Error al obtener notificaciones vigentes por nivel');
+      throw new Error(errorMessage || 'Error al obtener notificaciones vigentes por tipo');
     }
 
     const data = await response.json();
@@ -164,7 +144,7 @@ export async function obtenerNotificacionesVigentesPorUsuario(toastMessage, toas
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(notificationsApiUrl + '/notifications_web/users', {
+    const response = await fetch(notificationsApiUrl + '/notifications_web/search_by_user', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`
