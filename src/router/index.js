@@ -43,6 +43,9 @@ import A_EleccionDeHorarios from '@/views/timetable_teachers/A_EleccionDeHorario
 import B_HorarioPersonal from '@/views/timetable_teachers/B_HorarioPersonal.vue';
 import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
 
+import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
+import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
+
 const routes = [  
   {
     path: '/',
@@ -275,6 +278,18 @@ const routes = [
         meta: {
           role: 'PROFESOR'
         },
+      },
+      {
+        path: '/issues',
+        name: 'Issues',
+        component: IncidenciasTicPage,
+        meta: { role: 'PROFESOR' },
+      },
+      {
+        path: '/issues/admin',
+        name: 'IssuesTicAdminPage',
+        component: IncidenciasTicAdminPage,
+        meta: { role: 'ADMINISTRADOR' },
       },
     ],
   },

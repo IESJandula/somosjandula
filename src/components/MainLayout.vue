@@ -13,6 +13,7 @@
             <ion-item button @click="navigateAndCloseMenu('/printers/admin')">Impresión</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
@@ -86,6 +87,10 @@
             <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/personal')">2. Horario personal</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/groups')">3. Horario de grupos</ion-item>
           </ion-list>
+            <ion-item router-link="/issues" router-direction="forward">
+            <ion-icon slot="end" name="alert-circle-outline"></ion-icon>
+            <ion-label>Incidencias TIC</ion-label>
+        </ion-item>
         </ion-list>
       </ion-content>
     </ion-menu>
