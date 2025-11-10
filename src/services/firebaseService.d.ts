@@ -1,6 +1,4 @@
-import { Router } from 'vue-router';
 import { Ref } from 'vue';
-import { Auth } from "firebase/auth";
 
 export declare function importarUsuarios(toastMessage: Ref<string>,
                                          toastColor: Ref<string>,

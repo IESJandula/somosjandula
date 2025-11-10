@@ -43,6 +43,9 @@ import A_EleccionDeHorarios from '@/views/timetable_teachers/A_EleccionDeHorario
 import B_HorarioPersonal from '@/views/timetable_teachers/B_HorarioPersonal.vue';
 import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
 
+import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';
+import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
+
 const routes = [  
   {
     path: '/',
@@ -162,6 +165,22 @@ const routes = [
         name: 'A_CargaMatriculas',
         meta: {
           role: 'DIRECCION'
+        },
+      },
+      {
+        path: 'notifications/latestNews',
+        component: LatestNewsPage,
+        name: 'LatestNews',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'notifications/manager',
+        component: ManageNotificationsPage,
+        name: 'ManageNotificationsPage',
+        meta: {
+          role: 'PROFESOR', 
         },
       },
       {

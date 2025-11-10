@@ -3,6 +3,7 @@
     <!-- Menú lateral -->
     <ion-menu content-id="main-content" side="start" id="main-menu">
       <ion-content>
+        <!-- Menú Administración -->
         <ion-list>
           <ion-item v-if="mostrarAdmin" button @click="toggleSubMenuAdmin">
             Administración general
@@ -15,6 +16,8 @@
             <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
           </ion-list>
         </ion-list>
+
+        <!-- Menú de Cola de impresión -->
         <ion-list>
           <ion-item v-if="mostrarTimetableAdmin" button @click="toggleSubMenuTimetableAdmin">
             Administración de horarios
@@ -39,6 +42,17 @@
             <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por asignatura</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Asignaturas y departamentos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
+          </ion-list>
+        </ion-list>
+        <!-- Últimas noticias -->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuNotifications">
+            Últimas noticias
+            <ion-icon slot="end" :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="notificationsSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">Avisa de algo importante</ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
@@ -94,24 +108,39 @@
     <ion-page id="main-content">
       <ion-header>
         <ion-toolbar>
-          <!-- Botón de Menú -->
           <ion-buttons slot="start">
             <ion-menu-button autoHide="false"></ion-menu-button>
           </ion-buttons>
 
-          <!-- Contenedor de usuario y botón de desconectar -->
+          <div class="notificacionesSoloTexto-carousel">
+            <transition-group name="fade" tag="div" class="notificacionesSoloTexto">
+              <p
+                v-for="(msg, index) in notificacionesSoloTexto"
+                :key="index"
+                v-show="index === notificacionesSoloTextoIndex"
+              >
+                {{ msg }}
+              </p>
+            </transition-group>
+          </div>
+
           <div class="end-section" slot="end">
-            <span v-if="userName" class="user-name">{{ userName }}</span>
             <div class="top-bar">
-              <div class="button-container">
+              <div
+                class="button-container"
+                @mouseenter="showTooltip = true"
+                @mouseleave="showTooltip = false"
+              >
                 <ion-button @click="desconectar">Desconectar</ion-button>
+                <div v-if="showTooltip && userName" class="tooltip">
+                  {{ userName }}
+                </div>
               </div>
             </div>
           </div>
         </ion-toolbar>
       </ion-header>
 
-      <!-- Contenido con outlet debajo del header -->
       <ion-content class="ion-padding" fullscreen>
         <router-view></router-view>
       </ion-content>
@@ -133,17 +162,17 @@ import {
   IonButton,
   IonIcon,
   IonApp,
-} from '@ionic/vue';
-import { defineComponent, ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { menuController } from '@ionic/vue'; // Importa el controlador del menú
-import { getAuth, signOut } from 'firebase/auth';
-import { validarRolesMenu, obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
-import { crearToast } from '@/utils/toast';
-import { SESSION_JWT_TOKEN } from '@/utils/constants';
+} from "@ionic/vue";
+import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
+import { menuController } from "@ionic/vue";
+import { getAuth, signOut } from "firebase/auth";
+import { validarRolesMenu, obtenerNombreYApellidosUsuario } from "@/services/firebaseService";
+import { SESSION_JWT_TOKEN } from "@/utils/constants";
+import { obtenerNotificacionesVigentesPorTipo } from "@/services/notifications";
 
 export default defineComponent({
-  name: 'MainLayout',
+  name: "MainLayout",
   components: {
     IonMenu,
     IonContent,
@@ -160,7 +189,8 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
-    const userName = ref('');
+    const userName = ref("");
+    const showTooltip = ref(false);
     const mostrarAdmin = ref(false);
     const mostrarAdminFirebase = ref(false);
     const mostrarTimetableAdmin = ref(false);
@@ -171,7 +201,7 @@ export default defineComponent({
     const timetableAdminSubmenuVisible = ref(false);
     const schoolManagerSubmenuVisible = ref(false);
     const timetableTeachersSubmenuVisible = ref(false);
-
+    const notificationsSubmenuVisible = ref(false);
     const utilitiesSubmenuVisible = ref(false);
     const bookingsSubmenuVisible = ref(false);
     const absencesSubmenuVisible = ref(false);
@@ -181,31 +211,78 @@ export default defineComponent({
     const toastMessage = ref('');
     const toastColor = ref('success');
 
+    const notificacionesSoloTextoIndex = ref(0);
+    const notificacionesSoloTexto = ref([]);
+    let notificacionesSoloTextoInterval = null;
+
+    const nextNotificacionesSoloTexto = () => {
+      if (notificacionesSoloTexto.value.length > 0) {
+        notificacionesSoloTextoIndex.value =
+          (notificacionesSoloTextoIndex.value + 1) % notificacionesSoloTexto.value.length;
+      }
+    };
+
+    const actualizarNotificacionesSoloTexto = async () => {
+      try {
+        const notificacionesPorTipoSoloTexto = await obtenerNotificacionesVigentesPorTipo(toastMessage, toastColor, isToastOpen, "Solo texto");
+        notificacionesSoloTexto.value = notificacionesPorTipoSoloTexto.map(({
+          creador,
+          texto
+        }) => `${creador}: ${texto}`);
+        notificacionesSoloTextoIndex.value = 0;
+      } catch (error) {
+        console.error("Error al obtener notificaciones:", error);
+      }
+    };
+
+    onMounted(() => {
+      actualizarNotificacionesSoloTexto();
+      notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
+      setInterval(nextNotificacionesSoloTexto, 5000);
+
+      obtenerNombreYApellidosUsuario().then((userInfo) => {
+        userName.value = userInfo.nombre;
+      });
+
+      validarRolesMenu()
+        .then((rolesMenu) => {
+          mostrarAdmin.value = rolesMenu.mostrarAdmin;
+          mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
+          mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+
+    onBeforeUnmount(() => {
+      clearInterval(notificacionesSoloTextoInterval);
+    });
+
     const desconectar = async () => {
       try {
         const auth = getAuth();
         await signOut(auth);
-
-        // Eliminamos el token de la sesión previa
-        localStorage.removeItem(SESSION_JWT_TOKEN) ;
-
-        router.replace({ name: 'Login' });
-        window.location.reload(); // Forzar la recarga para limpiar cualquier estado residual
+        localStorage.removeItem(SESSION_JWT_TOKEN);
+        router.replace({ name: "Login" });
+        window.location.reload();
       } catch (error) {
-        console.error('Error al cerrar sesión:', error);
+        console.error("Error al cerrar sesión:", error);
       }
     };
 
     const navigateAndCloseMenu = async (path) => {
       await router.push(path);
-      await menuController.close('main-menu');
+      await menuController.close("main-menu");
     };
 
+    // Toggle submenus
     const toggleSubMenuAdmin = () => {
       adminSubmenuVisible.value = !adminSubmenuVisible.value;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
     };
@@ -215,6 +292,7 @@ export default defineComponent({
       timetableAdminSubmenuVisible.value = !timetableAdminSubmenuVisible.value;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
@@ -225,6 +303,7 @@ export default defineComponent({
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = !timetableTeachersSubmenuVisible.value;
       schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
@@ -234,6 +313,18 @@ export default defineComponent({
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
+      notificationsSubmenuVisible.value = false;
+      utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
+    };
+
+    const toggleSubMenuNotifications = () => {
+      adminSubmenuVisible.value = false;
+      timetableAdminSubmenuVisible.value = false;
+      timetableTeachersSubmenuVisible.value = false;
+      schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = !notificationsSubmenuVisible.value;
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
@@ -244,6 +335,7 @@ export default defineComponent({
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = !utilitiesSubmenuVisible.value;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
@@ -254,6 +346,7 @@ export default defineComponent({
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       absencesSubmenuVisible.value = false;
@@ -264,6 +357,7 @@ export default defineComponent({
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = !absencesSubmenuVisible.value;
@@ -295,6 +389,7 @@ export default defineComponent({
 
     return {
       userName,
+      showTooltip,
       desconectar,
       navigateAndCloseMenu,
       mostrarAdmin,
@@ -306,6 +401,7 @@ export default defineComponent({
       schoolManagerSubmenuVisible,
       timetableAdminSubmenuVisible,
       timetableTeachersSubmenuVisible,
+      notificationsSubmenuVisible,
       utilitiesSubmenuVisible,
       bookingsSubmenuVisible,
       absencesSubmenuVisible,
@@ -313,18 +409,21 @@ export default defineComponent({
       toggleSubMenuTimetableAdmin,
       toggleSubMenuTimetableTeachers,
       toggleSubMenuSchoolManager,
+      toggleSubMenuNotifications,
       toggleSubMenuUtilities,
       toggleSubMenuBookings,
       toggleSubMenuAbsences,
+      notificacionesSoloTexto,
+      notificacionesSoloTextoIndex,
     };
   },
 });
 </script>
+
 <style scoped>
 .submenu {
   padding-left: 20px;
 }
-
 ion-button {
   display: flex;
   align-items: center;
@@ -335,76 +434,85 @@ ion-button {
   --color: white;
   border-radius: 8px;
   opacity: 1;
-  /* Asegúrate de que sea visible */
 }
-
 ion-icon {
   font-size: 24px;
 }
-
-.menu-button {
-  margin-right: auto;
-  /* Empuja el botón de menú hacia la izquierda */
-}
-
 ion-toolbar {
   display: flex;
   justify-content: space-between;
-  /* Distribuye los elementos entre los extremos */
   align-items: center;
-  /* Alinea verticalmente en el centro */
 }
-
 .end-section {
   display: flex;
-  /* Utiliza flexbox para alinear elementos horizontalmente */
   align-items: center;
-  /* Alinea los elementos verticalmente al centro */
   gap: 10px;
-  /* Espacio entre el nombre del usuario y el botón de Logout */
 }
-
-.user-name {
-  font-size: 16px;
-  font-weight: bold;
+.notificacionesSoloTexto-carousel {
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  color: #000;
 }
-
-ion-menu {
-  z-index: 9999 !important;
+.notificacionesSoloTexto-carousel p {
+  margin: 0;
+  color: #000;
+  font-size: 14px;
+  white-space: nowrap;
 }
-
-.top-bar {
-  display: flex;
-  justify-content: flex-end;
-  /* Alinea los botones a la derecha */
-  align-items: center;
-  /* Centrar los botones verticalmente */
-  padding: 0 10px;
-  /* Espacio alrededor del contenido */
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-  /* Sombra para dar separación */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.6s;
 }
-
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.tooltip {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0.95;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
 .button-container {
-  display: flex;
-  gap: 10px;
-  /* Espacio entre los botones */
+  position: relative;
+  display: inline-block;
 }
-
-/* Ajuste del contenido principal */
-ion-content {
-  padding-top: 60px;
-  /* Ajusta este valor según la altura de tu toolbar */
-}
-
 @media (min-width: 768px) {
   ion-button {
     padding: 10px 30px;
     font-size: 18px;
   }
-
   ion-icon {
     font-size: 28px;
+  }
+}
+
+/* Estilos para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .notificacionesSoloTexto-carousel {
+    color: #fff;
+  }
+  .notificacionesSoloTexto-carousel p {
+    color: #fff;
+  }
+  ion-button {
+    --background: #4c8dff;
+    --color: white;
+  }
+  .tooltip {
+    background: #1a1a1a;
+    color: #fff;
   }
 }
 </style>
