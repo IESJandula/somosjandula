@@ -6,14 +6,14 @@ export interface NotificacionWeb {
   texto: string;
   fechaHoraInicio: string;
   fechaHoraFin: string;
-  rol: string;
+  receptor: string;
   tipo: string;
   imagen?: string;
 }
 
-export declare function obtenerRolesUsuario(toastMessage: Ref<string>,
-                                            toastColor: Ref<string>,
-                                            isToastOpen: Ref<boolean>): Promise<string[]>;
+export declare function obtenerReceptores(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>): Promise<string[]>;
 
 export declare function obtenerTiposNotificaciones(toastMessage: Ref<string>,
                                                    toastColor: Ref<string>,
@@ -27,7 +27,7 @@ export declare function crearNotificacionWeb(toastMessage: Ref<string>,
                                             inputHoraInicio: string,
                                             inputFechaFin: string,
                                             inputHoraFin: string,
-                                            inputRol: string,
+                                            inputReceptor: string,
                                             inputTipo: string,
                                             inputImagen?: string): Promise<void>;
 

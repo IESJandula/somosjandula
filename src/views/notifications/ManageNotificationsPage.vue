@@ -2,15 +2,15 @@
   <div class="page-wrapper">
     <!-- Crear Notificación -->
     <div class="card">
-      <h2>Formulario para crear una notificación</h2>
+      <h2 align="center">¡Crear una noticia!</h2>
 
-      <div class="form-group">
-        <label>Texto</label>
+      <div align="center" class="form-group">
+        <label>Escribe aquí el texto de la notificación</label>
         <input type="text" v-model="texto" placeholder="Escribe el texto..." />
       </div>
 
       <div class="form-row">
-        <div class="form-group">
+        <div align="center" class="form-group">
           <label>¿Desde cuándo?</label>
           <Datepicker
             v-model="fechaInicio"
@@ -22,7 +22,7 @@
           />
         </div>
 
-        <div class="form-group">
+        <div align="center" class="form-group">
           <label>¿Hasta cuándo?</label>
           <Datepicker
             v-model="fechaFin"
@@ -36,17 +36,17 @@
       </div>
 
       <div class="form-row">
-        <div class="form-group">
-          <label>¿Dónde la mostrarás?</label>
+        <div align="center" class="form-group">
+          <label>¿Qué quieres mostrar?</label>
           <select v-model="tipo">
-            <option v-for="tipo in tiposDisponibles" :key="tipo" :value="tipo">{{ tipo }}</option>
+            <option align="center" v-for="tipo in tiposDisponibles" :key="tipo" :value="tipo">{{ tipo }}</option>
           </select>
         </div>
 
-        <div class="form-group">
-          <label>¿Quién la recibirá?</label>
-          <select v-model="rol">
-            <option v-for="rol in rolesDisponibles" :key="rol" :value="rol">{{ rol }}</option>
+        <div align="center" class="form-group">
+          <label>¿Quién la leerá?</label>
+          <select v-model="receptor">
+            <option align="center" v-for="receptor in receptoresDisponibles" :key="receptor" :value="receptor">{{ receptor }}</option>
           </select>
         </div>
       </div>
@@ -83,7 +83,7 @@
             <td>{{ n.texto }}</td>
             <td>{{ n.fechaHoraInicio }}</td>
             <td>{{ n.fechaHoraFin }}</td>
-            <td>{{ n.rol }}</td>
+            <td>{{ n.receptor }}</td>
             <td>{{ n.tipo }}</td>
             <td>
               <button class="btn-danger" @click="cambiarEstadoNotificacion(n)">X</button>
@@ -95,17 +95,8 @@
     </div>
 
     <!-- Toast -->
-    <div v-if="isToastOpen" :class="['toast', toastColor]">
-      {{ toastMessage }}
-    </div>
-
-    <ion-toast
-      :is-open="isToastOpen"
-      :message="toastMessage"
-      :color="toastColor"
-      duration="2000"
-      position="top"
-      @did-dismiss="() => (isToastOpen = false)">
+    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2500"
+          @did-dismiss="() => isToastOpen = false" position="top">
     </ion-toast>
 
   </div>
@@ -117,25 +108,25 @@ import Datepicker from "@vuepic/vue-datepicker";
 import "@vuepic/vue-datepicker/dist/main.css";
 import { IonToast } from "@ionic/vue";
 import { format } from "date-fns";
-
 import { crearToast } from '@/utils/toast.js';
+
 import {
   crearNotificacionWeb,
   obtenerNotificacionesVigentesPorUsuario,
   cambiarEstadoNotificacionWeb,
-  obtenerRolesUsuario,
+  obtenerReceptores,
   obtenerTiposNotificaciones,
 } from "@/services/notifications";
 
-// Roles y niveles disponibles
-const rolesDisponibles = ref([]);
+// Receptores y niveles disponibles
+const receptoresDisponibles = ref([]);
 const tiposDisponibles = ref([]);
 
 // Variables en la creación de la notificación
 const texto = ref("");
 const fechaInicio = ref("");
 const fechaFin = ref("");
-const rol = ref("");
+const receptor = ref("");
 const tipo = ref("");
 const imagen = ref(null);
 
@@ -163,7 +154,7 @@ const crearNotificacion = async () =>
     const fechaHoraFin    = { fecha: format(fechaFin.value, "dd/MM/yyyy"),    hora: format(fechaFin.value, "HH:mm") } ;
 
     // Creamos la notificacion en el servidor
-    await crearNotificacionWebInternal(texto.value, fechaHoraInicio, fechaHoraFin, tipo.value, rol.value, imagen.value);
+    await crearNotificacionWebInternal(texto.value, fechaHoraInicio, fechaHoraFin, tipo.value, receptor.value, imagen.value);
   }
   catch (err)
   {
@@ -191,10 +182,16 @@ const crearNotificacionValidacionesPrevias = async () =>
   {
     throw new Error("La fecha de fin no puede estar vacía");
   }
+
+  // Validamos si la fecha de fin es anterior a la fecha de inicio
+  if (fechaFin.value < fechaInicio.value)
+  {
+    throw new Error("La fecha de fin no puede ser anterior a la fecha de inicio");
+  }
 }
 
 // Función interna para crear una notificación
-const crearNotificacionWebInternal = async (texto, fechaHoraInicio, fechaHoraFin, tipo, rol, imagen) =>
+ const crearNotificacionWebInternal = async (texto, fechaHoraInicio, fechaHoraFin, tipo, receptor, imagen) =>
 {
   try
   {
@@ -208,7 +205,7 @@ const crearNotificacionWebInternal = async (texto, fechaHoraInicio, fechaHoraFin
       fechaHoraInicio.hora,
       fechaHoraFin.fecha,
       fechaHoraFin.hora,
-      rol,
+      receptor,
       tipo,
       imagen ? imagen.value.name : ""
     );
@@ -232,11 +229,11 @@ const crearNotificacionWebInternal = async (texto, fechaHoraInicio, fechaHoraFin
 // Función para limpiar los campos de la notificación
 const limpiarCamposNotificacion = () =>
 {
-  texto.value = "";
+  texto.value       = "";
   fechaInicio.value = null;
-  fechaFin.value = null;
-  tipo.value = tiposDisponibles.value[0];
-  rol.value  = rolesDisponibles.value[0];
+  fechaFin.value    = null;
+  tipo.value        = tiposDisponibles.value[0];
+  receptor.value    = receptoresDisponibles.value[0];
 }
 
 // Función para cargar las notificaciones
@@ -255,7 +252,7 @@ const cargarNotificaciones = async () => {
       texto: n.texto,
       fechaHoraInicio: n.fechaHoraInicio,
       fechaHoraFin: n.fechaHoraFin,
-      rol: n.rol,
+      receptor: n.receptor,
       tipo: n.tipo,
     }));
   } 
@@ -281,9 +278,9 @@ const cambiarEstadoNotificacion = async (n) => {
 
 onMounted(() => {
   cargarNotificaciones();
-  obtenerRolesUsuario(toastMessage, toastColor, isToastOpen).then((roles) => {
-    rolesDisponibles.value = roles;
-    rol.value = roles[0];
+  obtenerReceptores(toastMessage, toastColor, isToastOpen).then((receptores) => {
+    receptoresDisponibles.value = receptores;
+    receptor.value = receptores[0];
   });
   obtenerTiposNotificaciones(toastMessage, toastColor, isToastOpen).then((tipos) => {
     tiposDisponibles.value = tipos;
@@ -386,69 +383,6 @@ button {
   font-weight: bold;
   color: #fff;
   z-index: 2000;
-}
-
-.toast.success {
-  background: #28a745;
-}
-
-.toast.error {
-  background: #dc3545;
-}
-
-.toast.warning {
-  background: #ffc107;
-  color: #000;
-}
-
-/* 🔹 Modal roles */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1500;
-  padding: 10px; 
-}
-
-.modal {
-  background: #fff;
-  padding: 20px 25px;
-  border-radius: 12px;
-  width: 320px;
-  max-width: 95%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  animation: modalFadeIn 0.2s ease-in-out;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.roles-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 180px;
-  overflow-y: auto;
-  padding-right: 5px; 
-}
-
-.roles-list label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 14px;
 }
 
 /* 🔹 Tabla con scroll */

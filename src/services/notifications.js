@@ -3,12 +3,12 @@ import { crearToast } from '@/utils/toast.js';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
 /**
- * Obtiene los roles de usuario.
+ * Obtiene los receptores de usuario.
  */
-export async function obtenerRolesUsuario(toastMessage, toastColor, isToastOpen) {
+export async function obtenerReceptores(toastMessage, toastColor, isToastOpen) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(notificationsApiUrl + '/notifications_web/roles', {
+    const response = await fetch(notificationsApiUrl + '/notifications_web/receptors', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`
@@ -17,7 +17,7 @@ export async function obtenerRolesUsuario(toastMessage, toastColor, isToastOpen)
 
     if (!response.ok) {
       const errorMessage = await response.text();
-      throw new Error(errorMessage || 'Error al obtener roles de usuario');
+      throw new Error(errorMessage || 'Error al obtener receptores de usuario');
     }
 
     const data = await response.json();
@@ -66,7 +66,7 @@ export async function crearNotificacionWeb(
   inputHoraInicio,
   inputFechaFin,
   inputHoraFin,
-  inputRol,
+  inputReceptor,
   inputTipo
 ) {
   try
@@ -84,7 +84,7 @@ export async function crearNotificacionWeb(
         horaInicio: inputHoraInicio,
         fechaFin: inputFechaFin,
         horaFin: inputHoraFin,
-        rol: inputRol,
+        receptor: inputReceptor,
         tipo: inputTipo
       },
 
