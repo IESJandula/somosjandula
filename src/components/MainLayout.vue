@@ -113,19 +113,20 @@
           </ion-buttons>
 
           <div class="notificacionesSoloTexto-carousel">
-            <transition-group name="fade" tag="div" class="notificacionesSoloTexto">
-              <div
-                v-for="(notificacion, index) in notificacionesSoloTexto"
-                :key="index"
-                v-show="index === notificacionesSoloTextoIndex"
-                class="notificacion-container"
-                :ref="el => { if (el) notificationRefs[index] = el }"
-                @mouseenter="handleMouseEnter(index, $event)"
-                @mouseleave="showNotificationTooltip = null; tooltipPosition = null"
-              >
-                <p>{{ notificacion.texto }}</p>
-              </div>
-            </transition-group>
+            <div class="notificacionesSoloTexto">
+              <transition name="fade">
+                <div
+                  v-if="notificacionesSoloTexto.length > 0 && notificacionesSoloTextoIndex < notificacionesSoloTexto.length"
+                  :key="notificacionesSoloTextoIndex"
+                  class="notificacion-container"
+                  :ref="el => { if (el) notificationRefs[notificacionesSoloTextoIndex] = el }"
+                  @mouseenter="handleMouseEnter(notificacionesSoloTextoIndex, $event)"
+                  @mouseleave="showNotificationTooltip = null; tooltipPosition = null"
+                >
+                  <p>{{ notificacionesSoloTexto[notificacionesSoloTextoIndex]?.texto }}</p>
+                </div>
+              </transition>
+            </div>
           </div>
           <teleport to="body">
             <div 
@@ -492,23 +493,48 @@ ion-toolbar {
   color: #000;
   position: relative;
 }
-.notificacion-container {
-  position: relative;
-  display: inline-block;
+.notificacionesSoloTexto {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE y Edge */
   width: 100%;
+  text-align: center;
+  position: relative;
+  min-height: 1.5em;
+}
+.notificacionesSoloTexto::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+.notificacion-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: inline-block;
   cursor: pointer;
+  touch-action: pan-x;
+  white-space: nowrap;
+  width: 100%;
+  text-align: center;
 }
 .notificacionesSoloTexto-carousel p {
   margin: 0;
   color: #000;
   font-size: 14px;
   white-space: nowrap;
+  display: inline-block;
 }
-.fade-enter-active,
+.fade-enter-active {
+  transition: opacity 0.6s ease-in;
+}
 .fade-leave-active {
-  transition: opacity 0.6s;
+  transition: opacity 0.6s ease-out;
 }
-.fade-enter-from,
+.fade-enter-from {
+  opacity: 0;
+}
 .fade-leave-to {
   opacity: 0;
 }
