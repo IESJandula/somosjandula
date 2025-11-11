@@ -5,7 +5,7 @@
       <h2 align="center">¡Crear una noticia!</h2>
 
       <div align="center" class="form-group">
-        <label>Escribe aquí el texto de la notificación</label>
+        <label>Escribe aquí el texto</label>
         <input type="text" v-model="texto" placeholder="Escribe el texto..." />
       </div>
 

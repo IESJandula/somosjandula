@@ -51,7 +51,7 @@
             <ion-icon slot="end" :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="notificationsSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item>
+          <!--  <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item> -->
             <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">Avisa de algo importante</ion-item>
           </ion-list>
         </ion-list>

@@ -8,7 +8,7 @@ import { obtenerTokenJWTValido } from '@/services/firebaseService';
 export async function obtenerReceptores(toastMessage, toastColor, isToastOpen) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(notificationsApiUrl + '/notifications_web/receptors', {
+    const response = await fetch(notificationsApiUrl + '/notifications/web/receptors', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`
@@ -34,7 +34,7 @@ export async function obtenerReceptores(toastMessage, toastColor, isToastOpen) {
 export async function obtenerTiposNotificaciones(toastMessage, toastColor, isToastOpen) {
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(notificationsApiUrl + '/notifications_web/types', {
+    const response = await fetch(notificationsApiUrl + '/notifications/web/types', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`
@@ -75,7 +75,7 @@ export async function crearNotificacionWeb(
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     // ✅ Envío al backend
-    const response = await fetch(notificationsApiUrl + '/notifications_web/users', {
+    const response = await fetch(notificationsApiUrl + '/notifications/web/users', {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -111,7 +111,7 @@ export async function obtenerNotificacionesVigentesPorTipo(toastMessage, toastCo
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(notificationsApiUrl + '/notifications_web/search_by_type', {
+    const response = await fetch(notificationsApiUrl + '/notifications/web/search_by_type', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -144,7 +144,7 @@ export async function obtenerNotificacionesVigentesPorUsuario(toastMessage, toas
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(notificationsApiUrl + '/notifications_web/search_by_user', {
+    const response = await fetch(notificationsApiUrl + '/notifications/web/search_by_user', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`
@@ -175,7 +175,7 @@ export async function borrarNotificacionWeb(toastMessage, toastColor, isToastOpe
   try {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(notificationsApiUrl + '/notifications_web/users/' + id, {
+    const response = await fetch(notificationsApiUrl + '/notifications/web/users/' + id, {
       method: 'DELETE',
       headers: { 
         Authorization: `Bearer ${token}`
