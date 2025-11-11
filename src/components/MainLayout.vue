@@ -114,15 +114,28 @@
 
           <div class="notificacionesSoloTexto-carousel">
             <transition-group name="fade" tag="div" class="notificacionesSoloTexto">
-              <p
-                v-for="(msg, index) in notificacionesSoloTexto"
+              <div
+                v-for="(notificacion, index) in notificacionesSoloTexto"
                 :key="index"
                 v-show="index === notificacionesSoloTextoIndex"
+                class="notificacion-container"
+                :ref="el => { if (el) notificationRefs[index] = el }"
+                @mouseenter="handleMouseEnter(index, $event)"
+                @mouseleave="showNotificationTooltip = null; tooltipPosition = null"
               >
-                {{ msg }}
-              </p>
+                <p>{{ notificacion.texto }}</p>
+              </div>
             </transition-group>
           </div>
+          <teleport to="body">
+            <div 
+              v-if="showNotificationTooltip !== null && notificacionesSoloTexto[showNotificationTooltip]?.creador" 
+              class="notification-tooltip"
+              :style="tooltipPosition"
+            >
+              {{ notificacionesSoloTexto[showNotificationTooltip].creador }}
+            </div>
+          </teleport>
 
           <div class="end-section" slot="end">
             <div class="top-bar">
@@ -213,6 +226,9 @@ export default defineComponent({
 
     const notificacionesSoloTextoIndex = ref(0);
     const notificacionesSoloTexto = ref([]);
+    const showNotificationTooltip = ref(null);
+    const tooltipPosition = ref(null);
+    const notificationRefs = ref({});
     let notificacionesSoloTextoInterval = null;
 
     const nextNotificacionesSoloTexto = () => {
@@ -222,13 +238,23 @@ export default defineComponent({
       }
     };
 
+    const handleMouseEnter = (index, event) => {
+      showNotificationTooltip.value = index;
+      const rect = event.currentTarget.getBoundingClientRect();
+      tooltipPosition.value = {
+        left: `${rect.left + rect.width / 2}px`,
+        top: `${rect.bottom + 5}px`,
+        transform: 'translateX(-50%)'
+      };
+    };
+
     const actualizarNotificacionesSoloTexto = async () => {
       try {
         const notificacionesPorTipoSoloTexto = await obtenerNotificacionesVigentesPorTipo(toastMessage, toastColor, isToastOpen, "Solo texto");
         notificacionesSoloTexto.value = notificacionesPorTipoSoloTexto.map(({
           creador,
           texto
-        }) => `${creador}: ${texto}`);
+        }) => ({ creador, texto }));
         notificacionesSoloTextoIndex.value = 0;
       } catch (error) {
         console.error("Error al obtener notificaciones:", error);
@@ -415,6 +441,10 @@ export default defineComponent({
       toggleSubMenuAbsences,
       notificacionesSoloTexto,
       notificacionesSoloTextoIndex,
+      showNotificationTooltip,
+      tooltipPosition,
+      notificationRefs,
+      handleMouseEnter,
     };
   },
 });
@@ -438,10 +468,17 @@ ion-button {
 ion-icon {
   font-size: 24px;
 }
+ion-header {
+  overflow: visible !important;
+  z-index: 1000;
+}
 ion-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1000;
 }
 .end-section {
   display: flex;
@@ -451,8 +488,15 @@ ion-toolbar {
 .notificacionesSoloTexto-carousel {
   flex: 1;
   text-align: center;
-  overflow: hidden;
+  overflow: visible;
   color: #000;
+  position: relative;
+}
+.notificacion-container {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  cursor: pointer;
 }
 .notificacionesSoloTexto-carousel p {
   margin: 0;
@@ -513,6 +557,41 @@ ion-toolbar {
   .tooltip {
     background: #1a1a1a;
     color: #fff;
+  }
+}
+</style>
+
+<style>
+.notification-tooltip {
+  position: fixed;
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0.95;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+.notification-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: #333;
+}
+
+@media (prefers-color-scheme: dark) {
+  .notification-tooltip {
+    background: #1a1a1a;
+    color: #fff;
+  }
+  .notification-tooltip::before {
+    border-bottom-color: #1a1a1a;
   }
 }
 </style>
