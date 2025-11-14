@@ -61,6 +61,40 @@
       </button>
     </div>
 
+    <!-- Actualizar Constantes -->
+  <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Actualizar Constantes</h1>
+      </div>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Clave de la constante:</ion-label>
+            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
+              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
+                {{ constante.clave }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-item v-if="selectedConstante">
+            <ion-label position="stacked">Valor:</ion-label>
+            <ion-input v-model="selectedConstante.valor"></ion-input>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
+            Actualizar
+          </ion-button>
+        </ion-col>
+      </ion-row>
+    </div>
+
     <!-- Lista de Notificaciones -->
     <div class="card">
       <h2>Lista de Notificaciones</h2>
@@ -135,6 +169,8 @@ import {
   cambiarEstadoNotificacionWeb,
   obtenerRolesUsuario,
   obtenerNivelesNotificaciones,
+  obtenerConstantes, 
+  actualizarConstantes
 } from "@/services/notifications";
 
 const texto = ref("");
@@ -145,6 +181,8 @@ const roles = ref([]);
 const imagen = ref(null);
 const showRolesModal = ref(false);
 
+const selectedConstante = ref(null);
+const constantes = ref([]);
 const notificaciones = ref([]);
 const rolesDisponibles = ref([]);
 const nivelesDisponibles = ref([]);
@@ -152,6 +190,15 @@ const nivelesDisponibles = ref([]);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
+
+// Función que se llama cuando el usuario selecciona una constante
+const onConstanteChange = () => {
+  if (!selectedConstante.value) {
+    selectedConstante.value = { valor: "" };
+  } else if (selectedConstante.value.valor === undefined) {
+    selectedConstante.value.valor = "";
+  }
+};
 
 const onFileChange = (e) => {
   imagen.value = e.target.files[0];
@@ -268,6 +315,62 @@ const cambiarEstadoNotificacion = async (n) => {
   }
 };
 
+// Función para actualizar la constante seleccionada
+const actualizarConstanteSeleccionada = async () => {
+  try {
+    const constantesActualizadas = constantes.value.map((c) =>
+      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
+    );
+
+    await actualizarConstantes(
+      firebaseApiUrl + "/notifications/constants",
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      constantesActualizadas
+    );
+    mensajeColor = "success";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      "Constantes actualizadas con éxito"
+    );
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      error.message
+    );
+  }
+};
+
+// Función para obtener las constantes al cargar el componente
+const cargarConstantes = async () => {
+  try {
+    constantes.value = await obtenerConstantes(
+      firebaseApiUrl + "/notifications/constants",
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+    
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      error.message
+    );
+  }
+};
+
 onMounted(() => {
   cargarNotificaciones();
   obtenerRolesUsuario(toastMessage, toastColor, isToastOpen).then((roles) => {
@@ -277,6 +380,7 @@ onMounted(() => {
     nivelesDisponibles.value = niveles;
     nivel.value = niveles[0];
   });
+  cargarConstantes();
 });
 </script>
 

@@ -1,4 +1,4 @@
-import { notificationsApiUrl } from '@/environment/apiUrls';
+import { notificationsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
@@ -213,4 +213,63 @@ export async function cambiarEstadoNotificacionWeb(toastMessage, toastColor, isT
     throw error;
   }
 }
+
+/**
+ * Obtener todas las constantes
+ */
+export async function obtenerConstantes(toastMessage, toastColor, isToastOpen) {
+  let token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  try {
+    const response = await fetch(firebaseApiUrl + '/notifications/constants', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorText || "Error al obtener constantes");
+      throw new Error(errorText || "Error al obtener constantes");
+    }
+
+    return await response.json();
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Actualizar constantes
+ * @param {Array} payload Lista de constantes { clave, valor }
+ */
+export async function actualizarConstantes(toastMessage, toastColor, isToastOpen, payload) {
+  let token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  try {
+    const response = await fetch(firebaseApiUrl + '/notifications/constants', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorText || "Error al actualizar constantes");
+      throw new Error(errorText || "Error al actualizar constantes");
+    }
+
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Constantes actualizadas correctamente");
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
 
