@@ -1,7 +1,5 @@
 <template>
-  <!-- 
-       SECCIÓN 1 — ADMIN UBICACIONES
-   -->
+  <!-- SECCIÓN 1 — ADMIN UBICACIONES -->
   <h1 class="t-1">Administración de Incidencias TIC</h1>
 
   <div class="top-container">
@@ -17,7 +15,11 @@
               class="input"
               placeholder="Ej: Aula 1.15, Laboratorio Informática..."
             />
-            <button @click="crearNuevaUbicacion" class="btn" :disabled="isLoading || !nuevaUbicacion.trim()">
+            <button
+              @click="crearNuevaUbicacion"
+              class="btn"
+              :disabled="isLoading || !nuevaUbicacion.trim()"
+            >
               Guardar ubicación
             </button>
           </div>
@@ -46,50 +48,110 @@
     </div>
   </div>
 
-  <!-- 
-       SECCIÓN 2 — ADMIN CATEGORÍAS
-   -->
-  <h1 class="t-1 mt-10">Administración de categorías de incidencias</h1>
+  <!-- SECCIÓN 2 — ADMIN CATEGORÍAS -->
+  <h1 class="t-1 mt-10">Administración de categorías</h1>
 
   <div class="top-container">
     <div class="top-section">
+      <!-- Formulario crear categoría -->
       <div class="card-upload-csv">
         <div class="container">
           <div class="t-2">Crear nueva categoría</div>
 
           <div class="section">
-            <label class="t-3">Tipo (TIC, DIRECCIÓN...)</label>
-            <input v-model="nuevaCategoria.tipo" class="input" />
-
-            <label class="t-3">Nombre responsable</label>
-            <input v-model="nuevaCategoria.nombreResponsable" class="input" />
-
-            <label class="t-3">Correo responsable</label>
-            <input v-model="nuevaCategoria.correoResponsable" class="input" />
+            <label class="t-3">Nombre de la categoría (TIC, DIRECCIÓN...)</label>
+            <input v-model="nuevaCategoria.nombreCategoria" class="input" />
 
             <button class="btn" @click="crearNuevaCategoria">Guardar categoría</button>
           </div>
         </div>
       </div>
 
+      <!-- Lista categorías -->
       <div class="card-upload-table card-upload-csv">
         <div class="t-2">Lista de categorías</div>
         <table>
           <thead>
             <tr>
-              <th class="th">Tipo</th>
-              <th class="th">Nombre responsable</th>
-              <th class="th">Correo</th>
+              <th class="th">Nombre categoría</th>
               <th class="th">Acción</th>
             </tr>
           </thead>
           <tbody class="t-3">
-            <tr v-for="categoria in categorias" :key="categoria.id">
-              <td class="th">{{ categoria.tipo }}</td>
-              <td class="th">{{ categoria.nombreResponsable }}</td>
-              <td class="th">{{ categoria.correoResponsable }}</td>
+            <tr v-for="categoria in categorias" :key="categoria.nombreCategoria">
+              <td class="th">{{ categoria.nombreCategoria }}</td>
               <td class="th">
-                <button class="eliminar" @click="borrarCat(categoria.id!)">&times;</button>
+                <button class="eliminar" @click="borrarCat(categoria.nombreCategoria)">
+                  &times;
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 3 — ADMIN USUARIOS DE CATEGORÍA -->
+  <h1 class="t-1 mt-10">Administración de usuarios responsables por categoría</h1>
+
+  <div class="top-container">
+    <div class="top-section">
+      <!-- Formulario crear usuario-categoría -->
+      <div class="card-upload-csv">
+        <div class="container">
+          <div class="t-2">Crear nuevo responsable de categoría</div>
+
+          <div class="section">
+            <label class="t-3">Categoría</label>
+            <select v-model="nuevoUsuarioCategoria.nombreCategoria" class="input">
+              <option value="" disabled>Selecciona una categoría</option>
+              <option
+                v-for="categoria in categorias"
+                :key="categoria.nombreCategoria"
+                :value="categoria.nombreCategoria"
+              >
+                {{ categoria.nombreCategoria }}
+              </option>
+            </select>
+
+            <label class="t-3">Nombre responsable</label>
+            <input v-model="nuevoUsuarioCategoria.nombreResponsable" class="input" />
+
+            <label class="t-3">Correo responsable</label>
+            <input v-model="nuevoUsuarioCategoria.correoResponsable" class="input" />
+
+            <button class="btn" @click="crearNuevoUsuarioCategoria">
+              Guardar responsable
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista usuarios-categoría -->
+      <div class="card-upload-table card-upload-csv">
+        <div class="t-2">Lista de responsables por categoría</div>
+        <table>
+          <thead>
+            <tr>
+              <th class="th">Categoría</th>
+              <th class="th">Nombre responsable</th>
+              <th class="th">Correo responsable</th>
+              <th class="th">Acción</th>
+            </tr>
+          </thead>
+          <tbody class="t-3">
+            <tr
+              v-for="usuario in usuariosCategoria"
+              :key="usuario.nombreCategoria + '-' + usuario.nombreResponsable + '-' + usuario.correoResponsable"
+            >
+              <td class="th">{{ usuario.nombreCategoria }}</td>
+              <td class="th">{{ usuario.nombreResponsable }}</td>
+              <td class="th">{{ usuario.correoResponsable }}</td>
+              <td class="th">
+                <button class="eliminar" @click="borrarUsuarioCat(usuario)">
+                  &times;
+                </button>
               </td>
             </tr>
           </tbody>
@@ -119,7 +181,10 @@ import {
   borrarUbicacion,
   listarCategorias,
   crearCategoria,
-  borrarCategoria
+  borrarCategoria,
+  listarUsuariosCategoria,
+  crearUsuarioCategoria,
+  borrarUsuarioCategoria,
 } from "@/services/issues.js";
 
 interface Ubicacion {
@@ -127,29 +192,37 @@ interface Ubicacion {
   nombre: string;
 }
 
-interface CategoriaIncidencia {
-  id?: number;
-  tipo: string;
+interface Categoria {
+  nombreCategoria: string;
+}
+
+interface UsuarioCategoria {
+  nombreCategoria: string;
   nombreResponsable: string;
   correoResponsable: string;
 }
 
 const ubicaciones = ref<Ubicacion[]>([]);
 const nuevaUbicacion = ref("");
-const categorias = ref<CategoriaIncidencia[]>([]);
-const nuevaCategoria = ref<CategoriaIncidencia>({
-  tipo: "",
+
+const categorias = ref<Categoria[]>([]);
+const nuevaCategoria = ref<Categoria>({
+  nombreCategoria: "",
+});
+
+const usuariosCategoria = ref<UsuarioCategoria[]>([]);
+const nuevoUsuarioCategoria = ref<UsuarioCategoria>({
+  nombreCategoria: "",
   nombreResponsable: "",
   correoResponsable: "",
 });
+
 const isLoading = ref(false);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
-/* 
-   FUNCIONES UBICACIONES
- */
+/* UBICACIONES */
 async function cargarUbicaciones() {
   try {
     ubicaciones.value = await listarUbicaciones(toastMessage, toastColor, isToastOpen);
@@ -169,7 +242,13 @@ async function crearNuevaUbicacion() {
     nuevaUbicacion.value = "";
     await cargarUbicaciones();
   } catch (e: any) {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al crear ubicación");
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "danger",
+      e.message || "Error al crear ubicación"
+    );
   } finally {
     isLoading.value = false;
   }
@@ -185,9 +264,7 @@ async function borrarUbi(id: number) {
   }
 }
 
-/* 
-   FUNCIONES CATEGORÍAS
- */
+/* CATEGORÍAS */
 async function cargarCategorias() {
   try {
     categorias.value = await listarCategorias(toastMessage, toastColor, isToastOpen);
@@ -198,28 +275,162 @@ async function cargarCategorias() {
 
 async function crearNuevaCategoria() {
   try {
+    if (!nuevaCategoria.value.nombreCategoria.trim()) {
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        "danger",
+        "El nombre de la categoría es obligatorio"
+      );
+      return;
+    }
+
     await crearCategoria(nuevaCategoria.value, toastMessage, toastColor, isToastOpen);
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría creada");
     await cargarCategorias();
-    nuevaCategoria.value = { tipo: "", nombreResponsable: "", correoResponsable: "" };
+    nuevaCategoria.value = { nombreCategoria: "" };
   } catch {
     crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al crear categoría");
   }
 }
 
-async function borrarCat(id: number) {
+async function borrarCat(nombreCategoria: string) {
   try {
-    await borrarCategoria(id, toastMessage, toastColor, isToastOpen);
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría eliminada");
+    await borrarCategoria(nombreCategoria, toastMessage, toastColor, isToastOpen);
+
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "success",
+      "Categoría eliminada correctamente"
+    );
+
     await cargarCategorias();
+    await cargarUsuariosCategoria();
+  } catch (e: any) {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "danger",
+      e?.message || "No se pudo borrar la categoría"
+    );
+  }
+}
+
+
+/* USUARIOS-CATEGORIA */
+async function cargarUsuariosCategoria() {
+  try {
+    usuariosCategoria.value = await listarUsuariosCategoria(
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
   } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al borrar categoría");
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "danger",
+      "Error al cargar usuarios de categoría"
+    );
+  }
+}
+
+async function crearNuevoUsuarioCategoria() {
+  try {
+    if (!nuevoUsuarioCategoria.value.nombreCategoria) {
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        "danger",
+        "Selecciona una categoría"
+      );
+      return;
+    }
+    if (!nuevoUsuarioCategoria.value.nombreResponsable.trim()) {
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        "danger",
+        "El nombre del responsable es obligatorio"
+      );
+      return;
+    }
+    if (!nuevoUsuarioCategoria.value.correoResponsable.trim()) {
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        "danger",
+        "El correo del responsable es obligatorio"
+      );
+      return;
+    }
+
+    await crearUsuarioCategoria(
+      nuevoUsuarioCategoria.value,
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "success",
+      "Usuario de categoría creado"
+    );
+    await cargarUsuariosCategoria();
+
+    nuevoUsuarioCategoria.value = {
+      nombreCategoria: "",
+      nombreResponsable: "",
+      correoResponsable: "",
+    };
+  } catch {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "danger",
+      "Error al crear usuario de categoría"
+    );
+  }
+}
+
+async function borrarUsuarioCat(usuario: UsuarioCategoria) {
+  try {
+    await borrarUsuarioCategoria(usuario, toastMessage, toastColor, isToastOpen);
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "success",
+      "Usuario de categoría eliminado"
+    );
+    await cargarUsuariosCategoria();
+  } catch {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "danger",
+      "Error al borrar usuario de categoría"
+    );
   }
 }
 
 onMounted(async () => {
   await cargarUbicaciones();
   await cargarCategorias();
+  await cargarUsuariosCategoria();
 });
 </script>
 
