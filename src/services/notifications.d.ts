@@ -2,21 +2,22 @@ import { Ref } from 'vue';
 
 export interface NotificacionWeb {
   id?: number;
+  creador: string;
   texto: string;
-  fechaInicio: string;
-  fechaFin: string;
-  nivel: string;
-  roles: string[];
+  fechaHoraInicio: string;
+  fechaHoraFin: string;
+  receptor: string;
+  tipo: string;
   imagen?: string;
 }
 
-export declare function obtenerRolesUsuario(toastMessage: Ref<string>,
-                                            toastColor: Ref<string>,
-                                            isToastOpen: Ref<boolean>): Promise<string[]>;
+export declare function obtenerReceptores(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>): Promise<string[]>;
 
-export declare function obtenerNivelesNotificaciones(toastMessage: Ref<string>,
-                                                    toastColor: Ref<string>,
-                                                    isToastOpen: Ref<boolean>): Promise<string[]>;
+export declare function obtenerTiposNotificaciones(toastMessage: Ref<string>,
+                                                   toastColor: Ref<string>,
+                                                   isToastOpen: Ref<boolean>): Promise<string[]>;
 
 export declare function crearNotificacionWeb(toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
@@ -26,14 +27,14 @@ export declare function crearNotificacionWeb(toastMessage: Ref<string>,
                                             inputHoraInicio: string,
                                             inputFechaFin: string,
                                             inputHoraFin: string,
-                                            inputNivel: string,
-                                            inputRoles: string[],
+                                            inputReceptor: string,
+                                            inputTipo: string,
                                             inputImagen?: string): Promise<void>;
 
-export declare function obtenerNotificacionesVigentesPorNivel(toastMessage: Ref<string>,
-                                                              toastColor: Ref<string>,
-                                                              isToastOpen: Ref<boolean>,
-                                                              nivel: string): Promise<NotificacionWeb[]>;
+export declare function obtenerNotificacionesVigentesPorTipo(toastMessage: Ref<string>,
+                                                             toastColor: Ref<string>,
+                                                             isToastOpen: Ref<boolean>,
+                                                             inputTipo: string): Promise<NotificacionWeb[]>;
 
 export declare function obtenerNotificacionesVigentesPorUsuario(toastMessage: Ref<string>,
                                                                 toastColor: Ref<string>,

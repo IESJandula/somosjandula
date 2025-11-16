@@ -15,7 +15,8 @@
           <div class="feature-text mat-agrup">Matriculaciones y agrupamientos</div>
           <div class="feature-text gestion-ap">Gestión de alumnado y profesorado</div>
           <div class="feature-text asignacion-materias">Asignación de materias y reducciones</div>
-          <div class="feature-text reserva-proyectores">Proximamente ... uso de proyectores</div>
+          <div class="feature-text gestion-proyectores">Gestión remota de proyectores</div>
+          <div class="feature-text envio-notificaciones">Envío de notificaciones</div>
         </div>
         
         <div class="buttons-container">
@@ -238,27 +239,31 @@ body {
 }
 
 .impresion-remota {
-  animation: fadeInOut 18s ease-in-out 0s infinite;
+  animation: fadeInOut 21s ease-in-out 0s infinite;
 }
 
 .reserva-recursos {
-  animation: fadeInOut 18s ease-in-out 3s infinite;
+  animation: fadeInOut 21s ease-in-out 3s infinite;
 }
 
 .mat-agrup {
-  animation: fadeInOut 18s ease-in-out 6s infinite;
+  animation: fadeInOut 21s ease-in-out 6s infinite;
 }
 
 .gestion-ap {
-  animation: fadeInOut 18s ease-in-out 9s infinite;
+  animation: fadeInOut 21s ease-in-out 9s infinite;
 }
 
 .asignacion-materias {
-  animation: fadeInOut 18s ease-in-out 12s infinite;
+  animation: fadeInOut 21s ease-in-out 12s infinite;
 }
 
-.reserva-proyectores {
-  animation: fadeInOut 18s ease-in-out 15s infinite;
+.gestion-proyectores {
+  animation: fadeInOut 21s ease-in-out 15s infinite;
+}
+
+.envio-notificaciones {
+  animation: fadeInOut 21s ease-in-out 18s infinite;
 }
 
 @keyframes fadeInOut {
