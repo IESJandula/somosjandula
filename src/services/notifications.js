@@ -193,4 +193,3 @@ export async function borrarNotificacionWeb(toastMessage, toastColor, isToastOpe
     throw error;
   }
 }
-
