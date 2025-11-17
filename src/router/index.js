@@ -45,6 +45,7 @@ import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
 
 import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';
 import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
+import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage.vue';
 
 const routes = [  
   {
@@ -181,6 +182,14 @@ const routes = [
         name: 'ManageNotificationsPage',
         meta: {
           role: 'PROFESOR', 
+        },
+      },
+      {
+        path: 'notifications/admin',
+        component: NotificationsAdminPage,
+        name: 'NotificationsAdminPage',
+        meta: {
+          role: 'ADMINISTRADOR',
         },
       },
       {

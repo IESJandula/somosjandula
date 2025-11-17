@@ -61,40 +61,6 @@
       </button>
     </div>
 
-    <!-- Actualizar Constantes -->
-  <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Actualizar Constantes</h1>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Clave de la constante:</ion-label>
-            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
-                {{ constante.clave }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item v-if="selectedConstante">
-            <ion-label position="stacked">Valor:</ion-label>
-            <ion-input v-model="selectedConstante.valor"></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
-            Actualizar
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
-
     <!-- Lista de Notificaciones -->
     <div class="card">
       <h2 align="center">Noticias creadas por ti ...</h2>
@@ -150,7 +116,6 @@ import {
   obtenerReceptores,
   obtenerTiposNotificaciones,
 } from "@/services/notifications";
-import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
 
 // Variables en la creación de la notificación
 const texto = ref("");
@@ -164,22 +129,11 @@ const imagen = ref(null);
 const receptoresDisponibles = ref([]);
 const tiposDisponibles = ref([]);
 
-const selectedConstante = ref(null);
-const constantes = ref([]);
 const notificaciones = ref([]);
 
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
-
-// Función que se llama cuando el usuario selecciona una constante
-const onConstanteChange = () => {
-  if (!selectedConstante.value) {
-    selectedConstante.value = { valor: "" };
-  } else if (selectedConstante.value.valor === undefined) {
-    selectedConstante.value.valor = "";
-  }
-};
 
 const onFileChange = (e) => {
   imagen.value = e.target.files[0];
@@ -341,7 +295,6 @@ onMounted(() => {
     tiposDisponibles.value = tipos;
     tipo.value = tipos[0];
   });
-  cargarConstantes();
 });
 </script>
 

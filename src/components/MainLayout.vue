@@ -13,6 +13,7 @@
             <ion-item v-if="mostrarAdminFirebase" button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/printers/admin')">Impresión</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
           </ion-list>
         </ion-list>
