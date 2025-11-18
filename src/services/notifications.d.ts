@@ -45,3 +45,6 @@ export declare function borrarNotificacionWeb(toastMessage: Ref<string>,
                                               isToastOpen: Ref<boolean>,
                                               idNotificacion: number): Promise<void>;
 
+export declare function autorizarGmailOAuth(toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>): Promise<boolean>;

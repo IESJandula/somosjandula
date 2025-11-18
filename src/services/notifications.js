@@ -193,3 +193,44 @@ export async function borrarNotificacionWeb(toastMessage, toastColor, isToastOpe
     throw error;
   }
 }
+
+/**
+ * Autoriza Gmail OAuth.
+ * Obtiene la URL de autorización del servidor y la abre en el navegador.
+ */
+export async function autorizarGmailOAuth(toastMessage, toastColor, isToastOpen) {
+  try {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+    const response = await fetch(notificationsApiUrl + '/notifications/gmail/authorize', {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al obtener la URL de autorización');
+      throw new Error(errorMessage || 'Error al obtener la URL de autorización');
+    }
+
+    // Obtenemos la URL de autorización de la respuesta JSON
+    const data = await response.json();
+    const authorizationUrl = data.authorizationUrl;
+
+    if (authorizationUrl) {
+      // Abrimos la URL de autorización en una nueva ventana
+      window.open(authorizationUrl, '_blank');
+      crearToast(toastMessage, toastColor, isToastOpen, "success", "Redirigiendo a Google para autorizar Gmail...");
+    } else {
+      crearToast(toastMessage, toastColor, isToastOpen, "danger", "No se recibió la URL de autorización");
+      throw new Error("No se recibió la URL de autorización");
+    }
+
+    return true;
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
