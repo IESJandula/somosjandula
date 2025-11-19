@@ -802,7 +802,7 @@ watch(recursoSeleccionado, () => {
 
   }
   else {
-    mensajeInformativo = ''
+    mensajeInformativo = 'Recuerda, este recurso NO se puede compartir en el mismo tramo horario'
     mensajeIncidencia = '¿Encontraste algún problema en el aula? Crea una incidencia '
   }
   getReserva();
