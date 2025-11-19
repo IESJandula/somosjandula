@@ -3,6 +3,14 @@
   <!-- Actualizar Constantes -->
   <div class="form-wrapper">
     <div class="form-container">
+      <h1 class="title">Configuración de Gmail</h1>
+      <div class="form-section">
+        <div style="margin-top: 15px;">
+          <ion-button expand="block" @click="autorizarGmailOAuthLlamadaServicio">Autorizar Gmail OAuth</ion-button>
+        </div>
+      </div>
+    </div>
+    <div class="form-container">
       <div class="title-container">
         <h1 class="title">Actualizar Constantes</h1>
       </div>
@@ -52,6 +60,7 @@ import {
 } from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
 import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
+import { autorizarGmailOAuth } from '@/services/notifications';
 
 // Selección de constante
 const selectedConstante = ref(null);
@@ -127,6 +136,10 @@ const cargarConstantes = async () => {
     );
   }
 };
+
+const autorizarGmailOAuthLlamadaServicio = async () => {
+    await autorizarGmailOAuth(toastMessage, toastColor, isToastOpen);
+  };
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
