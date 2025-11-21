@@ -275,7 +275,9 @@ async function cargarCategorias() {
 
 async function crearNuevaCategoria() {
   try {
-    if (!nuevaCategoria.value.nombreCategoria.trim()) {
+    const nombreNuevo = nuevaCategoria.value.nombreCategoria.trim();
+
+    if (!nombreNuevo) {
       crearToast(
         toastMessage,
         toastColor,
@@ -286,7 +288,28 @@ async function crearNuevaCategoria() {
       return;
     }
 
-    await crearCategoria(nuevaCategoria.value, toastMessage, toastColor, isToastOpen);
+    const existe = categorias.value.some(
+      (c) => c.nombreCategoria.trim().toLowerCase() === nombreNuevo.toLowerCase()
+    );
+
+    if (existe) {
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        "danger",
+        "Ya existe una categoría con ese nombre"
+      );
+      return;
+    }
+
+    await crearCategoria(
+      { nombreCategoria: nombreNuevo },
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría creada");
     await cargarCategorias();
     nuevaCategoria.value = { nombreCategoria: "" };
@@ -294,6 +317,7 @@ async function crearNuevaCategoria() {
     crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al crear categoría");
   }
 }
+
 
 async function borrarCat(nombreCategoria: string) {
   try {
@@ -369,6 +393,25 @@ async function crearNuevoUsuarioCategoria() {
         isToastOpen,
         "danger",
         "El correo del responsable es obligatorio"
+      );
+      return;
+    }
+    
+    const existe = usuariosCategoria.value.some((u) =>
+      u.nombreCategoria === nuevoUsuarioCategoria.value.nombreCategoria &&
+      u.nombreResponsable.trim().toLowerCase() ===
+        nuevoUsuarioCategoria.value.nombreResponsable.trim().toLowerCase() &&
+      u.correoResponsable.trim().toLowerCase() ===
+        nuevoUsuarioCategoria.value.correoResponsable.trim().toLowerCase()
+    );
+
+    if (existe) {
+      crearToast(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        "danger",
+        "Ya existe un responsable con esa categoría, nombre y correo"
       );
       return;
     }

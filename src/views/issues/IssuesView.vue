@@ -50,7 +50,16 @@
 
       <!-- Tarjeta de incidencias existentes -->
       <div class="card-upload-table card-upload-csv">
-        <div class="t-2">Listado de incidencias</div>
+        <div class="lista-header">
+          <div class="t-2">Listado de incidencias</div>
+
+          <input
+            v-model="filtroTexto"
+            class="filtro-input" filtro-derecha
+            type="text"
+            placeholder="Filtrar incidencias (min. 4 letras)..."
+          />
+        </div>
         <table>
           <thead>
             <tr>
@@ -65,12 +74,12 @@
           </thead>
           <tbody class="t-3">
             <tr
-              v-for="incidencia in incidencias"
+              v-for="incidencia in incidenciasFiltradas"
               :key="incidencia.ubicacion + '-' + incidencia.fechaIncidencia"
             >
               <td class="th">{{ incidencia.ubicacion }}</td>
               <td class="th">{{ incidencia.nombreCategoria }}</td>
-              <td class="th">{{ incidencia.descripcionIncidencia }}</td>
+              <td class="th" :title="formatearFecha(incidencia.fechaIncidencia)"> {{ incidencia.descripcionIncidencia }}</td>
 
               <!-- ESTADO -->
              <td class="th">
@@ -92,28 +101,33 @@
 
 
               <!-- RESPONSABLE -->
-            <td class="th">
-              <select
-                v-if="puedeEditarIncidencia(incidencia)"
-                v-model="incidencia.correoResponsable"
-                class="input"
-              >
-                <option value="" disabled>Sin responsable asignado</option>
-                <option
-                  v-for="resp in responsablesDeCategoria(incidencia.nombreCategoria)"
-                  :key="resp.correoResponsable"
-                  :value="resp.correoResponsable"
+              <td class="th">
+                <select
+                  v-if="puedeEditarIncidencia(incidencia)"
+                  v-model="incidencia.correoResponsable"
+                  class="input"
                 >
-                  {{ resp.correoResponsable }}
-                </option>
-              </select>
+                  <option value="" disabled>Sin responsable asignado</option>
 
-              <span v-else>
-                {{
-                  mostrarNombreResponsable(incidencia.nombreCategoria, incidencia.correoResponsable)
-                }}
-              </span>
-            </td>
+                  <option
+                    v-for="resp in responsablesDeCategoria(incidencia.nombreCategoria)"
+                    :key="resp.correoResponsable"
+                    :value="resp.correoResponsable"
+                  >
+                    {{ resp.nombreResponsable }} 
+                  </option>
+                </select>
+
+                <span v-else>
+                  {{
+                    mostrarNombreResponsable(
+                      incidencia.nombreCategoria,
+                      incidencia.correoResponsable
+                    )
+                  }}
+                </span>
+              </td>
+
 
 
               <!-- COMENTARIO -->
@@ -233,6 +247,59 @@ const nuevaIncidencia = ref<Incidencia>({
   descripcionIncidencia: "",
   nombreCategoria: "",
 });
+
+const filtroTexto = ref<string>("");
+
+
+const incidenciasFiltradas = computed(() => {
+  const filtro = filtroTexto.value.trim().toLowerCase();
+
+  // Si el filtro tiene menos de 4 caracteres, mostramos todas
+  if (!filtro || filtro.length < 4) {
+    return incidencias.value;
+  }
+
+  return incidencias.value.filter((i) => {
+    const ubicacion = i.ubicacion ?? "";
+    const desc = i.descripcionIncidencia ?? "";
+    const categoria = i.nombreCategoria ?? "";
+    const estado = i.estadoIncidencia ?? "";
+    const comentario = i.comentario ?? "";
+    const correoResp = i.correoResponsable ?? "";
+
+    // Buscamos el responsable para obtener su nombre
+    let nombreResp = "";
+    if (i.nombreCategoria && i.correoResponsable) {
+      const resp = usuariosCategoria.value.find(
+        (u) =>
+          u.nombreCategoria === i.nombreCategoria &&
+          u.correoResponsable.toLowerCase() === i.correoResponsable!.toLowerCase()
+      );
+      if (resp) {
+        nombreResp = resp.nombreResponsable ?? "";
+      }
+    }
+
+    const texto = (
+      ubicacion +
+      " " +
+      desc +
+      " " +
+      categoria +
+      " " +
+      estado +
+      " " +
+      comentario +
+      " " +
+      correoResp +
+      " " +
+      nombreResp
+    ).toLowerCase();
+
+    return texto.includes(filtro);
+  });
+});
+
 
 // ------------ Cálculos de permisos ------------
 
@@ -493,8 +560,6 @@ async function guardarIncidencia(incidencia: Incidencia) {
       "success",
       "Incidencia actualizada"
     );
-    // Opcional: recargar para asegurar que está sincronizado con backend
-    // await cargarIncidencias();
   } catch (e: any) {
     console.error("Error al modificar incidencia:", e);
     crearToast(
@@ -506,6 +571,34 @@ async function guardarIncidencia(incidencia: Incidencia) {
     );
   }
 }
+
+
+function formatearFecha(fechaValor: any): string {
+  if (!fechaValor) return "";
+
+  let fecha: Date;
+
+  if (Array.isArray(fechaValor)) {
+    const [year, month, day, hour = 0, minute = 0, second = 0] = fechaValor;
+    fecha = new Date(year, month - 1, day, hour, minute, second);
+  } else {
+    fecha = new Date(fechaValor);
+  }
+
+  if (isNaN(fecha.getTime())) {
+    return "";
+  }
+
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const año = fecha.getFullYear();
+
+  const horas = String(fecha.getHours()).padStart(2, "0");
+  const minutos = String(fecha.getMinutes()).padStart(2, "0");
+
+  return `${dia}/${mes}/${año} ${horas}:${minutos}`;
+}
+
 
 onMounted(async () => {
   await cargarDatosUsuario();      
@@ -543,7 +636,6 @@ onMounted(async () => {
   gap: 20px;
 }
 
-/* ⭐️⭐️⭐️ NUEVO: Layout especial para ADMIN ⭐️⭐️⭐️ */
 .top-section.admin-layout {
   flex-direction: column !important;
   align-items: stretch !important;
@@ -682,5 +774,41 @@ table {
 .guardar:hover {
   background-color: #16a34a;
 }
+
+.lista-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 1rem;
+}
+
+.lista-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.filtro-input {
+  width: 280px;
+  max-width: 320px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.95rem;
+}
+
+.filtro-input:focus {
+  outline: none;
+  border-color: #4782eb;
+  box-shadow: 0 0 3px #4782eb;
+}
+
+.filtro-derecha {
+  margin-left: auto;
+}
+
 
 </style>
