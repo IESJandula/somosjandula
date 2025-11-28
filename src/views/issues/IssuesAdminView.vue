@@ -1,5 +1,4 @@
 <template>
-  <!-- SECCIÓN 1 — ADMIN UBICACIONES -->
   <h1 class="t-1">Administración de Incidencias TIC</h1>
 
   <div class="top-container">
@@ -28,32 +27,32 @@
 
       <div class="card-upload-table card-upload-csv">
         <div class="t-2">Listado de ubicaciones</div>
-        <table>
-          <thead>
-            <tr>
-              <th class="th">Nombre</th>
-              <th class="th">Acción</th>
-            </tr>
-          </thead>
-          <tbody class="t-3">
-            <tr v-for="u in ubicaciones" :key="u.id">
-              <td class="th">{{ u.nombre }}</td>
-              <td class="th">
-                <button class="eliminar" @click="borrarUbi(u.id!)">&times;</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="tabla-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="th">Nombre</th>
+                <th class="th">Acción</th>
+              </tr>
+            </thead>
+            <tbody class="t-3">
+              <tr v-for="u in ubicaciones" :key="u.id">
+                <td class="th">{{ u.nombre }}</td>
+                <td class="th">
+                  <button class="eliminar" @click="borrarUbi(u.id!)">&times;</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- SECCIÓN 2 — ADMIN CATEGORÍAS -->
   <h1 class="t-1 mt-10">Administración de categorías</h1>
 
   <div class="top-container">
     <div class="top-section">
-      <!-- Formulario crear categoría -->
       <div class="card-upload-csv">
         <div class="container">
           <div class="t-2">Crear nueva categoría</div>
@@ -67,37 +66,36 @@
         </div>
       </div>
 
-      <!-- Lista categorías -->
       <div class="card-upload-table card-upload-csv">
         <div class="t-2">Lista de categorías</div>
-        <table>
-          <thead>
-            <tr>
-              <th class="th">Nombre categoría</th>
-              <th class="th">Acción</th>
-            </tr>
-          </thead>
-          <tbody class="t-3">
-            <tr v-for="categoria in categorias" :key="categoria.nombreCategoria">
-              <td class="th">{{ categoria.nombreCategoria }}</td>
-              <td class="th">
-                <button class="eliminar" @click="borrarCat(categoria.nombreCategoria)">
-                  &times;
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="tabla-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="th">Nombre categoría</th>
+                <th class="th">Acción</th>
+              </tr>
+            </thead>
+            <tbody class="t-3">
+              <tr v-for="categoria in categorias" :key="categoria.nombreCategoria">
+                <td class="th">{{ categoria.nombreCategoria }}</td>
+                <td class="th">
+                  <button class="eliminar" @click="borrarCat(categoria.nombreCategoria)">
+                    &times;
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- SECCIÓN 3 — ADMIN USUARIOS DE CATEGORÍA -->
   <h1 class="t-1 mt-10">Administración de usuarios responsables por categoría</h1>
 
   <div class="top-container">
     <div class="top-section">
-      <!-- Formulario crear usuario-categoría -->
       <div class="card-upload-csv">
         <div class="container">
           <div class="t-2">Crear nuevo responsable de categoría</div>
@@ -128,39 +126,39 @@
         </div>
       </div>
 
-      <!-- Lista usuarios-categoría -->
       <div class="card-upload-table card-upload-csv">
         <div class="t-2">Lista de responsables por categoría</div>
-        <table>
-          <thead>
-            <tr>
-              <th class="th">Categoría</th>
-              <th class="th">Nombre responsable</th>
-              <th class="th">Correo responsable</th>
-              <th class="th">Acción</th>
-            </tr>
-          </thead>
-          <tbody class="t-3">
-            <tr
-              v-for="usuario in usuariosCategoria"
-              :key="usuario.nombreCategoria + '-' + usuario.nombreResponsable + '-' + usuario.correoResponsable"
-            >
-              <td class="th">{{ usuario.nombreCategoria }}</td>
-              <td class="th">{{ usuario.nombreResponsable }}</td>
-              <td class="th">{{ usuario.correoResponsable }}</td>
-              <td class="th">
-                <button class="eliminar" @click="borrarUsuarioCat(usuario)">
-                  &times;
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="tabla-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="th">Categoría</th>
+                <th class="th">Nombre responsable</th>
+                <th class="th">Correo responsable</th>
+                <th class="th">Acción</th>
+              </tr>
+            </thead>
+            <tbody class="t-3">
+              <tr
+                v-for="usuario in usuariosCategoria"
+                :key="usuario.nombreCategoria + '-' + usuario.nombreResponsable + '-' + usuario.correoResponsable"
+              >
+                <td class="th">{{ usuario.nombreCategoria }}</td>
+                <td class="th">{{ usuario.nombreResponsable }}</td>
+                <td class="th">{{ usuario.correoResponsable }}</td>
+                <td class="th">
+                  <button class="eliminar" @click="borrarUsuarioCat(usuario)">
+                    &times;
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Toast global -->
   <ion-toast
     :is-open="isToastOpen"
     :message="toastMessage"
@@ -222,7 +220,6 @@ const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
-/* UBICACIONES */
 async function cargarUbicaciones() {
   try {
     ubicaciones.value = await listarUbicaciones(toastMessage, toastColor, isToastOpen);
@@ -264,7 +261,6 @@ async function borrarUbi(id: number) {
   }
 }
 
-/* CATEGORÍAS */
 async function cargarCategorias() {
   try {
     categorias.value = await listarCategorias(toastMessage, toastColor, isToastOpen);
@@ -318,7 +314,6 @@ async function crearNuevaCategoria() {
   }
 }
 
-
 async function borrarCat(nombreCategoria: string) {
   try {
     await borrarCategoria(nombreCategoria, toastMessage, toastColor, isToastOpen);
@@ -344,8 +339,6 @@ async function borrarCat(nombreCategoria: string) {
   }
 }
 
-
-/* USUARIOS-CATEGORIA */
 async function cargarUsuariosCategoria() {
   try {
     usuariosCategoria.value = await listarUsuariosCategoria(
@@ -396,13 +389,14 @@ async function crearNuevoUsuarioCategoria() {
       );
       return;
     }
-    
-    const existe = usuariosCategoria.value.some((u) =>
-      u.nombreCategoria === nuevoUsuarioCategoria.value.nombreCategoria &&
-      u.nombreResponsable.trim().toLowerCase() ===
-        nuevoUsuarioCategoria.value.nombreResponsable.trim().toLowerCase() &&
-      u.correoResponsable.trim().toLowerCase() ===
-        nuevoUsuarioCategoria.value.correoResponsable.trim().toLowerCase()
+
+    const existe = usuariosCategoria.value.some(
+      (u) =>
+        u.nombreCategoria === nuevoUsuarioCategoria.value.nombreCategoria &&
+        u.nombreResponsable.trim().toLowerCase() ===
+          nuevoUsuarioCategoria.value.nombreResponsable.trim().toLowerCase() &&
+        u.correoResponsable.trim().toLowerCase() ===
+          nuevoUsuarioCategoria.value.correoResponsable.trim().toLowerCase()
     );
 
     if (existe) {
@@ -501,10 +495,10 @@ onMounted(async () => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+  align-items: stretch;
 }
 .card-upload-csv {
-  flex: 1 1 30%;
-  min-width: 520px;
+  flex: 1 1 0;
   background-color: var(--form-bg-light);
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   border-radius: 10px;
@@ -512,11 +506,13 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 .t-2 {
   font-size: 1.3rem;
@@ -553,17 +549,21 @@ onMounted(async () => {
   background-color: #1461eb;
 }
 .card-upload-table {
-  overflow-y: auto;
-  height: 400px;
+  width: 100%;
+}
+.tabla-container {
+  width: 100%;
 }
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 .th {
   border: 1px solid currentColor;
   padding: 0.5rem 1rem;
   text-align: center;
+  word-wrap: break-word;
 }
 .eliminar {
   color: #ef4444;
@@ -571,5 +571,102 @@ table {
   background: transparent;
   border: none;
   cursor: pointer;
+}
+
+/* Solo para pantallas grandes, para mantener tamaño parecido al diseño original */
+@media (min-width: 1024px) {
+  .card-upload-csv {
+    min-width: 520px;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-container {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+
+  .top-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-upload-csv {
+    width: 100%;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .top-container {
+    background-color: transparent;
+  }
+
+  .card-upload-csv {
+    background-color: var(--form-bg-dark, #0b1220);
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+    border: 1px solid #1f2937;
+  }
+
+  .t-1,
+  .t-2,
+  .t-3 {
+    color: var(--text-color-dark, #e5e7eb);
+  }
+
+  table {
+    color: var(--text-color-dark, #e5e7eb);
+  }
+
+  thead tr {
+    background-color: #020617;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: rgba(15, 23, 42, 0.7);
+  }
+
+  tbody tr:nth-child(odd) {
+    background-color: rgba(15, 23, 42, 0.4);
+  }
+
+  tbody tr:hover {
+    background-color: rgba(37, 99, 235, 0.15);
+  }
+
+  .th {
+    border-color: #1f2937;
+  }
+
+  .input {
+    background-color: #020617;
+    color: var(--text-color-dark, #e5e7eb);
+    border-color: #334155;
+  }
+
+  .input::placeholder {
+    color: #6b7280;
+  }
+
+  .input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 1px #60a5fa;
+  }
+
+  .btn {
+    background-color: #2563eb;
+    color: #e5e7eb;
+  }
+
+  .btn:hover {
+    background-color: #1d4ed8;
+  }
+
+  .eliminar {
+    color: #f97373;
+  }
+
+  .eliminar:hover {
+    color: #fecaca;
+  }
 }
 </style>

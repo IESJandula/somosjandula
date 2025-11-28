@@ -2,7 +2,8 @@
   <h1 class="t-1">Gestión de Incidencias TIC</h1>
 
   <div class="top-container">
-    <div class="top-section" :class="{ 'admin-layout': esAdmin }">
+    <!-- Siempre con layout tipo admin: formulario arriba y tabla debajo -->
+    <div class="top-section admin-layout">
       
       <!-- Tarjeta para crear incidencia -->
       <div class="card-upload-csv">
@@ -55,7 +56,7 @@
 
           <input
             v-model="filtroTexto"
-            class="filtro-input" filtro-derecha
+            class="filtro-input filtro-derecha"
             type="text"
             placeholder="Filtrar incidencias (min. 4 letras)..."
           />
@@ -66,7 +67,7 @@
               <th class="th">Ubicación</th>
               <th class="th">Categoría</th>
               <th class="th">Descripción</th>
-              <th class="th">Estado</th>
+              <th class="th th-estado">Estado</th>
               <th class="th">Responsable</th>
               <th class="th">Solución</th>
               <th class="th">Acción</th>
@@ -79,10 +80,12 @@
             >
               <td class="th">{{ incidencia.ubicacion }}</td>
               <td class="th">{{ incidencia.nombreCategoria }}</td>
-              <td class="th" :title="formatearFecha(incidencia.fechaIncidencia)"> {{ incidencia.descripcionIncidencia }}</td>
+              <td class="th" :title="formatearFecha(incidencia.fechaIncidencia)">
+                {{ incidencia.descripcionIncidencia }}
+              </td>
 
-              <!-- ESTADO -->
-             <td class="th">
+              <!-- ESTADO (celda más grande) -->
+              <td class="th th-estado">
                 <select
                   v-if="puedeEditarIncidencia(incidencia)"
                   v-model="incidencia.estadoIncidencia"
@@ -97,11 +100,11 @@
                 <span v-else>
                   {{ incidencia.estadoIncidencia || '—' }}
                 </span>
-            </td>
-
+              </td>
 
               <!-- RESPONSABLE -->
               <td class="th">
+                <!-- Admin o responsable pueden editar (select con solo nombre) -->
                 <select
                   v-if="puedeEditarIncidencia(incidencia)"
                   v-model="incidencia.correoResponsable"
@@ -114,10 +117,11 @@
                     :key="resp.correoResponsable"
                     :value="resp.correoResponsable"
                   >
-                    {{ resp.nombreResponsable }} 
+                    {{ resp.nombreResponsable }}
                   </option>
                 </select>
 
+                <!-- Usuario normal ve solo el nombre del responsable -->
                 <span v-else>
                   {{
                     mostrarNombreResponsable(
@@ -128,9 +132,7 @@
                 </span>
               </td>
 
-
-
-              <!-- COMENTARIO -->
+              <!-- COMENTARIO / SOLUCIÓN -->
               <td class="th">
                 <textarea
                   v-if="puedeEditarIncidencia(incidencia)"
@@ -144,10 +146,9 @@
                 </span>
               </td>
 
-
-              <!-- BORRAR -->
+              <!-- BORRAR / GUARDAR -->
               <td class="th">
-                  <!-- Botón guardar solo para admin o responsable -->
+                <!-- Botón guardar solo para admin o responsable -->
                 <button
                   v-if="puedeEditarIncidencia(incidencia)"
                   class="guardar"
@@ -251,6 +252,7 @@ const nuevaIncidencia = ref<Incidencia>({
 const filtroTexto = ref<string>("");
 
 
+// Incidencias filtradas
 const incidenciasFiltradas = computed(() => {
   const filtro = filtroTexto.value.trim().toLowerCase();
 
@@ -330,18 +332,22 @@ function responsablesDeCategoria(nombreCategoria?: string): UsuarioCategoria[] {
   );
 }
 
+// Solo devuelve el nombre del responsable (sin correo)
 function mostrarNombreResponsable(
   nombreCategoria?: string,
   correoResponsable?: string
 ): string {
   if (!correoResponsable) return "Sin responsable";
+
   const resp = usuariosCategoria.value.find(
     (u) =>
       u.nombreCategoria === nombreCategoria &&
       u.correoResponsable.toLowerCase() === correoResponsable.toLowerCase()
   );
-  if (!resp) return correoResponsable;
-  return `${resp.nombreResponsable} (${resp.correoResponsable})`;
+
+  if (!resp) return "Sin responsable";
+
+  return resp.nombreResponsable;
 }
 
 // ------------ Cargas iniciales ------------
@@ -539,7 +545,6 @@ async function borrar(incidencia: Incidencia) {
 
 /**
  * Guardar cambios de una incidencia (estado, responsable, solución).
- * Se llama cuando cambias el select o sales del textarea de solución.
  */
 async function guardarIncidencia(incidencia: Incidencia) {
   if (!puedeEditarIncidencia(incidencia)) {
@@ -697,6 +702,7 @@ onMounted(async () => {
   color: #fff;
   font-size: 1.1rem;
   margin-top: 1rem;
+  cursor: pointer;
 }
 
 .btn:hover {
@@ -746,13 +752,17 @@ table {
   text-align: center;
 }
 
+.th-estado {
+  min-width: 170px;
+}
+
 .eliminar {
   color: #ef4444;
   font-size: 1.6rem;
   background: transparent;
   border: none;
+  cursor: pointer;
 }
-
 
 .acciones-cell {
   display: flex;
@@ -777,18 +787,11 @@ table {
 
 .lista-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  gap: 1rem;
-}
-
-.lista-header {
-  display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
   margin-bottom: 1rem;
+  gap: 1rem;
 }
 
 .filtro-input {
@@ -810,5 +813,102 @@ table {
   margin-left: auto;
 }
 
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .top-container {
+    background-color: transparent;
+  }
 
+  .card-upload-csv {
+    background-color: var(--form-bg-dark, #0b1220); /* gris-azul muy oscuro */
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+    border: 1px solid #1f2937;
+  }
+
+  .t-1,
+  .t-2,
+  .t-3 {
+    color: var(--text-color-dark, #e5e7eb); /* gris muy claro */
+  }
+
+  table {
+    color: var(--text-color-dark, #e5e7eb);
+  }
+
+  thead tr {
+    background-color: #020617;
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: rgba(15, 23, 42, 0.7);
+  }
+
+  tbody tr:nth-child(odd) {
+    background-color: rgba(15, 23, 42, 0.4);
+  }
+
+  tbody tr:hover {
+    background-color: rgba(37, 99, 235, 0.15);
+  }
+
+  .th {
+    border-color: #1f2937;
+  }
+
+  .input,
+  .filtro-input,
+  textarea.input {
+    background-color: #020617;
+    color: var(--text-color-dark, #e5e7eb);
+    border-color: #334155;
+  }
+
+  .input::placeholder,
+  textarea.input::placeholder,
+  .filtro-input::placeholder {
+    color: #6b7280;
+  }
+
+  .filtro-input:focus,
+  .input:focus,
+  textarea.input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 1px #60a5fa;
+  }
+
+  .btn {
+    background-color: #2563eb;
+    color: #e5e7eb;
+  }
+
+  .btn:hover {
+    background-color: #1d4ed8;
+  }
+
+  .guardar {
+    background-color: #22c55e;
+    color: #022c22;
+  }
+
+  .guardar:hover {
+    background-color: #4ade80;
+  }
+
+  .eliminar {
+    color: #f97373;
+  }
+
+  .eliminar:hover {
+    color: #fecaca;
+  }
+
+  .fondo-gris {
+    background-color: rgba(15, 23, 42, 0.85);
+  }
+
+  .circulo {
+    border: 4px solid #1f2937;
+    border-top: 4px solid #60a5fa;
+  }
+}
 </style>
