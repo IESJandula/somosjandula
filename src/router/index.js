@@ -309,7 +309,7 @@ const routes = [
         component: AutomationsSchoolAdminPage,
         name: 'AutomationsSchoolAdmin',
         meta: {
-          role: 'DIRECCION'
+          role: 'ADMINISTRADOR'
         },
       },
     ],
