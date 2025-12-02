@@ -304,6 +304,14 @@ const routes = [
           role: 'PROFESOR'
         },
       },
+      {
+        path: 'automationsSchool/admin',
+        component: AutomationsSchoolAdminPage,
+        name: 'AutomationsSchoolAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
     ],
   },
 ];
