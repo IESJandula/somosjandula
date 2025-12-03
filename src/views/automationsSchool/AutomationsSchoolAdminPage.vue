@@ -4,12 +4,12 @@
     <!-- Gestión de Recursos -->
     <div class="form-container">
       <div class="title-container">
-        <h1 class="title">Gestión de Recursos</h1>
+        <h1 class="title">Dispositivos</h1>
       </div>
       <ion-row>
         <ion-col size="12">
           <ion-item>
-            <ion-label position="stacked">Recurso:</ion-label>
+            <ion-label position="stacked">Nombre:</ion-label>
             <ion-input v-model="recurso"></ion-input>
           </ion-item>
         </ion-col>
@@ -17,7 +17,7 @@
       <ion-row>
         <ion-col size="12">
           <ion-item>
-            <ion-label position="stacked">Cantidad:</ion-label>
+            <ion-label position="stacked">Ubicacion:</ion-label>
             <ion-input type="number" v-model="cantidad"
               :min="recursosCantidadMaxima[recurso] ? recursosCantidadMaxima[recurso] : 0"></ion-input>
           </ion-item>
