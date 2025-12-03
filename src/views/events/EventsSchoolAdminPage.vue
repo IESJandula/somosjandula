@@ -4,7 +4,7 @@
         <!-- Gestión de Recursos -->
         <div class="form-container">
             <div class="title-container">
-                <h1 class="title">Gestión de Recursos</h1>
+                <h1 class="title">Gestión de Eventos</h1>
             </div>
             <ion-row>
                 <ion-col size="12">
