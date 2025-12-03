@@ -304,6 +304,14 @@ const routes = [
           role: 'PROFESOR'
         },
       },
+      {
+        path: 'eventsSchool/admin',
+        component: EventsSchoolAdminPage,
+        name: 'EventsSchoolAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
     ],
   },
 ];
