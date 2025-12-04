@@ -1,10 +1,11 @@
 import { eventsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-export const getEventos = async (toastMessage, toastColor, isToastOpen) => {
+export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) => 
+{
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(eventsApiUrl + '/events',
+    const response = await fetch(eventsApiUrl + '/api/evento',
         {
             method: 'GET',
             headers:
@@ -13,32 +14,55 @@ export const getEventos = async (toastMessage, toastColor, isToastOpen) => {
             },
         })
 
-    if (!response.ok) {
+    if (!response.ok) 
+    {
         const errorData = await response.json();
         throw new Error(errorData.message);
     }
     return await response.json()
 }
 
-export const enviar = async (toastMessage, toastColor, isToastOpen, payload) =>
+export const crearEvento = async (toastMessage, toastColor, isToastOpen, payload) => 
 {
-    let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+    let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(eventsApiUrl + '/events',
-    {
-        method: 'POST',
-        headers:
+    return await fetch(eventsApiUrl + '/api/evento',
         {
-            'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
-        },
-        body: payload, // Enviar el FormData directamente
-    });
+            method: 'POST',
+            headers:
+            {
+                'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
+            },
+            body: payload, // Enviar el FormData directamente
+        });
 }
 
-export const getListaEventos = async (toastMessage, toastColor, isToastOpen) => {
+export const borrarEvento = async (toastMessage, toastColor, isToastOpen, recurso) => 
+{
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(bookingsApiUrl + '/events',
+    const response = await fetch(eventsApiUrl + '/api/evento/{idEvento}',
+        {
+            method: 'DELETE',
+            headers:
+            {
+                'Authorization': `Bearer ${tokenPropio}`,
+                recurso: recurso
+            },
+        })
+
+    if (!response.ok) 
+    {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+    }
+}
+
+export const obtenerListaEventos = async (toastMessage, toastColor, isToastOpen) => 
+{
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(eventsApiUrl + '/api/evento',
         {
             method: 'GET',
             headers:
@@ -47,7 +71,8 @@ export const getListaEventos = async (toastMessage, toastColor, isToastOpen) => 
             },
         })
 
-    if (!response.ok) {
+    if (!response.ok) 
+    {
         const errorData = await response.json();
         throw new Error(errorData.message);
     }
