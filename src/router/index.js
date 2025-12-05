@@ -21,7 +21,6 @@ import AbsencesReviewPage from '@/views/absences/AbsencesReviewPage.vue';
 import AbsencesTasksPage from '@/views/absences/AbsencesTasksPage.vue';
 
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
-import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import PDIsTrainingPage from '@/views/documents/PDIsTrainingPage.vue';
 
 import ControlPanel from '@/views/projectors/ControlPanel.vue';
@@ -46,6 +45,10 @@ import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
 import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';
 import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
 import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage.vue';
+
+import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
+import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
+import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
 const routes = [  
   {
@@ -140,14 +143,6 @@ const routes = [
         path: 'documents/teacherGuide',
         component: TeacherGuidePage,
         name: 'DocumentsTeacherGuidePage',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'documents/itIssues',
-        component: ITIssuesPage,
-        name: 'DocumentsITIssuesPage',
         meta: {
           role: 'PROFESOR'
         },
@@ -303,6 +298,24 @@ const routes = [
         meta: {
           role: 'PROFESOR'
         },
+      },
+      {
+        path: '/issues',
+        name: 'Issues',
+        component: IncidenciasTicPage,
+        meta: { role: 'PROFESOR' },
+      },
+      {
+        path: '/issues/stats',
+        name: 'IssuesStatsPage',
+        component: EstadisticasIncidenciasTicPage,
+        meta: { role: 'PROFESOR' },
+      },
+      {
+        path: '/issues/admin',
+        name: 'IssuesTicAdminPage',
+        component: IncidenciasTicAdminPage,
+        meta: { role: 'ADMINISTRADOR' },
       },
     ],
   },

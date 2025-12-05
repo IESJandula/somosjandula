@@ -15,6 +15,7 @@
             <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
           </ion-list>
         </ion-list>
 
@@ -65,7 +66,6 @@
             <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprime documentos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/itIssues')">Crea incidencias TIC</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
           </ion-list>
         </ion-list>
@@ -100,6 +100,26 @@
             <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/choice')">1. Elección de horarios</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/personal')">2. Horario personal</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/groups')">3. Horario de grupos</ion-item>
+          </ion-list>
+        </ion-list>
+        <!--Incidencias-->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuIssues">
+            <ion-icon slot="end" name="alert-circle-outline"></ion-icon>
+            <ion-label>Incidencias</ion-label>
+            <ion-icon
+              slot="end"
+              :icon="issuesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"
+            ></ion-icon>
+          </ion-item>
+
+          <ion-list v-if="issuesSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/issues')">
+              Gestiona tus incidencias
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/issues/stats')">
+              Visualiza estadísticas
+            </ion-item>
           </ion-list>
         </ion-list>
       </ion-content>
@@ -221,6 +241,8 @@ export default defineComponent({
     const bookingsSubmenuVisible = ref(false);
     const absencesSubmenuVisible = ref(false);
 
+    const issuesSubmenuVisible = ref(false);
+
     // Variables para el toast
     const isToastOpen = ref(false);
     const toastMessage = ref('');
@@ -313,6 +335,7 @@ export default defineComponent({
       notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuTimetableAdmin = () => {
@@ -324,6 +347,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuTimetableTeachers = () => {
@@ -335,6 +359,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
     const toggleSubMenuSchoolManager = () => {
       adminSubmenuVisible.value = false;
@@ -356,6 +381,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuUtilities = () => {
@@ -367,6 +393,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = !utilitiesSubmenuVisible.value;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuBookings = () => {
@@ -378,6 +405,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       absencesSubmenuVisible.value = false;
+       issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuAbsences = () => {
@@ -389,6 +417,18 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = !absencesSubmenuVisible.value;
+      issuesSubmenuVisible.value = false;
+    };
+
+    const toggleSubMenuIssues = () => {
+      adminSubmenuVisible.value = false;
+      timetableAdminSubmenuVisible.value = false;
+      timetableTeachersSubmenuVisible.value = false;
+      schoolManagerSubmenuVisible.value = false;
+      utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = !issuesSubmenuVisible.value;
     };
 
     onMounted(async () => {
@@ -433,6 +473,7 @@ export default defineComponent({
       utilitiesSubmenuVisible,
       bookingsSubmenuVisible,
       absencesSubmenuVisible,
+      issuesSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuTimetableAdmin,
       toggleSubMenuTimetableTeachers,
@@ -447,6 +488,7 @@ export default defineComponent({
       tooltipPosition,
       notificationRefs,
       handleMouseEnter,
+      toggleSubMenuIssues
     };
   },
 });

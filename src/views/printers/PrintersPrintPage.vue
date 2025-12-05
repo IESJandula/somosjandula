@@ -290,7 +290,7 @@ const maximoHojasImpresion = ref(null);
 const router = useRouter();
 
 const navigateToIssues = () => {
-  router.push({ path: '/documents/itIssues' });
+  router.push({ path: '/issues' });
 };
 
 // Maneja el archivo cuando se selecciona
