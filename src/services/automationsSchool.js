@@ -1,11 +1,11 @@
-import { bookingsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
+import { automationsSchoolApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-export const getDiasSemana = async (toastMessage, toastColor, isToastOpen) =>
+export const getSensorBooleano = async (toastMessage, toastColor, isToastOpen) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/fixed/days_week',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/fixed/days_week',
   {
     method: 'GET',
     headers:
@@ -21,11 +21,11 @@ export const getDiasSemana = async (toastMessage, toastColor, isToastOpen) =>
   return await response.json()
 }
 
-export const getTramosHorarios = async (toastMessage, toastColor, isToastOpen) =>
+export const obtenerActuadores = async (toastMessage, toastColor, isToastOpen) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/fixed/timeslots',
+  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/actuador',
     {
       method: 'GET',
       headers:
@@ -45,7 +45,7 @@ export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso,
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
+  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/sensor/booleano',
   {
     method: 'POST',
     headers:
@@ -70,7 +70,7 @@ export const getRecursos = async (toastMessage, toastColor, isToastOpen) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/fixed/resources',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/fixed/resources',
   {
     method: 'GET',
     headers:
@@ -90,7 +90,7 @@ export const getRecursosCompartible = async (toastMessage, toastColor, isToastOp
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/fixed/resourcesCompartible',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/fixed/resourcesCompartible',
   {
     method: 'GET',
     headers:
@@ -111,7 +111,7 @@ export const comprobarEliminacion = async (toastMessage, toastColor, isToastOpen
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/checkDelete',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/admin/checkDelete',
   {
     method: 'GET',
     headers:
@@ -132,7 +132,7 @@ export const deleteRecurso = async(toastMessage, toastColor, isToastOpen, recurs
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/admin/resources',
   {
     method: 'DELETE',
     headers:
@@ -152,7 +152,7 @@ export const deleteRecursoReserva = async(toastMessage, toastColor, isToastOpen,
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/bookings',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/admin/resources/bookings',
   {
     method: 'DELETE',
     headers:
@@ -173,7 +173,7 @@ export const postReserva = async (toastMessage, toastColor, isToastOpen, email, 
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/fixed/bookings',
     {
     method: 'POST',
     headers:
@@ -198,7 +198,7 @@ export const getReservas = async (toastMessage, toastColor, isToastOpen, recurso
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/fixed/bookings',
   {
     method: 'GET',
     headers:
@@ -220,7 +220,7 @@ export const deleteReserva = async (toastMessage, toastColor, isToastOpen, email
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/fixed/bookings', {
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/fixed/bookings', {
     method: 'DELETE',
     headers:
     {
@@ -262,7 +262,7 @@ export const postReservaTemporary = async (toastMessage, toastColor, isToastOpen
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/temporary/bookings',
       {
       method: 'POST',
       headers:
@@ -289,7 +289,7 @@ export const getReservasTemporary = async (toastMessage, toastColor, isToastOpen
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/temporary/bookings',
   {
     method: 'GET',
     headers:
@@ -312,7 +312,7 @@ export const deleteReservaTemporary = async (toastMessage, toastColor, isToastOp
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings', {
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/temporary/bookings', {
         method: 'DELETE',
         headers:
         {
@@ -337,7 +337,7 @@ export const getCantMaxResource = async (toastMessage, toastColor, isToastOpen) 
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources/cantMax',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/admin/resources/cantMax',
   {
     method: 'GET',
     headers:
@@ -357,7 +357,7 @@ export const getCheckAvailable = async (toastMessage, toastColor, isToastOpen,di
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings/available',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/temporary/bookings/available',
   {
     method: 'GET',
     headers:
@@ -382,7 +382,7 @@ export const modifyResourceLock = async (toastMessage, toastColor, isToastOpen, 
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/resources',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/admin/resources',
     {
     method: 'PUT',
     headers:
@@ -403,7 +403,7 @@ export const getPaginatedLogs = async (toastMessage, toastColor, isToastOpen, pa
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/logs',
+  const response = await fetch(automationsSchoolApiUrl + '/bookings/admin/logs',
     {
     method: 'GET',
     headers:

@@ -230,7 +230,7 @@ import {
   obtenerSolicitudes
 } from "@/services/schoolManager.js";
 import {obtenerConstantes} from '@/services/constantes'
-import {schoolmanagerApiUrl} from "@/environment/apiUrls.ts";
+import {schoolManagerApiUrl} from "@/environment/apiUrls.ts";
 
 const rolesUsuario = ref([]);
 const profesorSeleccionado = ref('');
@@ -266,7 +266,7 @@ const isInitializing = ref(true);
 //FUNCION PARA DESHABILITAR EN FUNCION DE LA CONSTANTE DE LA VENTANA DE ADMINISTRACION
 const verificarConstantes = async () => {
   try {
-    constantes.value = await obtenerConstantes(schoolmanagerApiUrl + '/schoolManager/constants');
+    constantes.value = await obtenerConstantes(schoolManagerApiUrl + '/schoolManager/constants');
 
     const solicitudesDeshabilitada = constantes.value.find(c => c.clave === 'Selección horarios por claustro');
     valorConstante.value = solicitudesDeshabilitada.valor;

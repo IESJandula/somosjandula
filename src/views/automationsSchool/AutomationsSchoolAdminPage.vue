@@ -13,6 +13,18 @@
             <ion-input v-model="recurso"></ion-input>
           </ion-item>
         </ion-col>
+        <ion-col size="6">
+          <ion-item>
+            <ion-label position="stacked">Actuadores:</ion-label>
+            <ion-select v-model="actuadorElegido">
+              <ion-select-option v-for="actuador in actuadores" 
+                                  :key="`${actuador.mac} ${actuador.estado} ${actuador.ubicacion}`" 
+                                  :value="`${actuador.mac} ${actuador.estado} ${actuador.ubicacion}`">
+                {{ `${actuador.mac} ${actuador.estado} ${actuador.ubicacion}` }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
       </ion-row>
       <ion-row>
         <ion-col size="12">
@@ -240,6 +252,9 @@ import {
   modifyResourceLock,
   getPaginatedLogs,
 } from "@/services/bookings";
+import { obtenerActuadores } from "@/services/automationsSchool";
+
+const actuadores = ref(null);
 
 // Selección de constante
 const selectedConstante = ref(null);
@@ -624,14 +639,19 @@ const paginarLogs = async (pagina) => {
   }
 }
 
+const obtenerActuadoresVista = async (pagina) => {
+  actuadores.value = await obtenerActuadores(isToastOpen, toastMessage, toastColor);
+}
+
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
-  await paginarLogs(0);
+  await obtenerActuadoresVista();
+  /*await paginarLogs(0);
   await cargarConstantes();
   await cargarRecursos();
   await getRecurso();
   await switchRecurso();
-  await getCantMaxResource();
+  await getCantMaxResource();*/
 });
 </script>
 
