@@ -21,7 +21,6 @@ import AbsencesReviewPage from '@/views/absences/AbsencesReviewPage.vue';
 import AbsencesTasksPage from '@/views/absences/AbsencesTasksPage.vue';
 
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
-import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import PDIsTrainingPage from '@/views/documents/PDIsTrainingPage.vue';
 
 import ControlPanel from '@/views/projectors/ControlPanel.vue';
@@ -140,14 +139,6 @@ const routes = [
         path: 'documents/teacherGuide',
         component: TeacherGuidePage,
         name: 'DocumentsTeacherGuidePage',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'documents/itIssues',
-        component: ITIssuesPage,
-        name: 'DocumentsITIssuesPage',
         meta: {
           role: 'PROFESOR'
         },

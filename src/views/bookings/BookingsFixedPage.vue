@@ -435,7 +435,7 @@ watch(recursoSeleccionado, () => {
 });
 const router = useRouter();
 const navigateToIssues = () => {
-  router.push({ path: '/documents/itIssues' });
+  router.push({ path: '/issues' });
 };
 
 const cargarDatos = async () => {
