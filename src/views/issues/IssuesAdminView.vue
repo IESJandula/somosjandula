@@ -573,7 +573,7 @@ table {
   cursor: pointer;
 }
 
-/* Solo para pantallas grandes, para mantener tamaño parecido al diseño original */
+
 @media (min-width: 1024px) {
   .card-upload-csv {
     min-width: 520px;

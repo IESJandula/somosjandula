@@ -60,7 +60,23 @@
             type="text"
             placeholder="Filtrar incidencias (min. 4 letras)..."
           />
+
+          <!-- Control de tamaño de página -->
+          <div class="items-por-pagina">
+            <label for="page-size" class="paginacion-label">
+              Incidencias por página:
+            </label>
+            <input
+              id="page-size"
+              type="number"
+              v-model.number="pageSize"
+              min="1"
+              max="20"
+              class="input input-page-size"
+            />
+          </div>
         </div>
+
         <table>
           <thead>
             <tr>
@@ -75,7 +91,7 @@
           </thead>
           <tbody class="t-3">
             <tr
-              v-for="incidencia in incidenciasFiltradas"
+              v-for="incidencia in incidenciasPaginadas"
               :key="incidencia.ubicacion + '-' + incidencia.fechaIncidencia"
             >
               <td class="th">{{ incidencia.ubicacion }}</td>
@@ -159,8 +175,44 @@
                 <button @click="borrar(incidencia)" class="eliminar">&times;</button>
               </td>
             </tr>
+
+            <!-- Fila si no hay incidencias -->
+            <tr v-if="!incidenciasFiltradas.length">
+              <td class="th" colspan="7" style="text-align:center; opacity:0.7;">
+                No hay incidencias registradas
+              </td>
+            </tr>
           </tbody>
         </table>
+
+        <!-- Paginación  -->
+        <div
+          class="paginacion"
+          v-if="incidenciasFiltradas.length > pageSize"
+        >
+          <button
+            class="pag-btn"
+            :disabled="currentPage === 1"
+            @click="irPagina(currentPage - 1)"
+          >
+            ‹ Anterior
+          </button>
+
+          <span class="paginacion-info">
+            Página {{ currentPage }} de {{ totalPaginas }}
+            · Mostrando
+            {{ rangoInicio }}–{{ rangoFin }}
+            de {{ incidenciasFiltradas.length }}
+          </span>
+
+          <button
+            class="pag-btn"
+            :disabled="currentPage === totalPaginas"
+            @click="irPagina(currentPage + 1)"
+          >
+            Siguiente ›
+          </button>
+        </div>
       </div>
 
     </div>
@@ -178,7 +230,7 @@
 
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { IonToast } from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
 import {
@@ -194,7 +246,6 @@ import {
 
 // Servicio que te da email y roles del usuario logueado.
 import { obtenerDatosUsuarioSesion } from "@/services/firebaseService"; 
-// por ejemplo: devuelve { email: string, roles: string[] }
 
 // ------------ Tipos locales ------------
 
@@ -251,8 +302,12 @@ const nuevaIncidencia = ref<Incidencia>({
 
 const filtroTexto = ref<string>("");
 
+// ------------ Paginación (como en el otro componente) ------------
 
-// Incidencias filtradas
+const pageSize = ref<number>(8);  // incidencias por página (editable 1–20)
+const currentPage = ref<number>(1);
+
+// Incidencias filtradas (antes de paginar)
 const incidenciasFiltradas = computed(() => {
   const filtro = filtroTexto.value.trim().toLowerCase();
 
@@ -302,6 +357,53 @@ const incidenciasFiltradas = computed(() => {
   });
 });
 
+// Total de páginas
+const totalPaginas = computed(() => {
+  if (!incidenciasFiltradas.value.length) return 1;
+  return Math.ceil(incidenciasFiltradas.value.length / pageSize.value);
+});
+
+// Incidencias de la página actual
+const incidenciasPaginadas = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  return incidenciasFiltradas.value.slice(start, start + pageSize.value);
+});
+
+// Rango mostrado (para el texto "Mostrando X–Y de Z")
+const rangoInicio = computed(() => {
+  if (!incidenciasFiltradas.value.length) return 0;
+  return (currentPage.value - 1) * pageSize.value + 1;
+});
+
+const rangoFin = computed(() => {
+  const total = incidenciasFiltradas.value.length;
+  const fin = currentPage.value * pageSize.value;
+  return fin > total ? total : fin;
+});
+
+// Ir a una página concreta
+function irPagina(pagina: number) {
+  if (pagina < 1 || pagina > totalPaginas.value) return;
+  currentPage.value = pagina;
+}
+
+// Forzar límites de pageSize (1 a 20)
+watch(
+  pageSize,
+  (nuevo) => {
+    if (!nuevo || nuevo < 1) pageSize.value = 1;
+    if (nuevo > 20) pageSize.value = 20;
+  }
+);
+
+// Si cambian filtro, incidencias o pageSize, reseteamos a página 1
+watch(
+  [filtroTexto, incidencias, pageSize],
+  () => {
+    currentPage.value = 1;
+  },
+  { deep: true }
+);
 
 // ------------ Cálculos de permisos ------------
 
@@ -332,7 +434,7 @@ function responsablesDeCategoria(nombreCategoria?: string): UsuarioCategoria[] {
   );
 }
 
-// Solo devuelve el nombre del responsable (sin correo)
+
 function mostrarNombreResponsable(
   nombreCategoria?: string,
   correoResponsable?: string
@@ -380,7 +482,6 @@ async function cargarIncidencias() {
     );
   }
 }
-
 
 async function cargarUbicaciones() {
   try {
@@ -469,7 +570,6 @@ async function cargarDatosUsuario() {
     rolesUsuario.value = [];
   }
 }
-
 
 // ------------ Acciones ------------
 
@@ -577,7 +677,6 @@ async function guardarIncidencia(incidencia: Incidencia) {
   }
 }
 
-
 function formatearFecha(fechaValor: any): string {
   if (!fechaValor) return "";
 
@@ -603,7 +702,6 @@ function formatearFecha(fechaValor: any): string {
 
   return `${dia}/${mes}/${año} ${horas}:${minutos}`;
 }
-
 
 onMounted(async () => {
   await cargarDatosUsuario();      
@@ -775,7 +873,7 @@ table {
   padding: 0.25rem 0.6rem;
   border-radius: 0.375rem;
   border: none;
-  background-color: #22c55e; /* verde */
+  background-color: #22c55e; 
   color: white;
   font-size: 0.9rem;
   cursor: pointer;
@@ -813,6 +911,59 @@ table {
   margin-left: auto;
 }
 
+
+.items-por-pagina {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.paginacion-label {
+  white-space: nowrap;
+}
+
+.input-page-size {
+  max-width: 70px;
+}
+
+/* Paginación inferior */
+.paginacion {
+  margin-top: 0.75rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.paginacion-info {
+  white-space: nowrap;
+}
+
+.pag-btn {
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  padding: 0.25rem 0.8rem;
+  background-color: #e5e7eb;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.pag-btn:hover:not(:disabled) {
+  background-color: #d4d4d8;
+  transform: translateY(-1px);
+}
+
+.pag-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   .top-container {
@@ -820,7 +971,7 @@ table {
   }
 
   .card-upload-csv {
-    background-color: var(--form-bg-dark, #0b1220); /* gris-azul muy oscuro */
+    background-color: var(--form-bg-dark, #0b1220); 
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
     border: 1px solid #1f2937;
   }
@@ -828,7 +979,7 @@ table {
   .t-1,
   .t-2,
   .t-3 {
-    color: var(--text-color-dark, #e5e7eb); /* gris muy claro */
+    color: var(--text-color-dark, #e5e7eb); 
   }
 
   table {
@@ -909,6 +1060,31 @@ table {
   .circulo {
     border: 4px solid #1f2937;
     border-top: 4px solid #60a5fa;
+  }
+
+  .pag-btn {
+    background-color: #1f2937;
+    border-color: #334155;
+  }
+
+  .pag-btn:hover:not(:disabled) {
+    background-color: #374151;
+  }
+
+  .paginacion {
+    color: #9ca3af;
+  }
+
+  .paginacion-label {
+    color: #9ca3af;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .card-upload-table {
+    overflow-x:auto;
+    width: 100%;
   }
 }
 </style>

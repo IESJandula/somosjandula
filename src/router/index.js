@@ -45,6 +45,7 @@ import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
 
 import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
+import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
 const routes = [  
   {
@@ -283,6 +284,12 @@ const routes = [
         path: '/issues',
         name: 'Issues',
         component: IncidenciasTicPage,
+        meta: { role: 'PROFESOR' },
+      },
+      {
+        path: '/issues/stats',
+        name: 'IssuesStatsPage',
+        component: EstadisticasIncidenciasTicPage,
         meta: { role: 'PROFESOR' },
       },
       {
