@@ -15,7 +15,7 @@
               placeholder="Ej: Aula 1.15, Laboratorio Informática..."
             />
             <button
-              @click="crearNuevaUbicacion"
+              @click="crearNuevaUbicacionFunc"
               class="btn"
               :disabled="isLoading || !nuevaUbicacion.trim()"
             >
@@ -36,10 +36,10 @@
               </tr>
             </thead>
             <tbody class="t-3">
-              <tr v-for="u in ubicaciones" :key="u.id">
+              <tr v-for="u in ubicaciones" :key="u.nombre">
                 <td class="th">{{ u.nombre }}</td>
                 <td class="th">
-                  <button class="eliminar" @click="borrarUbi(u.id!)">&times;</button>
+                  <button class="eliminar" @click="borrarUbicacionFunc(u.nombre)">&times;</button>
                 </td>
               </tr>
             </tbody>
@@ -59,9 +59,9 @@
 
           <div class="section">
             <label class="t-3">Nombre de la categoría (TIC, DIRECCIÓN...)</label>
-            <input v-model="nuevaCategoria.nombreCategoria" class="input" />
+            <input v-model="nuevaCategoria" class="input" />
 
-            <button class="btn" @click="crearNuevaCategoria">Guardar categoría</button>
+            <button class="btn" @click="crearNuevaCategoriaFunc">Guardar categoría</button>
           </div>
         </div>
       </div>
@@ -77,10 +77,10 @@
               </tr>
             </thead>
             <tbody class="t-3">
-              <tr v-for="categoria in categorias" :key="categoria.nombreCategoria">
-                <td class="th">{{ categoria.nombreCategoria }}</td>
+              <tr v-for="categoria in categorias" :key="categoria.nombre">
+                <td class="th">{{ categoria.nombre }}</td>
                 <td class="th">
-                  <button class="eliminar" @click="borrarCat(categoria.nombreCategoria)">
+                  <button class="eliminar" @click="borrarCategoriaFunc(categoria.nombre)">
                     &times;
                   </button>
                 </td>
@@ -106,10 +106,10 @@
               <option value="" disabled>Selecciona una categoría</option>
               <option
                 v-for="categoria in categorias"
-                :key="categoria.nombreCategoria"
-                :value="categoria.nombreCategoria"
+                :key="categoria.nombre"
+                :value="categoria.nombre"
               >
-                {{ categoria.nombreCategoria }}
+                {{ categoria.nombre }}
               </option>
             </select>
 
@@ -117,9 +117,9 @@
             <input v-model="nuevoUsuarioCategoria.nombreResponsable" class="input" />
 
             <label class="t-3">Correo responsable</label>
-            <input v-model="nuevoUsuarioCategoria.correoResponsable" class="input" />
+            <input v-model="nuevoUsuarioCategoria.emailResponsable" class="input" />
 
-            <button class="btn" @click="crearNuevoUsuarioCategoria">
+            <button class="btn" @click="crearNuevoUsuarioCategoriaFunc">
               Guardar responsable
             </button>
           </div>
@@ -141,13 +141,13 @@
             <tbody class="t-3">
               <tr
                 v-for="usuario in usuariosCategoria"
-                :key="usuario.nombreCategoria + '-' + usuario.nombreResponsable + '-' + usuario.correoResponsable"
+                :key="usuario.nombreCategoria + '-' + usuario.nombreResponsable + '-' + usuario.emailResponsable"
               >
                 <td class="th">{{ usuario.nombreCategoria }}</td>
                 <td class="th">{{ usuario.nombreResponsable }}</td>
-                <td class="th">{{ usuario.correoResponsable }}</td>
+                <td class="th">{{ usuario.emailResponsable }}</td>
                 <td class="th">
-                  <button class="eliminar" @click="borrarUsuarioCat(usuario)">
+                  <button class="eliminar" @click="borrarUsuarioCategoriaFunc(usuario)">
                     &times;
                   </button>
                 </td>
@@ -186,33 +186,30 @@ import {
 } from "@/services/issues.js";
 
 interface Ubicacion {
-  id?: number;
   nombre: string;
 }
 
 interface Categoria {
-  nombreCategoria: string;
+  nombre: string;
 }
 
 interface UsuarioCategoria {
   nombreCategoria: string;
   nombreResponsable: string;
-  correoResponsable: string;
+  emailResponsable: string;
 }
 
 const ubicaciones = ref<Ubicacion[]>([]);
 const nuevaUbicacion = ref("");
 
 const categorias = ref<Categoria[]>([]);
-const nuevaCategoria = ref<Categoria>({
-  nombreCategoria: "",
-});
+const nuevaCategoria = ref<string>("");
 
 const usuariosCategoria = ref<UsuarioCategoria[]>([]);
 const nuevoUsuarioCategoria = ref<UsuarioCategoria>({
   nombreCategoria: "",
   nombreResponsable: "",
-  correoResponsable: "",
+  emailResponsable: "",
 });
 
 const isLoading = ref(false);
@@ -228,12 +225,12 @@ async function cargarUbicaciones() {
   }
 }
 
-async function crearNuevaUbicacion() {
+async function crearNuevaUbicacionFunc() {
   const nombre = nuevaUbicacion.value.trim();
   if (!nombre) return;
   try {
     isLoading.value = true;
-    const resp = await crearUbicacion(nombre, toastMessage, toastColor, isToastOpen);
+    const resp = await crearUbicacion(toastMessage, toastColor, isToastOpen, nombre);
     if (!resp.ok) throw new Error("Error al crear ubicación");
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Ubicación creada correctamente");
     nuevaUbicacion.value = "";
@@ -251,9 +248,9 @@ async function crearNuevaUbicacion() {
   }
 }
 
-async function borrarUbi(id: number) {
+async function borrarUbicacionFunc(nombre: string) {
   try {
-    await borrarUbicacion(id, toastMessage, toastColor, isToastOpen);
+    await borrarUbicacion(toastMessage, toastColor, isToastOpen, nombre);
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Ubicación eliminada");
     await cargarUbicaciones();
   } catch {
@@ -269,11 +266,11 @@ async function cargarCategorias() {
   }
 }
 
-async function crearNuevaCategoria() {
+async function crearNuevaCategoriaFunc() {
   try {
-    const nombreNuevo = nuevaCategoria.value.nombreCategoria.trim();
+    const nombreCategoria = nuevaCategoria.value.trim();
 
-    if (!nombreNuevo) {
+    if (!nombreCategoria) {
       crearToast(
         toastMessage,
         toastColor,
@@ -285,7 +282,7 @@ async function crearNuevaCategoria() {
     }
 
     const existe = categorias.value.some(
-      (c) => c.nombreCategoria.trim().toLowerCase() === nombreNuevo.toLowerCase()
+      (c) => c.nombre.trim().toLowerCase() === nombreCategoria.toLowerCase()
     );
 
     if (existe) {
@@ -294,29 +291,28 @@ async function crearNuevaCategoria() {
         toastColor,
         isToastOpen,
         "danger",
-        "Ya existe una categoría con ese nombre"
+        "Ya existe una categoría con ese nombre: " + nombreCategoria
       );
       return;
     }
 
     await crearCategoria(
-      { nombreCategoria: nombreNuevo },
       toastMessage,
       toastColor,
-      isToastOpen
+      isToastOpen,
+      nombreCategoria
     );
-
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría creada");
     await cargarCategorias();
-    nuevaCategoria.value = { nombreCategoria: "" };
-  } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al crear categoría");
+    nuevaCategoria.value = "";
+  } catch (e: any) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e?.message || "Error al crear categoría");
   }
 }
 
-async function borrarCat(nombreCategoria: string) {
+async function borrarCategoriaFunc(nombreCategoria: string) {
   try {
-    await borrarCategoria(nombreCategoria, toastMessage, toastColor, isToastOpen);
+    await borrarCategoria(toastMessage, toastColor, isToastOpen, nombreCategoria);
 
     crearToast(
       toastMessage,
@@ -357,7 +353,7 @@ async function cargarUsuariosCategoria() {
   }
 }
 
-async function crearNuevoUsuarioCategoria() {
+async function crearNuevoUsuarioCategoriaFunc() {
   try {
     if (!nuevoUsuarioCategoria.value.nombreCategoria) {
       crearToast(
@@ -379,7 +375,7 @@ async function crearNuevoUsuarioCategoria() {
       );
       return;
     }
-    if (!nuevoUsuarioCategoria.value.correoResponsable.trim()) {
+    if (!nuevoUsuarioCategoria.value.emailResponsable.trim()) {
       crearToast(
         toastMessage,
         toastColor,
@@ -395,8 +391,8 @@ async function crearNuevoUsuarioCategoria() {
         u.nombreCategoria === nuevoUsuarioCategoria.value.nombreCategoria &&
         u.nombreResponsable.trim().toLowerCase() ===
           nuevoUsuarioCategoria.value.nombreResponsable.trim().toLowerCase() &&
-        u.correoResponsable.trim().toLowerCase() ===
-          nuevoUsuarioCategoria.value.correoResponsable.trim().toLowerCase()
+        u.emailResponsable.trim().toLowerCase() ===
+          nuevoUsuarioCategoria.value.emailResponsable.trim().toLowerCase()
     );
 
     if (existe) {
@@ -411,10 +407,12 @@ async function crearNuevoUsuarioCategoria() {
     }
 
     await crearUsuarioCategoria(
-      nuevoUsuarioCategoria.value,
       toastMessage,
       toastColor,
-      isToastOpen
+      isToastOpen,
+      nuevoUsuarioCategoria.value.nombreCategoria,
+      nuevoUsuarioCategoria.value.nombreResponsable,
+      nuevoUsuarioCategoria.value.emailResponsable,
     );
 
     crearToast(
@@ -429,7 +427,7 @@ async function crearNuevoUsuarioCategoria() {
     nuevoUsuarioCategoria.value = {
       nombreCategoria: "",
       nombreResponsable: "",
-      correoResponsable: "",
+      emailResponsable: "",
     };
   } catch {
     crearToast(
@@ -442,9 +440,9 @@ async function crearNuevoUsuarioCategoria() {
   }
 }
 
-async function borrarUsuarioCat(usuario: UsuarioCategoria) {
+async function borrarUsuarioCategoriaFunc(usuario: UsuarioCategoria) {
   try {
-    await borrarUsuarioCategoria(usuario, toastMessage, toastColor, isToastOpen);
+    await borrarUsuarioCategoria(toastMessage, toastColor, isToastOpen, usuario.nombreCategoria, usuario.nombreResponsable, usuario.emailResponsable);
     crearToast(
       toastMessage,
       toastColor,

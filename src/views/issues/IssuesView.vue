@@ -24,10 +24,10 @@
               <option value="" disabled>Selecciona una categoría</option>
               <option
                 v-for="categoria in categorias"
-                :key="categoria.nombreCategoria"
-                :value="categoria.nombreCategoria"
+                :key="categoria.nombre"
+                :value="categoria.nombre"
               >
-                {{ categoria.nombreCategoria }}
+                {{ categoria.nombre }}
               </option>
             </select>
 
@@ -38,7 +38,7 @@
               placeholder="Describe el problema..."
             ></textarea>
 
-            <button @click="crearNuevaIncidencia" class="btn" :disabled="isLoading">
+            <button @click="crearIncidenciaFunc" class="btn" :disabled="isLoading">
               Crear incidencia
             </button>
 
@@ -123,15 +123,15 @@
                 <!-- Admin o responsable pueden editar (select con solo nombre) -->
                 <select
                   v-if="puedeEditarIncidencia(incidencia)"
-                  v-model="incidencia.correoResponsable"
+                  v-model="incidencia.emailResponsable"
                   class="input"
                 >
                   <option value="" disabled>Sin responsable asignado</option>
 
                   <option
                     v-for="resp in responsablesDeCategoria(incidencia.nombreCategoria)"
-                    :key="resp.correoResponsable"
-                    :value="resp.correoResponsable"
+                    :key="resp.emailResponsable"
+                    :value="resp.emailResponsable"
                   >
                     {{ resp.nombreResponsable }}
                   </option>
@@ -142,7 +142,7 @@
                   {{
                     mostrarNombreResponsable(
                       incidencia.nombreCategoria,
-                      incidencia.correoResponsable
+                      incidencia.emailResponsable
                     )
                   }}
                 </span>
@@ -168,11 +168,11 @@
                 <button
                   v-if="puedeEditarIncidencia(incidencia)"
                   class="guardar"
-                  @click="guardarIncidencia(incidencia)"
+                  @click="guardarIncidenciaFunc(incidencia)"
                 >
                   Guardar
                 </button>
-                <button @click="borrar(incidencia)" class="eliminar">&times;</button>
+                <button @click="borrarIncidenciaFunc(incidencia)" class="eliminar">&times;</button>
               </td>
             </tr>
 
@@ -251,23 +251,23 @@ import { obtenerDatosUsuarioSesion } from "@/services/firebaseService";
 
 interface Incidencia {
   ubicacion?: string;
-  descripcionIncidencia?: string;
-  estadoIncidencia?: string;
-  correoDocente?: string;
-  fechaIncidencia?: string;
+  descripcion?: string;
+  estado?: string;
+  emailDocente?: string;
+  fecha?: string;
   nombreCategoria?: string;
-  correoResponsable?: string;
+  emailResponsable?: string;
   comentario?: string;
 }
 
 interface Categoria {
-  nombreCategoria: string;
+  nombre: string;
 }
 
 interface UsuarioCategoria {
   nombreCategoria: string;
   nombreResponsable: string;
-  correoResponsable: string;
+  emailResponsable: string;
 }
 
 // ------------ Estado global de la vista ------------
@@ -296,7 +296,7 @@ const rolesUsuario = ref<string[]>([]);
 // Objeto de nueva incidencia
 const nuevaIncidencia = ref<Incidencia>({
   ubicacion: "",
-  descripcionIncidencia: "",
+  descripcion: "",
   nombreCategoria: "",
 });
 
@@ -322,15 +322,15 @@ const incidenciasFiltradas = computed(() => {
     const categoria = i.nombreCategoria ?? "";
     const estado = i.estadoIncidencia ?? "";
     const comentario = i.comentario ?? "";
-    const correoResp = i.correoResponsable ?? "";
+    const emailResp = i.emailResponsable ?? "";
 
     // Buscamos el responsable para obtener su nombre
     let nombreResp = "";
-    if (i.nombreCategoria && i.correoResponsable) {
+    if (i.nombreCategoria && i.emailResponsable) {
       const resp = usuariosCategoria.value.find(
         (u) =>
           u.nombreCategoria === i.nombreCategoria &&
-          u.correoResponsable.toLowerCase() === i.correoResponsable!.toLowerCase()
+          u.emailResponsable.toLowerCase() === i.emailResponsable!.toLowerCase()
       );
       if (resp) {
         nombreResp = resp.nombreResponsable ?? "";
@@ -348,7 +348,7 @@ const incidenciasFiltradas = computed(() => {
       " " +
       comentario +
       " " +
-      correoResp +
+      emailResp +
       " " +
       nombreResp
     ).toLowerCase();
@@ -414,7 +414,7 @@ function esResponsableDeCategoria(nombreCategoria?: string): boolean {
   return usuariosCategoria.value.some(
     (u) =>
       u.nombreCategoria === nombreCategoria &&
-      u.correoResponsable.toLowerCase() === correoUsuario.value.toLowerCase()
+      u.emailResponsable.toLowerCase() === correoUsuario.value.toLowerCase()
   );
 }
 
@@ -437,14 +437,14 @@ function responsablesDeCategoria(nombreCategoria?: string): UsuarioCategoria[] {
 
 function mostrarNombreResponsable(
   nombreCategoria?: string,
-  correoResponsable?: string
+  emailResponsable?: string
 ): string {
-  if (!correoResponsable) return "Sin responsable";
+  if (!emailResponsable) return "Sin responsable";
 
   const resp = usuariosCategoria.value.find(
     (u) =>
       u.nombreCategoria === nombreCategoria &&
-      u.correoResponsable.toLowerCase() === correoResponsable.toLowerCase()
+      u.emailResponsable.toLowerCase() === emailResponsable.toLowerCase()
   );
 
   if (!resp) return "Sin responsable";
@@ -458,17 +458,11 @@ async function cargarIncidencias() {
   try {
     const lista = await listarIncidencias(toastMessage, toastColor, isToastOpen);
     incidencias.value = lista.map((i: any) => {
-      const nombreCategoria =
-        i.nombreCategoria ||                
-        i.categoria?.nombreCategoria ||    
-        i.categoriaIncidencia?.nombreCategoria || 
-        "";
-
       return {
         ...i,
-        nombreCategoria,
+        nombreCategoria: i.categoria?.nombre ?? "",
         comentario: i.comentario ?? "",
-        estadoIncidencia: i.estadoIncidencia ?? "",
+        estado: i.estado ?? "",
       } as Incidencia;
     });
   } catch (error: any) {
@@ -573,11 +567,11 @@ async function cargarDatosUsuario() {
 
 // ------------ Acciones ------------
 
-async function crearNuevaIncidencia() {
+async function crearIncidenciaFunc() {
   try {
     isLoading.value = true;
 
-    if (!nuevaIncidencia.value.ubicacion || !nuevaIncidencia.value.descripcionIncidencia) {
+    if (!nuevaIncidencia.value.ubicacion || !nuevaIncidencia.value.descripcion) {
       crearToast(
         toastMessage,
         toastColor,
@@ -626,7 +620,7 @@ async function crearNuevaIncidencia() {
   }
 }
 
-async function borrar(incidencia: Incidencia) {
+async function borrarIncidenciaFunc(incidencia: Incidencia) {
   try {
     await borrarIncidencia(incidencia, toastMessage, toastColor, isToastOpen);
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Incidencia eliminada");
@@ -646,7 +640,7 @@ async function borrar(incidencia: Incidencia) {
 /**
  * Guardar cambios de una incidencia (estado, responsable, solución).
  */
-async function guardarIncidencia(incidencia: Incidencia) {
+async function guardarIncidenciaFunc(incidencia: Incidencia) {
   if (!puedeEditarIncidencia(incidencia)) {
     return;
   }

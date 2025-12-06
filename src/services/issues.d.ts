@@ -98,18 +98,18 @@ export declare function listarUbicaciones(
 
 /** Crear ubicación */
 export declare function crearUbicacion(
-  nombre: string,
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
+  isToastOpen: Ref<boolean>,
+  nombre: string
 ): Promise<any>;
 
 /** Borrar ubicación */
 export declare function borrarUbicacion(
-  id: number,
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
+  isToastOpen: Ref<boolean>,
+  nombre: string
 ): Promise<any>;
 
 /* =========================================================
@@ -121,22 +121,22 @@ export declare function listarCategorias(
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
   isToastOpen: Ref<boolean>
-): Promise<Categoria[]>;
+): Promise<[]>;
 
 /** Crear categoría */
 export declare function crearCategoria(
-  categoria: Categoria,
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<Categoria>;
+  isToastOpen: Ref<boolean>,
+  nombre: string
+): Promise<any>;
 
 /** Borrar categoría */
 export declare function borrarCategoria(
-  nombreCategoria: string,
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
+  isToastOpen: Ref<boolean>,
+  nombre: string
 ): Promise<any>;
 
 /* =========================================================
@@ -148,20 +148,24 @@ export declare function listarUsuariosCategoria(
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
   isToastOpen: Ref<boolean>
-): Promise<UsuarioCategoria[]>;
+): Promise<[]>;
 
 /** Crear responsable */
 export declare function crearUsuarioCategoria(
-  usuarioCategoria: UsuarioCategoria,
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<UsuarioCategoria>;
+  isToastOpen: Ref<boolean>,
+  nombreCategoria: string,
+  nombreResponsable: string,
+  emailResponsable: string
+): Promise<any>;
 
 /** Borrar responsable */
 export declare function borrarUsuarioCategoria(
-  usuarioCategoria: UsuarioCategoria,
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
+  isToastOpen: Ref<boolean>,
+  nombreCategoria: string,
+  nombreResponsable: string,
+  emailResponsable: string
 ): Promise<any>;

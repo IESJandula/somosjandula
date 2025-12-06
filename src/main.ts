@@ -41,7 +41,8 @@ import {
   chevronUpOutline,
   refreshOutline,
   closeCircleOutline,
-  checkmarkCircleOutline
+  checkmarkCircleOutline,
+  alertCircleOutline
 } from "ionicons/icons";
 
 import { initializeApp } from "firebase/app";
@@ -60,6 +61,7 @@ addIcons({
   "location-outline": locationOutline,
   "time-outline": timeOutline,
   "cash-outline": cashOutline,
+  "alert-circle-outline": alertCircleOutline,
   "menu-outline": menuOutline,
   "chevron-down-outline": chevronDownOutline,
   "chevron-up-outline": chevronUpOutline,
