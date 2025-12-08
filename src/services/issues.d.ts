@@ -1,22 +1,8 @@
 import type { Ref } from "vue";
 
-/* =========================================================
- * TIPOS COMUNES
- * =======================================================*/
-
-/**
- * Tipo que representa una incidencia TIC
- */
-export interface Incidencia {
-  ubicacion?: string;
-  descripcionIncidencia?: string;
-  estadoIncidencia?: string;
-  correoDocente?: string;
-  fechaIncidencia?: string;
-  nombreCategoria?: string;
-  comentario?: string;
-  correoResponsable?: string;
-}
+/*************************************************/
+/*************** Tipos Comunes ******************/
+/*************************************************/
 
 /**
  * Tipo que representa una ubicación para incidencias
@@ -30,7 +16,7 @@ export interface Ubicacion {
  * Tipo que representa una categoría de incidencia
  */
 export interface Categoria {
-  nombreCategoria: string;
+  nombre: string;
 }
 
 /**
@@ -39,133 +25,84 @@ export interface Categoria {
 export interface UsuarioCategoria {
   nombreCategoria: string;
   nombreResponsable: string;
-  correoResponsable: string;
+  emailResponsable: string;
 }
 
-/* =========================================================
- * INCIDENCIAS
- * =======================================================*/
+export interface Incidencia {
+  id?: number;
+  ubicacion: string;
+  email: string;
+  fecha: string;
+  problema: string;
+  estado: string;
+  solucion: string;
+  emailResponsable: string;
+  categoria: string;
+}
 
-/** Crear incidencia */
-export declare function crearIncidencia(
-  incidencia: Incidencia,
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<any>;
-
-/** Listar incidencias ordenadas */
-export declare function listarIncidencias(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<Incidencia[]>;
-
-/** Borrar incidencia */
-export declare function borrarIncidencia(
-  incidencia: Incidencia,
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<any>;
-
-/** Modificar incidencia */
-export declare function modificarIncidencia(
-  incidencia: Incidencia,
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<any>;
-
-/** Listar estados posibles de incidencias */
-export declare function listarEstados(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<string[]>;
-
-
-/* =========================================================
- * UBICACIONES
- * =======================================================*/
+/*************************************************/
+/**************** Ubicaciones ********************/
+/*************************************************/
 
 /** Listar ubicaciones */
 export declare function listarUbicaciones(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<Ubicacion[]>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Ubicacion[]>;
 
 /** Crear ubicación */
 export declare function crearUbicacion(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>,
-  nombre: string
-): Promise<any>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
 
 /** Borrar ubicación */
 export declare function borrarUbicacion(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>,
-  nombre: string
-): Promise<any>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
 
-/* =========================================================
- * CATEGORÍAS
- * =======================================================*/
+/*************************************************/
+/**************** Categorías *********************/
+/*************************************************/
 
 /** Listar categorías */
 export declare function listarCategorias(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<[]>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Categoria[]>;
 
 /** Crear categoría */
 export declare function crearCategoria(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>,
-  nombre: string
-): Promise<any>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
 
 /** Borrar categoría */
 export declare function borrarCategoria(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>,
-  nombre: string
-): Promise<any>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
 
-/* =========================================================
- * USUARIO–CATEGORÍA (RESPONSABLES)
- * =======================================================*/
+/*************************************************/
+/************ Usuarios Categoría *****************/
+/*************************************************/
 
 /** Listar responsables */
 export declare function listarUsuariosCategoria(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>
-): Promise<[]>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<UsuarioCategoria[]>;
 
 /** Crear responsable */
 export declare function crearUsuarioCategoria(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>,
-  nombreCategoria: string,
-  nombreResponsable: string,
-  emailResponsable: string
-): Promise<any>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombreCategoria: string, nombreResponsable: string, emailResponsable: string): Promise<any>;
 
 /** Borrar responsable */
 export declare function borrarUsuarioCategoria(
-  toastMessage: Ref<string>,
-  toastColor: Ref<string>,
-  isToastOpen: Ref<boolean>,
-  nombreCategoria: string,
-  nombreResponsable: string,
-  emailResponsable: string
-): Promise<any>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombreCategoria: string, nombreResponsable: string, emailResponsable: string): Promise<any>;
+
+/*************************************************/
+/**************** Incidencias ********************/
+/*************************************************/
+
+/** Crear incidencia */
+export declare function crearIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, ubicacion: string, descripcion: string, nombreCategoria: string): Promise<any>;
+
+/** Modificar incidencia */
+export declare function modificarIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, estado: string, solucion: string, emailResponsable: string): Promise<any>;
+
+/** Borrar incidencia */
+export declare function borrarIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number): Promise<any>;
+
+/** Listar estados posibles de incidencias */
+export declare function listarEstados(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<string[]>;
+
+/** Listar incidencias ordenadas */
+export declare function listarIncidencias(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Incidencia[]>;

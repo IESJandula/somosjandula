@@ -1,149 +1,22 @@
 import { issuesApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-/** INCIDENCIAS*/
+/*************************************************/
+/**************** Ubicaciones ********************/
+/*************************************************/
 
-
-/** Crear nueva incidencia */
-export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, incidencia) =>
-{
-  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-  const response = await fetch(`${issuesApiUrl}/issues/incidencias`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(incidencia), 
-  });
-
-  if (!response.ok)
-  {
-    const errorData = await response.json().catch(() => ({}));
-    const text = errorData.message || await response.text();
-    console.error("Error al crear incidencia:", response.status, text);
-    throw new Error("Error al crear incidencia");
-  }
-
-  return response;
-};
-
-/** Modificar el estado o información de una incidencia */
-export const modificarIncidencia = async (toastMessage, toastColor, isToastOpen, incidencia) => {
-  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-  const response = await fetch(`${issuesApiUrl}/issues/incidencias`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-    body: JSON.stringify(incidencia),
-  });
-
-  if (!response.ok)
-  {
-    const errorData = await response.json().catch(() => ({}));
-    const text = errorData.message || await response.text();
-    console.error("Error al modificar incidencia:", response.status, text);
-    throw new Error("Error al modificar incidencia");
-  }
-
-  return response;
-};
-
-/** Borrar incidencia */
-export const borrarIncidencia = async (toastMessage, toastColor, isToastOpen, incidencia) =>
-{
-  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-  const response = await fetch(`${issuesApiUrl}/issues/incidencias`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(incidencia),
-  });
-
-  if (!response.ok)
-  {
-    const errorData = await response.json().catch(() => ({}));
-    const text = errorData.message || await response.text();
-    console.error("Error al borrar incidencia:", response.status, text);
-    throw new Error("Error al borrar incidencia");
-  }
-
-  return response;
-};
-
-/** Listar todas las incidencias */
-export const listarIncidencias = async (toastMessage, toastColor, isToastOpen) =>
-{
-  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-  const params = new URLSearchParams({
-    page: '0',
-    size: '50',
-    sort: 'fecha,desc',
-  });
-
-  const response = await fetch(
-    `${issuesApiUrl}/issues/incidencias?${params.toString()}`,
-    {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok)
-  {
-    const errorData = await response.json().catch(() => ({}));
-    const text = errorData.message || await response.text();
-    console.error("Error al listar incidencias:", response.status, text);
-    throw new Error(text || 'Error al obtener las incidencias');
-  }
-
-  const page = await response.json();
-
-  return page.content || [];
-};
-
-/** Listar estados posibles de incidencias */
-export const listarEstados = async (toastMessage, toastColor, isToastOpen) =>
-{
-  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-  const response = await fetch(`${issuesApiUrl}/issues/estados`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok)
-  {
-    const errorData = await response.json().catch(() => ({}));
-    const text = errorData.message || await response.text();
-    console.error("Error al listar estados de incidencias:", response.status, text);
-    throw new Error(text || 'Error al obtener los estados de incidencias');
-  }
-
-  return await response.json();
-};
-
-
-/*UBICACIONES*/
-
-/** Listar ubicaciones (para desplegables) */
+/**
+ * Listar ubicaciones (para desplegables).
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @returns La respuesta de la API con las ubicaciones listadas.
+ */
 export const listarUbicaciones = async (toastMessage, toastColor, isToastOpen) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/ubicaciones`, {
+  const response = await fetch(`${issuesApiUrl}/issues/ubicaciones/`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -162,11 +35,19 @@ export const listarUbicaciones = async (toastMessage, toastColor, isToastOpen) =
 
 };
 
-/** Crear nueva ubicación desde la administración */
-export const crearUbicacion = async (toastMessage, toastColor, isToastOpen, nombre) => {
+/**
+ * Crear una nueva ubicación.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param nombre - El nombre de la ubicación.
+ * @returns La respuesta de la API con la ubicación creada.
+ */
+export const crearUbicacion = async (toastMessage, toastColor, isToastOpen, nombre) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/ubicaciones`, {
+  const response = await fetch(`${issuesApiUrl}/issues/ubicaciones/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -185,11 +66,19 @@ export const crearUbicacion = async (toastMessage, toastColor, isToastOpen, nomb
   return response;
 };
 
-/** Borrar ubicación */
-export const borrarUbicacion = async (toastMessage, toastColor, isToastOpen, nombre) => {
+/**
+ * Borrar una ubicación.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param nombre - El nombre de la ubicación.
+ * @returns La respuesta de la API con la ubicación borrada.
+ */
+export const borrarUbicacion = async (toastMessage, toastColor, isToastOpen, nombre) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/ubicaciones`, {
+  const response = await fetch(`${issuesApiUrl}/issues/ubicaciones/`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -209,13 +98,22 @@ export const borrarUbicacion = async (toastMessage, toastColor, isToastOpen, nom
 };
 
 
-/*CATEGORIAS*/
+/*************************************************/
+/**************** Categorías *********************/
+/*************************************************/
 
-/** Listar categorías (solo nombreCategoria) */
-export const listarCategorias = async (toastMessage, toastColor, isToastOpen) => {
+/**
+ * Listar categorías (solo nombreCategoria).
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @returns La respuesta de la API con las categorías listadas.
+ */
+export const listarCategorias = async (toastMessage, toastColor, isToastOpen) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/categorias`, {
+  const response = await fetch(`${issuesApiUrl}/issues/categorias/`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -233,11 +131,19 @@ export const listarCategorias = async (toastMessage, toastColor, isToastOpen) =>
   return await response.json();
 };
 
-/** Crear categoría (solo nombreCategoria) */
-export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nombre) => {
+/**
+ * Crear una nueva categoría.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param nombre - El nombre de la categoría.
+ * @returns La respuesta de la API con la categoría creada.
+ */
+export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nombre) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/categorias`, {
+  const response = await fetch(`${issuesApiUrl}/issues/categorias/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -256,12 +162,19 @@ export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nomb
   return response;
 };
 
-/** Borrar categoría (por nombreCategoria) */
-export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nombre) => {
+/**
+ * Borrar una categoría.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param nombre - El nombre de la categoría.
+ * @returns La respuesta de la API con la categoría borrada.
+ */
+export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nombre) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(
-    `${issuesApiUrl}/issues/categorias`,
+  const response = await fetch(`${issuesApiUrl}/issues/categorias/`,
     {
       method: 'DELETE',
       headers: {
@@ -283,13 +196,22 @@ export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nom
 };
 
 
-/* USUARIOS RESPONSABLES CATEGORIAS */
+/*************************************************/
+/************ Usuarios Categoría *****************/
+/*************************************************/
 
-/** Listar todos los usuarios responsables de categorías */
-export const listarUsuariosCategoria = async (toastMessage, toastColor, isToastOpen) => {
+/**
+ * Listar todos los usuarios responsables de categorías.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @returns La respuesta de la API con los usuarios responsables de categorías listados.
+ */
+export const listarUsuariosCategoria = async (toastMessage, toastColor, isToastOpen) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria`, {
+  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria/`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -307,11 +229,21 @@ export const listarUsuariosCategoria = async (toastMessage, toastColor, isToastO
   return await response.json();
 };
 
-/** Crear un nuevo usuario responsable de una categoría */
-export const crearUsuarioCategoria = async (toastMessage, toastColor, isToastOpen, nombreCategoria, nombreResponsable, emailResponsable) => {
+/**
+ * Crear un nuevo usuario responsable de una categoría.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param nombreCategoria - El nombre de la categoría.
+ * @param nombreResponsable - El nombre del usuario responsable.
+ * @param emailResponsable - El email del usuario responsable.
+ * @returns La respuesta de la API con el usuario responsable de categoría creado.
+ */
+export const crearUsuarioCategoria = async (toastMessage, toastColor, isToastOpen, nombreCategoria, nombreResponsable, emailResponsable) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria`, {
+  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -332,11 +264,21 @@ export const crearUsuarioCategoria = async (toastMessage, toastColor, isToastOpe
   return response;
 };
 
-/** Borrar un usuario de categoría (por clave compuesta, usando body) */
-export const borrarUsuarioCategoria = async (toastMessage, toastColor, isToastOpen, nombreCategoria, nombreResponsable, emailResponsable) => {
+/**
+ * Borrar un usuario de categoría (por clave compuesta, usando body).
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param nombreCategoria - El nombre de la categoría.
+ * @param nombreResponsable - El nombre del usuario responsable.
+ * @param emailResponsable - El email del usuario responsable.
+ * @returns La respuesta de la API con el usuario responsable de categoría borrado.
+ */
+export const borrarUsuarioCategoria = async (toastMessage, toastColor, isToastOpen, nombreCategoria, nombreResponsable, emailResponsable) =>
+{
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria`, {
+  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria/`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -356,3 +298,179 @@ export const borrarUsuarioCategoria = async (toastMessage, toastColor, isToastOp
 
   return response;
 };
+
+/*************************************************/
+/**************** Incidencias ********************/
+/*************************************************/
+
+/**
+ * Crear una nueva incidencia.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param nombreUbicacion - El nombre de la ubicación de la incidencia.
+ * @param problema - El problema de la incidencia.
+ * @param nombreCategoria - El nombre de la categoría de la incidencia.
+ * @returns La respuesta de la API con el ID de la incidencia creada.
+ */
+export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nombreUbicacion, problema, nombreCategoria) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'nombreUbicacion': nombreUbicacion,
+        'problema': problema,
+        'nombreCategoria': nombreCategoria,
+      },
+    });
+  
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al crear incidencia:", response.status, text);
+      throw new Error("Error al crear incidencia");
+    }
+  
+    return response;
+  };
+  
+  /**
+   * Modificar el estado o información de una incidencia.
+   * @param toastMessage - El mensaje de toast.
+   * @param toastColor - El color de toast.
+   * @param isToastOpen - Indica si el toast está abierto.
+   * @param id - El ID de la incidencia.
+   * @param estado - El estado de la incidencia.
+   * @param solucion - La solución de la incidencia.
+   * @param emailResponsable - El email del responsable de la incidencia.
+   * @returns La respuesta de la API con la incidencia modificada.
+   */
+  export const modificarIncidencia = async (toastMessage, toastColor, isToastOpen, id, estado, solucion, emailResponsable) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'id': id,
+        'estado': estado,
+        'solucion': solucion,
+        'emailResponsable': emailResponsable,
+      },
+    });
+  
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al modificar incidencia:", response.status, text);
+      throw new Error("Error al modificar incidencia");
+    }
+  
+    return response;
+  };
+  
+  /**
+   * Borrar una incidencia.
+   * @param toastMessage - El mensaje de toast.
+   * @param toastColor - El color de toast.
+   * @param isToastOpen - Indica si el toast está abierto.
+   * @param id - El ID de la incidencia.
+   * @returns La respuesta de la API con la incidencia borrada.
+   */
+  export const borrarIncidencia = async (toastMessage, toastColor, isToastOpen, id) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'id': id,
+      },
+    });
+  
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al borrar incidencia:", response.status, text);
+      throw new Error("Error al borrar incidencia");
+    }
+  
+    return response;
+  };
+  
+  /**
+   * Listar todas las incidencias.
+   * @param toastMessage - El mensaje de toast.
+   * @param toastColor - El color de toast.
+   * @param isToastOpen - Indica si el toast está abierto.
+   * @returns La respuesta de la API con las incidencias listadas.
+   */
+  export const listarIncidencias = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+    const params = new URLSearchParams({
+      page: '0',
+      size: '50',
+      sort: 'fecha,desc',
+    });
+  
+    const response = await fetch(
+      `${issuesApiUrl}/issues/incidencias/?${params.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+  
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al listar incidencias:", response.status, text);
+      throw new Error(text || 'Error al obtener las incidencias');
+    }
+  
+    const page = await response.json();
+  
+    return page.content || [];
+  };
+  
+  /**
+   * Listar estados posibles de incidencias.
+   * @param toastMessage - El mensaje de toast.
+   * @param toastColor - El color de toast.
+   * @param isToastOpen - Indica si el toast está abierto.
+   * @returns La respuesta de la API con los estados posibles de incidencias.
+   */
+  export const listarEstados = async (toastMessage, toastColor, isToastOpen) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/estados/`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+  
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al listar estados de incidencias:", response.status, text);
+      throw new Error(text || 'Error al obtener los estados de incidencias');
+    }
+  
+    return await response.json();
+  };

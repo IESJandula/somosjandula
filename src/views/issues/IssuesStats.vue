@@ -1,7 +1,7 @@
 <template>
   <div class="stats-page">
     <!-- Título de la página -->
-    <h1 class="stats-title">Estadísticas de incidencias TIC</h1>
+    <h1 class="stats-title">Estadísticas de incidencias</h1>
 
     <!-- Estado de carga -->
     <div v-if="isLoading" class="stats-loading">
@@ -49,21 +49,19 @@
 import { ref, computed, onMounted } from "vue";
 import { IonToast } from "@ionic/vue";
 
-import PieChart from "@/components/issues/pieChart.vue";
+import PieChart from "@/components/issues/PieChart.vue";
 import { crearToast } from "@/utils/toast";
 import { listarIncidencias } from "@/services/issues";
 
 interface Incidencia {
   ubicacion?: string;
-  descripcionIncidencia?: string;
-  estadoIncidencia?: string;
-  correoDocente?: string;
-  fechaIncidencia?: string;
-  nombreCategoria?: string;
-  correoResponsable?: string;
-  comentario?: string;
-  categoria?: { nombreCategoria?: string };
-  categoriaIncidencia?: { nombreCategoria?: string };
+  email?: string;
+  fecha?: string;
+  problema?: string;
+  estado?: string;
+  solucion?: string;
+  categoria?: string;
+  emailResponsable?: string;
 }
 
 interface PieDatum {
@@ -115,12 +113,7 @@ function contarPor<T extends Record<string, any>>(
 // Normalizar datos de incidencias
 const incidenciasNormalizadas = computed<Incidencia[]>(() =>
   incidencias.value.map((i) => {
-    const nombreCategoria =
-      i.nombreCategoria ||
-      i.categoria?.nombreCategoria ||
-      i.categoriaIncidencia?.nombreCategoria ||
-      "";
-
+    const nombreCategoria = i.categoria || "";
     return {
       ...i,
       nombreCategoria,
@@ -130,11 +123,11 @@ const incidenciasNormalizadas = computed<Incidencia[]>(() =>
 
 // Datos para cada gráfico
 const datosPorCategoria = computed<PieDatum[]>(() =>
-  contarPor(incidenciasNormalizadas.value, (i) => i.nombreCategoria)
+  contarPor(incidenciasNormalizadas.value, (i) => i.categoria)
 );
 
 const datosPorEstado = computed<PieDatum[]>(() =>
-  contarPor(incidenciasNormalizadas.value, (i) => i.estadoIncidencia)
+  contarPor(incidenciasNormalizadas.value, (i) => i.estado)
 );
 
 const datosPorUbicacion = computed<PieDatum[]>(() =>
