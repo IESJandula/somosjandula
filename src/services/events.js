@@ -5,7 +5,7 @@ export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) =>
 {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(eventsApiUrl + '/api/evento',
+    const response = await fetch(eventsApiUrl + '/events/manager',
         {
             method: 'GET',
             headers:
@@ -26,7 +26,7 @@ export const crearEvento = async (toastMessage, toastColor, isToastOpen, payload
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(eventsApiUrl + '/api/evento',
+    return await fetch(eventsApiUrl + '/events/manager',
         {
             method: 'POST',
             headers:
@@ -41,13 +41,15 @@ export const borrarEvento = async (toastMessage, toastColor, isToastOpen, recurs
 {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(eventsApiUrl + '/api/evento/{idEvento}',
+    const response = await fetch(eventsApiUrl + '/events/manager',
         {
             method: 'DELETE',
             headers:
             {
                 'Authorization': `Bearer ${tokenPropio}`,
-                recurso: recurso
+                'titulo': titulo,           
+                'fechaInicio': fechaInicio, 
+                'fechaFin': fechaFin        
             },
         })
 
@@ -58,23 +60,3 @@ export const borrarEvento = async (toastMessage, toastColor, isToastOpen, recurs
     }
 }
 
-export const obtenerListaEventos = async (toastMessage, toastColor, isToastOpen) => 
-{
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await fetch(eventsApiUrl + '/api/evento',
-        {
-            method: 'GET',
-            headers:
-            {
-                'Authorization': `Bearer ${tokenPropio}`,
-            },
-        })
-
-    if (!response.ok) 
-    {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-    }
-    return await response.json()
-};
