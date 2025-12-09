@@ -66,7 +66,7 @@
               <th class="th th-estado">Estado</th>
               <th class="th">Responsable</th>
               <th class="th">Solución</th>
-              <th class="th">Acción</th>
+              <th class="th">Acciones</th>
             </tr>
           </thead>
           <tbody class="t-3">
@@ -120,7 +120,7 @@
               <td class="th">
                 <!-- Botón guardar solo para admin o responsable -->
                 <button @click="guardarIncidenciaFunc(incidencia.id!, incidencia.estado!, incidencia.solucion!, incidencia.emailResponsable!, incidencia.categoria!)" class="guardar" v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)">Guardar</button>
-                <button @click="borrarIncidenciaFunc(incidencia.id!)" class="eliminar">&times;</button>
+                <button @click="borrarIncidenciaFunc(incidencia.id!)" class="eliminar" v-if="incidencia.estado === 'PENDIENTE'">&times;</button>
               </td>
             </tr>
 

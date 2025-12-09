@@ -156,7 +156,7 @@ export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nomb
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
     console.error('Error al crear categoría:', response.status, text);
-    throw new Error('Error al crear categoría');
+    throw new Error(text || 'Error al crear categoría');
   }
 
   return response;
@@ -258,7 +258,7 @@ export const crearUsuarioCategoria = async (toastMessage, toastColor, isToastOpe
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
     console.error('Error al crear usuario de categoría:', response.status, text);
-    throw new Error('Error al crear usuario de categoría');
+    throw new Error(text || 'Error al crear usuario de categoría');
   }
 
   return response;
@@ -293,7 +293,7 @@ export const borrarUsuarioCategoria = async (toastMessage, toastColor, isToastOp
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
     console.error('Error al borrar usuario de categoría:', response.status, text);
-    throw new Error('Error al borrar usuario de categoría');
+    throw new Error(text || 'Error al borrar usuario de categoría');
   }
 
   return response;
@@ -332,7 +332,7 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
       const errorData = await response.json().catch(() => ({}));
       const text = errorData.message || await response.text();
       console.error("Error al crear incidencia:", response.status, text);
-      throw new Error("Error al crear incidencia");
+      throw new Error(text || "Error al crear incidencia");
     }
   
     return response;
@@ -369,7 +369,7 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
       const errorData = await response.json().catch(() => ({}));
       const text = errorData.message || await response.text();
       console.error("Error al modificar incidencia:", response.status, text);
-      throw new Error("Error al modificar incidencia");
+      throw new Error(text || "Error al modificar incidencia");
     }
   
     return response;
@@ -400,7 +400,7 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
       const errorData = await response.json().catch(() => ({}));
       const text = errorData.message || await response.text();
       console.error("Error al borrar incidencia:", response.status, text);
-      throw new Error("Error al borrar incidencia");
+      throw new Error(text || "Error al borrar incidencia");
     }
   
     return response;
