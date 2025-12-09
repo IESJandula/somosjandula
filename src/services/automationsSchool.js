@@ -41,6 +41,26 @@ export const obtenerActuadores = async (toastMessage, toastColor, isToastOpen) =
   return await response.json()
 }
 
+export const obtenerUbicaciones = async (toastMessage, toastColor, isToastOpen) =>
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/ubicacion',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+  return await response.json()
+}
+
 export const postRecurso = async(toastMessage, toastColor, isToastOpen, recurso, cantidad, esCompartible) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);

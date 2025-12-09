@@ -29,3 +29,7 @@ export declare function obtenerSensores(toastMessage: Ref<string>,
 export declare function obtenerActuadores(toastMessage: Ref<string>,
                                     toastColor: Ref<string>,
                                     isToastOpen: Ref<boolean>): Promise<[]>;
+                                    
+export declare function obtenerUbicaciones(toastMessage: Ref<string>,
+                                    toastColor: Ref<string>,
+                                    isToastOpen: Ref<boolean>): Promise<[]>;

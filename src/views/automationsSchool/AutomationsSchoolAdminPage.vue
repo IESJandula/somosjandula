@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="form-wrapper">
-    <!-- Gestión de Recursos -->
+    <!-- Gestión de Dispositivos -->
     <div class="form-container">
       <div class="title-container">
         <h1 class="title">Dispositivos</h1>
@@ -9,9 +9,37 @@
       <ion-row>
         <ion-col size="12">
           <ion-item>
-            <ion-label position="stacked">Nombre:</ion-label>
+            <ion-label position="stacked">MAC:</ion-label>
             <ion-input v-model="recurso"></ion-input>
           </ion-item>
+        </ion-col>
+        <ion-col size="12">
+          <ion-item>
+            <ion-label position="stacked">Ubicacion:</ion-label>
+            <ion-select v-model="ubicacionElegida">
+              <ion-select-option v-for="ubicacion in ubicaciones" 
+                                  :key="`${ubicacion.nombreUbicacion}`" 
+                                  :value="`${ubicacion.nombreUbicacion}`">
+                {{ `${ubicacion.nombreUbicacion}`}}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <div class="switch-container-gestion">
+            <span>Actuador</span>
+            <label class="switch">
+              <input type="checkbox" v-model="esActuador" />
+              <span class="slider"></span>
+            </label>
+            <span>Sensor</span>
+            <label class="switch">
+              <input type="checkbox" v-model="esCompartibleGestion" />
+              <span class="slider"></span>
+            </label>
+          </div>
         </ion-col>
         <ion-col size="6">
           <ion-item>
@@ -24,25 +52,6 @@
               </ion-select-option>
             </ion-select>
           </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Ubicacion:</ion-label>
-            <ion-input type="number" v-model="cantidad"
-              :min="recursosCantidadMaxima[recurso] ? recursosCantidadMaxima[recurso] : 0"></ion-input>
-          </ion-item>
-        </ion-col>
-        <ion-col size="12">
-          <div class="switch-container-gestion">
-            <span>No Compartido</span>
-            <label class="switch">
-              <input type="checkbox" v-model="esCompartibleGestion" />
-              <span class="slider"></span>
-            </label>
-            <span>Compartido</span>
-          </div>
         </ion-col>
       </ion-row>
       <ion-row>
@@ -256,6 +265,10 @@ import { obtenerActuadores } from "@/services/automationsSchool";
 
 const actuadores = ref(null);
 
+import { obtenerUbicaciones } from "@/services/automationsSchool";
+
+const ubicaciones = ref(null);
+
 // Selección de constante
 const selectedConstante = ref(null);
 const selectedRecurso = ref(null);
@@ -264,6 +277,7 @@ const recursosNoCompartido = ref([]);
 const recursosCompartido = ref([]);
 const esCompartibleLista = ref(false);
 const esCompartibleGestion = ref(false);
+const esActuador = ref(false);
 const recursosCantidadMaxima = ref('');
 const recursos = ref([]);
 const logsPaginados = ref([]);
@@ -639,13 +653,18 @@ const paginarLogs = async (pagina) => {
   }
 }
 
-const obtenerActuadoresVista = async (pagina) => {
+const obtenerActuadoresVista = async (page) => {
   actuadores.value = await obtenerActuadores(isToastOpen, toastMessage, toastColor);
+}
+
+const obtenerUbicacionesVista = async (page) => {
+  ubicaciones.value = await obtenerUbicaciones(isToastOpen, toastMessage, toastColor);
 }
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await obtenerActuadoresVista();
+  await obtenerUbicacionesVista();
   /*await paginarLogs(0);
   await cargarConstantes();
   await cargarRecursos();
