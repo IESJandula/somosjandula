@@ -31,35 +31,74 @@
           <div class="switch-container-gestion">
             <span>Actuador</span>
             <label class="switch">
-              <input type="checkbox" v-model="esActuador" />
+              <input type="checkbox" v-model="esSensor" />
               <span class="slider"></span>
             </label>
             <span>Sensor</span>
-            <label class="switch">
-              <input type="checkbox" v-model="esCompartibleGestion" />
-              <span class="slider"></span>
-            </label>
           </div>
         </ion-col>
-        <ion-col size="6">
-          <ion-item>
-            <ion-label position="stacked">Actuadores:</ion-label>
-            <ion-select v-model="actuadorElegido">
-              <ion-select-option v-for="actuador in actuadores" 
-                                  :key="`${actuador.mac} ${actuador.estado} ${actuador.ubicacion}`" 
-                                  :value="`${actuador.mac} ${actuador.estado} ${actuador.ubicacion}`">
-                {{ `${actuador.mac} ${actuador.estado} ${actuador.ubicacion}` }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
+        
+      <!--<div v-if="esSensor" class="ion-margin-top">
+        <ion-item>
+          <ion-label position="stacked">Sensores disponibles:</ion-label>
+          <ion-select v-model="actuadorElegido">
+            <ion-select-option 
+              v-for="actuador in actuadores" 
+              :key="actuador.mac" 
+              :value="actuador.mac">
+              {{ actuador.mac }} - {{ actuador.estado }} - {{ actuador.ubicacion }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+      </div>-->
+      <ion-col size="12">
+          <div class="switch-container-gestion"  v-if="esSensor">
+          
+            <span>Booleano</span>
+            <label class="switch">
+              <input type="checkbox" v-model="esNumerico" />
+              <span class="slider"></span>
+            </label>
+            <span>Numerico</span>
+          </div>
+      </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block"
+            v-if="!esSensor"
+            color="secondary" @click="crearRecurso">
+            Crear / Modificar Dispositivo Actuador
+          </ion-button>
         </ion-col>
       </ion-row>
       <ion-row>
         <ion-col size="12">
           <ion-button expand="block"
-            v-if="cantidad && recurso && ((recursosCantidadMaxima[recurso] === undefined && cantidad > 0) || recursosCantidadMaxima[recurso] <= cantidad)"
+            v-if="!esNumerico && esSensor"
             color="secondary" @click="crearRecurso">
-            Crear / Modificar Recurso
+            Crear / Modificar Dispositivo Sensor Booleano
+          </ion-button>
+        </ion-col>
+      </ion-row>
+      <ion-col size="12">
+          <ion-item v-if="esNumerico && esSensor">
+            <ion-label position="stacked">Umbral Mínimo:</ion-label>
+            <ion-input type="number" v-model="umbralMin"></ion-input>
+          </ion-item>
+      </ion-col>
+      <ion-col size="12">
+          <ion-item v-if="esNumerico && esSensor">
+            <ion-label position="stacked">Umbral Máximo:</ion-label>
+            <ion-input type="number" v-model="umbralMax"></ion-input>
+          </ion-item>
+      </ion-col>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block"
+            v-if="esNumerico && esSensor && (umbralMin < umbralMax)"
+            color="secondary" @click="crearRecurso">
+            Crear / Modificar Dispositivo Sensor Numerico
           </ion-button>
         </ion-col>
       </ion-row>
@@ -277,7 +316,10 @@ const recursosNoCompartido = ref([]);
 const recursosCompartido = ref([]);
 const esCompartibleLista = ref(false);
 const esCompartibleGestion = ref(false);
-const esActuador = ref(false);
+const esSensor = ref(false);
+const esNumerico = ref(false);
+const umbralMax = ref(0);
+const umbralMin = ref(0);
 const recursosCantidadMaxima = ref('');
 const recursos = ref([]);
 const logsPaginados = ref([]);
@@ -302,7 +344,6 @@ const onConstanteChange = () => {
     selectedConstante.value.valor = "";
   }
 };
-
 // Función que se llama cuando el usuario selecciona una reserva para borrar
 const onReservaChange = () => {
   if (!selectedRecurso.value) {
@@ -465,6 +506,54 @@ const crearRecurso = async () => {
       }
       mensajeColor = "danger";
     }
+
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      mensajeActualizacion
+    );
+    // Limpiar el formulario después de crear el recurso
+    //recurso.value = "";
+    //cantidad.value = "";
+    cargarRecursos();
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      mensajeColor,
+      error.message
+    );
+  }
+};
+
+const crearDispositivoActuador = async () => {
+  try {
+    let mensajeActualizacion = "Operación realizada correctamente";
+    mensajeColor = "success";
+
+    const status = await crearActuador(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+
+    );
+
+    /*if (status.status == 409) {
+
+      const compartido = recursosCompartido.value.find((item) => item.recursos === recurso.value);
+
+      if (compartido) {
+        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos compartidos`;
+      }
+      else {
+        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos no compartidos`;
+      }
+      mensajeColor = "danger";
+    }*/
 
     crearToast(
       toastMessage,
