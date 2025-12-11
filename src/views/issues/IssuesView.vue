@@ -450,41 +450,53 @@ const incidenciasFiltradas = computed(() =>
     // Creamos una variable para la ubicación
     const ubicacion = i.ubicacion ?? "";
 
+    // Creamos una variable para el email
+    const email = i.email ?? "";
+
+    // Creamos una variable para el nombre
+    const nombre = i.nombre ?? "";
+
+    // Creamos una variable para los apellidos
+    const apellidos = i.apellidos ?? "";
+
+    // Creamos una variable para la fecha
+    const fecha = i.fecha ?? "";
+
     // Creamos una variable para el problema
     const problema = i.problema ?? "";
-
-    // Creamos una variable para la categoría
-    const categoria = i.categoria ?? "";
 
     // Creamos una variable para el estado
     const estado = i.estado ?? "";
 
     // Creamos una variable para la solución
     const solucion = i.solucion ?? "";
-
+    
     // Creamos una variable para el email del responsable
-    const emailResp = i.emailResponsable ?? "";
+    const emailResponsable = i.emailResponsable ?? "";
+    
+    // Creamos una variable para la categoría
+    const categoria = i.categoria ?? "";
 
     // Buscamos el responsable para obtener su nombre
-    let nombreResp = "";
+    let nombreResponsable = "";
     
     // Si hay nombre de categoría y email del responsable, se obtiene el nombre del responsable
     if (i.categoria && i.emailResponsable)
     {
       // Se obtiene el responsable de la categoría
-      const resp = usuariosCategoria.value.find(
+      const responsable = usuariosCategoria.value.find(
         (u) => u.nombreCategoria === i.categoria && u.emailResponsable.toLowerCase() === i.emailResponsable!.toLowerCase()
       );
 
       // Si hay responsable, se obtiene el nombre del responsable
-      if (resp)
+      if (responsable)
       {
-        nombreResp = resp.nombreResponsable ?? "";
+        nombreResponsable = responsable.nombreResponsable ?? "";
       }
     }
 
     // Se crea el texto a filtrar
-    const texto = (ubicacion + " " + problema + " " + categoria + " " + estado + " " + solucion + " " + emailResp + " " + nombreResp).toLowerCase();
+    const texto = (ubicacion + " " + email + " " + nombre + " " + apellidos + " " + fecha + " " + problema + " " + estado + " " + solucion + " " + emailResponsable + " " + nombreResponsable + " " + categoria).toLowerCase();
 
     // Se devuelve si el texto incluye el filtro
     return texto.includes(filtro);
