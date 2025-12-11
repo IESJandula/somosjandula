@@ -32,6 +32,8 @@ export interface Incidencia {
   id?: number;
   ubicacion: string;
   email: string;
+  nombre: string;
+  apellidos: string;
   fecha: string;
   problema: string;
   estado: string;

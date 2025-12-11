@@ -71,9 +71,11 @@
           </thead>
           <tbody class="t-3">
             <tr v-for="incidencia in incidenciasPaginadas" :key="incidencia.ubicacion + '-' + incidencia.fecha">
-              <td class="th">{{ incidencia.ubicacion }}</td>
-              <td class="th">{{ incidencia.categoria }}</td>
-              <td class="th" :title="formatearFecha(incidencia.fecha)">
+              <td class="th" :title="esAdmin ? (incidencia.nombre + ' ' + incidencia.apellidos) : ''">
+                {{ incidencia.ubicacion }}
+              </td>
+              <td class="th" :title="incidencia.fecha">{{ incidencia.categoria }}</td>
+              <td class="th" :title="esAdmin ? (incidencia.email) : ''">
                 {{ incidencia.problema }}
               </td>
 
@@ -745,38 +747,6 @@ async function guardarIncidenciaFunc(id: number, estado: string, solucion: strin
 /*************************************************/
 /******************** Helpers ********************/
 /*************************************************/
-
-/**
- * Formatear una fecha.
- * @param fechaValor - La fecha a formatear.
- * @returns La fecha formateada.
- */
- function formatearFecha(fechaValor: any): string
-{
-  // Creamos una fecha
-  let fechaRetorno: string = "" ;
-  
-  // Si no hay fecha, se devuelve una cadena vacía
-  if (fechaValor)
-  {
-    // Creamos una cadena vacía
-    let fechaFormateada = new Date(fechaValor);
-
-    // Obtenemos el día, mes y año de la fecha formateada
-    const dia = String(fechaFormateada.getDate()).padStart(2, "0");
-    const mes = String(fechaFormateada.getMonth() + 1).padStart(2, "0");
-    const año = fechaFormateada.getFullYear();
-
-    // Obtenemos las horas y minutos de la fecha formateada
-    const horas = String(fechaFormateada.getHours()).padStart(2, "0");
-    const minutos = String(fechaFormateada.getMinutes()).padStart(2, "0");
-    
-    // Formateamos la fecha y la devolvemos
-    fechaRetorno = `${dia}/${mes}/${año} ${horas}:${minutos}`;
-  }
-  
-  return fechaRetorno;
-}
 
 /**
  * Obtener los responsables de una categoría.
