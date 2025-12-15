@@ -349,18 +349,16 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
    * @param emailResponsable - El email del responsable de la incidencia.
    * @returns La respuesta de la API con la incidencia modificada.
    */
-  export const modificarIncidencia = async (toastMessage, toastColor, isToastOpen, id, estado, solucion, emailResponsable) =>
+  export const actualizarCategoriaIncidencia = async (toastMessage, toastColor, isToastOpen, id, nombreCategoria) =>
   {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-    const response = await fetch(`${issuesApiUrl}/issues/incidencias/`, {
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/categoria/`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'id': id,
-        'estado': estado,
-        'solucion': solucion,
-        'emailResponsable': emailResponsable,
+        'nombreCategoria': nombreCategoria,
       },
     });
   
@@ -368,13 +366,86 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
     {
       const errorData = await response.json().catch(() => ({}));
       const text = errorData.message || await response.text();
-      console.error("Error al modificar incidencia:", response.status, text);
-      throw new Error(text || "Error al modificar incidencia");
+      console.error("Error al actualizar la categoría de la incidencia:", response.status, text);
+      throw new Error(text || "Error al actualizar la categoría de la incidencia");
     }
   
     return response;
   };
+
+  export const actualizarEstadoIncidencia = async (toastMessage, toastColor, isToastOpen, id, estado) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/estado/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'id': id,
+        'estado': estado,
+      },
+    });
   
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al actualizar el estado de la incidencia:", response.status, text);
+      throw new Error(text || "Error al actualizar el estado de la incidencia");
+    }
+  
+    return response;
+  };
+
+  export const actualizarSolucionIncidencia = async (toastMessage, toastColor, isToastOpen, id, solucion) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/solucion/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'id': id,
+        'solucion': solucion,
+      },
+    });
+  
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al actualizar la solución de la incidencia:", response.status, text);
+      throw new Error(text || "Error al actualizar la solución de la incidencia");
+    }
+  
+    return response;
+  };
+
+  export const actualizarResponsableIncidencia = async (toastMessage, toastColor, isToastOpen, id, nombreCategoria, emailResponsable) =>
+  {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/responsable/`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'id': id,
+        'nombreCategoria': nombreCategoria,
+        'emailResponsable': emailResponsable,
+      },
+    });
+  
+    if (!response.ok)
+    {
+      const errorData = await response.json().catch(() => ({}));  
+      const text = errorData.message || await response.text();
+      console.error("Error al actualizar el responsable de la incidencia:", response.status, text);
+      throw new Error(text || "Error al actualizar el responsable de la incidencia");
+    }
+  
+    return response;
+  };
+
   /**
    * Borrar una incidencia.
    * @param toastMessage - El mensaje de toast.

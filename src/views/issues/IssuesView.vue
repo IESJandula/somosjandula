@@ -74,14 +74,31 @@
               <td class="th" :title="esAdmin ? (incidencia.nombre + ' ' + incidencia.apellidos) : ''">
                 {{ incidencia.ubicacion }}
               </td>
-              <td class="th" :title="incidencia.fecha">{{ incidencia.categoria }}</td>
+              <td class="th" :title="incidencia.fecha">
+                <select v-model="incidencia.categoria" class="input" 
+                        v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)"
+                        @change="actualizarCategoriaIncidenciaFunc(incidencia.id!, incidencia.categoria!)">
+                  <option value="" disabled>Sin categoría asignada</option>
+                  <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
+                    {{ categoria.nombre }}
+                  </option>
+                </select>
+                <span v-else>
+                  {{ incidencia.categoria || '—' }}
+                </span>
+              </td>
               <td class="th" :title="esAdmin ? (incidencia.email) : ''">
                 {{ incidencia.problema }}
               </td>
 
               <!-- ESTADO (celda más grande) -->
               <td class="th th-estado">
-                <select v-model="incidencia.estado" class="input" v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)">
+                <select 
+                  v-model="incidencia.estado" 
+                  class="input" 
+                  v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)"
+                  @change="actualizarEstadoIncidenciaFunc(incidencia.id!, incidencia.estado!)"
+                >
                   <option value="" disabled>Selecciona estado</option>
                   <option v-for="estado in estados" :key="estado" :value="estado">
                     {{ estado }}
@@ -95,16 +112,17 @@
               <!-- RESPONSABLE -->
               <td class="th">
                 <!-- Admin o responsable pueden editar (select con solo nombre) -->
-                <select v-model="incidencia.emailResponsable" class="input" v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)">
+                <select v-model="incidencia.emailResponsable" class="input"
+                        v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)"
+                        @change="actualizarResponsableIncidenciaFunc(incidencia.id!, incidencia.categoria!, incidencia.emailResponsable!)">
                   <option value="" disabled>Sin responsable asignado</option>
                   <option v-for="resp in responsablesDeCategoria(incidencia.categoria!)" :key="resp.emailResponsable" :value="resp.emailResponsable">
                     {{ resp.nombreResponsable }}
                   </option>
                 </select>
-
                 <!-- Usuario normal ve solo el nombre del responsable -->
                 <span v-else>
-                  {{ mostrarNombreResponsable(incidencia.categoria, incidencia.emailResponsable) }}
+                  {{ incidencia.nombreResponsable || '—' }}
                 </span>
               </td>
 
@@ -120,8 +138,8 @@
 
               <!-- BORRAR / GUARDAR -->
               <td class="th">
-                <!-- Botón guardar solo para admin o responsable -->
-                <button @click="guardarIncidenciaFunc(incidencia.id!, incidencia.estado!, incidencia.solucion!, incidencia.emailResponsable!, incidencia.categoria!)" class="guardar" v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)">Guardar</button>
+                <!-- Botón guardar solución solo para admin o responsable -->
+                <button @click="actualizarSolucionIncidenciaFunc(incidencia.id!, incidencia.solucion!)" class="actualizarSolucion" v-if="puedeEditarIncidencia(incidencia.emailResponsable!, incidencia.categoria!)">Actualizar solución</button>
                 <button @click="borrarIncidenciaFunc(incidencia.id!)" class="eliminar" v-if="incidencia.estado === 'PENDIENTE'">&times;</button>
               </td>
             </tr>
@@ -170,7 +188,10 @@ import {
   listarUbicaciones,
   listarCategorias,
   listarUsuariosCategoria,
-  modificarIncidencia,
+  actualizarCategoriaIncidencia,
+  actualizarEstadoIncidencia,
+  actualizarSolucionIncidencia,
+  actualizarResponsableIncidencia,
   listarEstados,
 } from "@/services/issues.js";
 
@@ -717,29 +738,25 @@ async function borrarIncidenciaFunc(id: number)
 }
 
 /**
- * Actualizar cambios de una incidencia (estado, responsable, solución) por parte del responsable.
+ * Actualizar la categoría de una incidencia por parte del responsable.
  * @param id - El ID de la incidencia a actualizar.
- * @param estado - El estado de la incidencia a actualizar.
- * @param solucion - La solución de la incidencia a actualizar.
- * @param emailResponsable - El email del responsable de la incidencia a actualizar.
- * @param categoria - La categoría de la incidencia a actualizar.
+ * @param nombreCategoria - El nombre de la categoría a actualizar.
  */
-async function guardarIncidenciaFunc(id: number, estado: string, solucion: string, emailResponsable: string, categoria: string)
+async function actualizarCategoriaIncidenciaFunc(id: number, nombreCategoria: string)
 {
   // Muestra un indicador de carga
   isLoading.value = true;
 
   try
   {
-    // Si puede editar la incidencia, se guarda
-    if (puedeEditarIncidencia(emailResponsable, categoria))
-    {
-      // Si puede editar la incidencia, tratamos de actualizarla
-      await modificarIncidencia(toastMessage, toastColor, isToastOpen, id, estado, solucion, emailResponsable);
+    // Si puede editar la incidencia, tratamos de actualizarla
+    await actualizarCategoriaIncidencia(toastMessage, toastColor, isToastOpen, id, nombreCategoria);
 
-      // Si se actualiza correctamente, mostramos un toast de éxito
-      crearToast(toastMessage, toastColor, isToastOpen, "success", "Incidencia actualizada"); 
-    }
+    // Cargamos las incidencias nuevamente
+    await cargarIncidencias();
+
+    // Si se actualiza correctamente, mostramos un toast de éxito
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría de la incidencia actualizada"); 
   }
   catch (e: any)
   {
@@ -747,7 +764,7 @@ async function guardarIncidenciaFunc(id: number, estado: string, solucion: strin
     console.error(e);
 
     // Mostramos un toast de error
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al modificar incidencia");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al actualizar la categoría de la incidencia");
   }
   finally
   {
@@ -756,6 +773,105 @@ async function guardarIncidenciaFunc(id: number, estado: string, solucion: strin
   }
 }
 
+/**
+ * Actualizar el estado de una incidencia por parte del responsable.
+ * @param id - El ID de la incidencia a actualizar.
+ * @param estado - El estado de la incidencia a actualizar.
+ */
+async function actualizarEstadoIncidenciaFunc(id: number, estado: string)
+{
+  // Muestra un indicador de carga
+  isLoading.value = true;
+
+  try
+  {
+    // Si puede editar la incidencia, tratamos de actualizarla
+    await actualizarEstadoIncidencia(toastMessage, toastColor, isToastOpen, id, estado);
+
+    // Si se actualiza correctamente, mostramos un toast de éxito
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Estado de la incidencia actualizada"); 
+  }
+  catch (e: any)
+  {
+    // Creamos el mensaje de error
+    console.error(e);
+
+    // Mostramos un toast de error
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al actualizar el estado de la incidencia");
+  }
+  finally
+  {
+    // Oculta el indicador de carga
+    isLoading.value = false;
+  }
+}
+
+/**
+ * Actualizar la solución de una incidencia por parte del responsable.
+ * @param id - El ID de la incidencia a actualizar.
+ * @param solucion - La solución de la incidencia a actualizar.
+ */
+async function actualizarSolucionIncidenciaFunc(id: number, solucion: string)
+{
+  // Muestra un indicador de carga
+  isLoading.value = true;
+
+  try
+  {
+    // Si puede editar la incidencia, tratamos de actualizarla
+    await actualizarSolucionIncidencia(toastMessage, toastColor, isToastOpen, id, solucion);
+
+    // Si se actualiza correctamente, mostramos un toast de éxito
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Solución de la incidencia actualizada"); 
+  }
+  catch (e: any)
+  {
+    // Creamos el mensaje de error
+    console.error(e);
+
+    // Mostramos un toast de error
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al actualizar la solución de la incidencia");
+  }
+  finally
+  {
+    // Oculta el indicador de carga
+    isLoading.value = false;
+  }
+}
+
+/**
+ * Actualizar el responsable de una incidencia por parte del responsable.
+ * @param id - El ID de la incidencia a actualizar.
+ * @param nombreResponsable - El nombre del responsable a actualizar.
+ * @param emailResponsable - El email del responsable a actualizar.
+ */
+async function actualizarResponsableIncidenciaFunc(id: number, nombreResponsable: string, emailResponsable: string)
+{
+  // Muestra un indicador de carga
+  isLoading.value = true;
+
+  try
+  {
+    // Si puede editar la incidencia, tratamos de actualizarla
+    await actualizarResponsableIncidencia(toastMessage, toastColor, isToastOpen, id, nombreResponsable, emailResponsable);
+
+    // Si se actualiza correctamente, mostramos un toast de éxito
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Responsable de la incidencia actualizado"); 
+  }
+  catch (e: any)
+  {
+    // Creamos el mensaje de error
+    console.error(e);
+
+    // Mostramos un toast de error
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al actualizar el responsable de la incidencia");
+  }
+  finally
+  {
+    // Oculta el indicador de carga
+    isLoading.value = false;
+  }
+}
 /*************************************************/
 /******************** Helpers ********************/
 /*************************************************/
@@ -962,7 +1078,7 @@ table {
   align-items: center;
 }
 
-.guardar {
+.actualizarSolucion {
   padding: 0.25rem 0.6rem;
   border-radius: 0.375rem;
   border: none;

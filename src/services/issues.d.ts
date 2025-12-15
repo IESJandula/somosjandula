@@ -39,6 +39,7 @@ export interface Incidencia {
   estado: string;
   solucion: string;
   emailResponsable: string;
+  nombreResponsable: string;
   categoria: string;
 }
 
@@ -97,8 +98,17 @@ export declare function borrarUsuarioCategoria(
 /** Crear incidencia */
 export declare function crearIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, ubicacion: string, descripcion: string, nombreCategoria: string): Promise<any>;
 
-/** Modificar incidencia */
-export declare function modificarIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, estado: string, solucion: string, emailResponsable: string): Promise<any>;
+/** Actualizar categoría de incidencia */
+export declare function actualizarCategoriaIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, nombreCategoria: string): Promise<any>;
+
+/** Actualizar estado de incidencia */
+export declare function actualizarEstadoIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, estado: string): Promise<any>;
+
+/** Actualizar solución de incidencia */
+export declare function actualizarSolucionIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, solucion: string): Promise<any>;
+
+/** Actualizar responsable de incidencia */
+export declare function actualizarResponsableIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, nombreCategoria: string, emailResponsable: string): Promise<any>;
 
 /** Borrar incidencia */
 export declare function borrarIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number): Promise<any>;
