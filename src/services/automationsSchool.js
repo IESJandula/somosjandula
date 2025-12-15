@@ -1,7 +1,7 @@
 import { automationsSchoolApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-export const crearSensorBooleano = async (mac, estado, nombreUbicacion, toastMessage, toastColor, isToastOpen) =>
+export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
@@ -43,7 +43,7 @@ export const obtenerSensorBooleano = async (toastMessage, toastColor, isToastOpe
   return await response.json()
 }
 
-export const crearSensorNumerico = async (mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo, toastMessage, toastColor, isToastOpen) =>
+export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
