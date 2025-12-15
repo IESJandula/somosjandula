@@ -1,7 +1,7 @@
 import { automationsSchoolApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen) =>
+export const crearSensorBooleano = async (mac, estado, nombreUbicacion, toastMessage, toastColor, isToastOpen) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
@@ -11,6 +11,9 @@ export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen)
       headers:
       {
         'Authorization': `Bearer ${tokenPropio}`,
+        mac: mac, 
+        estado: estado, 
+        nombreUbicacion: nombreUbicacion
       },
     })
 
@@ -40,7 +43,7 @@ export const obtenerSensorBooleano = async (toastMessage, toastColor, isToastOpe
   return await response.json()
 }
 
-export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen) =>
+export const crearSensorNumerico = async (mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo, toastMessage, toastColor, isToastOpen) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
@@ -50,6 +53,11 @@ export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen)
     headers:
     {
       'Authorization': `Bearer ${tokenPropio}`,
+      mac: mac, 
+      estado: estado, 
+      nombreUbicacion: nombreUbicacion, 
+      umbralMinimo: umbralMaximo, 
+      umbralMaximo: umbralMinimo
     },
   })
 

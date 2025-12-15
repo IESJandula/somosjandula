@@ -53,7 +53,7 @@
       </div>-->
       <ion-col size="12">
           <div class="switch-container-gestion"  v-if="esSensor">
-          
+
             <span>Booleano</span>
             <label class="switch">
               <input type="checkbox" v-model="esNumerico" />
@@ -306,7 +306,7 @@ const actuadores = ref(null);
 
 import { obtenerUbicaciones } from "@/services/automationsSchool";
 
-const ubicaciones = ref(null);
+constubicaciones = ref(null);
 
 // Selección de constante
 const selectedConstante = ref(null);
@@ -477,7 +477,7 @@ const cargarConstantes = async () => {
   }
 };
 
-const crearRecurso = async () => {
+conscrearRecurso = async () => {
   try {
     let mensajeActualizacion = "Operación realizada correctamente";
     mensajeColor = "success";
