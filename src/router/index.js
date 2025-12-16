@@ -50,6 +50,8 @@ import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
+import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
+
 const routes = [  
   {
     path: '/',
@@ -306,6 +308,12 @@ const routes = [
         meta: { role: 'PROFESOR' },
       },
       {
+        path: 'eventsSchool/admin',
+        component: EventsSchoolAdminPage,
+        name: 'EventsSchoolAdmin',
+        meta: {role: 'ADMINISTRADOR'},
+      },
+      {
         path: '/issues/stats',
         name: 'IssuesStatsPage',
         component: EstadisticasIncidenciasTicPage,
@@ -317,6 +325,7 @@ const routes = [
         component: IncidenciasTicAdminPage,
         meta: { role: 'ADMINISTRADOR' },
       },
+      
     ],
   },
 ];

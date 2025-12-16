@@ -13,9 +13,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@capacitor/android": "^6.1.0",
+    "@capacitor/android": "^6.2.1",
     "@capacitor/app": "6.0.0",
-    "@capacitor/core": "6.1.0",
+    "@capacitor/core": "^6.2.1",
     "@capacitor/haptics": "6.0.0",
     "@capacitor/ios": "6.1.0",
     "@capacitor/keyboard": "6.0.1",
@@ -31,7 +31,7 @@
     "bootstrap-icons": "^1.11.3",
     "date-fns": "^4.1.0",
     "echarts": "^6.0.0",
-    "firebase": "^10.14.1",
+    "firebase": "^12.6.0",
     "ionicons": "^7.4.0",
     "jwt-decode": "^4.0.0",
     "pdfjs-dist": "^4.5.136",
@@ -41,7 +41,7 @@
     "vuex": "^4.0.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "6.1.0",
+    "@capacitor/cli": "^6.2.1",
     "@vitejs/plugin-legacy": "^6.1.1",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/eslint-config-typescript": "^12.0.0",
