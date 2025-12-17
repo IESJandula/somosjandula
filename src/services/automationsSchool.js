@@ -88,6 +88,29 @@ export const obtenerSensorNumerico = async (toastMessage, toastColor, isToastOpe
   return await response.json()
 }
 
+export const crearActuador = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion) =>
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/actuador',
+    {
+      method: 'POST',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+        mac: mac, 
+        estado: estado, 
+        nombreUbicacion: nombreUbicacion
+      },
+    })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+  return await response.json()
+}
+
 export const obtenerActuadores = async (toastMessage, toastColor, isToastOpen) =>
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;

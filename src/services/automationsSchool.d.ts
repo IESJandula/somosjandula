@@ -22,6 +22,13 @@ export declare function obtenerSensorNumerico(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
 
+export declare function crearActuador(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>,
+                                        mac: Ref<string>,
+                                        estado: Ref<number>,
+                                        nombreUbicacion: Ref<string>): Promise<string[]>;
+
 export declare function obtenerActuadores(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<[]>;

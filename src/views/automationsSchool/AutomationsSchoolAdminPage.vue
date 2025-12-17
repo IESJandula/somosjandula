@@ -1,767 +1,153 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="form-wrapper">
-    <!-- Gestión de Dispositivos -->
     <div class="form-container">
+
+      <!-- TÍTULO -->
       <div class="title-container">
         <h1 class="title">Dispositivos</h1>
       </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">MAC:</ion-label>
-            <ion-input v-model="recurso"></ion-input>
-          </ion-item>
-        </ion-col>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Ubicacion:</ion-label>
-            <ion-select v-model="ubicacionElegida">
-              <ion-select-option v-for="ubicacion in ubicaciones" 
-                                  :key="`${ubicacion.nombreUbicacion}`" 
-                                  :value="`${ubicacion.nombreUbicacion}`">
-                {{ `${ubicacion.nombreUbicacion}`}}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <div class="switch-container-gestion">
-            <span>Actuador</span>
-            <label class="switch">
-              <input type="checkbox" v-model="esSensor" />
-              <span class="slider"></span>
-            </label>
-            <span>Sensor</span>
-          </div>
-        </ion-col>
-        
-      <!--<div v-if="esSensor" class="ion-margin-top">
-        <ion-item>
-          <ion-label position="stacked">Sensores disponibles:</ion-label>
-          <ion-select v-model="actuadorElegido">
-            <ion-select-option 
-              v-for="actuador in actuadores" 
-              :key="actuador.mac" 
-              :value="actuador.mac">
-              {{ actuador.mac }} - {{ actuador.estado }} - {{ actuador.ubicacion }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-      </div>-->
-      <ion-col size="12">
-          <div class="switch-container-gestion"  v-if="esSensor">
 
-            <span>Booleano</span>
-            <label class="switch">
-              <input type="checkbox" v-model="esNumerico" />
-              <span class="slider"></span>
-            </label>
-            <span>Numerico</span>
-          </div>
-      </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block"
-            v-if="!esSensor"
-            color="secondary" @click="crearRecurso">
-            Crear / Modificar Dispositivo Actuador
-          </ion-button>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block"
-            v-if="!esNumerico && esSensor"
-            color="secondary" @click="crearRecurso">
-            Crear / Modificar Dispositivo Sensor Booleano
-          </ion-button>
-        </ion-col>
-      </ion-row>
-      <ion-col size="12">
-          <ion-item v-if="esNumerico && esSensor">
-            <ion-label position="stacked">Umbral Mínimo:</ion-label>
-            <ion-input type="number" v-model="umbralMin"></ion-input>
-          </ion-item>
-      </ion-col>
-      <ion-col size="12">
-          <ion-item v-if="esNumerico && esSensor">
-            <ion-label position="stacked">Umbral Máximo:</ion-label>
-            <ion-input type="number" v-model="umbralMax"></ion-input>
-          </ion-item>
-      </ion-col>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block"
-            v-if="esNumerico && esSensor && (umbralMin < umbralMax)"
-            color="secondary" @click="crearRecurso">
-            Crear / Modificar Dispositivo Sensor Numerico
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
-
-    <!-- Lista de Recursos -->
-    <div class="form-container-table">
-      <div class="title-container">
-        <h1 class="title">Lista de Recursos</h1>
-      </div>
-      <div class="switch-container">
-        <span>No Compartido</span>
-        <label class="switch">
-          <input type="checkbox" v-model="esCompartibleLista" @change="switchRecurso" />
-          <span class="slider"></span>
-        </label>
-        <span>Compartido</span>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <table v-if="recursosNoCompartido.length > 0 || recursosCompartido.length > 0">
-            <thead>
-              <tr>
-                <th>Recurso</th>
-                <th>Cantidad</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody v-if="!esCompartibleLista">
-              <tr v-for="r in recursosNoCompartido" :key="r.id">
-                <td>{{ r.recursos }}</td>
-                <td>{{ r.cantidad }}</td>
-                <td>
-                  <button @click.stop="eliminarRecurso(r.recursos, $event)">
-                    X
-                  </button>
-                  <button class="btn-modify-lock" v-if="r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
-                    🔒
-                  </button>
-                  <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
-                    🔓
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-            <tbody v-else>
-              <tr v-for="r in recursosCompartido" :key="r.id">
-                <td>{{ r.recursos }}</td>
-                <td>{{ r.cantidad }}</td>
-                <td>
-                  <button @click.stop="eliminarRecurso(r.recursos, $event)">
-                    X
-                  </button>
-                  <button class="btn-modify-lock" v-if="r.bloqueado" @click.stop="bloquearRecurso(r.recursos, false)">
-                    🔒
-                  </button>
-                  <button v-else class="btn-modify-unlock" @click.stop="bloquearRecurso(r.recursos, true)">
-                    🔓
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <ion-col v-else size="12">
-            <ion-label>No hay recursos disponibles.</ion-label>
-          </ion-col>
-        </ion-col>
-      </ion-row>
-    </div>
-  </div>
-
-  <!-- Actualizar Constantes -->
-  <div class="form-wrapper">
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Actualizar Constantes</h1>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Clave de la constante:</ion-label>
-            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
-                {{ constante.clave }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item v-if="selectedConstante">
-            <ion-label position="stacked">Valor:</ion-label>
-            <ion-input v-model="selectedConstante.valor"></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
-            Actualizar
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
-    <!-- Borrado Reservas -->
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Borrado de Reservas por recurso</h1>
-      </div>
-
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Seleccione el recurso a borrar:</ion-label>
-            <ion-select v-model="selectedRecurso" @ionChange="onReservaChange">
-              <ion-select-option v-for="recurso in [...recursos]" :key="recurso.id" :value="recurso">
-                {{ recurso.recursos }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="borrarReservasRecurso">
-            Borrar
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
-  </div>
-  <div class="form-wrapper">
-    <div class="form-container-table-logs">
-      <div class="title-container">
-        <h1 class="title">Logs de Recursos</h1>
-        <div class="pagina-container">
-          <button class="decrementar-button" v-if="paginaActual > 0" @click="paginarLogs(--paginaActual)">
-            Anterior
-          </button>
-          <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
-          <button class="incrementar-button" v-if="disableLogsPaginated" @click="paginarLogs(++paginaActual)">
-            Siguiente
-          </button>
+      <!-- ===== DATOS BÁSICOS ===== -->
+      <div class="section">
+        <div class="row">
+          <label>MAC:</label>
+          <input type="text" v-model="dispositivo" />
         </div>
-        <table class="logs-table">
-          <thead>
-            <tr>
-              <th class="sticky-column">Fecha</th>
-              <th>Usuario</th>
-              <th>Acción</th>
-              <th>Tipo</th>
-              <th>Recurso</th>
-              <th>Reserva</th>
-              <th>Superusuario</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="log in logsPaginados" :key="log.numRegistro">
-              <td class="sticky-column">{{ log.fecha }}</td>
-              <td>{{ log.usuario }}</td>
-              <td>{{ log.accion }}</td>
-              <td>{{ log.tipo }}</td>
-              <td>{{ log.recurso }}</td>
-              <td>{{ log.locReserva }}</td>
-              <td>{{ log.superusuario }}</td>
-            </tr>
-          </tbody>
-        </table>
+
+        <div class="row">
+          <label>Ubicación:</label>
+          <select v-model="ubicacionElegida">
+            <option
+              v-for="ubicacion in ubicaciones"
+              :key="ubicacion.nombreUbicacion"
+              :value="ubicacion.nombreUbicacion"
+            >
+              {{ ubicacion.nombreUbicacion }}
+            </option>
+          </select>
+        </div>
       </div>
+
+      <!-- ===== TIPO DISPOSITIVO ===== -->
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Actuador</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esSensor" />
+            <span class="slider"></span>
+          </label>
+          <span>Sensor</span>
+        </div>
+      </div>
+
+      <!-- ===== TIPO SENSOR ===== -->
+      <div class="section center" v-if="esSensor">
+        <div class="switch-container-gestion">
+          <span>Booleano</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esNumerico" />
+            <span class="slider"></span>
+          </label>
+          <span>Numérico</span>
+        </div>
+      </div>
+
+      <!-- ===== UMBRALES ===== -->
+      <div class="section" v-if="esSensor && esNumerico">
+        <div class="row">
+          <label>Umbral Mínimo:</label>
+          <input type="number" v-model="umbralMin" />
+        </div>
+
+        <div class="row">
+          <label>Umbral Máximo:</label>
+          <input type="number" v-model="umbralMax" />
+        </div>
+      </div>
+
+      <!-- ===== BOTONES ===== -->
+      <div class="section">
+
+        <!-- ACTUADOR -->
+        <button
+          v-if="dispositivo && dispositivo.trim() !== '' && !esSensor"
+          class="btn-primary"
+          @click="crearActuador"
+        >
+          Crear / Modificar Dispositivo Actuador
+        </button>
+
+        <!-- SENSOR BOOLEANO -->
+        <button
+          v-if="dispositivo && dispositivo.trim() !== '' && esSensor && !esNumerico"
+          class="btn-primary"
+          @click="crearSensorBooleano"
+        >
+          Crear / Modificar Dispositivo Sensor Booleano
+        </button>
+
+        <!-- SENSOR NUMÉRICO -->
+        <button
+          v-if="dispositivo && dispositivo.trim() !== '' && esSensor && esNumerico && umbralMin < umbralMax"
+          class="btn-primary"
+          @click="crearSensorNumerico"
+        >
+          Crear / Modificar Dispositivo Sensor Numérico
+        </button>
+
+      </div>
+
     </div>
   </div>
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup>
-import { bookingsApiUrl } from "@/environment/apiUrls.ts";
 import { ref, onMounted } from "vue";
-import { IonRow, IonCol, IonItem, IonLabel } from "@ionic/vue";
-import {
-  IonSelect,
-  IonSelectOption,
-  IonInput,
-  IonButton,
-  IonToast,
-} from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
-import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
-import {
-  postRecurso,
-  getRecursosCompartible,
-  comprobarEliminacion,
-  deleteRecurso,
-  getRecursos,
-  getCantMaxResource,
-  deleteRecursoReserva,
-  modifyResourceLock,
-  getPaginatedLogs,
-} from "@/services/bookings";
-import { obtenerActuadores } from "@/services/automationsSchool";
+import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones } from "@/services/automationsSchool";
 
-const actuadores = ref(null);
+// DATOS
+const dispositivo = ref("");
+const ubicacionElegida = ref("");
 
-import { obtenerUbicaciones } from "@/services/automationsSchool";
+const actuadores = ref([]);
+const ubicaciones = ref([]);
 
-constubicaciones = ref(null);
-
-// Selección de constante
-const selectedConstante = ref(null);
-const selectedRecurso = ref(null);
-const constantes = ref([]);
-const recursosNoCompartido = ref([]);
-const recursosCompartido = ref([]);
-const esCompartibleLista = ref(false);
-const esCompartibleGestion = ref(false);
+// SWITCHES
 const esSensor = ref(false);
 const esNumerico = ref(false);
-const umbralMax = ref(0);
 const umbralMin = ref(0);
-const recursosCantidadMaxima = ref('');
-const recursos = ref([]);
-const logsPaginados = ref([]);
-const paginaActual = 0;
-const disableLogsPaginated = ref(true);
-// Variables para el toast
+const umbralMax = ref(0);
+
+// TOAST
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
-const recurso = ref("");
-const cantidad = ref("");
-
-// Nueva variable reactiva para el mensaje de actualización
-let mensajeColor = "";
-
-// Función que se llama cuando el usuario selecciona una constante
-const onConstanteChange = () => {
-  if (!selectedConstante.value) {
-    selectedConstante.value = { valor: "" };
-  } else if (selectedConstante.value.valor === undefined) {
-    selectedConstante.value.valor = "";
-  }
-};
-// Función que se llama cuando el usuario selecciona una reserva para borrar
-const onReservaChange = () => {
-  if (!selectedRecurso.value) {
-    selectedRecurso.value = { valor: "" };
-  } else if (selectedRecurso.value.valor === undefined) {
-    selectedRecurso.value.valor = "";
-  }
-};
-const borrarReservasRecurso = async () => {
-  try {
-    await deleteRecursoReserva(isToastOpen, toastMessage, toastColor, selectedRecurso.value.recursos);
-    mensajeColor = "success";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Reservas eliminadas correctamente");
-    getRecurso();
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
-  }
-}
-
-const getRecurso = async () => {
-  try {
-    const data = await getRecursos(isToastOpen, toastMessage, toastColor);
-    if (data) {
-      recursos.value = data.map((item) => ({ recursos: item.id, }));
-    }
-    else {
-      mensajeColor = "warning";
-      crearToast(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        mensajeColor,
-        "No existen recursos todavía"
-      );
-    }
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-}
-
-const getCantMax = async () => {
-  try {
-    const data = await getCantMaxResource(
-      isToastOpen,
-      toastMessage,
-      toastColor
-    );
-    recursosCantidadMaxima.value = data;
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-}
-
-// Función para actualizar la constante seleccionada
-const actualizarConstanteSeleccionada = async () => {
-  try {
-    const constantesActualizadas = constantes.value.map((c) =>
-      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
-    );
-
-    await actualizarConstantes(
-      bookingsApiUrl + "/bookings/constants",
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      constantesActualizadas
-    );
-    mensajeColor = "success";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      "Constantes actualizadas con éxito"
-    );
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
+// CARGA INICIAL
+const obtenerActuadoresVista = async () => {
+  actuadores.value = await obtenerActuadores(
+    isToastOpen,
+    toastMessage,
+    toastColor
+  );
 };
 
-// Función para obtener las constantes al cargar el componente
-const cargarConstantes = async () => {
-  try {
-    constantes.value = await obtenerConstantes(
-      bookingsApiUrl + "/bookings/constants",
-      toastMessage,
-      toastColor,
-      isToastOpen
-    );
-    getCantMax();
-
-    // Seleccionar la constante "Reserva Deshabilitada" por defecto
-    const reservaDeshabilitada = constantes.value.find(
-      (c) => c.clave === "Reserva Deshabilitada"
-    );
-
-    if (reservaDeshabilitada) {
-      selectedConstante.value = reservaDeshabilitada;
-    }
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
+const obtenerUbicacionesVista = async () => {
+  ubicaciones.value = await obtenerUbicaciones(
+    isToastOpen,
+    toastMessage,
+    toastColor
+  );
 };
 
-conscrearRecurso = async () => {
-  try {
-    let mensajeActualizacion = "Operación realizada correctamente";
-    mensajeColor = "success";
-    if (parseInt(cantidad.value) < 0) {
-      cantidad.value = cantidad.value * -1;
-    }
-
-    const status = await postRecurso(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      recurso.value,
-      parseInt(cantidad.value),
-      esCompartibleGestion.value
-    );
-
-    if (status.status == 409) {
-
-      const compartido = recursosCompartido.value.find((item) => item.recursos === recurso.value);
-
-      if (compartido) {
-        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos compartidos`;
-      }
-      else {
-        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos no compartidos`;
-      }
-      mensajeColor = "danger";
-    }
-
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      mensajeActualizacion
-    );
-    // Limpiar el formulario después de crear el recurso
-    //recurso.value = "";
-    //cantidad.value = "";
-    cargarRecursos();
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-};
-
-const crearDispositivoActuador = async () => {
-  try {
-    let mensajeActualizacion = "Operación realizada correctamente";
-    mensajeColor = "success";
-
-    const status = await crearActuador(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-
-    );
-
-    /*if (status.status == 409) {
-
-      const compartido = recursosCompartido.value.find((item) => item.recursos === recurso.value);
-
-      if (compartido) {
-        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos compartidos`;
-      }
-      else {
-        mensajeActualizacion = `El recurso: "${recurso.value}" ya existe en la lista de recursos no compartidos`;
-      }
-      mensajeColor = "danger";
-    }*/
-
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      mensajeActualizacion
-    );
-    // Limpiar el formulario después de crear el recurso
-    //recurso.value = "";
-    //cantidad.value = "";
-    cargarRecursos();
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-};
-
-const cargarRecursos = async () => {
-  try {
-    const data = await getRecursosCompartible(
-      isToastOpen,
-      toastMessage,
-      toastColor,
-      esCompartibleLista.value
-    );
-
-    if (esCompartibleLista.value) {
-      recursosCompartido.value = data.map((item) => ({
-        recursos: item.id,
-        cantidad: item.cantidad,
-        esCompartible: item.esCompartibleLista,
-        bloqueado: item.bloqueado,
-      }));
-    } else {
-      recursosNoCompartido.value = data.map((item) => ({
-        recursos: item.id,
-        cantidad: item.cantidad,
-        esCompartible: item.esCompartibleLista,
-        bloqueado: item.bloqueado,
-      }));
-    }
-
-
-  } catch (error) {
-    mensajeColor = "warning";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-};
-
-const bloquearRecurso = async (recurso, bloqueado) => {
-  try {
-    await modifyResourceLock(isToastOpen, toastMessage, toastColor, recurso, bloqueado);
-    let mensajeActualizacion = "";
-
-    if (bloqueado) {
-      mensajeActualizacion = "Recurso bloqueado correctamente";
-    } else {
-      mensajeActualizacion = "Recurso desbloqueado correctamente";
-    }
-
-    mensajeColor = "success";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      mensajeActualizacion
-    );
-    await cargarRecursos();
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-}
-
-const eliminarRecurso = async (recurso, event) => {
-  try {
-    event.stopPropagation();
-
-    const data = await comprobarEliminacion(toastMessage, toastColor, isToastOpen, recurso);
-
-    if (data) {
-      await deleteRecurso(toastMessage, toastColor, isToastOpen, recurso);
-      mensajeColor = "success";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Recurso eliminado correctamente");
-    }
-    else {
-      mensajeColor = "danger";
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "No se puede eliminar el recurso, ya que tiene reservas asociadas");
-    }
-
-    // Recargar los recursos desde el backend para asegurarse de que todo esté sincronizado
-    cargarRecursos();
-  } catch (error) {
-    // Si ocurre un error, mostrar mensaje de error
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-};
-
-const switchRecurso = async () => {
-  cargarRecursos();
-};
-
-const paginarLogs = async (pagina) => {
-  try {
-    const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
-    if (data.length >= 0) {
-      const formatearFecha = (fecha) => {
-        const date = new Date(fecha);
-        const pad = (n) => n.toString().padStart(2, '0');
-
-        const dia = pad(date.getDate());
-        const mes = pad(date.getMonth() + 1);
-        const anio = date.getFullYear();
-        const horas = pad(date.getHours());
-        const minutos = pad(date.getMinutes());
-
-        return `${dia}-${mes}-${anio} ${horas}:${minutos}`;
-      };
-
-      logsPaginados.value = data.map((item) => ({
-        numRegistro: item.numRegistro,
-        fecha: formatearFecha(item.fecha),
-        usuario: item.usuario,
-        accion: item.accion,
-        tipo: item.tipo,
-        recurso: item.recurso,
-        locReserva: item.locReserva,
-        superusuario: item.superusuario,
-        countMax: item.countMax,
-      }));
-
-      if (logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax) {
-        disableLogsPaginated.value = false;
-      }
-      else {
-        disableLogsPaginated.value = true;
-      }
-    }
-    else {
-      mensajeColor = "warning";
-      crearToast(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        mensajeColor,
-        "No hay logs disponibles para la página seleccionada"
-      );
-    }
-  }
-  catch (error) {
-    mensajeColor = "warning";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-}
-
-const obtenerActuadoresVista = async (page) => {
-  actuadores.value = await obtenerActuadores(isToastOpen, toastMessage, toastColor);
-}
-
-const obtenerUbicacionesVista = async (page) => {
-  ubicaciones.value = await obtenerUbicaciones(isToastOpen, toastMessage, toastColor);
-}
-
-// Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
-  await obtenerActuadoresVista();
+  /*await obtenerActuadoresVista();*/
   await obtenerUbicacionesVista();
-  /*await paginarLogs(0);
-  await cargarConstantes();
-  await cargarRecursos();
-  await getRecurso();
-  await switchRecurso();
-  await getCantMaxResource();*/
 });
 </script>
+
 
 <style scoped>
 .form-container {
@@ -1016,6 +402,11 @@ tr:hover td {
   font-size: 24px;
 }
 
+.title {
+  text-align: center;
+  width: 100%;
+}
+
 .switch-container {
   position: relative;
   left: 50%;
@@ -1165,4 +556,42 @@ input:checked+.slider:before {
   }
 
 }
+/* ===== SECCIONES (RESPIRACIÓN TIPO IONIC) ===== */
+.section {
+  margin-bottom: 25px;
+}
+
+.section.center {
+  display: flex;
+  justify-content: center;
+}
+
+/* Filas más limpias */
+.row {
+  margin-bottom: 15px;
+}
+
+/* Botón principal */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #2196f3;
+  border-radius: 6px;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+/* Centrar switches */
+.switch-container-gestion {
+  margin-left: 0;
+  justify-content: center;
+}
+
+/* Título más aireado */
+.title-container {
+  padding-bottom: 10px;
+}
+
 </style>
