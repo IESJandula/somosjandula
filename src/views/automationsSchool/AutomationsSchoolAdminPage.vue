@@ -18,11 +18,8 @@
         <div class="row">
           <label>Ubicación:</label>
           <select v-model="ubicacionElegida">
-            <option
-              v-for="ubicacion in ubicaciones"
-              :key="ubicacion.nombreUbicacion"
-              :value="ubicacion.nombreUbicacion"
-            >
+            <option v-for="ubicacion in ubicaciones" :key="ubicacion.nombreUbicacion"
+              :value="ubicacion.nombreUbicacion">
               {{ ubicacion.nombreUbicacion }}
             </option>
           </select>
@@ -54,7 +51,7 @@
       </div>
 
       <!-- ===== UMBRALES ===== -->
-      <div class="section" v-if="esSensor && esNumerico">
+      <div class="section" v-if="esSensor">
         <div class="row">
           <label>Umbral Mínimo:</label>
           <input type="number" v-model="umbralMin" />
@@ -70,29 +67,20 @@
       <div class="section">
 
         <!-- ACTUADOR -->
-        <button
-          v-if="dispositivo && dispositivo.trim() !== '' && !esSensor"
-          class="btn-primary"
-          @click="crearActuador"
-        >
+        <button v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && !esSensor" class="btn-primary"
+          @click="crearActuadorVista">
           Crear / Modificar Dispositivo Actuador
         </button>
 
         <!-- SENSOR BOOLEANO -->
         <button
-          v-if="dispositivo && dispositivo.trim() !== '' && esSensor && !esNumerico"
-          class="btn-primary"
-          @click="crearSensorBooleano"
-        >
+          v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && esSensor && !esNumerico && umbralMin < umbralMax"
+          class="btn-primary" @click="crearSensorBooleanoVista">
           Crear / Modificar Dispositivo Sensor Booleano
         </button>
 
         <!-- SENSOR NUMÉRICO -->
-        <button
-          v-if="dispositivo && dispositivo.trim() !== '' && esSensor && esNumerico && umbralMin < umbralMax"
-          class="btn-primary"
-          @click="crearSensorNumerico"
-        >
+        <button v-if="dispositivo && ubicacionElegida && esSensor && esNumerico && umbralMin < umbralMax" class="btn-primary" @click="crearSensorNumericoVista">
           Crear / Modificar Dispositivo Sensor Numérico
         </button>
 
@@ -110,6 +98,9 @@ import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuado
 // DATOS
 const dispositivo = ref("");
 const ubicacionElegida = ref("");
+const estado = ref("undefined");
+const umbralMin = ref(0);
+const umbralMax = ref(0);
 
 const actuadores = ref([]);
 const ubicaciones = ref([]);
@@ -117,8 +108,6 @@ const ubicaciones = ref([]);
 // SWITCHES
 const esSensor = ref(false);
 const esNumerico = ref(false);
-const umbralMin = ref(0);
-const umbralMax = ref(0);
 
 // TOAST
 const isToastOpen = ref(false);
@@ -132,6 +121,106 @@ const obtenerActuadoresVista = async () => {
     toastMessage,
     toastColor
   );
+};
+
+const crearActuadorVista = async () => {
+  try {
+    await crearActuador(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      dispositivo,
+      estado,
+      ubicacionElegida
+    );
+
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "Actuador creado correctamente"
+    );
+
+    dispositivo.value = "";
+    ubicacionElegida.value = "";
+
+  } catch (error) {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      error.message
+    );
+  }
+};
+const crearSensorNumericoVista = async () => {
+  try {
+    await crearSensorNumerico(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      dispositivo,
+      estado,
+      ubicacionElegida,
+      umbralMin,
+      umbralMax
+    );
+
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "Sensor numérico creado correctamente"
+    );
+
+    dispositivo.value = "";
+    ubicacionElegida.value = "";
+    umbralMin.value = 0;
+    umbralMax.value = 0;
+
+  } catch (error) {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      error.message
+    );
+  }
+};
+
+const crearSensorBooleanoVista = async () => {
+  try {
+    await crearSensorBooleano(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      dispositivo,
+      estado,
+      ubicacionElegida,
+      umbralMin,
+      umbralMax
+    );
+
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "Sensor booleano creado correctamente"
+    );
+
+    dispositivo.value = "";
+    ubicacionElegida.value = "";
+    umbralMin.value = 0;
+    umbralMax.value = 0;
+
+  } catch (error) {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      error.message
+    );
+  }
 };
 
 const obtenerUbicacionesVista = async () => {
@@ -556,6 +645,7 @@ input:checked+.slider:before {
   }
 
 }
+
 /* ===== SECCIONES (RESPIRACIÓN TIPO IONIC) ===== */
 .section {
   margin-bottom: 25px;
@@ -593,5 +683,4 @@ input:checked+.slider:before {
 .title-container {
   padding-bottom: 10px;
 }
-
 </style>
