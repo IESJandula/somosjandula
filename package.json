@@ -13,11 +13,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@capacitor/android": "^6.2.1",
     "@capacitor/app": "6.0.0",
     "@capacitor/core": "^6.2.1",
     "@capacitor/haptics": "6.0.0",
-    "@capacitor/ios": "6.1.0",
     "@capacitor/keyboard": "6.0.1",
     "@capacitor/push-notifications": "^6.0.2",
     "@capacitor/status-bar": "6.0.0",

@@ -17,7 +17,7 @@
     </div>
     
     <div class="pdf-container">
-      <div ref="pdfContainer" class="canvas-container">
+      <div class="canvas-container">
         <canvas ref="pdfCanvas"></canvas>
       </div>
     </div>
@@ -41,11 +41,7 @@ const props = defineProps({
   }
 });
 
-// Emits
-const emit = defineEmits(['pages-counted', 'selection-changed']);
-
 // Refs
-const pdfContainer = ref(null);
 const pdfCanvas = ref<HTMLCanvasElement | null>(null);
 const currentPage = ref(1);
 const totalPages = ref(0);
@@ -85,12 +81,6 @@ async function loadPDF(url: string) {
     const loadingTask = pdfjsLib.getDocument(url);
     pdfDoc = await loadingTask.promise;
     totalPages.value = pdfDoc.numPages;
-    
-    // Emit the page count to the parent component
-    emit('pages-counted', totalPages.value);
-    
-    // Reset selection when a new PDF is loaded
-    emit('selection-changed', Array.from({ length: totalPages.value }, (_, i) => i + 1));
     
     renderPage(currentPage.value);
   } catch (error) {
