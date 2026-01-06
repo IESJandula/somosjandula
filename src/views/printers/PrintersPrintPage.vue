@@ -320,17 +320,17 @@ const manejarArchivoSeleccionado = (archivoSeleccionado) =>
       // Obtenemos el array buffer del archivo PDF
       const arrayBuffer = e.target.result;
 
+      // Reseteamos los valores del formulario
+      pdfModoSeleccionPaginas.value = MODO_SELECCION_PAGINAS_TODAS;
+      pdfPaginasRangoInicio.value = 1;
+      pdfPaginasEspecificas.value = '';
+
       // Contamos las páginas totales del archivo PDF
       contarPaginasTotalesDelFicheroPdf(arrayBuffer);
     };
 
     // Leemos el archivo PDF como un array buffer
     reader.readAsArrayBuffer(archivoSeleccionado);
-
-    // Resetear los valores del formulario
-    pdfModoSeleccionPaginas.value = MODO_SELECCION_PAGINAS_TODAS;
-    pdfPaginasRangoInicio.value = 1;
-    pdfPaginasEspecificas.value = '';
 
     // La función nextTick se ejecuta después de que el DOM se haya actualizado
     // por lo que podemos sincronizar la altura de la vista previa del PDF
@@ -354,6 +354,9 @@ const contarPaginasTotalesDelFicheroPdf = async (ficheroPdf) =>
 
     // Reseteamos el rango final de páginas
     pdfPaginasRangoFin.value = pdfPaginasTotales.value;
+
+    // Validamos la impresión
+    validarImpresion();
   }
   catch (error)
   {
@@ -367,6 +370,8 @@ const contarPaginasTotalesDelFicheroPdf = async (ficheroPdf) =>
  */
 const validarImpresion = async () =>
 {
+  let validacionCorrecta = false;
+
   // Verificamos si hay un error global
   if (!errorGlobal.value)
   {
@@ -375,41 +380,42 @@ const validarImpresion = async () =>
 
     // Comprobamos el estado de la impresora seleccionada
     comprobarEstadoImpresoraSeleccionada();
-  }
   
-  // Verificamos si hay un error de la impresora
-  if (!errorImpresora.value)
-  {
-    // Verificamos que haya un archivo seleccionado
-    if (!seleccionArchivo.value)
+    // Verificamos si hay un error de la impresora
+    if (!errorImpresora.value)
     {
-      // Creamos un error si no hay archivo seleccionado
-      manejarError('No se ha seleccionado ningún archivo');
-    }
-    else
-    {
-      // Obtenemos el número de hojas a imprimir
-      const numeroTotalDeHojasAImprimir = calcularNumeroTotalDeHojasAImprimir();
-
-      // Actualizamos el mensaje de impresión
-      actualizarMensajeImpresion(numeroTotalDeHojasAImprimir);
-
-      // Deshabilitamos el botón de impresión si el número total de hojas a imprimir supera el valor máximo permitido
-      botonImpresionDeshabilitado.value = numeroTotalDeHojasAImprimir > maximoHojasImpresion.value;
-
-      // Manejamos el error si el número total de hojas a imprimir supera el valor máximo permitido
-      if (botonImpresionDeshabilitado.value)
+      // Verificamos que haya un archivo seleccionado
+      if (!seleccionArchivo.value)
       {
-        // Manejamos el error si el número total de hojas a imprimir supera el valor máximo permitido
-        manejarError(`El número máximo de hojas permitidas es ${maximoHojasImpresion.value}`);
+        // Creamos un error si no hay archivo seleccionado
+        manejarError('Selecciona un archivo para imprimir');
       }
       else
       {
-        // Limpiamos el error si el número total de hojas a imprimir no supera el valor máximo permitido
-        limpiarError();
+        // Obtenemos el número de hojas a imprimir
+        const numeroTotalDeHojasAImprimir = calcularNumeroTotalDeHojasAImprimir();
+
+        // Actualizamos el mensaje de impresión
+        actualizarMensajeImpresion(numeroTotalDeHojasAImprimir);
+
+        // Deshabilitamos el botón de impresión si el número total de hojas a imprimir supera el valor máximo permitido
+        botonImpresionDeshabilitado.value = numeroTotalDeHojasAImprimir > maximoHojasImpresion.value;
+
+        // Manejamos el error si el número total de hojas a imprimir supera el valor máximo permitido
+        if (botonImpresionDeshabilitado.value)
+        {
+          // Manejamos el error si el número total de hojas a imprimir supera el valor máximo permitido
+          manejarError(`El número máximo de hojas permitidas es ${maximoHojasImpresion.value}`);
+        }
+        else
+        {
+          validacionCorrecta = true;
+        }
       }
     }
   }
+
+  return validacionCorrecta;
 };
 
 /**
@@ -429,8 +435,12 @@ const calcularNumeroTotalDeHojasAImprimir = () =>
   } 
   else if (pdfModoSeleccionPaginas.value === MODO_SELECCION_PAGINAS_RANGO)
   {
-    // Obtenemos las páginas seleccionadas del rango
-    seleccionPaginas.value = Array.from({ length: pdfPaginasRangoFin.value - pdfPaginasRangoInicio.value + 1 }, (_, i) => pdfPaginasRangoInicio.value + i);
+    // Obtenemos el comienzo y el fin del rango en formato numérico
+    const comienzoRango = parseInt(pdfPaginasRangoInicio.value, 10);
+    const finRango = parseInt(pdfPaginasRangoFin.value, 10);
+
+    // Generamos un array de páginas del rango
+    seleccionPaginas.value = Array.from({ length: finRango - comienzoRango + 1 }, (_, i) => comienzoRango + i);
   }
   else // MODO_SELECCION_PAGINAS_ESPECIFICAS
   {
@@ -532,13 +542,17 @@ const calcularPaginasEspecificas = () =>
 const enviarPDFAImprimir = async () =>
 {
   // Validamos la impresión
-  validarImpresion();
+  const validacionCorrecta = await validarImpresion();
 
   // Si llegamos a este punto es porque todos los valores y estado de la impresora son correctos
+  if (validacionCorrecta)
+  {
+    // Bloqueamos el botón al enviar el formulario
+    botonImpresionDeshabilitado.value = true;
 
-  // Bloquea el botón al enviar el formulario
-  botonImpresionDeshabilitado.value = true;
-  botonImpresionTexto.value = 'Habilitando en 5 segundos'; // Cambia el texto del botón al iniciar el temporizador
+    // Cambiamos el texto del botón al iniciar el temporizador
+    botonImpresionTexto.value = 'Habilitando en 5 segundos';
+  }
 
   const formDataPayload = new FormData();
 
@@ -567,11 +581,11 @@ const enviarPDFAImprimir = async () =>
 
     if (!response.ok)
     {
-      manejarError('Error al enviar el PDF');
+      manejarError('Error al enviar el documento');
     }
     else
     {
-      mensajeError.value = 'PDF enviado correctamente';
+      mensajeImpresion.value = 'Enviado correctamente';
 
       // Actualizamos la tabla de impresiones
       await actualizarTablaHistorialImpresiones();
@@ -846,10 +860,17 @@ const validarRangoDePaginas = () =>
   const comienzoRango = parseInt(pdfPaginasRangoInicio.value, 10);
   const finRango = parseInt(pdfPaginasRangoFin.value, 10);
 
-  const rangoInvalido = comienzoRango < 1 || finRango > pdfPaginasTotales.value || comienzoRango > finRango;
-  if (rangoInvalido)
+  if (comienzoRango < 1)
   {
-    manejarError("El rango de páginas es inválido");
+    manejarError("El rango inicial no puede ser menor que 1");
+  }
+  else if (finRango > pdfPaginasTotales.value)
+  {
+    manejarError("El rango final no puede ser mayor que " + pdfPaginasTotales.value);
+  }
+  else if (comienzoRango > finRango)
+  {
+    manejarError("El rango inicial no puede ser mayor que el final");
   }
 };
 
@@ -895,7 +916,11 @@ watch(
   () => {
 
     // Valida la impresión
-    validarImpresion();
+    const validacionCorrecta = validarImpresion();
+    if (validacionCorrecta)
+    {
+      limpiarError();
+    }
   }
 );
 
@@ -916,6 +941,7 @@ watch(urlVistaPreviaPdf, (newValue, oldValue) =>
  const manejarError = (message) =>
 {
   mensajeError.value = message;
+  mensajeImpresion.value = '';
   botonImpresionDeshabilitado.value = true;
   botonImpresionTexto.value = '¡No puedes imprimir!';
 };
