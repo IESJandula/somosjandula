@@ -395,21 +395,25 @@ const validarImpresion = async () =>
         // Obtenemos el número de hojas a imprimir
         const numeroTotalDeHojasAImprimir = calcularNumeroTotalDeHojasAImprimir();
 
-        // Actualizamos el mensaje de impresión
-        actualizarMensajeImpresion(numeroTotalDeHojasAImprimir);
-
-        // Deshabilitamos el botón de impresión si el número total de hojas a imprimir supera el valor máximo permitido
-        botonImpresionDeshabilitado.value = numeroTotalDeHojasAImprimir > maximoHojasImpresion.value;
-
-        // Manejamos el error si el número total de hojas a imprimir supera el valor máximo permitido
-        if (botonImpresionDeshabilitado.value)
+        // Si el mensaje de error es '', entonces podemos seguir con las validaciones
+        if (mensajeError.value === '')
         {
+          // Actualizamos el mensaje de impresión
+          actualizarMensajeImpresion(numeroTotalDeHojasAImprimir);
+         
+          // Deshabilitamos el botón de impresión si el número total de hojas a imprimir supera el valor máximo permitido
+          botonImpresionDeshabilitado.value = numeroTotalDeHojasAImprimir > maximoHojasImpresion.value;
+  
           // Manejamos el error si el número total de hojas a imprimir supera el valor máximo permitido
-          manejarError(`El número máximo de hojas permitidas es ${maximoHojasImpresion.value}`);
-        }
-        else
-        {
-          validacionCorrecta = true;
+          if (botonImpresionDeshabilitado.value)
+          {
+            // Manejamos el error si el número total de hojas a imprimir supera el valor máximo permitido
+            manejarError(`El número máximo de hojas permitidas es ${maximoHojasImpresion.value}`);
+          }
+          else
+          {
+            validacionCorrecta = true;
+          }
         }
       }
     }
@@ -435,17 +439,31 @@ const calcularNumeroTotalDeHojasAImprimir = () =>
   } 
   else if (pdfModoSeleccionPaginas.value === MODO_SELECCION_PAGINAS_RANGO)
   {
-    // Obtenemos el comienzo y el fin del rango en formato numérico
-    const comienzoRango = parseInt(pdfPaginasRangoInicio.value, 10);
-    const finRango = parseInt(pdfPaginasRangoFin.value, 10);
+    // Validamos el rango de páginas
+    validarRangoDePaginas(pdfPaginasRangoInicio.value, pdfPaginasRangoFin.value);
 
-    // Generamos un array de páginas del rango
-    seleccionPaginas.value = Array.from({ length: finRango - comienzoRango + 1 }, (_, i) => comienzoRango + i);
+    // Si el mensaje de error es '', entonces podemos obtener el rango de páginas
+    if (mensajeError.value === '')
+    {
+      // Obtenemos el comienzo y el fin del rango en formato numérico
+      const comienzoRango = parseInt(pdfPaginasRangoInicio.value, 10);
+      const finRango = parseInt(pdfPaginasRangoFin.value, 10);
+    
+      // Generamos un array de páginas del rango
+      seleccionPaginas.value = Array.from({ length: finRango - comienzoRango + 1 }, (_, i) => comienzoRango + i);      
+    }
   }
   else // MODO_SELECCION_PAGINAS_ESPECIFICAS
   {
-    // Obtenemos las páginas seleccionadas específicas
-    seleccionPaginas.value = calcularPaginasEspecificas();
+    // Validamos las páginas específicas
+    validarPaginasEspecificas(pdfPaginasEspecificas.value);
+
+    // Si el mensaje de error es '', entonces podemos obtener las páginas específicas
+    if (mensajeError.value === '')
+    {
+      // Obtenemos las páginas específicas
+      seleccionPaginas.value = calcularPaginasEspecificas();
+    }
   }
 
   // Obtenemos el número de páginas seleccionadas
@@ -470,44 +488,44 @@ const calcularNumeroTotalDeHojasAImprimir = () =>
  */
 const calcularPaginasEspecificas = () =>
 {
-  // Separamos las páginas específicas por comas
-  // unimos casos como "1", "1-3", "1,3,5-7", "1,3,5-7,10" en un array de páginas
-  // para tener algo como este array: [1, 2, 3, 5, 6, 7, 10]
-  const paginas = pdfPaginasEspecificas.value.split(',')
-                                             .flatMap(range =>
+  try
   {
-    // Eliminamos los espacios en blanco
-    range = range.trim();
-
-    // Si la página es un rango, la procesamos
-    if (range.includes('-'))
+    // Separamos las páginas específicas por comas
+    // unimos casos como "1", "1-3", "1,3,5-7", "1,3,5-7,10" en un array de páginas
+    // para tener algo como este array: [1, 2, 3, 5, 6, 7, 10]
+    const paginas = pdfPaginasEspecificas.value.split(',').flatMap(valor =>
     {
-      // Separamos el rango por el guión medio
-      const [comienzo, fin] = range.split('-').map(Number);
+      // Eliminamos los espacios en blanco
+      valor = valor.trim();
 
-      // Validamos el rango de páginas
-      if (Number.isInteger(comienzo) && Number.isInteger(fin) && comienzo >= 1 && fin <= pdfPaginasTotales.value && comienzo <= fin)
+      // Si la página es un rango, la procesamos
+      if (valor.includes('-'))
       {
+        // Separamos el rango por el guión medio
+        const [comienzo, fin] = valor.split('-').map(Number);
+
         // Generamos un array de páginas del rango
         return Array.from({ length: fin - comienzo + 1 }, (_, i) => comienzo + i);
       }
-    }
-    else
-    {
-      // Si la página es una sola, la convertimos a número y la validamos
-      const pagina = Number(range);
-
-      // Validamos la página
-      if (Number.isInteger(pagina) && pagina >= 1 && pagina <= pdfPaginasTotales.value)
+      else
       {
-        // Devolvemos la página como un array
+        // Si la página es una sola, la convertimos a número y la validamos
+        const pagina = Number(valor);
+
+        // Devolvemos el array con la página
         return [pagina];
       }
-    }
-  });
+    });
 
-  // Le aplicamos un Set para eliminar duplicados y ordenamos el array de páginas
-  return [...new Set(paginas)].sort((a, b) => a - b);
+    // Le aplicamos un Set para eliminar duplicados y ordenamos el array de páginas
+    return [...new Set(paginas)].sort((a, b) => a - b);
+  }
+  catch (error)
+  {
+    manejarError(error.message);
+
+    return [];
+  }
 };
 
 /**
@@ -769,7 +787,7 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
       const data = await response.json();
       
       // Verificamos si hay un error global
-      if (data.errorGlobal)
+      if (data.globalError)
       {
         // Si hay un error global, manejarlo y deshabilitar la impresión
         errorGlobal.value = data.globalError;
@@ -857,22 +875,83 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
  */
 const validarRangoDePaginas = () =>
 {
-  const comienzoRango = parseInt(pdfPaginasRangoInicio.value, 10);
-  const finRango = parseInt(pdfPaginasRangoFin.value, 10);
+  // Llamada interna a la validación de rango de páginas con guión medio	
+  validarRangoDePaginasInterna(pdfPaginasRangoInicio.value, pdfPaginasRangoFin.value);
+};
 
-  if (comienzoRango < 1)
+/**
+ * Valida las páginas específicas
+ */
+const validarPaginasEspecificas = () =>
+{
+  // Separamos las páginas específicas por comas
+  // unimos casos como "1", "1-3", "1,3,5-7", "1,3,5-7,10" en un array de páginas
+  // para tener algo como este array: [1, 2, 3, 5, 6, 7, 10]
+  pdfPaginasEspecificas.value.split(',').flatMap(valor =>
+  {
+    // Eliminamos los espacios en blanco
+    valor = valor.trim();
+
+    // Si la página es un rango, la procesamos
+    if (valor.includes('-'))
+    {
+      // Separamos el rango por el guión medio
+      const [comienzo, fin] = valor.split('-').map(Number);
+
+      // Llamada interna a la validación de rango de páginas con guión medio
+      validarRangoDePaginasInterna(comienzo, fin);
+    }
+    else
+    {
+      // Si la página es una sola, la convertimos a número y la validamos
+      const pagina = parseInt(valor, 10);
+
+      // Validamos la página
+      if (!Number.isInteger(pagina))
+      {
+        manejarError("Página con carácter no permitido: " + valor);
+      }
+      else if (pagina < 1)
+      {
+        manejarError("La página no puede ser menor que 1: " + valor);
+      }
+      else if (pagina > pdfPaginasTotales.value)
+      {
+        manejarError("La página no puede ser mayor que " + pdfPaginasTotales.value + ": " + valor);
+      }
+    }
+  });
+}
+
+/**
+ * Valida los inputs de rango de páginas
+ */
+const validarRangoDePaginasInterna = (rangoInicio, rangoFin) =>
+{
+  const rangoInicioNumero = parseInt(rangoInicio, 10);
+  const rangoFinNumero = parseInt(rangoFin, 10);
+
+  if (!Number.isInteger(rangoInicioNumero))
+  {
+    manejarError("Rango inicial con carácter no permitido");
+  }
+  else if (!Number.isInteger(rangoFinNumero))
+  {
+    manejarError("Rango final con carácter no permitido");
+  }
+  else if (rangoInicioNumero < 1)
   {
     manejarError("El rango inicial no puede ser menor que 1");
   }
-  else if (finRango > pdfPaginasTotales.value)
+  else if (rangoFinNumero > pdfPaginasTotales.value)
   {
     manejarError("El rango final no puede ser mayor que " + pdfPaginasTotales.value);
   }
-  else if (comienzoRango > finRango)
+  else if (rangoInicioNumero > rangoFinNumero)
   {
     manejarError("El rango inicial no puede ser mayor que el final");
   }
-};
+}
 
 /**
  * Sincroniza la altura del preview con la altura del formulario
