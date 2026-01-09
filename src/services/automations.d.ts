@@ -33,7 +33,10 @@ export declare function crearActuador(toastMessage: Ref<string>,
 
 export declare function obtenerActuadores(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
-                                        isToastOpen: Ref<boolean>): Promise<[]>;
+                                        isToastOpen: Ref<boolean>,
+                                        mac: Ref<string>,
+                                        estado: Ref<string>,
+                                        nombreUbicacion: Ref<string>): Promise<[]>;
                                     
 export declare function obtenerUbicaciones(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,

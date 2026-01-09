@@ -31,7 +31,7 @@
         <div class="switch-container-gestion">
           <span>Actuador</span>
           <label class="switch">
-            <input type="checkbox" v-model="esSensor" />
+            <input type="checkbox" v-model="esSensorForm" />
             <span class="slider"></span>
           </label>
           <span>Sensor</span>
@@ -39,11 +39,11 @@
       </div>
 
       <!-- ===== TIPO SENSOR ===== -->
-      <div class="section center" v-if="esSensor">
+      <div class="section center" v-if="esSensorForm">
         <div class="switch-container-gestion">
           <span>Booleano</span>
           <label class="switch">
-            <input type="checkbox" v-model="esNumerico" />
+            <input type="checkbox" v-model="esNumericoForm" />
             <span class="slider"></span>
           </label>
           <span>Numérico</span>
@@ -51,7 +51,7 @@
       </div>
 
       <!-- ===== UMBRALES ===== -->
-      <div class="section" v-if="esSensor">
+      <div class="section" v-if="esSensorForm">
         <div class="row">
           <label>Umbral Mínimo:</label>
           <input type="number" v-model="umbralMin" />
@@ -67,33 +67,160 @@
       <div class="section">
 
         <!-- ACTUADOR -->
-        <button v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && !esSensor" class="btn-primary"
+        <button v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && !esSensorForm" class="btn-primary"
           @click="crearActuadorVista">
           Crear / Modificar Dispositivo Actuador
         </button>
 
         <!-- SENSOR BOOLEANO -->
         <button
-          v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && esSensor && !esNumerico && umbralMin < umbralMax"
+          v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && esSensorForm && !esNumericoForm && umbralMin < umbralMax"
           class="btn-primary" @click="crearSensorBooleanoVista">
           Crear / Modificar Dispositivo Sensor Booleano
         </button>
 
         <!-- SENSOR NUMÉRICO -->
-        <button v-if="dispositivo && ubicacionElegida && esSensor && esNumerico && umbralMin < umbralMax" class="btn-primary" @click="crearSensorNumericoVista">
+        <button v-if="dispositivo && ubicacionElegida && esSensorForm && esNumericoForm && umbralMin < umbralMax"
+          class="btn-primary" @click="crearSensorNumericoVista">
           Crear / Modificar Dispositivo Sensor Numérico
         </button>
 
       </div>
 
     </div>
+
+    <!-- ==== LISTA DE DISPOSITIVOS ==== -->
+
+    <!-- TÍTULO -->
+    <div class="form-container-table">
+      <div class="title-container">
+        <h1 class="title">Lista de dispositivos</h1>
+      </div>
+
+      <!-- ===== TIPO DISPOSITIVO ===== -->
+
+      <!-- ACTUADOR -->
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Actuador</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esSensorLista" />
+            <span class="slider"></span>
+          </label>
+          <span>Sensor</span>
+        </div>
+      </div>
+
+      <!-- SENSOR BOOLEANO -->
+      <div class="section center" v-if="esSensorLista">
+        <div class="switch-container-gestion">
+          <span>Booleano</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esNumericoLista" />
+            <span class="slider"></span>
+          </label>
+
+          <!-- SENSOR NUMÉRICO -->
+          <span>Numérico</span>
+        </div>
+      </div>
+
+      <!-- ==== TABLA DE LOS DISPOSITIVOS ==== -->
+      <table>
+        <thead>
+          <tr>
+            <th>MAC</th>
+            <th>Estado</th>
+            <th>Ubicación</th>
+            <th v-if="esSensorLista">Última actualización</th>
+            <th v-if="esSensorLista">Umbral máximo</th>
+            <th v-if="esSensorLista">Umbral mínimo</th>
+            <th v-if="esSensorLista">Valor actual</th>
+
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <!-- ACTUADOR -->
+        <tbody v-if="!esSensorLista">
+          <tr v-for="dispositivo in actuadores" :key="dispositivo.mac">
+            <td>{{ dispositivo.mac }}</td>
+            <td>{{ dispositivo.estado }}</td>
+            <td>{{ dispositivo.nombreUbicacion }}</td>
+            <td>
+              <button>
+                X
+              </button>
+            </td>
+          </tr>
+        </tbody>
+
+        <!-- SENSOR BOOLEANO -->
+        <tbody v-if="esSensorLista && !esNumericoLista">
+          <tr v-for="sensor in sensoresBooleanos" :key="sensor.mac">
+            <td>{{ sensor.mac }}</td>
+            <td>{{ sensor.estado }}</td>
+            <td>{{ sensor.nombreUbicacion }}</td>
+            <td>
+              <span v-if="sensor.ultimaActualizacion !== null">
+                {{ sensor.ultimaActualizacion }}
+              </span>
+              <span v-else>-</span>
+            </td>
+            <td>{{ sensor.umbralMaximo }}</td>
+            <td>{{ sensor.umbralMinimo }}</td>
+            <td>
+              <span v-if="sensor.valorActual !== null">
+                {{ sensor.valorActual }}
+              </span>
+              <span v-else>-</span>
+            </td>
+            <td>
+              <button>
+                X
+              </button>
+            </td>
+          </tr>
+        </tbody>
+
+        <!-- SENSOR NUMÉRICO -->
+        <tbody v-if="esSensorLista && esNumericoLista">
+          <tr v-for="sensor in sensoresNumericos" :key="sensor.mac">
+            <td>{{ sensor.mac }}</td>
+            <td>{{ sensor.estado }}</td>
+            <td>{{ sensor.nombreUbicacion }}</td>
+            <td>
+              <span v-if="sensor.ultimaActualizacion !== null">
+                {{ sensor.ultimaActualizacion }}
+              </span>
+              <span v-else>-</span>
+            </td>
+            <td>{{ sensor.umbralMaximo }}</td>
+            <td>{{ sensor.umbralMinimo }}</td>
+            <td>
+              <span v-if="sensor.valorActual !== null">
+                {{ sensor.valorActual }}
+              </span>
+              <span v-else>-</span>
+            </td>
+            <td>
+              <button>
+                X
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import { crearToast } from "@/utils/toast.js";
-import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones } from "@/services/automations";
+import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones, obtenerSensorNumerico, obtenerSensorBooleano } from "@/services/automations";
 
 // DATOS
 const dispositivo = ref("");
@@ -103,26 +230,27 @@ const umbralMin = ref(0);
 const umbralMax = ref(0);
 
 const actuadores = ref([]);
+const sensoresNumericos = ref([]);
+const sensoresBooleanos = ref([]);
 const ubicaciones = ref([]);
 
-// SWITCHES
-const esSensor = ref(false);
-const esNumerico = ref(false);
+// booleanos para los botones de CREAR
+const esSensorForm = ref(false);
+const esNumericoForm = ref(false);
+
+// booleanos para los botones de LISTAR
+const esSensorLista = ref(false);
+const esNumericoLista = ref(false);
+
 
 // TOAST
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
-// CARGA INICIAL
-const obtenerActuadoresVista = async () => {
-  actuadores.value = await obtenerActuadores(
-    isToastOpen,
-    toastMessage,
-    toastColor
-  );
-};
+// ********* FUNCIONES ********
 
+// Crear Dispositivo ACTUADOR
 const crearActuadorVista = async () => {
   try {
     await crearActuador(
@@ -144,39 +272,8 @@ const crearActuadorVista = async () => {
     dispositivo.value = "";
     ubicacionElegida.value = "";
 
-  } catch (error) {
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      error.message
-    );
-  }
-};
-const crearSensorNumericoVista = async () => {
-  try {
-    await crearSensorNumerico(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      dispositivo,
-      estado,
-      ubicacionElegida,
-      umbralMin,
-      umbralMax
-    );
+    obtenerActuadoresVista();
 
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      "Sensor numérico creado correctamente"
-    );
-
-    dispositivo.value = "";
-    ubicacionElegida.value = "";
-    umbralMin.value = 0;
-    umbralMax.value = 0;
 
   } catch (error) {
     crearToast(
@@ -188,6 +285,16 @@ const crearSensorNumericoVista = async () => {
   }
 };
 
+// Obtener la lista de ACTUADORES
+const obtenerActuadoresVista = async () => {
+  actuadores.value = await obtenerActuadores(
+    isToastOpen,
+    toastMessage,
+    toastColor,
+  );
+};
+
+// Crear dispositivo SENSOR BOOLEANO
 const crearSensorBooleanoVista = async () => {
   try {
     await crearSensorBooleano(
@@ -212,6 +319,7 @@ const crearSensorBooleanoVista = async () => {
     ubicacionElegida.value = "";
     umbralMin.value = 0;
     umbralMax.value = 0;
+    obtenerSensorBooleanoVista();
 
   } catch (error) {
     crearToast(
@@ -223,6 +331,62 @@ const crearSensorBooleanoVista = async () => {
   }
 };
 
+// Obtener la lista de SENSORES BOOLEANOS
+const obtenerSensorBooleanoVista = async () => {
+  sensoresBooleanos.value = await obtenerSensorBooleano(
+    isToastOpen,
+    toastMessage,
+    toastColor,
+  );
+};
+
+// Crear dispositivo SENSOR NÚMERICO
+const crearSensorNumericoVista = async () => {
+  try {
+    await crearSensorNumerico(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      dispositivo,
+      estado,
+      ubicacionElegida,
+      umbralMin,
+      umbralMax
+    );
+
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      "Sensor numérico creado correctamente"
+    );
+
+    dispositivo.value = "";
+    ubicacionElegida.value = "";
+    umbralMin.value = 0;
+    umbralMax.value = 0;
+    obtenerSensorNumericoVista();
+
+  } catch (error) {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      error.message
+    );
+  }
+};
+
+// Obtener la lista de SENSORES NÚMERICOS
+const obtenerSensorNumericoVista = async () => {
+  sensoresNumericos.value = await obtenerSensorNumerico(
+    isToastOpen,
+    toastMessage,
+    toastColor,
+  );
+};
+
+// Obtener la lista de UBICACIONES
 const obtenerUbicacionesVista = async () => {
   ubicaciones.value = await obtenerUbicaciones(
     isToastOpen,
@@ -232,11 +396,12 @@ const obtenerUbicacionesVista = async () => {
 };
 
 onMounted(async () => {
-  /*await obtenerActuadoresVista();*/
+  await obtenerActuadoresVista();
   await obtenerUbicacionesVista();
+  await obtenerSensorNumericoVista();
+  await obtenerSensorBooleanoVista();
 });
 </script>
-
 
 <style scoped>
 .form-container {
@@ -253,10 +418,9 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.form-container-table,
-.form-container-table-logs {
-  width: 100%;
-  max-width: 50%;
+.form-container-table {
+  min-width: 1200px;
+  width: fit-content;
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
@@ -267,6 +431,7 @@ onMounted(async () => {
   font-family: "Roboto", sans-serif;
   margin-top: 2%;
 }
+
 
 .form-container-table-logs {
   overflow-x: auto;
