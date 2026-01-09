@@ -93,12 +93,12 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { crearToast } from "@/utils/toast.js";
-import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones } from "@/services/automationsSchool";
+import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones } from "@/services/automations";
 
 // DATOS
 const dispositivo = ref("");
 const ubicacionElegida = ref("");
-const estado = ref("undefined");
+const estado = ref("indefinido");
 const umbralMin = ref(0);
 const umbralMax = ref(0);
 

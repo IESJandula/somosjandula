@@ -47,7 +47,7 @@ import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';
 import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
 import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage.vue';
 
-import AutomationsSchoolAdminPage from '@/views/automationsSchool/AutomationsSchoolAdminPage.vue'
+import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
 
 const routes = [  
   {
@@ -307,9 +307,9 @@ const routes = [
         },
       },
       {
-        path: 'automationsSchool/admin',
+        path: 'automations/admin',
         component: AutomationsSchoolAdminPage,
-        name: 'AutomationsSchoolAdmin',
+        name: 'AutomationsAdmin',
         meta: {
           role: 'ADMINISTRADOR'
         },

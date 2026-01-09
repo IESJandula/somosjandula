@@ -5,7 +5,7 @@ export declare function crearSensorBooleano(toastMessage: Ref<string>,
                                         estado: Ref<string>,
                                         nombreUbicacion: Ref<string>,
                                         umbralMinimo: Ref<number>,
-                                        umbralMaximo: Ref<number>): Promise<void>;
+                                        umbralMaximo: Ref<number>): Promise<string[]>;
 
 export declare function obtenerSensorBooleano(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,

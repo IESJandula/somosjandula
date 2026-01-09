@@ -1,4 +1,4 @@
-import { automationsSchoolApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
+import { automationsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
 export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo) => {
@@ -6,7 +6,7 @@ export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen,
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsSchoolApiUrl + '/automations_school/admin/sensor/booleano',
+    automationsApiUrl + '/automations/admin/sensor/booleano',
     {
       method: 'POST',
       headers: {
@@ -17,7 +17,7 @@ export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen,
         mac: mac.value ?? mac,
         estado: estado.value ?? estado,
         nombreUbicacion: nombreUbicacion.value ?? nombreUbicacion,
-        çumbralMinimo: umbralMinimo.value ?? umbralMinimo,
+        umbralMinimo: umbralMinimo.value ?? umbralMinimo,
         umbralMaximo: umbralMaximo.value ?? umbralMaximo,
       })
     }
@@ -32,7 +32,7 @@ export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen,
 export const obtenerSensorBooleano = async (toastMessage, toastColor, isToastOpen) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/sensor/booleano',
+  const response = await fetch(automationsApiUrl + '/automations/admin/sensor/booleano',
     {
       method: 'GET',
       headers:
@@ -51,7 +51,7 @@ export const obtenerSensorBooleano = async (toastMessage, toastColor, isToastOpe
 export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/sensor/numerico',
+  const response = await fetch(automationsApiUrl + '/automations/admin/sensor/numerico',
     {
       method: 'POST',
       headers:
@@ -78,7 +78,7 @@ export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen,
 export const obtenerSensorNumerico = async (toastMessage, toastColor, isToastOpen) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/sensor/numerico',
+  const response = await fetch(automationsApiUrl + '/automations/admin/sensor/numerico',
     {
       method: 'GET',
       headers:
@@ -98,7 +98,7 @@ export const crearActuador = async (toastMessage, toastColor, isToastOpen, mac, 
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsSchoolApiUrl + '/automations_school/admin/actuador',
+    automationsApiUrl + '/automations/admin/actuador',
     {
       method: 'POST',
       headers: {
@@ -122,7 +122,7 @@ export const crearActuador = async (toastMessage, toastColor, isToastOpen, mac, 
 export const obtenerActuadores = async (toastMessage, toastColor, isToastOpen) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/actuador',
+  const response = await fetch(automationsApiUrl + '/automations/admin/actuador',
     {
       method: 'GET',
       headers:
@@ -141,7 +141,7 @@ export const obtenerActuadores = async (toastMessage, toastColor, isToastOpen) =
 export const obtenerUbicaciones = async (toastMessage, toastColor, isToastOpen) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(automationsSchoolApiUrl + '/automations_school/admin/ubicacion',
+  const response = await fetch(automationsApiUrl + '/automations/admin/ubicacion',
     {
       method: 'GET',
       headers:
