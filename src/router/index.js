@@ -308,7 +308,7 @@ const routes = [
       },
       {
         path: 'automations/admin',
-        component: AutomationsSchoolAdminPage,
+        component: AutomationsAdminPage,
         name: 'AutomationsAdmin',
         meta: {
           role: 'ADMINISTRADOR'
