@@ -202,7 +202,6 @@ import { obtenerDatosUsuarioSesion } from "@/services/firebaseService";
 // ------------ Estado global de la vista ------------
 
 const categorias = ref<Categoria[]>([]);
-const categoriaSeleccionadaNombre = ref<string | "">("");
 
 // Ubicaciones e incidencias
 const ubicaciones = ref<string[]>([]);
