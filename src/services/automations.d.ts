@@ -11,6 +11,11 @@ export declare function obtenerSensorBooleano(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
 
+export declare function eliminarSensorBooleano(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>,
+                                        mac: Ref<string>): Promise<string[]>;
+
 export declare function crearSensorNumerico(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>,
@@ -24,6 +29,11 @@ export declare function obtenerSensorNumerico(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
 
+export declare function eliminarSensorNumerico(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>,
+                                        mac: Ref<string>): Promise<string[]>;
+
 export declare function crearActuador(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>,
@@ -36,8 +46,13 @@ export declare function obtenerActuadores(toastMessage: Ref<string>,
                                         isToastOpen: Ref<boolean>,
                                         mac: Ref<string>,
                                         estado: Ref<string>,
-                                        nombreUbicacion: Ref<string>): Promise<[]>;
+                                        nombreUbicacion: Ref<string>): Promise<string[]>;
+
+export declare function eliminarActuador(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>,
+                                        mac: Ref<string>): Promise<string[]>;
                                     
 export declare function obtenerUbicaciones(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
-                                        isToastOpen: Ref<boolean>): Promise<[]>;
+                                        isToastOpen: Ref<boolean>): Promise<string[]>;

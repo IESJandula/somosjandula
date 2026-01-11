@@ -148,7 +148,7 @@
             <td>{{ dispositivo.estado }}</td>
             <td>{{ dispositivo.nombreUbicacion }}</td>
             <td>
-              <button>
+              <button @click="eliminarActuadorVista(dispositivo.mac)">
                 X
               </button>
             </td>
@@ -176,7 +176,7 @@
               <span v-else>-</span>
             </td>
             <td>
-              <button>
+              <button @click="eliminarSensorBooleanoVista(sensor.mac)">
                 X
               </button>
             </td>
@@ -204,14 +204,13 @@
               <span v-else>-</span>
             </td>
             <td>
-              <button>
+              <button @click="eliminarSensorNumericoVista(sensor.mac)">
                 X
               </button>
             </td>
           </tr>
         </tbody>
       </table>
-
     </div>
 
   </div>
@@ -220,7 +219,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { crearToast } from "@/utils/toast.js";
-import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones, obtenerSensorNumerico, obtenerSensorBooleano } from "@/services/automations";
+import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones, obtenerSensorNumerico, obtenerSensorBooleano, eliminarActuador, eliminarSensorBooleano, eliminarSensorNumerico } from "@/services/automations";
 
 // DATOS
 const dispositivo = ref("");
@@ -234,6 +233,10 @@ const sensoresNumericos = ref([]);
 const sensoresBooleanos = ref([]);
 const ubicaciones = ref([]);
 
+const mostrarConfirmacion = ref(false);
+const macAEliminar = ref(null);
+const tipoAEliminar = ref(null);
+
 // booleanos para los botones de CREAR
 const esSensorForm = ref(false);
 const esNumericoForm = ref(false);
@@ -242,13 +245,21 @@ const esNumericoForm = ref(false);
 const esSensorLista = ref(false);
 const esNumericoLista = ref(false);
 
-
 // TOAST
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
 // ********* FUNCIONES ********
+
+// Obtener la lista de UBICACIONES
+const obtenerUbicacionesVista = async () => {
+  ubicaciones.value = await obtenerUbicaciones(
+    isToastOpen,
+    toastMessage,
+    toastColor
+  );
+};
 
 // Crear Dispositivo ACTUADOR
 const crearActuadorVista = async () => {
@@ -287,11 +298,26 @@ const crearActuadorVista = async () => {
 
 // Obtener la lista de ACTUADORES
 const obtenerActuadoresVista = async () => {
-  actuadores.value = await obtenerActuadores(
-    isToastOpen,
-    toastMessage,
-    toastColor,
-  );
+  try {
+    actuadores.value = await obtenerActuadores(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+    );
+  } catch (error) {
+    actuadores.value = [];
+  }
+};
+
+//Eliminar ACTUADOR
+const eliminarActuadorVista = async (mac) => {
+  try {
+    await eliminarActuador(toastMessage, toastColor, isToastOpen, mac);
+    crearToast(toastMessage, toastColor, isToastOpen, "Actuador eliminado correctamente");
+    await obtenerActuadoresVista();
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, error.message);
+  }
 };
 
 // Crear dispositivo SENSOR BOOLEANO
@@ -331,13 +357,27 @@ const crearSensorBooleanoVista = async () => {
   }
 };
 
-// Obtener la lista de SENSORES BOOLEANOS
 const obtenerSensorBooleanoVista = async () => {
-  sensoresBooleanos.value = await obtenerSensorBooleano(
-    isToastOpen,
-    toastMessage,
-    toastColor,
-  );
+  try {
+    sensoresBooleanos.value = await obtenerSensorBooleano(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+    );
+  } catch (error) {
+    sensoresBooleanos.value = [];
+  }
+};
+
+// Eliminar SENSOR BOOLEANO
+const eliminarSensorBooleanoVista = async (mac) => {
+  try {
+    await eliminarSensorBooleano(toastMessage, toastColor, isToastOpen, mac);
+    crearToast(toastMessage, toastColor, isToastOpen, "Sensor booleano eliminado correctamente");
+    await obtenerSensorBooleanoVista();
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, error.message);
+  }
 };
 
 // Crear dispositivo SENSOR NÚMERICO
@@ -379,27 +419,36 @@ const crearSensorNumericoVista = async () => {
 
 // Obtener la lista de SENSORES NÚMERICOS
 const obtenerSensorNumericoVista = async () => {
-  sensoresNumericos.value = await obtenerSensorNumerico(
-    isToastOpen,
-    toastMessage,
-    toastColor,
-  );
+  try {
+    sensoresNumericos.value = await obtenerSensorNumerico(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+    );
+  } catch (error) {
+    sensoresNumericos.value = [];
+  }
 };
 
-// Obtener la lista de UBICACIONES
-const obtenerUbicacionesVista = async () => {
-  ubicaciones.value = await obtenerUbicaciones(
-    isToastOpen,
-    toastMessage,
-    toastColor
-  );
+//Eliminar SENSOR NUMÉRICO
+const eliminarSensorNumericoVista = async (mac) => {
+  try {
+    await eliminarSensorNumerico(toastMessage, toastColor, isToastOpen, mac);
+    crearToast(toastMessage, toastColor, isToastOpen, "Sensor numérico eliminado correctamente");
+    await obtenerSensorNumericoVista();
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, error.message);
+  }
 };
 
 onMounted(async () => {
-  await obtenerActuadoresVista();
   await obtenerUbicacionesVista();
+  await obtenerActuadoresVista();
   await obtenerSensorNumericoVista();
   await obtenerSensorBooleanoVista();
+  await eliminarActuadorVista();
+  await eliminarSensorBooleano();
+  await eliminarSensorNumericoVista();
 });
 </script>
 

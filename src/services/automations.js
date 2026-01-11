@@ -48,6 +48,27 @@ export const obtenerSensorBooleano = async (toastMessage, toastColor, isToastOpe
   return await response.json()
 }
 
+export const eliminarSensorBooleano = async (toastMessage, toastColor, isToastOpen, mac) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + `/automations/admin/sensor/booleano/${mac}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
+
 export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -72,7 +93,6 @@ export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen,
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
 }
 
 export const obtenerSensorNumerico = async (toastMessage, toastColor, isToastOpen) => {
@@ -93,6 +113,27 @@ export const obtenerSensorNumerico = async (toastMessage, toastColor, isToastOpe
   }
   return await response.json()
 }
+
+export const eliminarSensorNumerico = async (toastMessage, toastColor, isToastOpen, mac) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + `/automations/admin/sensor/numerico/${mac}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
 
 export const crearActuador = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
@@ -137,6 +178,27 @@ export const obtenerActuadores = async (toastMessage, toastColor, isToastOpen) =
   }
   return await response.json()
 }
+
+export const eliminarActuador = async (toastMessage, toastColor, isToastOpen, mac) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + `/automations/admin/actuador/${mac}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
 
 export const obtenerUbicaciones = async (toastMessage, toastColor, isToastOpen) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
