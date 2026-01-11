@@ -68,6 +68,7 @@
             <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/itIssues')">Crea incidencias TIC</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/automations/map')">Vista de pájaro</ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->

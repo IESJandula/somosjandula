@@ -48,6 +48,7 @@ import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPa
 import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage.vue';
 
 import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
+import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
 
 const routes = [  
   {
@@ -312,6 +313,14 @@ const routes = [
         name: 'AutomationsAdmin',
         meta: {
           role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: 'automations/map',
+        component: AutomationsMapView,
+        name: 'AutomationsMapView',
+        meta: {
+          role: 'PROFESOR'
         },
       },
     ],
