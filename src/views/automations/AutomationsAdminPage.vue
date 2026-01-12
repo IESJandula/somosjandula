@@ -69,20 +69,20 @@
         <!-- ACTUADOR -->
         <button v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && !esSensorForm" class="btn-primary"
           @click="crearActuadorVista">
-          Crear / Modificar Dispositivo Actuador
+          Crear / Modificar Dispositivo
         </button>
 
         <!-- SENSOR BOOLEANO -->
         <button
           v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && esSensorForm && !esNumericoForm && umbralMin < umbralMax"
           class="btn-primary" @click="crearSensorBooleanoVista">
-          Crear / Modificar Dispositivo Sensor Booleano
+          Crear / Modificar Dispositivo
         </button>
 
         <!-- SENSOR NUMÉRICO -->
         <button v-if="dispositivo && ubicacionElegida && esSensorForm && esNumericoForm && umbralMin < umbralMax"
           class="btn-primary" @click="crearSensorNumericoVista">
-          Crear / Modificar Dispositivo Sensor Numérico
+          Crear / Modificar Dispositivo
         </button>
 
       </div>
@@ -232,10 +232,6 @@ const actuadores = ref([]);
 const sensoresNumericos = ref([]);
 const sensoresBooleanos = ref([]);
 const ubicaciones = ref([]);
-
-const mostrarConfirmacion = ref(false);
-const macAEliminar = ref(null);
-const tipoAEliminar = ref(null);
 
 // booleanos para los botones de CREAR
 const esSensorForm = ref(false);
