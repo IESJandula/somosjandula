@@ -280,7 +280,8 @@ const crearActuadorVista = async () => {
     ubicacionElegida.value = "";
 
     obtenerActuadoresVista();
-
+    obtenerSensorBooleanoVista();
+    obtenerSensorNumericoVista();
 
   } catch (error) {
     crearToast(
@@ -341,7 +342,10 @@ const crearSensorBooleanoVista = async () => {
     ubicacionElegida.value = "";
     umbralMin.value = 0;
     umbralMax.value = 0;
+
     obtenerSensorBooleanoVista();
+    obtenerActuadoresVista();
+    obtenerSensorNumericoVista();
 
   } catch (error) {
     crearToast(
@@ -401,7 +405,10 @@ const crearSensorNumericoVista = async () => {
     ubicacionElegida.value = "";
     umbralMin.value = 0;
     umbralMax.value = 0;
+
     obtenerSensorNumericoVista();
+    obtenerSensorBooleanoVista();
+    obtenerActuadoresVista();
 
   } catch (error) {
     crearToast(
