@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <!-- ✅ ROTACIÓN: CAMBIA ENTRE PLANOS (AGREGADO) -->
+      <!-- ROTACIÓN: CAMBIA ENTRE PLANOS -->
       <div id="contenedor-rotacion">
         <p class="titulo-djg">
           Rotación:
