@@ -37,6 +37,29 @@
         </div>
       </div>
 
+      <!-- ✅ ROTACIÓN: CAMBIA ENTRE PLANOS (AGREGADO) -->
+      <div id="contenedor-rotacion">
+        <p class="titulo-djg">
+          Rotación:
+          <span :class="rotationEnabled ? 'rot-on' : 'rot-off'">
+            {{ rotationEnabled ? 'Activada' : 'Desactivada' }}
+          </span>
+        </p>
+
+        <div class="rot-times">
+          <button @click="startRotation(3)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 3 }">03s</button>
+          <button @click="startRotation(5)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 5 }">05s</button>
+          <button @click="startRotation(10)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 10 }">10s</button>
+          <button @click="startRotation(15)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 15 }">15s</button>
+          <button @click="startRotation(20)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 20 }">20s</button>
+          <button @click="startRotation(30)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 30 }">30s</button>
+        </div>
+
+        <button class="btn-secondary" @click="stopRotation" :disabled="!rotationEnabled">
+          Desactivar rotación
+        </button>
+      </div>
+
       <!-- Dimensiones -->
       <div id="contenedor-dimensiones">
         <label for="selector-dimensiones" class="titulo-djg">Dimensiones plano.</label>
@@ -139,7 +162,7 @@
       </div>
     </div>
 
-    <!--  TOOLTIP GLOBAL (SIEMPRE VISIBLE POR ENCIMA) -->
+    <!-- TOOLTIP GLOBAL -->
     <div
       v-if="tooltip.visible"
       class="tooltip tooltip-fixed"
@@ -167,7 +190,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, onBeforeUnmount } from 'vue'
 
 type Planta = 'terrenos' | 'baja' | 'primera' | 'segunda'
 
@@ -186,11 +209,10 @@ type ZoneDevice = { type: DeviceType; count: number }
 
 const planta = ref<Planta>('baja')
 
-// Imágenes
-const plantaTerrenosUrl = new URL('./img/planos/Planta-baja-terrenos.png', import.meta.url).href
-const plantaBajaUrl = new URL('./img/planos/Planta-baja.png', import.meta.url).href
-const plantaPrimeraUrl = new URL('./img/planos/Planta-primera.png', import.meta.url).href
-const plantaSegundaUrl = new URL('./img/planos/Planta-segunda.png', import.meta.url).href
+const plantaTerrenosUrl = '/img/automations/Planta-baja-terrenos.png'
+const plantaBajaUrl = '/img/automations/Planta-baja.png'
+const plantaPrimeraUrl = '/img/automations/Planta-primera.png'
+const plantaSegundaUrl = '/img/automations/Planta-segunda.png'
 
 // Zonas
 const zonasBaja = [
@@ -326,6 +348,7 @@ const clearSelection = () => {
   tooltip.visible = false
 }
 
+// Cambiar planta (manual)
 const setPlant = (p: Planta) => {
   planta.value = p
   tooltip.visible = false
@@ -377,7 +400,6 @@ const tooltip = reactive({
 const tooltipTotal = computed(() => tooltip.devices.reduce((a, d) => a + d.count, 0))
 
 const setTooltipPos = (evt: MouseEvent) => {
-  // +12 separa el tooltip del cursor
   tooltip.x = evt.clientX + 12
   tooltip.y = evt.clientY + 12
 }
@@ -397,6 +419,47 @@ const onZoneMove = (evt: MouseEvent) => {
 const onZoneLeave = () => {
   tooltip.visible = false
 }
+
+// ROTACIÓN: VA CAMBIANDO ENTRE PLANOS
+const rotationEnabled = ref(false)
+const rotationSeconds = ref(10)
+let rotationTimer: number | null = null
+
+const ROTATION_ORDER: Planta[] = ['terrenos', 'baja', 'primera', 'segunda']
+
+const advancePlant = () => {
+  const idx = ROTATION_ORDER.indexOf(planta.value)
+  const next = ROTATION_ORDER[(idx + 1) % ROTATION_ORDER.length]
+  planta.value = next
+  tooltip.visible = false
+}
+
+const startRotation = (seconds: number) => {
+  rotationSeconds.value = seconds
+  rotationEnabled.value = true
+
+  if (rotationTimer !== null) {
+    window.clearInterval(rotationTimer)
+    rotationTimer = null
+  }
+
+  rotationTimer = window.setInterval(() => {
+    if (!rotationEnabled.value) return
+    advancePlant()
+  }, rotationSeconds.value * 1000)
+}
+
+const stopRotation = () => {
+  rotationEnabled.value = false
+  if (rotationTimer !== null) {
+    window.clearInterval(rotationTimer)
+    rotationTimer = null
+  }
+}
+
+onBeforeUnmount(() => {
+  if (rotationTimer !== null) window.clearInterval(rotationTimer)
+})
 
 // init
 applyDimensions()
@@ -492,6 +555,24 @@ button:hover {
   margin-top: 8px;
 }
 
+/* ===== ROTACIÓN ===== */
+#contenedor-rotacion .rot-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.rot-on { color: green; font-weight: 800; }
+.rot-off { color: #c60000; font-weight: 800; }
+
+.rot-active {
+  background-color: rgb(31, 155, 203);
+  color: #fff;
+  font-weight: 800;
+}
+
 /* ===== MAPA ===== */
 .contenedor {
   padding: 10px;
@@ -536,7 +617,7 @@ button:hover {
 }
 
 .tooltip-fixed {
-  position: fixed; /* <- clave para que se vea siempre */
+  position: fixed;
 }
 
 .tooltip-title {
