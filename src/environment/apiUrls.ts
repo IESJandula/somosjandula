@@ -5,3 +5,4 @@ export const schoolManagerApiUrl = import.meta.env.VITE_SCHOOLMANAGER_API_BASE_U
 export const projectorsApiUrl = import.meta.env.VITE_PROJECTORS_API_BASE_URL as string
 export const notificationsApiUrl = import.meta.env.VITE_NOTIFICATIONS_API_BASE_URL as string
 export const automationsApiUrl = import.meta.env.VITE_AUTOMATIONS_API_BASE_URL as string
+export const schoolBaseServerApiUrl = import.meta.env.VITE_SCHOOL_BASE_SERVER_API_URL as string

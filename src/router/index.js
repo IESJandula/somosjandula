@@ -50,6 +50,8 @@ import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage
 import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
 import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
 
+import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
+
 const routes = [  
   {
     path: '/',
@@ -321,6 +323,14 @@ const routes = [
         name: 'AutomationsMapView',
         meta: {
           role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'schoolBaseServer/admin',
+        component: SchoolBaseServerAdminPage,
+        name: 'SchoolBaseServerAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
     ],
