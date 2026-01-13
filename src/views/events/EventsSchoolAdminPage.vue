@@ -279,9 +279,10 @@ async function crearEventoFn() {
       toastColor,
       isToastOpen,
       evento.value.titulo,
+      evento.value.nombre,
       fechaInicioLong,
-      fechaFinLong,
-      evento.value.nombre
+      fechaFinLong
+
     );
 
     console.log("Evento creado, recargando lista");

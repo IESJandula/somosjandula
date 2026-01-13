@@ -8,9 +8,9 @@ export declare function crearEvento( toastMessage: Ref<string>,
                                       toastColor: Ref<string>,
                                       isToastOpen: Ref<boolean>,
                                       titulo: string,
+                                      nombre: string,
                                       fechaInicio: number,
                                       fechaFin: number,
-                                      nombre: string
                                     ): Promise<string>;
 
 export declare function borrarEvento( toastMessage: Ref<string>,
