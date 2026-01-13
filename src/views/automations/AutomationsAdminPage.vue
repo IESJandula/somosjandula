@@ -69,20 +69,20 @@
         <!-- ACTUADOR -->
         <button v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && !esSensorForm" class="btn-primary"
           @click="crearActuadorVista">
-          Crear / Modificar Dispositivo
+          Crear / Modificar
         </button>
 
         <!-- SENSOR BOOLEANO -->
         <button
           v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && esSensorForm && !esNumericoForm && umbralMin < umbralMax"
           class="btn-primary" @click="crearSensorBooleanoVista">
-          Crear / Modificar Dispositivo
+          Crear / Modificar
         </button>
 
         <!-- SENSOR NUMÉRICO -->
         <button v-if="dispositivo && ubicacionElegida && esSensorForm && esNumericoForm && umbralMin < umbralMax"
           class="btn-primary" @click="crearSensorNumericoVista">
-          Crear / Modificar Dispositivo
+          Crear / Modificar
         </button>
 
       </div>
@@ -132,10 +132,10 @@
             <th>MAC</th>
             <th>Estado</th>
             <th>Ubicación</th>
-            <th v-if="esSensorLista">Última actualización</th>
-            <th v-if="esSensorLista">Umbral máximo</th>
-            <th v-if="esSensorLista">Umbral mínimo</th>
             <th v-if="esSensorLista">Valor actual</th>
+            <th v-if="esSensorLista">Última actualización</th>
+            <th v-if="esSensorLista">Umbral mínimo</th>
+            <th v-if="esSensorLista">Umbral máximo</th>
 
             <th>Acciones</th>
           </tr>
@@ -162,19 +162,19 @@
             <td>{{ sensor.estado }}</td>
             <td>{{ sensor.nombreUbicacion }}</td>
             <td>
-              <span v-if="sensor.ultimaActualizacion !== null">
-                {{ sensor.ultimaActualizacion }}
-              </span>
-              <span v-else>-</span>
-            </td>
-            <td>{{ sensor.umbralMaximo }}</td>
-            <td>{{ sensor.umbralMinimo }}</td>
-            <td>
               <span v-if="sensor.valorActual !== null">
                 {{ sensor.valorActual }}
               </span>
               <span v-else>-</span>
             </td>
+            <td>
+              <span v-if="sensor.ultimaActualizacion !== null">
+                {{ sensor.ultimaActualizacion }}
+              </span>
+              <span v-else>-</span>
+            </td>
+            <td>{{ sensor.umbralMinimo }}</td>
+            <td>{{ sensor.umbralMaximo }}</td>
             <td>
               <button @click="eliminarSensorBooleanoVista(sensor.mac)">
                 X
@@ -276,9 +276,6 @@ const crearActuadorVista = async () => {
       "Actuador creado correctamente"
     );
 
-    dispositivo.value = "";
-    ubicacionElegida.value = "";
-
     obtenerActuadoresVista();
     obtenerSensorBooleanoVista();
     obtenerSensorNumericoVista();
@@ -338,11 +335,6 @@ const crearSensorBooleanoVista = async () => {
       "Sensor booleano creado correctamente"
     );
 
-    dispositivo.value = "";
-    ubicacionElegida.value = "";
-    umbralMin.value = 0;
-    umbralMax.value = 0;
-
     obtenerSensorBooleanoVista();
     obtenerActuadoresVista();
     obtenerSensorNumericoVista();
@@ -400,11 +392,6 @@ const crearSensorNumericoVista = async () => {
       isToastOpen,
       "Sensor numérico creado correctamente"
     );
-
-    dispositivo.value = "";
-    ubicacionElegida.value = "";
-    umbralMin.value = 0;
-    umbralMax.value = 0;
 
     obtenerSensorNumericoVista();
     obtenerSensorBooleanoVista();
