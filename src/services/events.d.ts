@@ -11,8 +11,8 @@ export declare function crearEvento(
   titulo: string,
   fechaInicio: number,
   fechaFin: number,
-  categoria: string
-): Promise<Evento>;
+  nombre: string
+): Promise<string>;
 
 export declare function borrarEvento(
   toastMessage: Ref<string>,
@@ -23,8 +23,23 @@ export declare function borrarEvento(
   fechaFin: number
 ): Promise<void>;
 
+export declare function crearCategoria(
+  toastMessage: Ref<string>,
+  toastColor: Ref<string>,
+  isToastOpen: Ref<boolean>,
+  nombre: string,
+  color: string
+): Promise<string>;
+
 export declare function obtenerCategorias(
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
   isToastOpen: Ref<boolean>
 ): Promise<Categoria[]>;
+
+export declare function borrarCategoria(
+  toastMessage: Ref<string>,
+  toastColor: Ref<string>,
+  isToastOpen: Ref<boolean>,
+  nombre: string
+): Promise<void>;
