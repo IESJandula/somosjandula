@@ -190,7 +190,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, onBeforeUnmount } from 'vue'
+import { computed, reactive, ref, onBeforeUnmount, onMounted } from 'vue';
+import { obtenerDispositivos } from "@/services/automationsMap";
+
+// TOAST
+const isToastOpen = ref(false);
+const toastMessage = ref("");
+const toastColor = ref("success");
 
 type Planta = 'terrenos' | 'baja' | 'primera' | 'segunda'
 
@@ -456,6 +462,10 @@ const stopRotation = () => {
     rotationTimer = null
   }
 }
+
+onMounted(async () => {
+  await obtenerDispositivos(toastMessage, toastColor, isToastOpen);
+});
 
 onBeforeUnmount(() => {
   if (rotationTimer !== null) window.clearInterval(rotationTimer)

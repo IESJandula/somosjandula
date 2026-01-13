@@ -51,3 +51,7 @@ export interface ResumenZona {
   listaSensoresBooleanos: SensorBooleano[];
   listaSensoresNumericos: SensorNumerico[];
 }
+
+export declare function obtenerDispositivos(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>): Promise<string[]>;
