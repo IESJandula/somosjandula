@@ -2,77 +2,31 @@
   <div class="main-container">
     <div class="top-row">
       <div class="left-top-container">
-        <div class="form-container usuario-container">
+        <div class="form-container">
+          <h2 class="window-title">CREAR CATEGORÍA</h2>
+
           <div class="form-grid">
             <div class="form-row">
-              <label class="form-label">TÍTULO:</label>
-              <input 
-                type="text" 
-                v-model="evento.titulo"
-                class="form-input"
-                required
-              />
+              <label class="form-label">NOMBRE:</label>
+              <input type="text" v-model="nuevaCategoria.nombre" class="form-input" placeholder="" />
             </div>
-            
+
             <div class="form-row">
-              <label class="form-label">CATEGORIA:</label>
-              <select 
-                v-model="evento.categoria"
-                class="form-select"
-                required
-              >
-                <option value="">Seleccione</option>
-                <option 
-                  v-for="categoria in categorias" 
-                  :key="categoria.nombre" 
-                  :value="categoria.nombre"
-                >
-                  {{ categoria.nombre }}
-                </option>
-              </select>
-            </div>
-            
-            <div class="form-row">
-              <label class="form-label">FECHA INICIO:</label>
-              <input 
-                type="date" 
-                v-model="evento.fechaInicio"
-                class="form-input"
-                required
-              />
-            </div>
-            
-            <div class="form-row combined-row">
-              <div class="checkbox-wrapper">
-                <input 
-                  type="checkbox" 
-                  id="eventoMismoDia" 
-                  v-model="eventoMismoDia"
-                  @change="toggleMismoDia"
-                  class="form-checkbox"
-                />
-                <label for="eventoMismoDia" class="checkbox-label">
-                  EVENTO FINALIZA ESE DIA DE
-                </label>
-              </div>
-              
-              <div v-if="!eventoMismoDia" class="fecha-fin-wrapper">
-                <label class="form-label">FECHA FIN:</label>
-                <input 
-                  type="date" 
-                  v-model="evento.fechaFin"
-                  class="form-input"
-                  :required="!eventoMismoDia"
-                />
+              <label class="form-label">COLOR:</label>
+              <div class="color-selection">
+                <select v-model="nuevaCategoria.color" class="form-select">
+                  <option value="">Seleccione color</option>
+                  <option v-for="color in coloresDisponibles" :key="color.value" :value="color.value">
+                    {{ color.nombre }}
+                  </option>
+                </select>
+                <div v-if="nuevaCategoria.color" class="color-preview"
+                  :style="{ backgroundColor: nuevaCategoria.color }"></div>
               </div>
             </div>
-            
-            <div class="button-row">
-              <button 
-                type="button" 
-                @click="crearEventoFunc"
-                class="btn-enviar"
-              >
+
+            <div class="top-row">
+              <button type="button" @click="agregarCategoriaFn" class="btn-enviar">
                 ENVIAR
               </button>
             </div>
@@ -80,100 +34,9 @@
         </div>
       </div>
       <div class="right-top-container">
-        <div class="form-container-table table-container">
-          <h2 class="window-title">CALENDARIO DE EVENTOS</h2>
-          
-          <div class="table-wrapper">
-            <table class="events-table">
-              <thead>
-                <tr>
-                  <th>TÍTULO</th>
-                  <th>CATEGORIA</th>
-                  <th>FECHA INICIO</th>
-                  <th>FECHA FIN</th>
-                  <th>ACCIONES</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="eventoItem in eventos" :key="`${eventoItem.titulo}-${eventoItem.fechaInicio}`">
-                  <td>{{ eventoItem.titulo }}</td>
-                  <td>{{ eventoItem.categoria }}</td>
-                  <td>{{ formatFecha(eventoItem.fechaInicio) }}</td>
-                  <td>{{ formatFecha(eventoItem.fechaFin) }}</td>
-                  <td>
-                    <button 
-                      @click="borrarEventoFunc(eventoItem)" 
-                      class="btn-eliminar"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-                <tr v-if="eventos.length === 0">
-                  <td colspan="5" class="no-data">No hay eventos registrados</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="bottom-row">
-      <div class="left-bottom-container">
-        <div class="form-container">
-          <h2 class="window-title">CREAR CATEGORÍA</h2>
-          
-          <div class="form-grid">
-            <div class="form-row">
-              <label class="form-label">NOMBRE:</label>
-              <input 
-                type="text" 
-                v-model="nuevaCategoria.nombre"
-                class="form-input"
-                placeholder=""
-              />
-            </div>
-            
-            <div class="form-row">
-              <label class="form-label">COLOR:</label>
-              <div class="color-selection">
-                <select 
-                  v-model="nuevaCategoria.color"
-                  class="form-select"
-                >
-                  <option value="">Seleccione color</option>
-                  <option 
-                    v-for="color in coloresDisponibles" 
-                    :key="color.value" 
-                    :value="color.value"
-                  >
-                    {{ color.nombre }}
-                  </option>
-                </select>
-                <div 
-                  v-if="nuevaCategoria.color"
-                  class="color-preview"
-                  :style="{ backgroundColor: nuevaCategoria.color }"
-                ></div>
-              </div>
-            </div>
-            
-            <div class="button-row">
-              <button 
-                type="button" 
-                @click="agregarCategoria"
-                class="btn-enviar"
-              >
-                ENVIAR
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="right-bottom-container">
         <div class="form-container">
           <h2 class="window-title">LISTA DE CATEGORÍAS</h2>
-          
+
           <div class="categorias-table-container">
             <div class="table-wrapper">
               <table class="categorias-table">
@@ -189,20 +52,15 @@
                     <td>{{ categoria.nombre }}</td>
                     <td>
                       <div class="color-cell">
-                        <span 
-                          class="color-display" 
-                          :style="{ backgroundColor: getColorForCategory(categoria.nombre) }"
-                        ></span>
-                        <span class="color-name">{{ getColorName(getColorForCategory(categoria.nombre)) }}</span>
+                        <span class="color-display" :style="{ backgroundColor: categoria.color }"></span>
+                        <span class="color-name">{{ getColorName(categoria.color) }}</span>
                       </div>
                     </td>
                     <td>
-                      <button 
-                        @click="eliminarCategoria(categoria)"
-                        class="btn-eliminar-cat"
-                      >
+                      <button @click="eliminarCategoriaFn(categoria)" class="btn-eliminar-cat">
                         Eliminar
                       </button>
+
                     </td>
                   </tr>
                   <tr v-if="categorias.length === 0">
@@ -215,25 +73,105 @@
         </div>
       </div>
     </div>
-    <IonToast
-      :is-open="isToastOpen"
-      :message="toastMessage"
-      :color="toastColor"
-      :duration="3000"
-      @didDismiss="isToastOpen = false"
-    />
+    <div class="bottom-row">
+      <div class="left-bottom-container">
+        <div class="form-container usuario-container">
+          <div class="form-grid">
+            <div class="form-row">
+              <label class="form-label">TÍTULO:</label>
+              <input type="text" v-model="evento.titulo" class="form-input" required />
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">CATEGORIA:</label>
+              <select v-model="evento.nombre" class="form-select" required>
+                <option value="">Seleccione</option>
+                <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
+                  {{ categoria.nombre }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label class="form-label">FECHA INICIO:</label>
+              <input type="date" v-model="evento.fechaInicio" class="form-input" required />
+            </div>
+
+            <div class="form-row combined-row">
+              <div class="checkbox-wrapper">
+                <input type="checkbox" id="eventoMismoDia" v-model="eventoMismoDia" @change="toggleMismoDia"
+                  class="form-checkbox" />
+                <label for="eventoMismoDia" class="checkbox-label">
+                  EVENTO FINALIZA ESE DIA
+                </label>
+              </div>
+
+              <div v-if="!eventoMismoDia" class="fecha-fin-wrapper">
+                <label class="form-label">FECHA FIN:</label>
+                <input type="date" v-model="evento.fechaFin" class="form-input" :required="!eventoMismoDia" />
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button type="button" @click="crearEventoFn" class="btn-enviar">
+                ENVIAR
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right-bottom-container">
+        <div class="form-container-table table-container">
+          <h2 class="window-title">CALENDARIO DE EVENTOS</h2>
+
+          <div class="table-wrapper">
+            <table class="events-table">
+              <thead>
+                <tr>
+                  <th>TÍTULO</th>
+                  <th>CATEGORIA</th>
+                  <th>FECHA INICIO</th>
+                  <th>FECHA FIN</th>
+                  <th>ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="eventoItem in eventos" :key="`${eventoItem.titulo}-${eventoItem.fechaInicio}`">
+                  <td>{{ eventoItem.titulo }}</td>
+                  <td>{{ eventoItem.nombre }}</td>
+                  <td>{{ formatFecha(eventoItem.fechaInicio) }}</td>
+                  <td>{{ formatFecha(eventoItem.fechaFin) }}</td>
+                  <td>
+                    <button @click="borrarEventoFn(eventoItem)" class="btn-eliminar">
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+                <tr v-if="eventos.length === 0">
+                  <td colspan="5" class="no-data">No hay eventos registrados</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top">mierda</ion-toast>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { IonToast } from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
+import { IonToast } from "@ionic/vue";
 
 import {
   obtenerEventos,
   crearEvento,
   borrarEvento,
+  crearCategoria,
+  borrarCategoria,
   obtenerCategorias,
 } from "@/services/events.js";
 
@@ -242,19 +180,25 @@ interface Evento {
   titulo: string;
   fechaInicio: number;
   fechaFin: number;
-  categoria: string;
+  nombre: string;
 }
 
 interface EventoForm {
   titulo: string;
   fechaInicio: string;
   fechaFin: string;
-  categoria: string;
+  nombre: string;
 }
 
 interface Categoria {
   nombre: string;
+  color: string;
 }
+
+const isToastOpen = ref(false);
+const toastMessage = ref("");
+const toastColor = ref("success");
+
 const eventos = ref<Evento[]>([]);
 const categorias = ref<Categoria[]>([]);
 const eventoMismoDia = ref(false);
@@ -265,7 +209,7 @@ const evento = ref<EventoForm>({
   titulo: "",
   fechaInicio: "",
   fechaFin: "",
-  categoria: "",
+  nombre: "",
 });
 
 // Nueva categoría
@@ -273,63 +217,62 @@ const nuevaCategoria = ref({
   nombre: "",
   color: ""
 });
-
-// Toast
-const isToastOpen = ref(false);
-const toastMessage = ref("");
-const toastColor = ref("success");
-
 // Colores disponibles para seleccionar
 const coloresDisponibles = ref([
   { value: '#008000', nombre: 'VERDE' },
   { value: '#0000FF', nombre: 'AZUL' },
-  { value: '#FFFF00', nombre: 'AMARILLO' }
+  { value: '#FFFF00', nombre: 'AMARILLO' },
+  { value: '#FF0000', nombre: 'ROJO' }
 ]);
 
+function dateToTimestamp(dateStr: string): number {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).getTime();
+}
 // Cargar todos los eventos
 async function cargarEventos() {
-  try {
-    eventos.value = await obtenerEventos(toastMessage, toastColor, isToastOpen);
-  } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al cargar eventos");
-  }
+  eventos.value = await obtenerEventos(toastMessage, toastColor, isToastOpen);
 }
 
 // Cargar todas las categorías
 async function cargarCategorias() {
-  try {
     categorias.value = await obtenerCategorias(toastMessage, toastColor, isToastOpen);
-  } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al cargar categorías");
-  }
 }
 
-// Crear un nuevo evento
-async function crearEventoFunc() {
-  try {
-    if (!evento.value.titulo || !evento.value.fechaInicio || !evento.value.categoria) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "Título, fecha inicio y categoría son obligatorios");
+// Crear evento
+async function crearEventoFn() {
+    try {
+    // Validaciones con feedback en consola
+    if (!evento.value.titulo || !evento.value.fechaInicio || !evento.value.nombre) {
+      console.error("Faltan campos obligatorios", evento.value);
       return;
     }
 
-    const fechaInicioLong = new Date(evento.value.fechaInicio).getTime();
-    let fechaFinLong: number;
-
-    if (eventoMismoDia.value) {
-      fechaFinLong = fechaInicioLong;
-    } else {
-      if (!evento.value.fechaFin) {
-        crearToast(toastMessage, toastColor, isToastOpen, "danger", "Debe especificar fecha fin para eventos de múltiples días");
-        return;
-      }
-      fechaFinLong = new Date(evento.value.fechaFin).getTime();
+    if (!eventoMismoDia.value && !evento.value.fechaFin) {
+      console.error("Falta fecha fin");
+      return;
     }
+
+    // Conversión segura de fechas
+    const fechaInicioLong = dateToTimestamp(evento.value.fechaInicio);
+    const fechaFinLong = eventoMismoDia.value
+      ? fechaInicioLong
+      : dateToTimestamp(evento.value.fechaFin);
 
     if (fechaFinLong < fechaInicioLong) {
-      crearToast(toastMessage, toastColor, isToastOpen, "danger", "La fecha fin no puede ser anterior a la fecha inicio");
+      console.error("Fecha fin menor que fecha inicio");
       return;
     }
 
+    // Log de datos que van al backend
+    console.log("DATOS A ENVIAR:", {
+      titulo: evento.value.titulo,
+      fechaInicio: fechaInicioLong,
+      fechaFin: fechaFinLong,
+      nombre: evento.value.nombre,
+    });
+
+    // LLAMADA REAL AL BACKEND
     await crearEvento(
       toastMessage,
       toastColor,
@@ -337,63 +280,86 @@ async function crearEventoFunc() {
       evento.value.titulo,
       fechaInicioLong,
       fechaFinLong,
-      evento.value.categoria
+      evento.value.nombre
     );
 
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Evento creado correctamente");
+    console.log("Evento creado, recargando lista");
 
-    // Limpiar formulario
-    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", categoria: "" };
+    // Reset formulario
+    evento.value = {
+      titulo: "",
+      fechaInicio: "",
+      fechaFin: "",
+      nombre: "",
+    };
     eventoMismoDia.value = false;
 
     // Recargar eventos
     await cargarEventos();
-  } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al crear evento");
+
+  } catch (error) {
+    console.error("🔥 ERROR EN CREAR EVENTO:", error);
   }
 }
 
-// Borrar un evento
-async function borrarEventoFunc(e: Evento) {
-  try {
-    await borrarEvento(toastMessage, toastColor, isToastOpen, e.titulo, e.fechaInicio, e.fechaFin);
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Evento eliminado");
+// Borrar evento
+async function borrarEventoFn(e: Evento) {
+ try {
+    await borrarEvento(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      e.titulo,
+      e.fechaInicio,
+      e.fechaFin
+    );
     await cargarEventos();
-  } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al borrar evento");
+  } catch (error) {
+    console.error("🔥 ERROR AL BORRAR EVENTO:", error);
   }
 }
 
-// Funciones auxiliares
+// Check evento mismo día
 function toggleMismoDia() {
-  if (eventoMismoDia.value) {
-    evento.value.fechaFin = "";
-  }
+  if (eventoMismoDia.value) evento.value.fechaFin = "";
 }
 
-async function agregarCategoria() {
-  if (!nuevaCategoria.value.nombre || !nuevaCategoria.value.color) {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Debe ingresar nombre y seleccionar un color");
+// Crear categoría
+async function agregarCategoriaFn(){
+ if (!nuevaCategoria.value.nombre || !nuevaCategoria.value.color) {
+    console.error("❌ Datos de categoría incompletos", nuevaCategoria.value);
     return;
   }
-  
-  // Agregar a la lista local
-  categorias.value.push({
-    nombre: nuevaCategoria.value.nombre
-  });
-  
-  crearToast(toastMessage, toastColor, isToastOpen, "success", `Categoría "${nuevaCategoria.value.nombre}" agregada`);
-  
-  // Limpiar formulario
-  nuevaCategoria.value = { nombre: "", color: "" };
+
+  try {
+    await crearCategoria(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      nuevaCategoria.value.nombre,
+      nuevaCategoria.value.color
+    );
+
+    nuevaCategoria.value = { nombre: "", color: "" };
+    await cargarCategorias();
+
+  } catch (error) {
+    console.error("🔥 ERROR AL CREAR CATEGORÍA:", error);
+  }
 }
 
-function eliminarCategoria(categoria: Categoria) {
-  // Eliminar de la lista local
-  const index = categorias.value.findIndex(c => c.nombre === categoria.nombre);
-  if (index !== -1) {
-    categorias.value.splice(index, 1);
-    crearToast(toastMessage, toastColor, isToastOpen, "success", `Categoría "${categoria.nombre}" eliminada`);
+// Eliminar categoría
+async function eliminarCategoriaFn(categoria: Categoria) {
+  try {
+    await borrarCategoria(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      categoria.nombre
+    );
+    await cargarCategorias();
+  } catch (error) {
+    console.error("Error al eliminar categoría:", error);
   }
 }
 
@@ -407,21 +373,18 @@ function formatFecha(timestamp: number): string {
 }
 
 function getColorForCategory(nombreCategoria: string): string {
-  // Para categorías existentes, usar color asignado
-  const index = categorias.value.findIndex(cat => cat.nombre === nombreCategoria);
-  if (index !== -1 && nuevaCategoria.value.color) {
-    return nuevaCategoria.value.color;
-  }
-  // Por defecto, usar color basado en el índice
-  const colorIndex = index % coloresDisponibles.value.length;
+  const cat = categorias.value.find(cat => cat.nombre === nombreCategoria);
+  if (cat) return cat.color;
+  
+  const colorIndex = categorias.value.length % coloresDisponibles.value.length;
   return coloresDisponibles.value[colorIndex].value;
 }
+
 
 function getColorName(colorValue: string): string {
   const colorObj = coloresDisponibles.value.find(c => c.value === colorValue);
   return colorObj ? colorObj.nombre : colorValue;
 }
-
 // Montaje inicial
 onMounted(async () => {
   await cargarCategorias();
@@ -441,7 +404,8 @@ onMounted(async () => {
 }
 
 /* FILAS */
-.top-row, .bottom-row {
+.top-row,
+.bottom-row {
   display: flex;
   gap: 20px;
   flex: 1;
@@ -459,19 +423,23 @@ onMounted(async () => {
 
 /* Ajustes de tamaño para cada contenedor */
 .left-top-container {
-  flex: 1; /* Formulario más pequeño */
+  flex: 1;
+  /* Formulario más pequeño */
 }
 
 .right-top-container {
-  flex: 2; /* Tabla más grande */
+  flex: 2;
+  /* Tabla más grande */
 }
 
 .left-bottom-container {
-  flex: 1; /* Formulario categoría */
+  flex: 1;
+  /* Formulario categoría */
 }
 
 .right-bottom-container {
-  flex: 1; /* Lista categorías */
+  flex: 1;
+  /* Lista categorías */
 }
 
 /* ESTILOS COMUNES DE FORMULARIO */
@@ -647,14 +615,16 @@ onMounted(async () => {
   min-height: 0;
 }
 
-.events-table, .categorias-table {
+.events-table,
+.categorias-table {
   width: 100%;
   border-collapse: collapse;
   border: 2px solid #007bff;
   font-size: 12px;
 }
 
-.events-table th, .categorias-table th {
+.events-table th,
+.categorias-table th {
   background-color: #007bff;
   color: white;
   padding: 10px 12px;
@@ -667,7 +637,8 @@ onMounted(async () => {
   z-index: 10;
 }
 
-.events-table td, .categorias-table td {
+.events-table td,
+.categorias-table td {
   padding: 8px 12px;
   border: 2px solid #007bff;
   background-color: #e9f5ff;
@@ -677,7 +648,8 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.events-table tr:hover td, .categorias-table tr:hover td {
+.events-table tr:hover td,
+.categorias-table tr:hover td {
   background-color: #d0eaff;
 }
 
@@ -688,7 +660,8 @@ onMounted(async () => {
   padding: 15px;
 }
 
-.btn-eliminar, .btn-eliminar-cat {
+.btn-eliminar,
+.btn-eliminar-cat {
   background-color: #dc3545;
   color: white;
   border: none;
@@ -699,7 +672,8 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-.btn-eliminar:hover, .btn-eliminar-cat:hover {
+.btn-eliminar:hover,
+.btn-eliminar-cat:hover {
   background-color: #c82333;
 }
 
@@ -739,10 +713,12 @@ onMounted(async () => {
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {
-  .top-row, .bottom-row {
+
+  .top-row,
+  .bottom-row {
     flex-direction: column;
   }
-  
+
   .left-top-container,
   .right-top-container,
   .left-bottom-container,
@@ -757,39 +733,71 @@ onMounted(async () => {
     align-items: flex-start;
     gap: 6px;
   }
-  
+
   .form-label {
     text-align: left;
     min-width: auto;
   }
-  
+
   .combined-row {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .form-input,
   .form-select {
     width: 100%;
   }
-  
+
   .table-wrapper {
     overflow-x: auto;
   }
-  
-  .events-table, .categorias-table {
+
+  .events-table,
+  .categorias-table {
     font-size: 11px;
   }
-}
 
+  
+}
+.toast {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    opacity: 1;
+    transition: opacity .3s ease;
+  }
+  .success {
+    background: #28a745;
+  }
+
+  .error {
+    background: #dc3545;
+  }
+
+  .warning {
+    background: #ffc107;
+    color: black;
+  }
+
+  .info {
+    background: #17a2b8;
+  }
 /* MODO OSCURO */
 @media (prefers-color-scheme: dark) {
+
   .form-container,
   .form-container-table {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   }
-  
+
   .window-title,
   .form-label,
   .checkbox-label,
@@ -797,16 +805,31 @@ onMounted(async () => {
   .date-label {
     color: var(--text-color-dark);
   }
-  
+
   .events-table td,
   .categorias-table td {
     background-color: #34495e;
     color: var(--text-color-dark);
   }
-  
+
   .events-table tr:hover td,
   .categorias-table tr:hover td {
     background-color: #3a506b;
+  }
+  .form-input,
+  .form-select {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    border: 1px solid #555;
+  }
+
+  .form-input::placeholder {
+    color: #aaa;
+  }
+
+  .form-select option {
+    background-color: #2c3e50;
+    color: #ecf0f1;
   }
 }
 </style>
