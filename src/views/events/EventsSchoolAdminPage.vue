@@ -225,6 +225,7 @@ const coloresDisponibles = ref([
   { value: '#FF0000', nombre: 'ROJO' }
 ]);
 
+
 function dateToTimestamp(dateStr: string): number {
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day).getTime();
@@ -241,8 +242,9 @@ async function cargarCategorias() {
 
 // Crear evento
 async function crearEventoFn() {
+
     try {
-    // Validaciones con feedback en consola
+    
     if (!evento.value.titulo || !evento.value.fechaInicio || !evento.value.nombre) {
       console.error("Faltan campos obligatorios", evento.value);
       return;
@@ -272,7 +274,6 @@ async function crearEventoFn() {
       nombre: evento.value.nombre,
     });
 
-    // LLAMADA REAL AL BACKEND
     await crearEvento(
       toastMessage,
       toastColor,
@@ -292,19 +293,24 @@ async function crearEventoFn() {
       fechaFin: "",
       nombre: "",
     };
+
+
+    // Limpiar formulario
+    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombre: "" };
     eventoMismoDia.value = false;
 
-    // Recargar eventos
+    // Recargar lista de eventos
     await cargarEventos();
 
   } catch (error) {
-    console.error("🔥 ERROR EN CREAR EVENTO:", error);
+    console.error("🔥ERROR EN CREAR EVENTO:", error);
+
   }
 }
 
 // Borrar evento
 async function borrarEventoFn(e: Evento) {
- try {
+  try {
     await borrarEvento(
       toastMessage,
       toastColor,
@@ -325,12 +331,11 @@ function toggleMismoDia() {
 }
 
 // Crear categoría
+
 async function agregarCategoriaFn(){
  if (!nuevaCategoria.value.nombre || !nuevaCategoria.value.color) {
     console.error("❌ Datos de categoría incompletos", nuevaCategoria.value);
-    return;
   }
-
   try {
     await crearCategoria(
       toastMessage,
@@ -342,10 +347,10 @@ async function agregarCategoriaFn(){
 
     nuevaCategoria.value = { nombre: "", color: "" };
     await cargarCategorias();
-
   } catch (error) {
     console.error("🔥 ERROR AL CREAR CATEGORÍA:", error);
   }
+
 }
 
 // Eliminar categoría
@@ -361,6 +366,7 @@ async function eliminarCategoriaFn(categoria: Categoria) {
   } catch (error) {
     console.error("Error al eliminar categoría:", error);
   }
+
 }
 
 function formatFecha(timestamp: number): string {
@@ -371,15 +377,6 @@ function formatFecha(timestamp: number): string {
     year: 'numeric'
   });
 }
-
-function getColorForCategory(nombreCategoria: string): string {
-  const cat = categorias.value.find(cat => cat.nombre === nombreCategoria);
-  if (cat) return cat.color;
-  
-  const colorIndex = categorias.value.length % coloresDisponibles.value.length;
-  return coloresDisponibles.value[colorIndex].value;
-}
-
 
 function getColorName(colorValue: string): string {
   const colorObj = coloresDisponibles.value.find(c => c.value === colorValue);
@@ -758,9 +755,7 @@ onMounted(async () => {
     font-size: 11px;
   }
 
-  
-}
-.toast {
+  .toast {
     position: fixed;
     right: 20px;
     bottom: 20px;
@@ -769,10 +764,11 @@ onMounted(async () => {
     color: white;
     font-weight: 600;
     z-index: 9999;
-    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
     opacity: 1;
     transition: opacity .3s ease;
   }
+
   .success {
     background: #28a745;
   }
@@ -789,6 +785,8 @@ onMounted(async () => {
   .info {
     background: #17a2b8;
   }
+}
+
 /* MODO OSCURO */
 @media (prefers-color-scheme: dark) {
 
