@@ -464,7 +464,7 @@ const stopRotation = () => {
 }
 
 onMounted(async () => {
-  await obtenerDispositivos(toastMessage, toastColor, isToastOpen);
+  //await obtenerDispositivos(toastMessage, toastColor, isToastOpen);
 });
 
 onBeforeUnmount(() => {

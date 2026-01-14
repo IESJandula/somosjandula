@@ -52,38 +52,63 @@
         <ion-list>
           <ion-item button @click="toggleSubMenuNotifications">
             Últimas noticias
+            <ion-icon slot="end" name="newspaper-outline"></ion-icon>
             <ion-icon slot="end" :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="notificationsSubmenuVisible" class="submenu">
           <!--  <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item> -->
-            <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">Avisa de algo importante</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">
+              Avisa de algo importante
+              <ion-icon slot="end" name="megaphone"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
           <ion-item button @click="toggleSubMenuUtilities">
             Mis utilidades
+            <ion-icon slot="end" name="heart-outline"></ion-icon>
             <ion-icon slot="end" :icon="utilitiesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="utilitiesSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprime documentos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/automations/map')">Vista de pájaro</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/printers/print')">
+              Imprime documentos
+              <ion-icon slot="end" name="print"></ion-icon>
+            </ion-item>
+            <!--<ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>-->
+            <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">
+              Guía del profesorado
+              <ion-icon slot="end" name="book"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">
+              Formación PDIs
+              <ion-icon slot="end" name="browsers"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/automations/map')">
+              Vista de pájaro
+              <ion-icon slot="end" name="eye"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->
         <ion-list>
           <ion-item button @click="toggleSubMenuBookings">
             Reservas
+            <ion-icon slot="end" name="calendar-outline"></ion-icon>
             <ion-icon slot="end" :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="bookingsSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">Realiza reservas fijas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">Realiza reservas temporales</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">
+              Reservas fijas
+              <ion-icon slot="end" name="infinite"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">
+              Reservas temporales
+              <ion-icon slot="end" name="git-commit"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
         <!-- Guardias -->
+        <!--
         <ion-list>
           <ion-item button @click="toggleSubMenuAbsences">
             Guardias
@@ -94,6 +119,7 @@
             <ion-item button @click="navigateAndCloseMenu('/absences/tasks')">Revisa las tareas de guardia</ion-item>
           </ion-list>
         </ion-list>
+        -->
         <ion-list>
           <ion-item v-if="mostrarTimetableTeachers" button @click="toggleSubMenuTimetableTeachers">
             Horarios
@@ -108,20 +134,19 @@
         <!--Incidencias-->
         <ion-list>
           <ion-item button @click="toggleSubMenuIssues">
-            <ion-icon slot="end" name="alert-circle-outline"></ion-icon>
             <ion-label>Incidencias</ion-label>
-            <ion-icon
-              slot="end"
-              :icon="issuesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"
-            ></ion-icon>
+            <ion-icon slot="end" name="bag-add-outline"></ion-icon>
+            <ion-icon slot="end" :icon="issuesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
 
           <ion-list v-if="issuesSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/issues')">
               Gestiona tus incidencias
+              <ion-icon slot="end" name="bandage"></ion-icon>
             </ion-item>
             <ion-item button @click="navigateAndCloseMenu('/issues/stats')">
               Visualiza estadísticas
+              <ion-icon slot="end" name="bar-chart"></ion-icon>
             </ion-item>
           </ion-list>
         </ion-list>
