@@ -319,6 +319,8 @@ const routes = [
         name: 'IssuesTicAdminPage',
         component: IncidenciasTicAdminPage,
         meta: { role: 'ADMINISTRADOR' },
+      },
+      {
         path: 'automations/admin',
         component: AutomationsAdminPage,
         name: 'AutomationsAdmin',
