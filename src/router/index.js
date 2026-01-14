@@ -50,6 +50,9 @@ import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
+import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
+import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
+
 const routes = [  
   {
     path: '/',
@@ -316,6 +319,20 @@ const routes = [
         name: 'IssuesTicAdminPage',
         component: IncidenciasTicAdminPage,
         meta: { role: 'ADMINISTRADOR' },
+        path: 'automations/admin',
+        component: AutomationsAdminPage,
+        name: 'AutomationsAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: 'automations/map',
+        component: AutomationsMapView,
+        name: 'AutomationsMapView',
+        meta: {
+          role: 'PROFESOR'
+        },
       },
     ],
   },

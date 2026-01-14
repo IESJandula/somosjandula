@@ -16,6 +16,7 @@
             <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
           </ion-list>
         </ion-list>
 
@@ -67,6 +68,7 @@
             <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/automations/map')">Vista de pájaro</ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->
@@ -288,9 +290,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      actualizarNotificacionesSoloTexto();
-      notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
-      setInterval(nextNotificacionesSoloTexto, 5000);
+      //actualizarNotificacionesSoloTexto();
+      //notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
+      //setInterval(nextNotificacionesSoloTexto, 5000);
 
       obtenerNombreYApellidosUsuario().then((userInfo) => {
         userName.value = userInfo.nombre;

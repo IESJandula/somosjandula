@@ -44,7 +44,7 @@ import { onMounted, ref } from 'vue';
 import { IonToast, IonInput, IonRow, IonCol, IonItem, IonLabel, IonSelect, IonSelectOption, IonButton } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
-import { schoolmanagerApiUrl } from "@/environment/apiUrls.ts";
+import { schoolManagerApiUrl } from "@/environment/apiUrls.ts";
 
 const selectedConstante = ref(null);
 const constantes = ref([]);
@@ -74,7 +74,7 @@ const actualizarConstanteSeleccionada = async () => {
     );
 
     await actualizarConstantes(
-      schoolmanagerApiUrl + "/schoolManager/constants",
+      schoolManagerApiUrl + "/schoolManager/constants",
       toastMessage,
       toastColor,
       isToastOpen,
@@ -108,7 +108,7 @@ const actualizarConstanteSeleccionada = async () => {
 const cargarConstantes = async () => {
   try {
     constantes.value = await obtenerConstantes(
-      schoolmanagerApiUrl + "/schoolManager/constants",
+      schoolManagerApiUrl + "/schoolManager/constants",
       toastMessage,
       toastColor,
       isToastOpen
