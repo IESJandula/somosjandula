@@ -24,4 +24,4 @@ export const obtenerDispositivos = async (toastMessage, toastColor, isToastOpen)
 };
 
 
-objeto = map["aula-2.13"]
+// objeto = map["aula-2.13"]

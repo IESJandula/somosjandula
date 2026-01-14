@@ -99,7 +99,6 @@ export const borrarCursoEtapaGrupo = async (toastMessage, toastColor, isToastOpe
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
 }
 export const crearEspacioSinDocencia = async (toastMessage, toastColor, isToastOpen, espacioSinDocenciaDto) =>
 {

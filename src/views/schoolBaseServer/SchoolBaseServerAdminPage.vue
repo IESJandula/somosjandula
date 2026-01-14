@@ -5,20 +5,23 @@
       <div class="title-container">
         <h1 class="title">Elige curso académico</h1>
       </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Elige curso académico:</ion-label>
-            <ion-select v-model="cursoElegido">
-              <ion-select-option v-for="curso in cursos" :key="curso.cursoAcademico" :value="curso.cursoAcademico">
-                {{ curso.cursoAcademico }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
+
+      <div class="section">
+        <div class="row">
+          <select v-model="cursoElegido" class="custom-select">
+            <option
+              v-for="curso in cursos"
+              :key="curso.cursoAcademico"
+              :value="curso.cursoAcademico"
+            >
+              {{ curso.cursoAcademico }}
+            </option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
+
   <!-- Creador de grupos -->
   <div class="form-wrapper">
     <div class="form-container">
@@ -26,95 +29,78 @@
         <h1 class="title">Creador de grupos</h1>
       </div>
 
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Curso (número):</ion-label>
-            <ion-input type="number" v-model.number="cursoGrupo">
-            </ion-input>
-          </ion-item>
-        </ion-col>
+      <div class="section">
+        <div class="row">
+          <label>Curso (número):</label>
+          <input type="number" v-model.number="cursoGrupo" />
+        </div>
 
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Etapa:</ion-label>
-            <ion-input v-model="etapaGrupo">
-            </ion-input>
-          </ion-item>
-        </ion-col>
+        <div class="row">
+          <label>Etapa:</label>
+          <input type="text" v-model="etapaGrupo" />
+        </div>
 
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Grupo:</ion-label>
-            <ion-input v-model="grupoGrupo">
-            </ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
+        <div class="row">
+          <label>Grupo:</label>
+          <input type="text" v-model="grupoGrupo" />
+        </div>
+      </div>
 
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="secondary" @click="crearGrupo">
-            Crear
-          </ion-button>
-        </ion-col>
-      </ion-row>
+      <div class="section">
+        <button class="btn-primary" @click="crearGrupo">
+          Crear
+        </button>
+      </div>
     </div>
+
     <!-- Listado de grupos -->
     <div class="form-container-table">
       <div class="title-container">
         <h1 class="title">Listado de Grupos</h1>
       </div>
 
-      <ion-row>
-        <ion-col size="12">
-          <table v-if="grupos.length > 0">
-            <thead>
-              <tr>
-                <th>Curso</th>
-                <th>Etapa</th>
-                <th>Grupo</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="g in grupos" :key="`${g.curso}-${g.etapa}-${g.grupo}`">
-                <td>{{ g.curso }}</td>
-                <td>{{ g.etapa }}</td>
-                <td>{{ g.grupo }}</td>
-                <td>
-                  <button class="btn-delete" @click="eliminarGrupo(g)">X</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <table v-if="grupos.length > 0">
+        <thead>
+          <tr>
+            <th>Curso</th>
+            <th>Etapa</th>
+            <th>Grupo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
 
+        <tbody>
+          <tr v-for="g in grupos" :key="`${g.curso}-${g.etapa}-${g.grupo}`">
+            <td>{{ g.curso }}</td>
+            <td>{{ g.etapa }}</td>
+            <td>{{ g.grupo }}</td>
+            <td>
+              <button class="btn-delete" @click="eliminarGrupo(g)">X</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-          <ion-label v-else>No hay grupos creados.</ion-label>
-        </ion-col>
-      </ion-row>
+      <div v-else>
+        <span>No hay grupos creados.</span>
+      </div>
     </div>
-
   </div>
-
 </template>
 
 <script setup>
 import { schoolBaseServerApiUrl } from "@/environment/apiUrls.ts";
-import { ref, onMounted } from "vue";
-import { IonRow, IonCol, IonItem, IonLabel } from "@ionic/vue";
-import {
-  IonSelect,
-  IonSelectOption,
-  IonInput,
-  IonButton,
-  IonToast,
-} from "@ionic/vue";
-
-
+import { ref, onMounted, watch, nextTick } from "vue";
 
 import { obtenerCursosAcademicos } from "@/services/schoolBaseServer";
+import { seleccionarCursoAcademico } from "@/services/schoolBaseServer";
+import { obtenerCursosEtapasGrupos } from "@/services/schoolBaseServer";
+import { crearCursoEtapaGrupo } from "@/services/schoolBaseServer";
+import { borrarCursoEtapaGrupo } from "@/services/schoolBaseServer";
 
+// ====================
+// VARIABLES
+// ====================
 const cursoElegido = ref(null);
 const cursos = ref([]);
 const cursoGrupo = ref(null);
@@ -122,14 +108,16 @@ const etapaGrupo = ref("");
 const grupoGrupo = ref("");
 const grupos = ref([]);
 
-
-
-import { seleccionarCursoAcademico } from "@/services/schoolBaseServer";
+// Toast
+const isToastOpen = ref(false);
+const toastMessage = ref("");
+const toastColor = ref("success");
 
 let inicializandoCurso = true;
 
-import { watch } from "vue";
-
+// ====================
+// WATCH
+// ====================
 watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
   if (inicializandoCurso) return;
   if (!nuevoCurso || nuevoCurso === cursoAnterior) return;
@@ -143,14 +131,14 @@ watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
     );
 
     await cargarGrupos();
-
   } catch (error) {
     console.error("Error al seleccionar curso académico:", error);
   }
 });
 
-import { obtenerCursosEtapasGrupos } from "@/services/schoolBaseServer";
-
+// ====================
+// FUNCIONES
+// ====================
 const cargarGrupos = async () => {
   try {
     const data = await obtenerCursosEtapasGrupos(
@@ -161,20 +149,11 @@ const cargarGrupos = async () => {
     );
 
     console.log("RAW DATA:", data);
-
     grupos.value = Array.isArray(data) ? data : [];
-
   } catch (error) {
     console.error("Error cargando grupos:", error);
   }
 };
-
-// Variables para el toast
-const isToastOpen = ref(false);
-const toastMessage = ref("");
-const toastColor = ref("success");
-
-import { nextTick } from "vue";
 
 const obtenerCursosAcademicosVista = async () => {
   const data = await obtenerCursosAcademicos(
@@ -185,21 +164,15 @@ const obtenerCursosAcademicosVista = async () => {
 
   cursos.value = data;
 
-  // buscar el curso marcado en BD
   const cursoSeleccionado = data.find(
     (curso) => curso.seleccionado === true
   );
 
   if (cursoSeleccionado) {
-    // ⏳ esperar a que Ionic pinte el select
     await nextTick();
-
-    // 🔥 ahora sí
     cursoElegido.value = cursoSeleccionado.cursoAcademico;
   }
 };
-
-import { crearCursoEtapaGrupo } from "@/services/schoolBaseServer";
 
 const crearGrupo = async () => {
   if (
@@ -243,7 +216,6 @@ const crearGrupo = async () => {
     isToastOpen.value = true;
   }
 };
-import { borrarCursoEtapaGrupo } from "@/services/schoolBaseServer";
 
 const eliminarGrupo = async (grupo) => {
   try {
@@ -270,7 +242,9 @@ const eliminarGrupo = async (grupo) => {
   }
 };
 
-// Ejecutar las funciones iniciales al montar el componente
+// ====================
+// ON MOUNT
+// ====================
 onMounted(async () => {
   await obtenerCursosAcademicosVista();
   await cargarGrupos();
@@ -293,10 +267,9 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-.form-container-table,
-.form-container-table-logs {
-  width: 100%;
-  max-width: 50%;
+.form-container-table {
+  min-width: 1200px;
+  width: fit-content;
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
@@ -307,6 +280,7 @@ onMounted(async () => {
   font-family: "Roboto", sans-serif;
   margin-top: 2%;
 }
+
 
 .form-container-table-logs {
   overflow-x: auto;
@@ -386,7 +360,7 @@ onMounted(async () => {
   border: 2px solid #007bff;
   border-radius: 5px;
   background-color: white;
-  color: #007bff;
+  color: #000000;
   outline: none;
   cursor: pointer;
   transition: border-color 0.3s, box-shadow 0.3s;
@@ -494,6 +468,11 @@ tr:hover td {
   margin-bottom: 5px;
 }
 
+.row label {
+  display: block;
+  margin-bottom: 10px;
+}
+
 .modal-content input {
   width: 100%;
   padding: 10px;
@@ -529,6 +508,11 @@ tr:hover td {
 .title {
   margin: 0;
   font-size: 24px;
+}
+
+.title {
+  text-align: center;
+  width: 100%;
 }
 
 .switch-container {
@@ -679,5 +663,48 @@ input:checked+.slider:before {
     margin-left: 0;
   }
 
+}
+
+/* ===== SECCIONES (RESPIRACIÓN TIPO IONIC) ===== */
+.section {
+  margin-bottom: 25px;
+}
+
+.section.center {
+  display: flex;
+  justify-content: center;
+}
+
+.section .row {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centra horizontalmente */
+}
+/* Filas más limpias */
+.row {
+  margin-bottom: 15px;
+}
+
+/* Botón principal */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #2196f3;
+  border-radius: 6px;
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+/* Centrar switches */
+.switch-container-gestion {
+  margin-left: 0;
+  justify-content: center;
+}
+
+/* Título más aireado */
+.title-container {
+  padding-bottom: 10px;
 }
 </style>
