@@ -9,11 +9,7 @@
       <div class="section">
         <div class="row">
           <select v-model="cursoElegido" class="custom-select">
-            <option
-              v-for="curso in cursos"
-              :key="curso.cursoAcademico"
-              :value="curso.cursoAcademico"
-            >
+            <option v-for="curso in cursos" :key="curso.cursoAcademico" :value="curso.cursoAcademico">
               {{ curso.cursoAcademico }}
             </option>
           </select>
@@ -86,17 +82,110 @@
       </div>
     </div>
   </div>
+
+  <div class="form-wrapper">
+
+    <!-- CREADOR DE ESPACIOS -->
+    <div class="form-container">
+
+      <div class="title-container">
+        <h1 class="title">Creador de espacios</h1>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <label>Nombre:</label>
+          <input type="text" v-model="nombre" />
+        </div>
+      </div>
+
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Sin Docencia</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esConDocencia" />
+            <span class="slider"></span>
+          </label>
+          <span>Con Docencia</span>
+        </div>
+      </div>
+
+      <div class="section center" v-if="esConDocencia">
+        <div class="switch-container-gestion">
+          <span>Fijo</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esDesdoble" />
+            <span class="slider"></span>
+          </label>
+          <span>Desdoble</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <button type="button" class="btn-primary" @click="crearEspacio">
+          Crear
+        </button>
+      </div>
+
+    </div>
+
+    <!-- TABLA DE ESPACIOS -->
+    <div class="form-container-table">
+
+      <div class="title-container">
+        <h1 class="title">Listado de espacios</h1>
+      </div>
+
+      <table v-if="espaciosOrdenados.length > 0">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr v-for="e in espaciosOrdenados" :key="e.nombre + e.tipo">
+            <td>{{ e.nombre }}</td>
+            <td>{{ e.tipo }}</td>
+            <td>
+              <button type="button" class="btn-delete" @click="eliminarEspacio(e)">
+                X
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-else>
+        <span>No hay espacios creados.</span>
+      </div>
+
+    </div>
+  </div>
+
 </template>
 
 <script setup>
-import { schoolBaseServerApiUrl } from "@/environment/apiUrls.ts";
-import { ref, onMounted, watch, nextTick } from "vue";
+import { ref, onMounted, watch, nextTick, computed } from "vue";
 
-import { obtenerCursosAcademicos } from "@/services/schoolBaseServer";
-import { seleccionarCursoAcademico } from "@/services/schoolBaseServer";
-import { obtenerCursosEtapasGrupos } from "@/services/schoolBaseServer";
-import { crearCursoEtapaGrupo } from "@/services/schoolBaseServer";
-import { borrarCursoEtapaGrupo } from "@/services/schoolBaseServer";
+import {
+  obtenerCursosAcademicos,
+  seleccionarCursoAcademico,
+  obtenerCursosEtapasGrupos,
+  crearCursoEtapaGrupo,
+  borrarCursoEtapaGrupo,
+  crearEspacioSinDocencia,
+  crearEspacioDesdoble,
+  crearEspacioFijo,
+  obtenerEspaciosSinDocencia,
+  obtenerEspaciosDesdoble,
+  obtenerEspaciosFijo,
+  borrarEspacioSinDocencia,
+  borrarEspacioDesdoble,
+  borrarEspacioFijo
+} from "@/services/schoolBaseServer";
 
 // ====================
 // VARIABLES
@@ -107,6 +196,17 @@ const cursoGrupo = ref(null);
 const etapaGrupo = ref("");
 const grupoGrupo = ref("");
 const grupos = ref([]);
+const nombre = ref("");
+const esConDocencia = ref(false);
+const esDesdoble = ref(false);
+const espacios = ref([]);
+
+// Ordenar espacios por nombre alfabéticamente.
+const espaciosOrdenados = computed(() => {
+  return [...espacios.value].sort((a, b) =>
+    a.nombre.localeCompare(b.nombre)
+  );
+});
 
 // Toast
 const isToastOpen = ref(false);
@@ -131,6 +231,7 @@ watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
     );
 
     await cargarGrupos();
+    await cargarEspacios();
   } catch (error) {
     console.error("Error al seleccionar curso académico:", error);
   }
@@ -242,12 +343,93 @@ const eliminarGrupo = async (grupo) => {
   }
 };
 
+const crearEspacio = async () => {
+  if (!nombre.value.trim()) return;
+
+  const dto = {
+    cursoAcademico: cursoElegido.value,
+    nombre: nombre.value.trim()
+  };
+
+  try {
+    let tipo = "SIN DOCENCIA";
+
+    if (!esConDocencia.value) {
+      await crearEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
+    } else if (esDesdoble.value) {
+      await crearEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
+      tipo = "DESDOBLE";
+    } else {
+      await crearEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
+      tipo = "FIJO";
+    }
+
+    // 🔥 AÑADIMOS DIRECTAMENTE AL ARRAY
+    espacios.value.push({ nombre: dto.nombre, tipo });
+    espacios.value = [...espacios.value]; // fuerza refresco
+
+    nombre.value = "";
+    esConDocencia.value = false;
+    esDesdoble.value = false;
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+const cargarEspacios = async () => {
+  try {
+    const sinDocencia = await obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoElegido.value);
+    const fijos = await obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoElegido.value);
+    const desdobles = await obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoElegido.value);
+
+    const lista = [];
+
+    sinDocencia.forEach(e => lista.push({ nombre: e.nombre, tipo: "SIN DOCENCIA" }));
+    fijos.forEach(e => lista.push({ nombre: e.nombre, tipo: "FIJO" }));
+    desdobles.forEach(e => lista.push({ nombre: e.nombre, tipo: "DESDOBLE" }));
+
+    espacios.value = [...lista]; //
+
+  } catch (error) {
+    console.error("Error cargando espacios", error);
+  }
+};
+
+const eliminarEspacio = async (espacio) => {
+  try {
+    const dto = {
+      cursoAcademico: cursoElegido.value,
+      nombre: espacio.nombre
+    };
+
+    if (espacio.tipo === "SIN DOCENCIA") {
+      await borrarEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
+    } else if (espacio.tipo === "FIJO") {
+      await borrarEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
+    } else {
+      await borrarEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
+    }
+
+    // 🔥 BORRAMOS DEL ARRAY
+    espacios.value = espacios.value.filter(e =>
+      !(e.nombre === espacio.nombre && e.tipo === espacio.tipo)
+    );
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
 // ====================
 // ON MOUNT
 // ====================
 onMounted(async () => {
   await obtenerCursosAcademicosVista();
   await cargarGrupos();
+  await cargarEspacios();
   inicializandoCurso = false;
 });
 </script>
@@ -678,8 +860,10 @@ input:checked+.slider:before {
 .section .row {
   display: flex;
   flex-direction: column;
-  align-items: center; /* centra horizontalmente */
+  align-items: center;
+  /* centra horizontalmente */
 }
+
 /* Filas más limpias */
 .row {
   margin-bottom: 15px;
