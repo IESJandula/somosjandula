@@ -316,9 +316,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      //actualizarNotificacionesSoloTexto();
-      //notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
-      //setInterval(nextNotificacionesSoloTexto, 5000);
+      actualizarNotificacionesSoloTexto();
+      notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
+      setInterval(nextNotificacionesSoloTexto, 5000);
 
       obtenerNombreYApellidosUsuario().then((userInfo) => {
         userName.value = userInfo.nombre;
