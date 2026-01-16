@@ -103,23 +103,36 @@
         <div class="switch-container-gestion">
           <span>Sin Docencia</span>
           <label class="switch">
-            <input type="checkbox" v-model="esConDocencia" />
+            <input type="checkbox" v-model="esConDocenciaForm" />
             <span class="slider"></span>
           </label>
           <span>Con Docencia</span>
         </div>
       </div>
 
-      <div class="section center" v-if="esConDocencia">
+      <div class="section center" v-if="esConDocenciaForm">
         <div class="switch-container-gestion">
           <span>Fijo</span>
           <label class="switch">
-            <input type="checkbox" v-model="esDesdoble" />
+            <input type="checkbox" v-model="esDesdobleForm" />
             <span class="slider"></span>
           </label>
           <span>Desdoble</span>
         </div>
       </div>
+
+      <div class="section" v-if="esConDocenciaForm && !esDesdobleForm">
+        <div class="row">
+          <label>Grupo:</label>
+          <select v-model="grupoSeleccionado" class="custom-select">
+            <option disabled value="">Selecciona un grupo</option>
+            <option v-for="g in grupos" :key="g.curso + g.etapa + g.grupo" :value="g">
+              {{ g.curso }} {{ g.etapa }} {{ g.grupo }}
+            </option>
+          </select>
+        </div>
+      </div>
+
 
       <div class="section">
         <button type="button" class="btn-primary" @click="crearEspacio">
@@ -134,6 +147,28 @@
 
       <div class="title-container">
         <h1 class="title">Listado de espacios</h1>
+      </div>
+
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Sin Docencia</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esConDocenciaLista" />
+            <span class="slider"></span>
+          </label>
+          <span>Con Docencia</span>
+        </div>
+      </div>
+
+      <div class="section center" v-if="esConDocenciaLista">
+        <div class="switch-container-gestion">
+          <span>Fijo</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esDesdobleLista" />
+            <span class="slider"></span>
+          </label>
+          <span>Desdoble</span>
+        </div>
       </div>
 
       <table v-if="espaciosOrdenados.length > 0">
@@ -196,9 +231,14 @@ const cursoGrupo = ref(null);
 const etapaGrupo = ref("");
 const grupoGrupo = ref("");
 const grupos = ref([]);
+const grupoSeleccionado = ref(null);
 const nombre = ref("");
-const esConDocencia = ref(false);
-const esDesdoble = ref(false);
+// booleanos para los botones de CREAR
+const esConDocenciaForm = ref(false);
+const esDesdobleForm = ref(false);
+// booleanos para los botones de LISTAR
+const esConDocenciaLista = ref(false);
+const esDesdobleLista = ref(false);
 const espacios = ref([]);
 
 // Ordenar espacios por nombre alfabéticamente.
@@ -306,6 +346,7 @@ const crearGrupo = async () => {
     isToastOpen.value = true;
 
     await cargarGrupos();
+    await cargarEspacios();
 
     cursoGrupo.value = null;
     etapaGrupo.value = "";
@@ -336,6 +377,8 @@ const eliminarGrupo = async (grupo) => {
     isToastOpen.value = true;
 
     await cargarGrupos();
+    await cargarEspacios();
+
   } catch (error) {
     toastMessage.value = error.message;
     toastColor.value = "danger";
@@ -354,9 +397,9 @@ const crearEspacio = async () => {
   try {
     let tipo = "SIN DOCENCIA";
 
-    if (!esConDocencia.value) {
+    if (!esConDocenciaForm.value) {
       await crearEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
-    } else if (esDesdoble.value) {
+    } else if (esDesdobleForm.value) {
       await crearEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
       tipo = "DESDOBLE";
     } else {
@@ -369,8 +412,11 @@ const crearEspacio = async () => {
     espacios.value = [...espacios.value]; // fuerza refresco
 
     nombre.value = "";
-    esConDocencia.value = false;
-    esDesdoble.value = false;
+    esConDocenciaForm.value = false;
+    esDesdobleForm.value = false;
+
+    await cargarGrupos();
+    await cargarEspacios();
 
   } catch (error) {
     console.error(error);
@@ -390,7 +436,10 @@ const cargarEspacios = async () => {
     fijos.forEach(e => lista.push({ nombre: e.nombre, tipo: "FIJO" }));
     desdobles.forEach(e => lista.push({ nombre: e.nombre, tipo: "DESDOBLE" }));
 
-    espacios.value = [...lista]; //
+    espacios.value = [...lista];
+
+    await cargarGrupos();
+    await cargarEspacios();
 
   } catch (error) {
     console.error("Error cargando espacios", error);
@@ -412,10 +461,8 @@ const eliminarEspacio = async (espacio) => {
       await borrarEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
     }
 
-    // 🔥 BORRAMOS DEL ARRAY
-    espacios.value = espacios.value.filter(e =>
-      !(e.nombre === espacio.nombre && e.tipo === espacio.tipo)
-    );
+    await cargarGrupos();
+    await cargarEspacios();
 
   } catch (error) {
     console.error(error);
@@ -711,10 +758,11 @@ tr:hover td {
 .switch-container-gestion {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 15px;
   margin-top: 10px;
   margin-bottom: 10px;
-  margin-left: 8%;
+  width: 100%;
 }
 
 .switch-container span {
