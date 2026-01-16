@@ -177,6 +177,9 @@
             <th>Nombre</th>
             <th>Tipo</th>
             <th>Acciones</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Curso</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Etapa</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Grupo</th>
           </tr>
         </thead>
 
@@ -189,7 +192,18 @@
                 X
               </button>
             </td>
+
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.curso ?? "-" }}
+            </td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.etapa ?? "-" }}
+            </td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.grupo ?? "-" }}
+            </td>
           </tr>
+
         </tbody>
       </table>
 
@@ -389,33 +403,52 @@ const eliminarGrupo = async (grupo) => {
 const crearEspacio = async () => {
   if (!nombre.value.trim()) return;
 
-  const dto = {
-    cursoAcademico: cursoElegido.value,
-    nombre: nombre.value.trim()
-  };
-
   try {
-    let tipo = "SIN DOCENCIA";
-
     if (!esConDocenciaForm.value) {
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim()
+      };
+
       await crearEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
-    } else if (esDesdobleForm.value) {
+    }
+    else if (esDesdobleForm.value) {
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim()
+      };
+
       await crearEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
-      tipo = "DESDOBLE";
-    } else {
+    }
+    else {
+      // 🔥 FIJO → aquí va el grupo
+      if (!grupoSeleccionado.value) {
+        toastMessage.value = "Selecciona un grupo";
+        toastColor.value = "danger";
+        isToastOpen.value = true;
+        return;
+      }
+
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim(),
+        curso: grupoSeleccionado.value.curso,
+        etapa: grupoSeleccionado.value.etapa,
+        grupo: grupoSeleccionado.value.grupo
+      };
+
       await crearEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
-      tipo = "FIJO";
     }
 
-    // 🔥 AÑADIMOS DIRECTAMENTE AL ARRAY
-    espacios.value.push({ nombre: dto.nombre, tipo });
-    espacios.value = [...espacios.value]; // fuerza refresco
+    toastMessage.value = "Espacio creado correctamente";
+    toastColor.value = "success";
+    isToastOpen.value = true;
 
     nombre.value = "";
+    grupoSeleccionado.value = null;
     esConDocenciaForm.value = false;
     esDesdobleForm.value = false;
 
-    await cargarGrupos();
     await cargarEspacios();
 
   } catch (error) {
@@ -433,7 +466,13 @@ const cargarEspacios = async () => {
     const lista = [];
 
     sinDocencia.forEach(e => lista.push({ nombre: e.nombre, tipo: "SIN DOCENCIA" }));
-    fijos.forEach(e => lista.push({ nombre: e.nombre, tipo: "FIJO" }));
+    fijos.forEach(e => lista.push({
+      nombre: e.nombre,
+      tipo: "FIJO",
+      curso: e.curso,
+      etapa: e.etapa,
+      grupo: e.grupo
+    }));
     desdobles.forEach(e => lista.push({ nombre: e.nombre, tipo: "DESDOBLE" }));
 
     espacios.value = [...lista];
