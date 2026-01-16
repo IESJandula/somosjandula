@@ -1,5 +1,5 @@
 <template>
-  <div id="djg-main-box">
+  <div class="contenedor-scroll-horizontal" id="djg-main-box">
     <!-- PANEL IZQUIERDO -->
     <div id="panel">
       <!-- Localizador -->
@@ -18,7 +18,7 @@
       </div>
 
       <!-- Plantas -->
-      <div id="contenedor-botones-plantas-box">
+      <div class="scroll-container" id="contenedor-botones-plantas-box">
         <p class="titulo-djg">Mostrar planta.</p>
 
         <div id="contenedor-botones-plantas">
@@ -190,13 +190,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, onBeforeUnmount, onMounted } from 'vue';
-import { obtenerDispositivos } from "@/services/automationsMap";
+import { computed, reactive, ref, onBeforeUnmount, onMounted } from 'vue'
+import { obtenerDispositivos, obtenerCursosAcademicos, obtenerEspaciosFijo, obtenerEspaciosSinDocencia, obtenerEspaciosDesdoble} from '@/services/automationsMap'
 
 // TOAST
-const isToastOpen = ref(false);
-const toastMessage = ref("");
-const toastColor = ref("success");
+const isToastOpen = ref(false)
+const toastMessage = ref('')
+const toastColor = ref('success')
 
 type Planta = 'terrenos' | 'baja' | 'primera' | 'segunda'
 
@@ -222,17 +222,57 @@ const plantaSegundaUrl = '/img/automations/Planta-segunda.png'
 
 // Zonas
 const zonasBaja = [
-  'aula-2ndo-Guia','aula-1ero-Guia-A','aula-1ero-Guia-B','gimnasio','pista-padel',
-  'aula0-11','aula0-9','aula0-7','aula0-5','aula0-3','aula0-1','aula0-2-norte','aula0-2-sur'
+  'aula-2ndo-Guia',
+  'aula-1ero-Guia-A',
+  'aula-1ero-Guia-B',
+  'gimnasio',
+  'pista-padel',
+  'aula0-11',
+  'aula0-9',
+  'aula0-7',
+  'aula0-5',
+  'aula0-3',
+  'aula0-1',
+  'aula0-2-norte',
+  'aula0-2-sur'
 ]
 const zonasPrimera = [
-  'aula1-11','aula1-9','aula1-7','aula1-5','aula1-3','aula1-1','aula1-19','aula1-17',
-  'aula1-15','aula1-13','aula1-2','aula1-4','aula1-6','aula1-8','aula1-10','aula1-12'
+  'aula1-11',
+  'aula1-9',
+  'aula1-7',
+  'aula1-5',
+  'aula1-3',
+  'aula1-1',
+  'aula1-19',
+  'aula1-17',
+  'aula1-15',
+  'aula1-13',
+  'aula1-2',
+  'aula1-4',
+  'aula1-6',
+  'aula1-8',
+  'aula1-10',
+  'aula1-12'
 ]
 const zonasSegunda = [
-  'aula2-11','aula2-13','aula2-9','aula2-7','aula2-5','aula2-3','aula2-1','aula2-23',
-  'aula2-21','aula2-19','aula2-17','aula2-15','aula2-2','aula2-4','aula2-6','aula2-8',
-  'aula2-10','aula2-12'
+  'aula2-11',
+  'aula2-13',
+  'aula2-9',
+  'aula2-7',
+  'aula2-5',
+  'aula2-3',
+  'aula2-1',
+  'aula2-23',
+  'aula2-21',
+  'aula2-19',
+  'aula2-17',
+  'aula2-15',
+  'aula2-2',
+  'aula2-4',
+  'aula2-6',
+  'aula2-8',
+  'aula2-10',
+  'aula2-12'
 ]
 
 // Tipos (catálogo)
@@ -268,13 +308,13 @@ const ZONE_DEVICES: Record<string, ZoneDevice[]> = {
 
 // Labels
 const ZONE_LABELS: Record<string, string> = {
- 'aula-2ndo-Guia': 'Aula 2º - Guía',
+  'aula-2ndo-Guia': 'Aula 2º - Guía',
   'aula-1ero-Guia-A': 'Aula 1º - Guía A',
   'aula-1ero-Guia-B': 'Aula 1º - Guía B',
   gimnasio: 'Gimnasio',
   'pista-padel': 'Pista de pádel',
   'aula0-11': 'Aula 0.11 - 1º BCS-A',
-  'aula0-9': 'Aula 0.9 - Aula de Plasica' ,
+  'aula0-9': 'Aula 0.9 - Aula de Plasica',
   'aula0-7': 'Aula 0.7 - 1º SMR',
   'aula0-5': 'Aula 0.5 - 2º SMR',
   'aula0-3': 'Aula 0.3 - 2º FPB',
@@ -331,10 +371,29 @@ const zoneOptions = computed(() =>
 const selectedZoneId = ref<string>('')
 const selectedZonePlant = ref<Exclude<Planta, 'terrenos'> | null>(null)
 
+/**
+ * ✅ CENTRAR ZONA EN PANTALLA
+ * (funciona para scroll horizontal/vertical del contenedor)
+ */
+const centerZone = (zoneId: string) => {
+  requestAnimationFrame(() => {
+    const el = document.getElementById(zoneId)
+    if (!el) return
+
+    el.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'center'
+    })
+  })
+}
+
 const selectZone = (id: string, plant: Exclude<Planta, 'terrenos'>) => {
   selectedZoneId.value = id
   selectedZonePlant.value = plant
   selectedZoneKey.value = id
+
+  centerZone(id)
 }
 
 const onZoneChange = () => {
@@ -345,6 +404,8 @@ const onZoneChange = () => {
   planta.value = plant
   selectedZoneId.value = id
   selectedZonePlant.value = plant
+
+  centerZone(id)
 }
 
 const clearSelection = () => {
@@ -358,6 +419,11 @@ const clearSelection = () => {
 const setPlant = (p: Planta) => {
   planta.value = p
   tooltip.visible = false
+
+  // si ya hay una zona seleccionada, céntrala al cambiar de planta
+  if (selectedZoneId.value) {
+    centerZone(selectedZoneId.value)
+  }
 }
 
 // Dimensiones
@@ -438,6 +504,11 @@ const advancePlant = () => {
   const next = ROTATION_ORDER[(idx + 1) % ROTATION_ORDER.length]
   planta.value = next
   tooltip.visible = false
+
+  //si hay selección, centra también al rotar
+  if (selectedZoneId.value) {
+    centerZone(selectedZoneId.value)
+  }
 }
 
 const startRotation = (seconds: number) => {
@@ -462,10 +533,19 @@ const stopRotation = () => {
     rotationTimer = null
   }
 }
+const cursoAcademicoActual = async () => {
+  
+   await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen);
+
+};
 
 onMounted(async () => {
   await obtenerDispositivos(toastMessage, toastColor, isToastOpen);
-});
+  await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen);
+  await obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoAcademicoActual);
+  await obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoAcademicoActual);
+  await obtenerEspaciosDesdoble (toastMessage, toastColor, isToastOpen, cursoAcademicoActual)
+})
 
 onBeforeUnmount(() => {
   if (rotationTimer !== null) window.clearInterval(rotationTimer)
@@ -574,8 +654,14 @@ button:hover {
   margin-top: 6px;
 }
 
-.rot-on { color: green; font-weight: 800; }
-.rot-off { color: #c60000; font-weight: 800; }
+.rot-on {
+  color: green;
+  font-weight: 800;
+}
+.rot-off {
+  color: #c60000;
+  font-weight: 800;
+}
 
 .rot-active {
   background-color: rgb(31, 155, 203);
@@ -584,6 +670,11 @@ button:hover {
 }
 
 /* ===== MAPA ===== */
+.contenedor-scroll-horizontal {
+  display: flex;
+  overflow-x: auto;
+}
+
 .contenedor {
   padding: 10px;
 }
