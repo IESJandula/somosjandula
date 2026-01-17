@@ -119,7 +119,7 @@ export const crearEspacioSinDocencia = async (toastMessage, toastColor, isToastO
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
+  return true;
 }
 export const obtenerEspaciosSinDocencia = async (toastMessage, toastColor, isToastOpen, cursoAcademico) =>
 {
@@ -160,7 +160,7 @@ export const borrarEspacioSinDocencia = async (toastMessage, toastColor, isToast
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
+  return true;
 }
 export const crearEspacioFijo = async (toastMessage, toastColor, isToastOpen, espacioFijoDto) =>
 {
@@ -181,7 +181,7 @@ export const crearEspacioFijo = async (toastMessage, toastColor, isToastOpen, es
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
+  return true;
 }
 export const obtenerEspaciosFijo = async (toastMessage, toastColor, isToastOpen, cursoAcademico) =>
 {
@@ -222,7 +222,7 @@ export const borrarEspacioFijo = async (toastMessage, toastColor, isToastOpen, e
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
+  return true;
 }
 export const crearEspacioDesdoble = async (toastMessage, toastColor, isToastOpen, espacioDesdobleDto) =>
 {
@@ -243,7 +243,7 @@ export const crearEspacioDesdoble = async (toastMessage, toastColor, isToastOpen
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
+  return true;
 }
 export const obtenerEspaciosDesdoble = async (toastMessage, toastColor, isToastOpen, cursoAcademico) =>
 {
@@ -284,5 +284,5 @@ export const borrarEspacioDesdoble = async (toastMessage, toastColor, isToastOpe
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
-  return await response.json()
+  return true;
 }

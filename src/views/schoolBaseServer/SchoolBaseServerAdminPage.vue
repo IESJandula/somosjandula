@@ -176,10 +176,10 @@
           <tr>
             <th>Nombre</th>
             <th>Tipo</th>
-            <th>Acciones</th>
             <th v-if="!esDesdobleLista && esConDocenciaLista">Curso</th>
             <th v-if="!esDesdobleLista && esConDocenciaLista">Etapa</th>
             <th v-if="!esDesdobleLista && esConDocenciaLista">Grupo</th>
+            <th>Acciones</th>
           </tr>
         </thead>
 
@@ -187,12 +187,6 @@
           <tr v-for="e in espaciosOrdenados" :key="e.nombre + e.tipo">
             <td>{{ e.nombre }}</td>
             <td>{{ e.tipo }}</td>
-            <td>
-              <button type="button" class="btn-delete" @click="eliminarEspacio(e)">
-                X
-              </button>
-            </td>
-
             <td v-if="!esDesdobleLista && esConDocenciaLista">
               {{ e.curso ?? "-" }}
             </td>
@@ -201,6 +195,11 @@
             </td>
             <td v-if="!esDesdobleLista && esConDocenciaLista">
               {{ e.grupo ?? "-" }}
+            </td>
+            <td>
+              <button type="button" class="btn-delete" @click="eliminarEspacio(e)">
+                X
+              </button>
             </td>
           </tr>
 
@@ -257,7 +256,24 @@ const espacios = ref([]);
 
 // Ordenar espacios por nombre alfabéticamente.
 const espaciosOrdenados = computed(() => {
-  return [...espacios.value].sort((a, b) =>
+  let filtrados = [...espacios.value];
+
+  // SIN DOCENCIA
+  if (!esConDocenciaLista.value) {
+    filtrados = filtrados.filter(e => e.tipo === "SIN DOCENCIA");
+  }
+  // CON DOCENCIA
+  else {
+    if (!esDesdobleLista.value) {
+      // FIJO
+      filtrados = filtrados.filter(e => e.tipo === "FIJO");
+    } else {
+      // DESDOBLE
+      filtrados = filtrados.filter(e => e.tipo === "DESDOBLE");
+    }
+  }
+
+  return filtrados.sort((a, b) =>
     a.nombre.localeCompare(b.nombre)
   );
 });
@@ -303,7 +319,6 @@ const cargarGrupos = async () => {
       cursoElegido.value
     );
 
-    console.log("RAW DATA:", data);
     grupos.value = Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error cargando grupos:", error);
@@ -443,11 +458,6 @@ const crearEspacio = async () => {
     toastMessage.value = "Espacio creado correctamente";
     toastColor.value = "success";
     isToastOpen.value = true;
-
-    nombre.value = "";
-    grupoSeleccionado.value = null;
-    esConDocenciaForm.value = false;
-    esDesdobleForm.value = false;
 
     await cargarEspacios();
 
