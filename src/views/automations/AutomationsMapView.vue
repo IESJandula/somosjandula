@@ -5,6 +5,7 @@
       <!-- Localizador -->
       <div id="panel-selector">
         <label for="selector-zona" class="titulo-djg">Localizador (zona):</label>
+
         <select id="selector-zona" v-model="selectedZoneKey" @change="onZoneChange">
           <option value="">Seleccionar</option>
           <option v-for="opt in zoneOptions" :key="opt.key" :value="opt.key">
@@ -15,6 +16,23 @@
         <button class="btn-secondary" @click="clearSelection" :disabled="!selectedZoneId">
           Quitar selección
         </button>
+      </div>
+
+      <!-- Curso académico -->
+      <div id="panel-curso">
+        <p class="titulo-djg">Curso académico</p>
+
+        <p v-if="loadingCursos">Cargando cursos…</p>
+
+        <template v-else>
+          <select v-model="cursoAcademicoSeleccionado" @change="recargarEspaciosFijos" style="width: 100%; border-radius: 5px; padding: 6px;">
+            <option v-for="c in cursosAcademicos" :key="c.cursoAcademico" :value="c.cursoAcademico">
+              {{ c.cursoAcademico }} <span v-if="c.seleccionado"> (seleccionado)</span>
+            </option>
+          </select>
+        </template>
+
+        <p v-if="loadingEspacios" style="margin-top: 8px;">Cargando espacios fijos…</p>
       </div>
 
       <!-- Plantas -->
@@ -37,29 +55,6 @@
         </div>
       </div>
 
-      <!-- ROTACIÓN: CAMBIA ENTRE PLANOS -->
-      <div id="contenedor-rotacion">
-        <p class="titulo-djg">
-          Rotación:
-          <span :class="rotationEnabled ? 'rot-on' : 'rot-off'">
-            {{ rotationEnabled ? 'Activada' : 'Desactivada' }}
-          </span>
-        </p>
-
-        <div class="rot-times">
-          <button @click="startRotation(3)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 3 }">03s</button>
-          <button @click="startRotation(5)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 5 }">05s</button>
-          <button @click="startRotation(10)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 10 }">10s</button>
-          <button @click="startRotation(15)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 15 }">15s</button>
-          <button @click="startRotation(20)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 20 }">20s</button>
-          <button @click="startRotation(30)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 30 }">30s</button>
-        </div>
-
-        <button class="btn-secondary" @click="stopRotation" :disabled="!rotationEnabled">
-          Desactivar rotación
-        </button>
-      </div>
-
       <!-- Dimensiones -->
       <div id="contenedor-dimensiones">
         <label for="selector-dimensiones" class="titulo-djg">Dimensiones plano.</label>
@@ -78,34 +73,24 @@
         </button>
       </div>
 
-      <!-- INFO (click) -->
+      <!-- INFO -->
       <div id="contenedor-info">
-        <p class="titulo-djg">Dispositivos en la zona</p>
+        <p class="titulo-djg">Zona seleccionada</p>
 
         <p v-if="!selectedZoneId"><span>Seleccione una zona del mapa.</span></p>
 
         <template v-else>
-          <p><strong>Zona:</strong> {{ zoneLabel(selectedZoneId) }}</p>
-          <p><strong>Planta:</strong> {{ selectedZonePlant ?? planta }}</p>
+          <p><strong>Zona:</strong> {{ zoneIdToLocalizadorLabel(selectedZoneId) }}</p>
+          
 
           <hr />
 
-          <p v-if="selectedZoneDevices.length === 0">
-            No hay dispositivos registrados en esta zona.
+          <p v-if="!labelGrupoSeleccionado">
+            Esta zona no tiene (de momento) curso/etapa/grupo asociado en espacios fijos.
           </p>
 
-          <ul v-else class="device-list">
-            <li v-for="d in selectedZoneDevices" :key="d.type" class="device-item">
-              <span class="device-name">
-                {{ DEVICE_TYPES[d.type]?.icon ?? '🔧' }}
-                {{ DEVICE_TYPES[d.type]?.label ?? d.type }}
-              </span>
-              <span class="device-count">{{ d.count }}</span>
-            </li>
-          </ul>
-
-          <p v-if="selectedZoneDevices.length" class="device-total">
-            <strong>Total:</strong> {{ totalDevices }}
+          <p v-else>
+            
           </p>
         </template>
       </div>
@@ -124,11 +109,12 @@
           :id="id"
           class="zona"
           :class="{ 'zone-selected': selectedZoneId === id }"
-          @mouseenter="onZoneEnter($event, id, 'baja')"
-          @mousemove="onZoneMove($event)"
-          @mouseleave="onZoneLeave"
           @click="selectZone(id, 'baja')"
-        />
+        >
+          <span v-if="zonaGrupoLabel(id)" class="zone-text">
+            {{ zonaGrupoLabel(id) }}
+          </span>
+        </div>
       </div>
 
       <!-- PLANTA PRIMERA -->
@@ -139,11 +125,12 @@
           :id="id"
           class="zona"
           :class="{ 'zone-selected': selectedZoneId === id }"
-          @mouseenter="onZoneEnter($event, id, 'primera')"
-          @mousemove="onZoneMove($event)"
-          @mouseleave="onZoneLeave"
           @click="selectZone(id, 'primera')"
-        />
+        >
+          <span v-if="zonaGrupoLabel(id)" class="zone-text">
+            {{ zonaGrupoLabel(id) }}
+          </span>
+        </div>
       </div>
 
       <!-- PLANTA SEGUNDA -->
@@ -154,44 +141,21 @@
           :id="id"
           class="zona"
           :class="{ 'zone-selected': selectedZoneId === id }"
-          @mouseenter="onZoneEnter($event, id, 'segunda')"
-          @mousemove="onZoneMove($event)"
-          @mouseleave="onZoneLeave"
           @click="selectZone(id, 'segunda')"
-        />
-      </div>
-    </div>
-
-    <!-- TOOLTIP GLOBAL -->
-    <div
-      v-if="tooltip.visible"
-      class="tooltip tooltip-fixed"
-      :style="{ left: tooltip.x + 'px', top: tooltip.y + 'px' }"
-    >
-      <div class="tooltip-title">{{ tooltip.title }}</div>
-
-      <div v-if="tooltip.devices.length === 0" class="tooltip-empty">
-        Sin dispositivos registrados.
-      </div>
-
-      <ul v-else class="tooltip-list">
-        <li v-for="d in tooltip.devices" :key="d.type" class="tooltip-item">
-          <span>
-            {{ DEVICE_TYPES[d.type]?.icon ?? '🔧' }}
-            {{ DEVICE_TYPES[d.type]?.label ?? d.type }}
+        >
+          <span v-if="zonaGrupoLabel(id)" class="zone-text">
+            {{ zonaGrupoLabel(id) }}
           </span>
-          <span class="tooltip-count">{{ d.count }}</span>
-        </li>
-      </ul>
-
-      <div v-if="tooltip.devices.length" class="tooltip-footer">Total: {{ tooltipTotal }}</div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, onBeforeUnmount, onMounted } from 'vue'
-import { obtenerDispositivos, obtenerCursosAcademicos, obtenerEspaciosFijo, obtenerEspaciosSinDocencia, obtenerEspaciosDesdoble} from '@/services/automationsMap'
+import { computed, ref, onBeforeUnmount, onMounted } from 'vue'
+import { obtenerCursosAcademicos, obtenerEspaciosFijo } from '@/services/automationsMap'
+
 
 // TOAST
 const isToastOpen = ref(false)
@@ -200,19 +164,6 @@ const toastColor = ref('success')
 
 type Planta = 'terrenos' | 'baja' | 'primera' | 'segunda'
 
-type DeviceType =
-  | 'camera'
-  | 'sensor_temp'
-  | 'sensor_motion'
-  | 'lock'
-  | 'light'
-  | 'signage'
-  | 'router'
-  | 'access_point'
-  | 'projector'
-
-type ZoneDevice = { type: DeviceType; count: number }
-
 const planta = ref<Planta>('baja')
 
 const plantaTerrenosUrl = '/img/automations/Planta-baja-terrenos.png'
@@ -220,7 +171,7 @@ const plantaBajaUrl = '/img/automations/Planta-baja.png'
 const plantaPrimeraUrl = '/img/automations/Planta-primera.png'
 const plantaSegundaUrl = '/img/automations/Planta-segunda.png'
 
-// Zonas
+// Zonas (IDs del mapa)
 const zonasBaja = [
   'aula-2ndo-Guia',
   'aula-1ero-Guia-A',
@@ -275,108 +226,116 @@ const zonasSegunda = [
   'aula2-12'
 ]
 
-// Tipos (catálogo)
-const DEVICE_TYPES: Record<DeviceType, { label: string; icon: string }> = {
-  camera: { label: 'Cámara', icon: '📷' },
-  sensor_temp: { label: 'Sensor de temperatura', icon: '🌡️' },
-  sensor_motion: { label: 'Sensor de movimiento', icon: '🕴️' },
-  lock: { label: 'Cerradura inteligente', icon: '🔒' },
-  light: { label: 'Iluminación', icon: '💡' },
-  signage: { label: 'Cartelería digital', icon: '🖥️' },
-  router: { label: 'Router', icon: '📡' },
-  access_point: { label: 'Punto de acceso', icon: '📶' },
-  projector: { label: 'Proyector', icon: '📽️' }
+// ------------------------------
+// CURSOS ACADÉMICOS
+// ------------------------------
+type CursoAcademicoDto = {
+  cursoAcademico: string
+  seleccionado: boolean | null
 }
 
-// Dispositivos por zona (EJEMPLO)
-const ZONE_DEVICES: Record<string, ZoneDevice[]> = {
-  'aula0-11': [
-    { type: 'access_point', count: 1 },
-    { type: 'projector', count: 1 },
-    { type: 'sensor_motion', count: 1 }
-  ],
-  'aula0-9': [
-    { type: 'camera', count: 1 },
-    { type: 'light', count: 8 }
-  ],
-  gimnasio: [
-    { type: 'camera', count: 2 },
-    { type: 'sensor_motion', count: 2 }
-  ],
-  'pista-padel': [{ type: 'camera', count: 1 }]
+const cursosAcademicos = ref<CursoAcademicoDto[]>([])
+const cursoAcademicoSeleccionado = ref<string>('')
+
+const loadingCursos = ref(false)
+const loadingEspacios = ref(false)
+
+// ------------------------------
+// ESPACIOS FIJOS (DTO)
+// ------------------------------
+type EspacioFijoDto = {
+  cursoAcademico: string
+  nombre: string
+  curso: number | null
+  etapa: string | null
+  grupo: string | null
 }
 
-// Labels
-const ZONE_LABELS: Record<string, string> = {
-  'aula-2ndo-Guia': 'Aula 2º - Guía',
-  'aula-1ero-Guia-A': 'Aula 1º - Guía A',
-  'aula-1ero-Guia-B': 'Aula 1º - Guía B',
-  gimnasio: 'Gimnasio',
-  'pista-padel': 'Pista de pádel',
-  'aula0-11': 'Aula 0.11 - 1º BCS-A',
-  'aula0-9': 'Aula 0.9 - Aula de Plasica',
-  'aula0-7': 'Aula 0.7 - 1º SMR',
-  'aula0-5': 'Aula 0.5 - 2º SMR',
-  'aula0-3': 'Aula 0.3 - 2º FPB',
-  'aula0-1': 'Aula 0.1 - 1º FPB',
-  'aula0-2-norte': 'Aula 0.2 Norte - 3º DIVER',
-  'aula0-2-sur': 'Aula 0.2 Sur - 4º DIVER',
-  'aula1-11': 'Aula 1.11 - Aula-Taller Tecnología',
-  'aula1-9': 'Aula 1.9 - 1º ESO-C',
-  'aula1-7': 'Aula 1.7 - 1º ESO-B',
-  'aula1-5': 'Aula 1.5 - 1º ESO-A',
-  'aula1-3': 'Aula 1.3 - 4º ESO-A',
-  'aula1-1': 'Aula 1.1 - DPT-Orientación',
-  'aula1-19': 'Aula 1.19 - Aula Convivencia',
-  'aula1-17': 'Aula 1.17 - 4º ESO-B',
-  'aula1-15': 'Aula 1.15 - 4º ESO-C',
-  'aula1-13': 'Aula 1.13 - 1º CFGS Mecatrónica',
-  'aula1-2': 'Aula 1.2 - 1º BACH-A',
-  'aula1-4': 'Aula 1.4 - 1º BACH-B',
-  'aula1-6': 'Aula 1.6 - 1º BACH-C',
-  'aula1-8': 'Aula 1.8 - LAB de Ciencias',
-  'aula1-10': 'Aula 1.10 - Aula-Taller TIC',
-  'aula1-12': 'Aula 1.12 - 2º BACH-A',
-  'aula2-11': 'Aula 2.11 - 1º DAM-DAW',
-  'aula2-13': 'Aula 2.13 - 2º DAM-DAW',
-  'aula2-9': 'Aula 2.9 - Informática',
-  'aula2-7': 'Aula 2.7 - 3º ESO-B',
-  'aula2-5': 'Aula 2.5 - 2º ESO-B',
-  'aula2-3': 'Aula 2.3 - 2º ESO-A',
-  'aula2-1': 'Aula 2.1 - 3º DIVER',
-  'aula2-23': 'Aula 2.23 - Aula PT',
-  'aula2-21': 'Aula 2.21 - Aula Convivenvia',
-  'aula2-19': 'Aula 2.19 - 4º DIVER',
-  'aula2-17': 'Aula 2.17 - 2º ESO-C',
-  'aula2-15': 'Aula 2.15 - 3º ESO-A',
-  'aula2-2': 'Aula 2.2 - Desdobles',
-  'aula2-4': 'Aula 2.4 - 2º BACH-D',
-  'aula2-6': 'Aula 2.6 - 2º BACH-C',
-  'aula2-8': 'Aula 2.8 - 2º BACH-B',
-  'aula2-10': 'Aula 2.10 - Taller Radio Audiovisuales',
-  'aula2-12': 'Aula 2.12 - LAB FQ'
-}
-const zoneLabel = (id: string) => ZONE_LABELS[id] ?? id
+const espaciosFijos = ref<EspacioFijoDto[]>([])
 
-// Localizador
+// ------------------------------
+// NORMALIZACIÓN
+// ------------------------------
+
+const normalizarEspacioNombreAZoneId = (nombre: string): string =>
+{
+  // nos quedamos solo con el prefijo "Aula X.Y" si viene con " - ..."
+  const base = nombre.split(' - ')[0].trim() // "Aula 2.13"
+  const m = base.match(/^Aula\s+(\d+)\.(\d+)$/i)
+  if (!m) return ''
+
+  const plantaNum = m[1] // "2"
+  const aulaNum = m[2]   // "13"
+  return `aula${plantaNum}-${aulaNum}`
+}
+// "aula2-15" => "Aula 2.15"
+const zoneIdToAulaNombre = (zoneId: string): string =>
+{
+  const m = zoneId.match(/^aula(\d+)-(\d+)$/i)
+  if (!m) return zoneId
+  return `Aula ${m[1]}.${m[2]}`
+}
+
+// label completo para el localizador:
+// "Aula 2.15 - 3º ESO-A"  ó  "Aula 2.23"
+const zoneIdToLocalizadorLabel = (zoneId: string): string =>
+{
+  const aulaNombre = zoneIdToAulaNombre(zoneId)
+  const grupo = zonaGrupoLabel(zoneId)
+  return grupo ? `${aulaNombre} - ${grupo}` : aulaNombre
+}
+
+// ------------------------------
+// MAPEO zoneId -> "2º ESO-A"
+// ------------------------------
+const zoneIdToGrupoLabel = computed<Record<string, string>>(() =>
+{
+  const map: Record<string, string> = {}
+
+  for (const e of espaciosFijos.value)
+  {
+    const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
+    if (!zoneId) continue
+
+    if (e.curso != null && e.etapa && e.grupo)
+    {
+      map[zoneId] = `${e.curso}º ${e.etapa}-${e.grupo}`
+    }
+  }
+
+  return map
+})
+
+const zonaGrupoLabel = (zoneId: string) =>
+{
+  return zoneIdToGrupoLabel.value[zoneId] ?? ''
+}
+
+// ------------------------------
+// LOCALIZADOR
+// ------------------------------
 const selectedZoneKey = ref<string>('')
 const zoneOptions = computed(() =>
   [...zonasBaja, ...zonasPrimera, ...zonasSegunda].map((id) => ({
     key: id,
-    label: zoneLabel(id)
+    label: zoneIdToLocalizadorLabel(id)
   }))
 )
+
 
 // Selección (click)
 const selectedZoneId = ref<string>('')
 const selectedZonePlant = ref<Exclude<Planta, 'terrenos'> | null>(null)
 
-/**
- * ✅ CENTRAR ZONA EN PANTALLA
- * (funciona para scroll horizontal/vertical del contenedor)
- */
-const centerZone = (zoneId: string) => {
-  requestAnimationFrame(() => {
+const labelGrupoSeleccionado = computed(() =>
+  selectedZoneId.value ? zonaGrupoLabel(selectedZoneId.value) : ''
+)
+
+// Centrar zona
+const centerZone = (zoneId: string) =>
+{
+  requestAnimationFrame(() =>
+  {
     const el = document.getElementById(zoneId)
     if (!el) return
 
@@ -388,15 +347,16 @@ const centerZone = (zoneId: string) => {
   })
 }
 
-const selectZone = (id: string, plant: Exclude<Planta, 'terrenos'>) => {
+const selectZone = (id: string, plant: Exclude<Planta, 'terrenos'>) =>
+{
   selectedZoneId.value = id
   selectedZonePlant.value = plant
   selectedZoneKey.value = id
-
   centerZone(id)
 }
 
-const onZoneChange = () => {
+const onZoneChange = () =>
+{
   const id = selectedZoneKey.value
   if (!id) return
 
@@ -404,29 +364,26 @@ const onZoneChange = () => {
   planta.value = plant
   selectedZoneId.value = id
   selectedZonePlant.value = plant
-
   centerZone(id)
 }
 
-const clearSelection = () => {
+const clearSelection = () =>
+{
   selectedZoneId.value = ''
   selectedZonePlant.value = null
   selectedZoneKey.value = ''
-  tooltip.visible = false
 }
 
-// Cambiar planta (manual)
-const setPlant = (p: Planta) => {
+// Cambiar planta
+const setPlant = (p: Planta) =>
+{
   planta.value = p
-  tooltip.visible = false
-
-  // si ya hay una zona seleccionada, céntrala al cambiar de planta
-  if (selectedZoneId.value) {
-    centerZone(selectedZoneId.value)
-  }
+  if (selectedZoneId.value) centerZone(selectedZoneId.value)
 }
 
-// Dimensiones
+// ------------------------------
+// DIMENSIONES
+// ------------------------------
 const DIMENSIONS: Record<string, { w: number; h: number }> = {
   res1: { w: 936, h: 662 },
   res2: { w: 1100, h: 777 },
@@ -439,12 +396,14 @@ const selectedDimensionKey = ref<keyof typeof DIMENSIONS>('res3')
 const mapWidth = ref(DIMENSIONS.res3.w)
 const mapHeight = ref(DIMENSIONS.res3.h)
 
-const applyDimensions = () => {
+const applyDimensions = () =>
+{
   const dim = DIMENSIONS[selectedDimensionKey.value]
   mapWidth.value = dim.w
   mapHeight.value = dim.h
 }
-const resetDimensions = () => {
+const resetDimensions = () =>
+{
   selectedDimensionKey.value = 'res3'
   applyDimensions()
 }
@@ -455,104 +414,93 @@ const mapStyle = (imgUrl: string) =>
     backgroundImage: `url('${imgUrl}')`
   }) as const
 
-// Panel
-const selectedZoneDevices = computed<ZoneDevice[]>(() =>
-  selectedZoneId.value ? ZONE_DEVICES[selectedZoneId.value] ?? [] : []
-)
-const totalDevices = computed(() => selectedZoneDevices.value.reduce((a, d) => a + d.count, 0))
+// ------------------------------
+// CARGA DATOS (SOLO FIJOS)
+// ------------------------------
+const cargarCursosYEspaciosFijos = async () =>
+{
+  loadingCursos.value = true
+  loadingEspacios.value = true
 
-// Tooltip GLOBAL con coordenadas de pantalla
-const tooltip = reactive({
-  visible: false,
-  x: 0,
-  y: 0,
-  title: '',
-  devices: [] as ZoneDevice[]
-})
-const tooltipTotal = computed(() => tooltip.devices.reduce((a, d) => a + d.count, 0))
+  try
+  {
+    const cursos = await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen)
+    cursosAcademicos.value = cursos as any
 
-const setTooltipPos = (evt: MouseEvent) => {
-  tooltip.x = evt.clientX + 12
-  tooltip.y = evt.clientY + 12
-}
+    const sel = cursosAcademicos.value.find(c => c.seleccionado)
+    cursoAcademicoSeleccionado.value = sel?.cursoAcademico ?? cursosAcademicos.value[0]?.cursoAcademico ?? ''
 
-const onZoneEnter = (evt: MouseEvent, zoneId: string, _plant: Exclude<Planta, 'terrenos'>) => {
-  tooltip.visible = true
-  tooltip.title = zoneLabel(zoneId)
-  tooltip.devices = ZONE_DEVICES[zoneId] ?? []
-  setTooltipPos(evt)
-}
+    if (!cursoAcademicoSeleccionado.value)
+    {
+      throw new Error('No hay cursos académicos disponibles')
+    }
 
-const onZoneMove = (evt: MouseEvent) => {
-  if (!tooltip.visible) return
-  setTooltipPos(evt)
-}
+    espaciosFijos.value = await obtenerEspaciosFijo(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      cursoAcademicoSeleccionado.value
+    ) as any
 
-const onZoneLeave = () => {
-  tooltip.visible = false
-}
-
-// ROTACIÓN: VA CAMBIANDO ENTRE PLANOS
-const rotationEnabled = ref(false)
-const rotationSeconds = ref(10)
-let rotationTimer: number | null = null
-
-const ROTATION_ORDER: Planta[] = ['terrenos', 'baja', 'primera', 'segunda']
-
-const advancePlant = () => {
-  const idx = ROTATION_ORDER.indexOf(planta.value)
-  const next = ROTATION_ORDER[(idx + 1) % ROTATION_ORDER.length]
-  planta.value = next
-  tooltip.visible = false
-
-  //si hay selección, centra también al rotar
-  if (selectedZoneId.value) {
-    centerZone(selectedZoneId.value)
+    console.log('CURSO ACADÉMICO:', cursoAcademicoSeleccionado.value)
+    console.log('ESPACIOS FIJOS:', espaciosFijos.value)
+  }
+  catch (e: any)
+  {
+    toastMessage.value = e?.message ?? 'Error cargando datos'
+    toastColor.value = 'danger'
+    isToastOpen.value = true
+  }
+  finally
+  {
+    loadingCursos.value = false
+    loadingEspacios.value = false
   }
 }
 
-const startRotation = (seconds: number) => {
-  rotationSeconds.value = seconds
-  rotationEnabled.value = true
+const recargarEspaciosFijos = async () =>
+{
+  if (!cursoAcademicoSeleccionado.value) return
 
-  if (rotationTimer !== null) {
-    window.clearInterval(rotationTimer)
-    rotationTimer = null
+  loadingEspacios.value = true
+  try
+  {
+    espaciosFijos.value = await obtenerEspaciosFijo(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      cursoAcademicoSeleccionado.value
+    ) as any
   }
-
-  rotationTimer = window.setInterval(() => {
-    if (!rotationEnabled.value) return
-    advancePlant()
-  }, rotationSeconds.value * 1000)
-}
-
-const stopRotation = () => {
-  rotationEnabled.value = false
-  if (rotationTimer !== null) {
-    window.clearInterval(rotationTimer)
-    rotationTimer = null
+  catch (e: any)
+  {
+    toastMessage.value = e?.message ?? 'Error recargando espacios fijos'
+    toastColor.value = 'danger'
+    isToastOpen.value = true
+  }
+  finally
+  {
+    loadingEspacios.value = false
   }
 }
-const cursoAcademicoActual = async () => {
-  
-   await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen);
-
-};
-
-onMounted(async () => {
-  await obtenerDispositivos(toastMessage, toastColor, isToastOpen);
-  await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen);
-  await obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoAcademicoActual);
-  await obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoAcademicoActual);
-  await obtenerEspaciosDesdoble (toastMessage, toastColor, isToastOpen, cursoAcademicoActual)
-})
-
-onBeforeUnmount(() => {
-  if (rotationTimer !== null) window.clearInterval(rotationTimer)
-})
 
 // init
 applyDimensions()
+
+onMounted(async () =>
+{
+  await cargarCursosYEspaciosFijos()
+
+  // ❌ comentado a propósito
+  // await obtenerDispositivos(...)
+  // await obtenerEspaciosDesdoble(...)
+  // await obtenerEspaciosSinDocencia(...)
+})
+
+onBeforeUnmount(() =>
+{
+  // nada especial de momento
+})
 </script>
 
 <style scoped>
@@ -628,47 +576,6 @@ button:hover {
   cursor: not-allowed;
 }
 
-.device-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.device-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px dashed #ddd;
-}
-
-.device-total {
-  margin-top: 8px;
-}
-
-/* ===== ROTACIÓN ===== */
-#contenedor-rotacion .rot-times {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: center;
-  margin-top: 6px;
-}
-
-.rot-on {
-  color: green;
-  font-weight: 800;
-}
-.rot-off {
-  color: #c60000;
-  font-weight: 800;
-}
-
-.rot-active {
-  background-color: rgb(31, 155, 203);
-  color: #fff;
-  font-weight: 800;
-}
-
 /* ===== MAPA ===== */
 .contenedor-scroll-horizontal {
   display: flex;
@@ -693,6 +600,10 @@ button:hover {
   background-color: rgba(255, 255, 0, 0.26);
   border: 1px solid rgb(0, 0, 0);
   cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .zona:hover {
@@ -704,56 +615,15 @@ button:hover {
   box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.85);
 }
 
-/* Tooltip GLOBAL */
-.tooltip {
-  z-index: 999999;
-  min-width: 220px;
-  max-width: 320px;
-  background: rgba(216, 247, 255, 0.97);
-  border: 2px solid #2b2b2b;
-  border-radius: 8px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
-  padding: 10px;
-  pointer-events: none;
-}
-
-.tooltip-fixed {
-  position: fixed;
-}
-
-.tooltip-title {
+/* Texto dentro de cada zona */
+.zone-text {
+  font-size: 12px;
   font-weight: 800;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.35);
-  padding-bottom: 6px;
-  margin-bottom: 6px;
-}
-
-.tooltip-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.tooltip-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 3px 0;
-}
-
-.tooltip-count {
-  font-weight: 700;
-}
-
-.tooltip-footer {
-  margin-top: 8px;
-  border-top: 2px solid rgba(0, 0, 0, 0.35);
-  padding-top: 6px;
-  font-weight: 700;
-}
-
-.tooltip-empty {
-  font-style: italic;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.25);
+  pointer-events: none; /* para que el click siga siendo de la zona */
 }
 
 /* PLANTA BAJA */
