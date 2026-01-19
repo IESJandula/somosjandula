@@ -1,23 +1,4 @@
 <template>
-  <div class="form-wrapper">
-    <!-- Elección de curso académico-->
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Elige curso académico</h1>
-      </div>
-
-      <div class="section">
-        <div class="row">
-          <select v-model="cursoElegido" class="custom-select">
-            <option v-for="curso in cursos" :key="curso.cursoAcademico" :value="curso.cursoAcademico">
-              {{ curso.cursoAcademico }}
-            </option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Creador de grupos -->
   <div class="form-wrapper">
     <div class="form-container">
@@ -79,6 +60,25 @@
 
       <div v-else>
         <span>No hay grupos creados.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-wrapper">
+    <!-- Elección de curso académico-->
+    <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Elige curso académico</h1>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <select v-model="cursoElegido" class="custom-select">
+            <option v-for="curso in cursos" :key="curso.cursoAcademico" :value="curso.cursoAcademico">
+              {{ curso.cursoAcademico }}
+            </option>
+          </select>
+        </div>
       </div>
     </div>
   </div>
