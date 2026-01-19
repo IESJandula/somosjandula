@@ -1,6 +1,6 @@
 import { eventsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
-import { crearToast } from '@/utils/toast.js';
+import { crearToast } from "@/utils/toast.js";
 
 export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) => {
   try {
@@ -11,40 +11,40 @@ export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) => {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
+        'Accept': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorMessage = await response.text();
-      throw new Error(errorMessage || 'Error al obtener eventos');
+      const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+      throw new Error(errorData.message);
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
 
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al obtener eventos");
-    throw error;
   }
 };
 
-export const crearEvento = async (toastMessage, toastColor, isToastOpen, titulo, nombre, fechaInicio, fechaFin) => {
+export const crearEvento = async (toastMessage, toastColor, isToastOpen, titulo, nombre, fechaInicio, fechaFin, usuarioNombre, usuarioApellidos, usuarioEmail) => {
 try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-      const payload = {titulo, nombre, fechaInicio, fechaFin };
+    
+    const payload = { titulo, nombre, fechaInicio, fechaFin} ;
     const response = await fetch(`${eventsApiUrl}/events/manager/`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${tokenPropio}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        'Authorization': `Bearer ${tokenPropio}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify(payload), // ✅ CLAVE
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message);
+      const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+      throw new Error(errorData.message || 'Error al crear evento');
     }
 
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Evento creado correctamente");
@@ -56,7 +56,8 @@ try {
 
 };
 
-export const borrarEvento = async (toastMessage, toastColor, isToastOpen, titulo, fechaInicio, fechaFin) => {
+export const borrarEvento = async (toastMessage, toastColor, isToastOpen, titulo, fechaInicio) => 
+  {
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -65,13 +66,12 @@ export const borrarEvento = async (toastMessage, toastColor, isToastOpen, titulo
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
         'titulo': titulo,
-        'fechaInicio': fechaInicio.toString(),
-        'fechaFin': fechaFin.toString(),
+        'fechaInicio': fechaInicio.toString()
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+      const errorData = await response.json();
       throw new Error(errorData.message);
     }
 
@@ -130,7 +130,7 @@ export const obtenerCategorias = async (toastMessage, toastColor, isToastOpen) =
       throw new Error(errorData.message);
     }
 
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categorías obtenidas correctamente");
+
 
     return await response.json();
 
@@ -143,22 +143,20 @@ export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nom
  try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${eventsApiUrl}/events/categories/`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
+    const response = await fetch(
+      `${eventsApiUrl}/events/categories/${encodeURIComponent(nombre)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
+        },
+      }
+    );
+      if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
       throw new Error(errorData.message);
     }
-
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categorías obtenidas correctamente");
-
-    return await response.json();
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría eliminada correctamente");
 
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al obtener categorías");

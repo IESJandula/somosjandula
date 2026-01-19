@@ -3,117 +3,36 @@
     <div class="top-row">
       <div class="left-top-container">
         <div class="form-container">
-          <h2 class="window-title">CREAR CATEGORÍA</h2>
+          <h2 class="window-title">CREAR HUELGA</h2>
 
           <div class="form-grid">
             <div class="form-row">
               <label class="form-label">NOMBRE:</label>
-              <input type="text" v-model="nuevaCategoria.nombre" class="form-input" placeholder="" />
-            </div>
-
-            <div class="form-row">
-              <label class="form-label">COLOR:</label>
-              <div class="color-selection">
-                <select v-model="nuevaCategoria.color" class="form-select">
-                  <option value="">Seleccione color</option>
-                  <option v-for="color in coloresDisponibles" :key="color.value" :value="color.value">
-                    {{ color.nombre }}
-                  </option>
-                </select>
-                <div v-if="nuevaCategoria.color" class="color-preview"
-                  :style="{ backgroundColor: nuevaCategoria.color }"></div>
-              </div>
-            </div>
-
-            <div class="top-row">
-              <button type="button" @click="agregarCategoriaFn" class="btn-enviar">
-                ENVIAR
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="right-top-container">
-        <div class="form-container">
-          <h2 class="window-title">LISTA DE CATEGORÍAS</h2>
-
-          <div class="categorias-table-container">
-            <div class="table-wrapper">
-              <table class="categorias-table">
-                <thead>
-                  <tr>
-                    <th>NOMBRE</th>
-                    <th>COLOR</th>
-                    <th>ACCIONES</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="categoria in categorias" :key="categoria.nombre">
-                    <td>{{ categoria.nombre }}</td>
-                    <td>
-                      <div class="color-cell">
-                        <span class="color-display" :style="{ backgroundColor: categoria.color }"></span>
-                        <span class="color-name">{{ getColorName(categoria.color) }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <button @click="eliminarCategoriaFn(categoria)" class="btn-eliminar-cat">
-                        Eliminar
-                      </button>
-
-                    </td>
-                  </tr>
-                  <tr v-if="categorias.length === 0">
-                    <td colspan="3" class="no-data">No hay categorías creadas</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="bottom-row">
-      <div class="left-bottom-container">
-        <div class="form-container usuario-container">
-          <div class="form-grid">
-            <div class="form-row">
-              <label class="form-label">TÍTULO:</label>
-              <input type="text" v-model="evento.titulo" class="form-input" required />
-            </div>
-
-            <div class="form-row">
-              <label class="form-label">CATEGORIA:</label>
-              <select v-model="evento.nombre" class="form-select" required>
-                <option value="">Seleccione</option>
-                <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
-                  {{ categoria.nombre }}
-                </option>
-              </select>
+              <input type="text" v-model="nuevaHuelga.nombre" class="form-input" placeholder="" />
             </div>
 
             <div class="form-row">
               <label class="form-label">FECHA INICIO:</label>
-              <input type="date" v-model="evento.fechaInicio" class="form-input" required />
+              <input type="date" v-model="huelga.fechaInicio" class="form-input" required />
             </div>
 
             <div class="form-row combined-row">
               <div class="checkbox-wrapper">
-                <input type="checkbox" id="eventoMismoDia" v-model="eventoMismoDia" @change="toggleMismoDia"
+                <input type="checkbox" id="huelgaMismoDia" v-model="huelgaMismoDia" @change="toggleMismoDia"
                   class="form-checkbox" />
-                <label for="eventoMismoDia" class="checkbox-label">
-                  EVENTO FINALIZA ESE DIA
+                <label for="huelgaMismoDia" class="checkbox-label">
+                  HUELGA FINALIZA ESE DIA
                 </label>
               </div>
 
-              <div v-if="!eventoMismoDia" class="fecha-fin-wrapper">
+              <div v-if="!huelgaMismoDia" class="fecha-fin-wrapper">
                 <label class="form-label">FECHA FIN:</label>
-                <input type="date" v-model="evento.fechaFin" class="form-input" :required="!eventoMismoDia" />
+                <input type="date" v-model="evento.fechaFin" class="form-input" :required="!huelgaMismoDia" />
               </div>
             </div>
 
             <div class="button-row">
-              <button type="button" @click="crearEventoFn" class="btn-enviar">
+              <button type="button" @click="crearHuelgaFn" class="btn-enviar">
                 ENVIAR
               </button>
             </div>
@@ -122,31 +41,27 @@
       </div>
       <div class="right-bottom-container">
         <div class="form-container-table table-container">
-          <h2 class="window-title">CALENDARIO DE EVENTOS</h2>
+          <h2 class="window-title">CALENDARIO DE HUELGAS</h2>
 
           <div class="table-wrapper">
             <table class="events-table">
               <thead>
                 <tr>
                   <th>TÍTULO</th>
-                  <th>CATEGORIA</th>
                   <th>FECHA INICIO</th>
                   <th>FECHA FIN</th>
-                  <th>NOMBRE DEL USUARIO</th>
-                  <th>APELLIDOS DEL USUARIO</th>
-                  <th>EMAIL DEL USUARIO</th>
+                  <th>ESTADO</th>
+                  <th>Nº PARTICIPANTES</th>
                   <th>ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="eventoItem in eventos" :key="`${eventoItem.titulo}-${eventoItem.fechaInicio}`">
                   <td>{{ eventoItem.titulo }}</td>
-                  <td>{{ eventoItem.nombre }}</td>
                   <td>{{ formatFecha(eventoItem.fechaInicio) }}</td>
                   <td>{{ formatFecha(eventoItem.fechaFin) }}</td>
-                  <td>{{ eventoItem.usuarioNombre }}</td>
-                  <td>{{ eventoItem.usuarioApellidos }}</td>
-                  <td>{{ eventoItem.usuarioEmail }}</td>
+                  <td>{{ eventoItem.nombre }}</td>
+
                   <td>
                     <button @click="borrarEventoFn(eventoItem)" class="btn-eliminar">
                       Eliminar
@@ -165,6 +80,7 @@
   </div>
     <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+
 </template>
 
 <script setup lang="ts">
@@ -187,9 +103,6 @@ interface Evento {
   fechaInicio: number;
   fechaFin: number;
   nombre: string;
-  usuarioNombre: string;
-  usuarioApellidos: string;
-  usuarioEmail: string;
 }
 
 interface EventoForm {
@@ -197,9 +110,6 @@ interface EventoForm {
   fechaInicio: string;
   fechaFin: string;
   nombre: string;
-  usuarioNombre: string;
-  usuarioApellidos: string;
-  usuarioEmail: string;
 }
 
 interface Categoria {
@@ -221,10 +131,7 @@ const evento = ref<EventoForm>({
   titulo: "",
   nombre: "",
   fechaInicio: "",
-  fechaFin: "",
-  usuarioNombre: "",
-  usuarioApellidos: "",
-  usuarioEmail: ""
+  fechaFin: ""
 });
 
 // Nueva categoría
@@ -252,7 +159,7 @@ async function cargarEventos() {
 
 // Cargar todas las categorías
 async function cargarCategorias() {
-  categorias.value = await obtenerCategorias(toastMessage, toastColor, isToastOpen);
+    categorias.value = await obtenerCategorias(toastMessage, toastColor, isToastOpen);
 }
 
 // Crear evento
@@ -288,8 +195,6 @@ async function crearEventoFn() {
       fechaInicio: fechaInicioLong,
       fechaFin: fechaFinLong,
       nombre: evento.value.nombre,
-      usuarioNombre : evento.value.usuarioNombre,
-      usuarioEmail : evento.value.usuarioEmail
     });
 
     await crearEvento(
@@ -299,10 +204,8 @@ async function crearEventoFn() {
       evento.value.titulo,
       evento.value.nombre,
       fechaInicioLong,
-      fechaFinLong,
-      evento.value.usuarioNombre,
-      evento.value.usuarioApellidos,
-      evento.value.usuarioEmail,
+      fechaFinLong
+
     );
 
     console.log("Evento creado, recargando lista");
@@ -312,15 +215,12 @@ async function crearEventoFn() {
       titulo: "",
       nombre: "",
       fechaInicio: "",
-      fechaFin: "",
-      usuarioNombre: "",
-      usuarioApellidos: "",
-      usuarioEmail: ""
+      fechaFin: ""
     };
 
 
     // Limpiar formulario
-    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombre: "", usuarioNombre: "", usuarioApellidos: "", usuarioEmail: "" };
+    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombre: "" };
     eventoMismoDia.value = false;
 
     // Recargar lista de eventos

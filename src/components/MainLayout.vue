@@ -17,6 +17,7 @@
             <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/eventsSchool/admin')">Eventos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
           </ion-list>
         </ion-list>
 

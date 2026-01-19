@@ -11,14 +11,16 @@ export declare function crearEvento( toastMessage: Ref<string>,
                                       nombre: string,
                                       fechaInicio: number,
                                       fechaFin: number,
+                                      usuarioNombre: string,
+                                      usuarioApellidos: string,
+                                      usuarioEmail: string
                                     ): Promise<string>;
 
 export declare function borrarEvento( toastMessage: Ref<string>,
                                       toastColor: Ref<string>,
                                       isToastOpen: Ref<boolean>,
                                       titulo: string,
-                                      fechaInicio: number,
-                                      fechaFin: number
+                                      fechaInicio: number
                                     ): Promise<void>;
 export declare function crearCategoria( toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
