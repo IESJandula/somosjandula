@@ -175,7 +175,6 @@
         <thead>
           <tr>
             <th>Nombre</th>
-            <th>Tipo</th>
             <th v-if="!esDesdobleLista && esConDocenciaLista">Curso</th>
             <th v-if="!esDesdobleLista && esConDocenciaLista">Etapa</th>
             <th v-if="!esDesdobleLista && esConDocenciaLista">Grupo</th>
@@ -186,7 +185,6 @@
         <tbody>
           <tr v-for="e in espaciosOrdenados" :key="e.nombre + e.tipo">
             <td>{{ e.nombre }}</td>
-            <td>{{ e.tipo }}</td>
             <td v-if="!esDesdobleLista && esConDocenciaLista">
               {{ e.curso ?? "-" }}
             </td>
@@ -546,14 +544,15 @@ onMounted(async () => {
 }
 
 .form-container-table {
-  min-width: 1200px;
-  width: fit-content;
+  min-width: 700px; 
+  width: 90%; 
+  max-width: 900px; 
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
   border-radius: 10px;
   box-sizing: border-box;
-  padding: 20px 30px;
+  padding: 12px 15px;
   margin: auto;
   font-family: "Roboto", sans-serif;
   margin-top: 2%;
@@ -656,9 +655,10 @@ table {
   background-color: #f8f9fa;
   color: #1a1a1a;
   border: 2px solid #007bff;
-  margin-top: 20px;
+  margin-top: 10px;
   border-radius: 5px;
   overflow: hidden;
+  font-size: 13px; 
 }
 
 span {
@@ -670,21 +670,18 @@ span {
 th,
 td {
   border: 2px solid #007bff;
-  padding: 10px;
+  padding: 6px;
 }
 
 td {
-  height: 50px;
-  width: 150px;
-  /* Establece un ancho fijo */
+  height: 38px;
+  width: 120px; 
   background-color: #e9f5ff;
   text-overflow: ellipsis;
-  /* Para manejar contenido largo */
   overflow: hidden;
-  /* Oculta cualquier contenido que desborde */
   word-wrap: break-word;
-  /* Permite que el texto largo se divida y se ajuste */
 }
+
 
 th {
   background-color: #007bff;
@@ -988,4 +985,20 @@ input:checked+.slider:before {
 .title-container {
   padding-bottom: 10px;
 }
+
+/* SCROLL INTERNO PARA TABLAS   */
+table tbody {
+  display: block;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+table thead,
+table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
 </style>
