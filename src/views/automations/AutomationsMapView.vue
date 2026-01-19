@@ -216,7 +216,6 @@ const zonasBaja = [
   'biblioteca',
   'sala-profesores',
   'salon-actos',
-  'escenario',
   'direccion',
   'jefatura-estudios',
   'taller-lince',
@@ -238,7 +237,9 @@ const zonasPrimera = [
   'aula1-6',
   'aula1-8',
   'aula1-10',
-  'aula1-12'
+  'aula1-12',
+  'aseos1-m',
+  'aseos1-f'
 ]
 const zonasSegunda = [
   'aula2-11',
@@ -258,7 +259,9 @@ const zonasSegunda = [
   'aula2-6',
   'aula2-8',
   'aula2-10',
-  'aula2-12'
+  'aula2-12',
+  'aseos2-m',
+  'aseos2-f'
 ]
 
 // ------------------------------
@@ -349,16 +352,19 @@ const zoneIdToLocalizadorLabel = (zoneId: string): string =>
       'aseos-f': 'Aseos (F)',
       'aseos-m': 'Aseos (M)',
       'conserjeria': 'Conserjería',
-      'ampa-visitas': 'AMPA y visitas',
+      'ampa-visitas': 'Visitas',
       'secretaria': 'Secretaría',
       'biblioteca': 'Biblioteca',
       'sala-profesores': 'Sala de profesores',
       'salon-actos': 'Salón de actos',
-      'escenario': 'Escenario',
       'direccion': 'Dirección',
       'jefatura-estudios': 'Jefatura de estudios',
       'taller-lince': 'Taller Lince',
       'aseos-central': 'Aseos',
+      'aseos1-m': 'Aseos (M)',
+      'aseos1-f': 'Aseos (F)',
+      'aseos2-m': 'Aseos (M)',
+      'aseos2-f': 'Aseos (F)'
 
     }
 
@@ -740,12 +746,11 @@ button:hover {
 }
 
 .caja-mapa {
-  border: 3px solid rgba(0, 0, 0, 0.35);
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
   position: relative;
-  overflow: visible;
+  border: 3px solid rgba(0,0,0,0.35);
+  background-repeat: no-repeat;
+  background-position: top left;
+  background-size: 100% 100%;
 }
 
 .zona {
@@ -821,32 +826,23 @@ button:hover {
 #aula0-1 { height: 10%; width: 5.5%; top: 61.6%; right: 17.7%; }
 #aula0-2-norte { height: 13.2%; width: 4.5%; top: 72.8%; left: 12%; }
 #aula0-2-sur { height: 13.2%; width: 4.5%; top: 72.8%; left: 16.7%; }
-/* ✅ ZONAS FIJAS - PLANTA BAJA (AJUSTADAS A LA IMAGEN) */
 
-/* Franja inferior (junto a Aula 0.2 norte/sur) */
-#caldera    { top: 72.8%; left: 21.5%; width: 4.35%; height: 13.2%; }
-#cafeteria  { top: 72.8%; left: 25.9%; width: 6.93%; height: 13.2%; }
-#aseos-f    { top: 72.8%; left: 32.8%; width: 3.52%; height: 13.2%; }
-#aseos-m    { top: 72.8%; left: 36.3%; width: 3.52%; height: 13.2%; }
+/* ===== ZONAS FIJAS PLANTA BAJA ===== */
 
-/* AMPA / Conserjería (bloque pequeño junto al cruce) */
-#ampa-visitas { top: 58.4%; left: 35.8%; width: 4.20%; height: 4.01%; }
-#conserjeria  { top: 62.4%; left: 35.8%; width: 4.20%; height: 9.67%; }
-
-/* Banda central inferior (Secretaría / Biblioteca / Sala de profesores / Aseos pasillo) */
-#secretaria      { top: 58.1%; left: 40.0%; width: 10.84%; height: 13.88%; }
-#biblioteca      { top: 58.1%; left: 50.9%; width: 11.82%; height: 13.88%; }
-#sala-profesores { top: 58.1%; left: 62.7%; width: 9.33%;  height: 13.88%; }
-#aseos-central   { top: 58.1%; left: 72.0%; width: 4.39%;  height: 13.88%; }
-
-/* Banda superior (Salón de actos / Escenario / Dirección / Jefatura / Taller Lince) */
-#salon-actos       { top: 36.5%; left: 40.0%; width: 24.66%; height: 11.53%; }
-#escenario         { top: 36.5%; left: 64.7%; width: 1.66%;  height: 11.53%; }
-#direccion         { top: 36.5%; left: 66.4%; width: 11.38%; height: 11.53%; }
-#jefatura-estudios { top: 36.5%; left: 77.7%; width: 7.13%;  height: 11.53%; }
-#taller-lince      { top: 36.5%; left: 84.9%; width: 2.29%;  height: 11.53%; }
-
-
+#caldera {height:10%;width:4.6%;top:76%;left:21.3%;}
+#cafeteria {height:10%;width:7%;top:76%;left:25.8%;}
+#aseos-f {height:10%;width:3.5%;top:76%;left:33%;}
+#aseos-m {height:10%;width:3.5%;top:76%;left:36.5%;}
+#ampa-visitas {height:4%;width:4.8%;top:61.9%;left:35.3%;}
+#conserjeria {height:6.5%;width:4.8%;top:65.9%;left:35.3%;}
+#secretaria {height:10.4%;width:6.8%;top:61.5%;left:44.2%;}
+#biblioteca {height:10.4%;width:11.8%;top:61.5%;left:50.7%;}
+#sala-profesores {height:10.4%;width:9.4%;top:61.5%;left:62.8%;}
+#aseos-central {height:10.4%;width:4.4%;top:61.5%;left:72.2%;}
+#salon-actos {height:10.2%;width:23.4%;top:47.9%;left:44.0%;}
+#direccion {height:10.2%;width:4.7%;top:47.9%;left:67.4%;}
+#jefatura-estudios {height:10.2%;width:4.6%;top:47.9%;left:72%;}
+#taller-lince {height:10.2%;width:6.3%;top:47.9%;left:76.6%;}
 
 /* PLANTA PRIMERA */
 #aula1-11 { height: 25.3%; width: 11.3%; top: 10.5%; right: 4.9%; }
@@ -865,6 +861,9 @@ button:hover {
 #aula1-8 { height: 11.3%; width: 11.3%; top: 72.3%; left: 1.3%; }
 #aula1-10 { height: 11.3%; width: 5.5%; top: 72.3%; left: 12.9%; }
 #aula1-12 { height: 11.3%; width: 11.4%; top: 72.3%; left: 18.7%; }
+#aseos1-m {height:11.6%;width:3.2%;top:72.4%;left:30%;}
+#aseos1-f {height:11.6%;width:3.2%;top:72.4%;left:33.2%;}
+
 
 /* PLANTA SEGUNDA */
 #aula2-11 { height: 12.2%; width: 11.3%; top: 9%; right: 4.5%; }
@@ -885,4 +884,6 @@ button:hover {
 #aula2-8 { height: 11.3%; width: 11.3%; top: 70.6%; left: 1.5%; }
 #aula2-10 { height: 11.3%; width: 5.5%; top: 70.6%; left: 13.1%; }
 #aula2-12 { height: 11.3%; width: 11.4%; top: 70.6%; left: 18.9%; }
+#aseos2-m {height:11.6%;width:3.2%;top:70.6%;left:30%;}
+#aseos2-f {height:11.6%;width:3.2%;top:70.6%;left:33.2%;}
 </style>
