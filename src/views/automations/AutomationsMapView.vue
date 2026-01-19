@@ -40,9 +40,6 @@
         <p class="titulo-djg">Mostrar planta.</p>
 
         <div id="contenedor-botones-plantas">
-          <button @click="setPlant('terrenos')" :class="{ 'boton-active': planta === 'terrenos' }">
-            Planta<br />terrenos
-          </button>
           <button @click="setPlant('baja')" :class="{ 'boton-active': planta === 'baja' }">
             Planta<br />baja
           </button>
@@ -54,6 +51,26 @@
           </button>
         </div>
       </div>
+      <!-- ROTACIÓN DE PLANTAS -->
+        <div id="contenedor-rotacion">
+          <p class="titulo-djg">
+            Rotación:
+            <span :class="rotationEnabled ? 'rot-on' : 'rot-off'">
+              {{ rotationEnabled ? 'Activada' : 'Desactivada' }}
+            </span>
+          </p>
+
+          <div class="rot-times">
+            <button @click="startRotation(5)"  :class="{ 'rot-active': rotationEnabled && rotationSeconds === 5 }">05s</button>
+            <button @click="startRotation(15)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 15 }">15s</button>
+            <button @click="startRotation(30)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 30 }">30s</button>
+          </div>
+
+          <button class="btn-secondary" @click="stopRotation" :disabled="!rotationEnabled">
+            Desactivar rotación
+          </button>
+        </div>
+
 
       <!-- Dimensiones -->
       <div id="contenedor-dimensiones">
@@ -98,8 +115,6 @@
 
     <!-- MAPAS -->
     <div class="contenedor">
-      <!-- TERRENOS -->
-      <div v-show="planta === 'terrenos'" class="caja-mapa" :style="mapStyle(plantaTerrenosUrl)"></div>
 
       <!-- PLANTA BAJA -->
       <div v-show="planta === 'baja'" id="planta-baja" class="caja-mapa" :style="mapStyle(plantaBajaUrl)">
@@ -154,7 +169,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount, onMounted } from 'vue'
-import { obtenerCursosAcademicos, obtenerEspaciosFijo } from '@/services/automationsMap'
+import { obtenerCursosAcademicos, obtenerEspaciosFijo, obtenerEspaciosDesdoble, obtenerEspaciosSinDocencia } from '@/services/automationsMap'
 
 
 // TOAST
@@ -162,11 +177,16 @@ const isToastOpen = ref(false)
 const toastMessage = ref('')
 const toastColor = ref('success')
 
-type Planta = 'terrenos' | 'baja' | 'primera' | 'segunda'
+type Planta = 'baja' | 'primera' | 'segunda'
 
 const planta = ref<Planta>('baja')
+const rotationEnabled = ref(false)
+const rotationSeconds = ref(10)
+let rotationTimer: number | null = null
 
-const plantaTerrenosUrl = '/img/automations/Planta-baja-terrenos.png'
+const ROTATION_ORDER: Planta[] = ['baja', 'primera', 'segunda']
+
+
 const plantaBajaUrl = '/img/automations/Planta-baja.png'
 const plantaPrimeraUrl = '/img/automations/Planta-primera.png'
 const plantaSegundaUrl = '/img/automations/Planta-segunda.png'
@@ -185,7 +205,22 @@ const zonasBaja = [
   'aula0-3',
   'aula0-1',
   'aula0-2-norte',
-  'aula0-2-sur'
+  'aula0-2-sur',
+  'caldera',
+  'cafeteria',
+  'aseos-f',
+  'aseos-m',
+  'conserjeria',
+  'ampa-visitas',
+  'secretaria',
+  'biblioteca',
+  'sala-profesores',
+  'salon-actos',
+  'escenario',
+  'direccion',
+  'jefatura-estudios',
+  'taller-lince',
+  'aseos-central'
 ]
 const zonasPrimera = [
   'aula1-11',
@@ -250,7 +285,18 @@ type EspacioFijoDto = {
   etapa: string | null
   grupo: string | null
 }
+type EspacioDesdobleDto = {
+  cursoAcademico: string
+  nombre: string
+}
 
+type EspacioSinDocenciaDto = {
+  cursoAcademico: string
+  nombre: string
+}
+
+const espaciosDesdoble = ref<EspacioDesdobleDto[]>([])
+const espaciosSinDocencia = ref<EspacioSinDocenciaDto[]>([])
 const espaciosFijos = ref<EspacioFijoDto[]>([])
 
 // ------------------------------
@@ -280,36 +326,103 @@ const zoneIdToAulaNombre = (zoneId: string): string =>
 // "Aula 2.15 - 3º ESO-A"  ó  "Aula 2.23"
 const zoneIdToLocalizadorLabel = (zoneId: string): string =>
 {
+  if (isStaticZone(zoneId))
+  {
+    return STATIC_ZONE_LABELS[zoneId]
+  }
+
   const aulaNombre = zoneIdToAulaNombre(zoneId)
-  const grupo = zonaGrupoLabel(zoneId)
-  return grupo ? `${aulaNombre} - ${grupo}` : aulaNombre
+  const info = zonaGrupoLabel(zoneId)
+  if (!info) return aulaNombre
+
+  if (info.toLowerCase().startsWith(aulaNombre.toLowerCase()))
+  {
+    return info
+  }
+
+  return `${aulaNombre} - ${info}`
 }
+
+    const STATIC_ZONE_LABELS: Record<string, string> = {
+      'caldera': 'Caldera',
+      'cafeteria': 'Cafetería',
+      'aseos-f': 'Aseos (F)',
+      'aseos-m': 'Aseos (M)',
+      'conserjeria': 'Conserjería',
+      'ampa-visitas': 'AMPA y visitas',
+      'secretaria': 'Secretaría',
+      'biblioteca': 'Biblioteca',
+      'sala-profesores': 'Sala de profesores',
+      'salon-actos': 'Salón de actos',
+      'escenario': 'Escenario',
+      'direccion': 'Dirección',
+      'jefatura-estudios': 'Jefatura de estudios',
+      'taller-lince': 'Taller Lince',
+      'aseos-central': 'Aseos',
+
+    }
+
+    const isStaticZone = (zoneId: string) => !!STATIC_ZONE_LABELS[zoneId]
+
+
 
 // ------------------------------
 // MAPEO zoneId -> "2º ESO-A"
 // ------------------------------
-const zoneIdToGrupoLabel = computed<Record<string, string>>(() =>
+const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
 {
   const map: Record<string, string> = {}
 
+  // ESPACIOS FIJOS → "2º ESO-A"
   for (const e of espaciosFijos.value)
   {
     const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
     if (!zoneId) continue
 
-    if (e.curso != null && e.etapa && e.grupo)
+    if (e.curso && e.etapa && e.grupo)
     {
       map[zoneId] = `${e.curso}º ${e.etapa}-${e.grupo}`
     }
   }
 
+  // DESDOBLES → "Desdobles"
+  for (const e of espaciosDesdoble.value)
+  {
+    const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
+    if (!zoneId) continue
+
+    map[zoneId] = 'Desdobles'
+  }
+
+  // SIN DOCENCIA → "Sin docencia"
+  for (const e of espaciosSinDocencia.value)
+  {
+    const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
+    if (!zoneId) continue
+
+    map[zoneId] = 'Sin docencia'
+  }
+
   return map
 })
 
+
+
 const zonaGrupoLabel = (zoneId: string) =>
 {
-  return zoneIdToGrupoLabel.value[zoneId] ?? ''
+  // ZONA ESTÁTICA
+  if (isStaticZone(zoneId))
+  {
+    return STATIC_ZONE_LABELS[zoneId]
+  }
+
+  const aulaNombre = zoneIdToAulaNombre(zoneId) // "Aula 2.15"
+  const extra = zoneIdToFinalLabel.value[zoneId] ?? '' // "2º ESO-A" | "Desdobles" | "Sin docencia"
+  return extra ? `${aulaNombre} \n ${extra}` : aulaNombre
 }
+
+
+
 
 // ------------------------------
 // LOCALIZADOR
@@ -380,6 +493,41 @@ const setPlant = (p: Planta) =>
   planta.value = p
   if (selectedZoneId.value) centerZone(selectedZoneId.value)
 }
+const advancePlant = () =>
+{
+  const idx = ROTATION_ORDER.indexOf(planta.value)
+  planta.value = ROTATION_ORDER[(idx + 1) % ROTATION_ORDER.length]
+
+  if (selectedZoneId.value)
+  {
+    centerZone(selectedZoneId.value)
+  }
+}
+
+const startRotation = (seconds: number) =>
+{
+  rotationSeconds.value = seconds
+  rotationEnabled.value = true
+
+  if (rotationTimer !== null)
+  {
+    window.clearInterval(rotationTimer)
+  }
+
+  rotationTimer = window.setInterval(advancePlant, seconds * 1000)
+}
+
+const stopRotation = () =>
+{
+  rotationEnabled.value = false
+
+  if (rotationTimer !== null)
+  {
+    window.clearInterval(rotationTimer)
+    rotationTimer = null
+  }
+}
+
 
 // ------------------------------
 // DIMENSIONES
@@ -435,12 +583,16 @@ const cargarCursosYEspaciosFijos = async () =>
       throw new Error('No hay cursos académicos disponibles')
     }
 
-    espaciosFijos.value = await obtenerEspaciosFijo(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      cursoAcademicoSeleccionado.value
-    ) as any
+    [
+      espaciosFijos.value,
+      espaciosDesdoble.value,
+      espaciosSinDocencia.value
+    ] = await Promise.all([
+      obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value),
+      obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value),
+      obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value)
+    ]) as any
+
 
     console.log('CURSO ACADÉMICO:', cursoAcademicoSeleccionado.value)
     console.log('ESPACIOS FIJOS:', espaciosFijos.value)
@@ -491,16 +643,17 @@ onMounted(async () =>
 {
   await cargarCursosYEspaciosFijos()
 
-  // ❌ comentado a propósito
-  // await obtenerDispositivos(...)
-  // await obtenerEspaciosDesdoble(...)
-  // await obtenerEspaciosSinDocencia(...)
+
 })
 
 onBeforeUnmount(() =>
 {
-  // nada especial de momento
+  if (rotationTimer !== null)
+  {
+    window.clearInterval(rotationTimer)
+  }
 })
+
 </script>
 
 <style scoped>
@@ -624,7 +777,35 @@ button:hover {
   border-radius: 6px;
   border: 1px solid rgba(0,0,0,0.25);
   pointer-events: none; /* para que el click siga siendo de la zona */
+  white-space: pre-line;
+  text-align: center;
 }
+
+/* ===== ROTACIÓN ===== */
+#contenedor-rotacion .rot-times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.rot-on {
+  color: green;
+  font-weight: 800;
+}
+
+.rot-off {
+  color: #c60000;
+  font-weight: 800;
+}
+
+.rot-active {
+  background-color: rgb(31, 155, 203);
+  color: #fff;
+  font-weight: 800;
+}
+
 
 /* PLANTA BAJA */
 #aula-2ndo-Guia { height: 14.5%; width: 7%; top: 1.6%; left: 14%; }
@@ -640,6 +821,32 @@ button:hover {
 #aula0-1 { height: 10%; width: 5.5%; top: 61.6%; right: 17.7%; }
 #aula0-2-norte { height: 13.2%; width: 4.5%; top: 72.8%; left: 12%; }
 #aula0-2-sur { height: 13.2%; width: 4.5%; top: 72.8%; left: 16.7%; }
+/* ✅ ZONAS FIJAS - PLANTA BAJA (AJUSTADAS A LA IMAGEN) */
+
+/* Franja inferior (junto a Aula 0.2 norte/sur) */
+#caldera    { top: 72.8%; left: 21.5%; width: 4.35%; height: 13.2%; }
+#cafeteria  { top: 72.8%; left: 25.9%; width: 6.93%; height: 13.2%; }
+#aseos-f    { top: 72.8%; left: 32.8%; width: 3.52%; height: 13.2%; }
+#aseos-m    { top: 72.8%; left: 36.3%; width: 3.52%; height: 13.2%; }
+
+/* AMPA / Conserjería (bloque pequeño junto al cruce) */
+#ampa-visitas { top: 58.4%; left: 35.8%; width: 4.20%; height: 4.01%; }
+#conserjeria  { top: 62.4%; left: 35.8%; width: 4.20%; height: 9.67%; }
+
+/* Banda central inferior (Secretaría / Biblioteca / Sala de profesores / Aseos pasillo) */
+#secretaria      { top: 58.1%; left: 40.0%; width: 10.84%; height: 13.88%; }
+#biblioteca      { top: 58.1%; left: 50.9%; width: 11.82%; height: 13.88%; }
+#sala-profesores { top: 58.1%; left: 62.7%; width: 9.33%;  height: 13.88%; }
+#aseos-central   { top: 58.1%; left: 72.0%; width: 4.39%;  height: 13.88%; }
+
+/* Banda superior (Salón de actos / Escenario / Dirección / Jefatura / Taller Lince) */
+#salon-actos       { top: 36.5%; left: 40.0%; width: 24.66%; height: 11.53%; }
+#escenario         { top: 36.5%; left: 64.7%; width: 1.66%;  height: 11.53%; }
+#direccion         { top: 36.5%; left: 66.4%; width: 11.38%; height: 11.53%; }
+#jefatura-estudios { top: 36.5%; left: 77.7%; width: 7.13%;  height: 11.53%; }
+#taller-lince      { top: 36.5%; left: 84.9%; width: 2.29%;  height: 11.53%; }
+
+
 
 /* PLANTA PRIMERA */
 #aula1-11 { height: 25.3%; width: 11.3%; top: 10.5%; right: 4.9%; }
