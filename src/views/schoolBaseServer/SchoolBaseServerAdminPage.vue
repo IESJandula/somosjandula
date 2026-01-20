@@ -1,27 +1,4 @@
 <template>
-  <div class="form-wrapper">
-    <!-- Elección de curso académico-->
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Elige curso académico</h1>
-      </div>
-
-      <div class="section">
-        <div class="row">
-          <select v-model="cursoElegido" class="custom-select">
-            <option
-              v-for="curso in cursos"
-              :key="curso.cursoAcademico"
-              :value="curso.cursoAcademico"
-            >
-              {{ curso.cursoAcademico }}
-            </option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Creador de grupos -->
   <div class="form-wrapper">
     <div class="form-container">
@@ -86,17 +63,177 @@
       </div>
     </div>
   </div>
+
+  <div class="form-wrapper">
+    <!-- Elección de curso académico-->
+    <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Elige curso académico</h1>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <select v-model="cursoElegido" class="custom-select">
+            <option v-for="curso in cursos" :key="curso.cursoAcademico" :value="curso.cursoAcademico">
+              {{ curso.cursoAcademico }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-wrapper">
+
+    <!-- CREADOR DE ESPACIOS -->
+    <div class="form-container">
+
+      <div class="title-container">
+        <h1 class="title">Creador de espacios</h1>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <label>Nombre:</label>
+          <input type="text" v-model="nombre" />
+        </div>
+      </div>
+
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Sin Docencia</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esConDocenciaForm" />
+            <span class="slider"></span>
+          </label>
+          <span>Con Docencia</span>
+        </div>
+      </div>
+
+      <div class="section center" v-if="esConDocenciaForm">
+        <div class="switch-container-gestion">
+          <span>Fijo</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esDesdobleForm" />
+            <span class="slider"></span>
+          </label>
+          <span>Desdoble</span>
+        </div>
+      </div>
+
+      <div class="section" v-if="esConDocenciaForm && !esDesdobleForm">
+        <div class="row">
+          <label>Grupo:</label>
+          <select v-model="grupoSeleccionado" class="custom-select">
+            <option disabled value="">Selecciona un grupo</option>
+            <option v-for="g in grupos" :key="g.curso + g.etapa + g.grupo" :value="g">
+              {{ g.curso }} {{ g.etapa }} {{ g.grupo }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+
+      <div class="section">
+        <button type="button" class="btn-primary" @click="crearEspacio">
+          Crear / Modificar
+        </button>
+      </div>
+
+    </div>
+
+    <!-- TABLA DE ESPACIOS -->
+    <div class="form-container-table">
+
+      <div class="title-container">
+        <h1 class="title">Listado de espacios</h1>
+      </div>
+
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Sin Docencia</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esConDocenciaLista" />
+            <span class="slider"></span>
+          </label>
+          <span>Con Docencia</span>
+        </div>
+      </div>
+
+      <div class="section center" v-if="esConDocenciaLista">
+        <div class="switch-container-gestion">
+          <span>Fijo</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esDesdobleLista" />
+            <span class="slider"></span>
+          </label>
+          <span>Desdoble</span>
+        </div>
+      </div>
+
+      <table v-if="espaciosOrdenados.length > 0">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Curso</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Etapa</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Grupo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr v-for="e in espaciosOrdenados" :key="e.nombre + e.tipo">
+            <td>{{ e.nombre }}</td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.curso ?? "-" }}
+            </td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.etapa ?? "-" }}
+            </td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.grupo ?? "-" }}
+            </td>
+            <td>
+              <button type="button" class="btn-delete" @click="eliminarEspacio(e)">
+                X
+              </button>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <div v-else>
+        <span>No hay espacios creados.</span>
+      </div>
+
+    </div>
+  </div>
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+             @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup>
-import { schoolBaseServerApiUrl } from "@/environment/apiUrls.ts";
-import { ref, onMounted, watch, nextTick } from "vue";
+import { ref, onMounted, watch, nextTick, computed } from "vue";
 
-import { obtenerCursosAcademicos } from "@/services/schoolBaseServer";
-import { seleccionarCursoAcademico } from "@/services/schoolBaseServer";
-import { obtenerCursosEtapasGrupos } from "@/services/schoolBaseServer";
-import { crearCursoEtapaGrupo } from "@/services/schoolBaseServer";
-import { borrarCursoEtapaGrupo } from "@/services/schoolBaseServer";
+import {
+  obtenerCursosAcademicos,
+  seleccionarCursoAcademico,
+  obtenerCursosEtapasGrupos,
+  crearCursoEtapaGrupo,
+  borrarCursoEtapaGrupo,
+  crearEspacioSinDocencia,
+  crearEspacioDesdoble,
+  crearEspacioFijo,
+  obtenerEspaciosSinDocencia,
+  obtenerEspaciosDesdoble,
+  obtenerEspaciosFijo,
+  borrarEspacioSinDocencia,
+  borrarEspacioDesdoble,
+  borrarEspacioFijo
+} from "@/services/schoolBaseServer";
+import { crearToast } from "@/utils/toast";
 
 // ====================
 // VARIABLES
@@ -107,6 +244,39 @@ const cursoGrupo = ref(null);
 const etapaGrupo = ref("");
 const grupoGrupo = ref("");
 const grupos = ref([]);
+const grupoSeleccionado = ref(null);
+const nombre = ref("");
+// booleanos para los botones de CREAR
+const esConDocenciaForm = ref(false);
+const esDesdobleForm = ref(false);
+// booleanos para los botones de LISTAR
+const esConDocenciaLista = ref(false);
+const esDesdobleLista = ref(false);
+const espacios = ref([]);
+
+// Ordenar espacios por nombre alfabéticamente.
+const espaciosOrdenados = computed(() => {
+  let filtrados = [...espacios.value];
+
+  // SIN DOCENCIA
+  if (!esConDocenciaLista.value) {
+    filtrados = filtrados.filter(e => e.tipo === "SIN DOCENCIA");
+  }
+  // CON DOCENCIA
+  else {
+    if (!esDesdobleLista.value) {
+      // FIJO
+      filtrados = filtrados.filter(e => e.tipo === "FIJO");
+    } else {
+      // DESDOBLE
+      filtrados = filtrados.filter(e => e.tipo === "DESDOBLE");
+    }
+  }
+
+  return filtrados.sort((a, b) =>
+    a.nombre.localeCompare(b.nombre)
+  );
+});
 
 // Toast
 const isToastOpen = ref(false);
@@ -131,6 +301,7 @@ watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
     );
 
     await cargarGrupos();
+    await cargarEspacios();
   } catch (error) {
     console.error("Error al seleccionar curso académico:", error);
   }
@@ -148,7 +319,6 @@ const cargarGrupos = async () => {
       cursoElegido.value
     );
 
-    console.log("RAW DATA:", data);
     grupos.value = Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error cargando grupos:", error);
@@ -200,11 +370,12 @@ const crearGrupo = async () => {
       cursoEtapaGrupoDto
     );
 
-    toastMessage.value = "Grupo creado correctamente";
+    toastMessage.value = "Grupo creado correctamente.";
     toastColor.value = "success";
     isToastOpen.value = true;
 
     await cargarGrupos();
+    await cargarEspacios();
 
     cursoGrupo.value = null;
     etapaGrupo.value = "";
@@ -214,6 +385,8 @@ const crearGrupo = async () => {
     toastMessage.value = error.message || "Error al crear el grupo";
     toastColor.value = "danger";
     isToastOpen.value = true;
+
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
   }
 };
 
@@ -235,6 +408,8 @@ const eliminarGrupo = async (grupo) => {
     isToastOpen.value = true;
 
     await cargarGrupos();
+    await cargarEspacios();
+
   } catch (error) {
     toastMessage.value = error.message;
     toastColor.value = "danger";
@@ -242,12 +417,117 @@ const eliminarGrupo = async (grupo) => {
   }
 };
 
+const crearEspacio = async () => {
+  if (!nombre.value.trim()) return;
+
+  try {
+    if (!esConDocenciaForm.value) {
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim()
+      };
+
+      await crearEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
+    }
+    else if (esDesdobleForm.value) {
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim()
+      };
+
+      await crearEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
+    }
+    else {
+      // 🔥 FIJO → aquí va el grupo
+      if (!grupoSeleccionado.value) {
+        toastMessage.value = "Selecciona un grupo";
+        toastColor.value = "danger";
+        isToastOpen.value = true;
+        return;
+      }
+
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim(),
+        curso: grupoSeleccionado.value.curso,
+        etapa: grupoSeleccionado.value.etapa,
+        grupo: grupoSeleccionado.value.grupo
+      };
+
+      await crearEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
+    }
+
+    toastMessage.value = "Espacio creado correctamente";
+    toastColor.value = "success";
+    isToastOpen.value = true;
+
+    await cargarEspacios();
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
+const cargarEspacios = async () => {
+  try {
+    const sinDocencia = await obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoElegido.value);
+    const fijos = await obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoElegido.value);
+    const desdobles = await obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoElegido.value);
+
+    const lista = [];
+
+    sinDocencia.forEach(e => lista.push({ nombre: e.nombre, tipo: "SIN DOCENCIA" }));
+    fijos.forEach(e => lista.push({
+      nombre: e.nombre,
+      tipo: "FIJO",
+      curso: e.curso,
+      etapa: e.etapa,
+      grupo: e.grupo
+    }));
+    desdobles.forEach(e => lista.push({ nombre: e.nombre, tipo: "DESDOBLE" }));
+
+    espacios.value = [...lista];
+
+    await cargarGrupos();
+    await cargarEspacios();
+
+  } catch (error) {
+    console.error("Error cargando espacios", error);
+  }
+};
+
+const eliminarEspacio = async (espacio) => {
+  try {
+    const dto = {
+      cursoAcademico: cursoElegido.value,
+      nombre: espacio.nombre
+    };
+
+    if (espacio.tipo === "SIN DOCENCIA") {
+      await borrarEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
+    } else if (espacio.tipo === "FIJO") {
+      await borrarEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
+    } else {
+      await borrarEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
+    }
+
+    await cargarGrupos();
+    await cargarEspacios();
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+
 // ====================
 // ON MOUNT
 // ====================
 onMounted(async () => {
   await obtenerCursosAcademicosVista();
   await cargarGrupos();
+  await cargarEspacios();
   inicializandoCurso = false;
 });
 </script>
@@ -268,14 +548,15 @@ onMounted(async () => {
 }
 
 .form-container-table {
-  min-width: 1200px;
-  width: fit-content;
+  min-width: 700px; 
+  width: 90%; 
+  max-width: 900px; 
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
   border-radius: 10px;
   box-sizing: border-box;
-  padding: 20px 30px;
+  padding: 12px 15px;
   margin: auto;
   font-family: "Roboto", sans-serif;
   margin-top: 2%;
@@ -378,9 +659,10 @@ table {
   background-color: #f8f9fa;
   color: #1a1a1a;
   border: 2px solid #007bff;
-  margin-top: 20px;
+  margin-top: 10px;
   border-radius: 5px;
   overflow: hidden;
+  font-size: 13px; 
 }
 
 span {
@@ -392,21 +674,18 @@ span {
 th,
 td {
   border: 2px solid #007bff;
-  padding: 10px;
+  padding: 6px;
 }
 
 td {
-  height: 50px;
-  width: 150px;
-  /* Establece un ancho fijo */
+  height: 38px;
+  width: 120px; 
   background-color: #e9f5ff;
   text-overflow: ellipsis;
-  /* Para manejar contenido largo */
   overflow: hidden;
-  /* Oculta cualquier contenido que desborde */
   word-wrap: break-word;
-  /* Permite que el texto largo se divida y se ajuste */
 }
+
 
 th {
   background-color: #007bff;
@@ -529,10 +808,11 @@ tr:hover td {
 .switch-container-gestion {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 15px;
   margin-top: 10px;
   margin-bottom: 10px;
-  margin-left: 8%;
+  width: 100%;
 }
 
 .switch-container span {
@@ -678,8 +958,10 @@ input:checked+.slider:before {
 .section .row {
   display: flex;
   flex-direction: column;
-  align-items: center; /* centra horizontalmente */
+  align-items: center;
+  /* centra horizontalmente */
 }
+
 /* Filas más limpias */
 .row {
   margin-bottom: 15px;
@@ -707,4 +989,20 @@ input:checked+.slider:before {
 .title-container {
   padding-bottom: 10px;
 }
+
+/* SCROLL INTERNO PARA TABLAS   */
+table tbody {
+  display: block;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+table thead,
+table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
 </style>
