@@ -364,7 +364,11 @@ const zoneIdToLocalizadorLabel = (zoneId: string): string =>
       'aseos1-m': 'Aseos (M)',
       'aseos1-f': 'Aseos (F)',
       'aseos2-m': 'Aseos (M)',
-      'aseos2-f': 'Aseos (F)'
+      'aseos2-f': 'Aseos (F)',
+      'aula1-10': 'TIC',
+      'aula2-10': 'Audiovisuales',
+      'aula2-21': 'Convivencia'
+      
 
     }
 
