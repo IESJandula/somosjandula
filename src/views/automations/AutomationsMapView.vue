@@ -193,9 +193,9 @@ const plantaSegundaUrl = '/img/automations/Planta-segunda.png'
 
 // Zonas (IDs del mapa)
 const zonasBaja = [
-  'aula-2ndo-Guia',
-  'aula-1ero-Guia-A',
-  'aula-1ero-Guia-B',
+  'aula0-14',
+  'aula0-13',
+  'aula0-12',
   'gimnasio',
   'pista-padel',
   'aula0-11',
@@ -308,22 +308,52 @@ const espaciosFijos = ref<EspacioFijoDto[]>([])
 
 const normalizarEspacioNombreAZoneId = (nombre: string): string =>
 {
-  // nos quedamos solo con el prefijo "Aula X.Y" si viene con " - ..."
-  const base = nombre.split(' - ')[0].trim() // "Aula 2.13"
-  const m = base.match(/^Aula\s+(\d+)\.(\d+)$/i)
-  if (!m) return ''
+  // nos quedamos solo con el prefijo si viene con " - ..."
+  const base = nombre.split(' - ')[0].trim()
 
-  const plantaNum = m[1] // "2"
-  const aulaNum = m[2]   // "13"
-  return `aula${plantaNum}-${aulaNum}`
+  // 1) Aula X.Y Norte/Sur  -> aulaX-Y-norte / aulaX-Y-sur
+  const mNS = base.match(/^Aula\s+(\d+)\.(\d+)\s+(Norte|Sur)$/i)
+  if (mNS)
+  {
+    const plantaNum = mNS[1]
+    const aulaNum = mNS[2]
+    const orientacion = mNS[3].toLowerCase() // "norte" | "sur"
+    return `aula${plantaNum}-${aulaNum}-${orientacion}`
+  }
+
+  // 2) Aula X.Y -> aulaX-Y
+  const m = base.match(/^Aula\s+(\d+)\.(\d+)$/i)
+  if (m)
+  {
+    const plantaNum = m[1]
+    const aulaNum = m[2]
+    return `aula${plantaNum}-${aulaNum}`
+  }
+
+  // 3) ZONAS ESTÁTICAS desde endpoint
+  // (acepta "Salón..." con o sin tilde)
+  const normalized = base.toLowerCase()
+  if (normalized === 'salón de actos' || normalized === 'salon de actos') return 'salon-actos'
+  if (normalized === 'biblioteca') return 'biblioteca'
+
+  return ''
 }
+
 // "aula2-15" => "Aula 2.15"
 const zoneIdToAulaNombre = (zoneId: string): string =>
 {
-  const m = zoneId.match(/^aula(\d+)-(\d+)$/i)
+  const m = zoneId.match(/^aula(\d+)-(\d+)(?:-(norte|sur))?$/i)
   if (!m) return zoneId
-  return `Aula ${m[1]}.${m[2]}`
+
+  const planta = m[1]
+  const aula = m[2]
+  const orientacion = m[3]
+    ? ` ${m[3][0].toUpperCase()}${m[3].slice(1).toLowerCase()}`
+    : ''
+
+  return `Aula ${planta}.${aula}${orientacion}`
 }
+
 
 // label completo para el localizador:
 // "Aula 2.15 - 3º ESO-A"  ó  "Aula 2.23"
@@ -367,7 +397,9 @@ const zoneIdToLocalizadorLabel = (zoneId: string): string =>
       'aseos2-f': 'Aseos (F)',
       'aula1-10': 'TIC',
       'aula2-10': 'Audiovisuales',
-      'aula2-21': 'Convivencia'
+      'aula2-21': 'Convivencia',
+      'pista-padel': 'Pista de Padel',
+      'gimnasio':'Gimansio'
       
 
     }
@@ -377,13 +409,13 @@ const zoneIdToLocalizadorLabel = (zoneId: string): string =>
 
 
 // ------------------------------
-// MAPEO zoneId -> "2º ESO-A"
+// MAPEO zoneId -> "2 ESO A"
 // ------------------------------
 const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
 {
   const map: Record<string, string> = {}
 
-  // ESPACIOS FIJOS → "2º ESO-A"
+  
   for (const e of espaciosFijos.value)
   {
     const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
@@ -391,7 +423,8 @@ const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
 
     if (e.curso && e.etapa && e.grupo)
     {
-      map[zoneId] = `${e.curso}º ${e.etapa}-${e.grupo}`
+      map[zoneId] = `${e.curso} ${e.etapa} ${e.grupo}`.replace(/\s+/g, ' ').trim()
+      //map[zoneId] = `${e.curso}º ${e.etapa}-${e.grupo}`
     }
   }
 
@@ -417,22 +450,20 @@ const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
 })
 
 
-
 const zonaGrupoLabel = (zoneId: string) =>
 {
-  // ZONA ESTÁTICA
+  const extra = zoneIdToFinalLabel.value[zoneId] ?? ''
+
   if (isStaticZone(zoneId))
   {
-    return STATIC_ZONE_LABELS[zoneId]
+    const base = STATIC_ZONE_LABELS[zoneId]
+    return extra ? `${base} \n ${extra}` : base
   }
 
-  const aulaNombre = zoneIdToAulaNombre(zoneId) // "Aula 2.15"
-  const extra = zoneIdToFinalLabel.value[zoneId] ?? '' // "2º ESO-A" | "Desdobles" | "Sin docencia"
-  return extra ? `${aulaNombre} \n ${extra}` : aulaNombre
+  const aulaNombre = zoneIdToAulaNombre(zoneId)
+  const extraAula = zoneIdToFinalLabel.value[zoneId] ?? ''
+  return extraAula ? `${aulaNombre} \n ${extraAula}` : aulaNombre
 }
-
-
-
 
 // ------------------------------
 // LOCALIZADOR
@@ -817,9 +848,9 @@ button:hover {
 
 
 /* PLANTA BAJA */
-#aula-2ndo-Guia { height: 14.5%; width: 7%; top: 1.6%; left: 14%; }
-#aula-1ero-Guia-A { height: 9%; width: 7%; top: 1.6%; left: 21%; }
-#aula-1ero-Guia-B { height: 9%; width: 7%; top: 1.6%; left: 28%; }
+#aula0-12 { height: 14.5%; width: 7%; top: 1.6%; left: 14%; }
+#aula0-13 { height: 9%; width: 7%; top: 1.6%; left: 21%; }
+#aula0-14 { height: 9%; width: 7%; top: 1.6%; left: 28%; }
 #gimnasio { height: 11%; width: 18.4%; top: 29.5%; left: 12%; }
 #aula0-11 { height: 10.8%; width: 8.1%; top: 25.3%; left: 44.2%; }
 #aula0-9 { height: 10.8%; width: 11.9%; top: 25.3%; left: 52.6%; }
