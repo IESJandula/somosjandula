@@ -136,7 +136,7 @@
 
       <div class="section">
         <button type="button" class="btn-primary" @click="crearEspacio">
-          Crear
+          Crear / Modificar
         </button>
       </div>
 
