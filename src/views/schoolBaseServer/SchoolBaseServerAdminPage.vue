@@ -210,7 +210,8 @@
 
     </div>
   </div>
-
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+             @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup>
@@ -232,6 +233,7 @@ import {
   borrarEspacioDesdoble,
   borrarEspacioFijo
 } from "@/services/schoolBaseServer";
+import { crearToast } from "@/utils/toast";
 
 // ====================
 // VARIABLES
@@ -368,7 +370,7 @@ const crearGrupo = async () => {
       cursoEtapaGrupoDto
     );
 
-    toastMessage.value = "Grupo creado correctamente";
+    toastMessage.value = "Grupo creado correctamente.";
     toastColor.value = "success";
     isToastOpen.value = true;
 
@@ -383,6 +385,8 @@ const crearGrupo = async () => {
     toastMessage.value = error.message || "Error al crear el grupo";
     toastColor.value = "danger";
     isToastOpen.value = true;
+
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
   }
 };
 
