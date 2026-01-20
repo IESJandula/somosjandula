@@ -76,6 +76,7 @@
     <div class="bottom-row">
       <div class="left-bottom-container">
         <div class="form-container usuario-container">
+          <h2 class="window-title">CREAR EVENTO</h2>
           <div class="form-grid">
             <div class="form-row">
               <label class="form-label">TÍTULO:</label>
@@ -154,7 +155,7 @@
                   </td>
                 </tr>
                 <tr v-if="eventos.length === 0">
-                  <td colspan="5" class="no-data">No hay eventos registrados</td>
+                  <td colspan="8" class="no-data">No hay eventos registrados</td>
                 </tr>
               </tbody>
             </table>
@@ -416,12 +417,13 @@ onMounted(async () => {
 <style scoped>
 /* CONTENEDOR PRINCIPAL */
 .main-container {
+  height: 100vh;
   padding: 20px;
   background-color: var(--background-color, #f0f2f5);
-  min-height: 100vh;
+  overflow: hidden; 
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  box-sizing: border-box;   
 }
 
 /* FILAS */
@@ -430,6 +432,8 @@ onMounted(async () => {
   display: flex;
   gap: 20px;
   flex: 1;
+  min-height: 0;
+  margin-bottom: 20px;
 }
 
 /* CONTENEDORES */
@@ -438,7 +442,7 @@ onMounted(async () => {
 .left-bottom-container,
 .right-bottom-container {
   flex: 1;
-  min-height: 400px;
+  min-height: 0;
   display: flex;
 }
 
@@ -468,28 +472,27 @@ onMounted(async () => {
   background-color: var(--form-bg-light);
   border: 1px solid #444;
   border-radius: 10px;
-  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-  padding: 25px;
-  font-family: "Roboto", sans-serif;
+  padding: 15px;
   height: 100%;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  overflow: hidden; 
 }
 
 .form-container-table {
   background-color: var(--form-bg-light);
   border: 1px solid #444;
   border-radius: 10px;
-  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   padding: 25px;
-  font-family: "Roboto", sans-serif;
   height: 100%;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  overflow: hidden; 
+  min-height: 0;
 }
 
 .window-title {
@@ -497,24 +500,25 @@ onMounted(async () => {
   font-size: 16px;
   font-weight: bold;
   text-align: left;
-  margin: 0 0 20px 0;
-  padding-bottom: 10px;
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
   border-bottom: 2px solid #007bff;
   text-transform: uppercase;
+  font-size: 14px;
 }
 
 /* FORMULARIO EN GRID */
 .form-grid {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 0;
 }
 
 .form-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .combined-row {
@@ -534,7 +538,7 @@ onMounted(async () => {
 
 .form-input {
   flex: 1;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 13px;
@@ -578,8 +582,9 @@ onMounted(async () => {
 }
 
 .button-row {
+  display: flex;
   justify-content: flex-end;
-  margin-top: 15px;
+  margin-top: auto;
 }
 
 .btn-enviar {
@@ -632,7 +637,8 @@ onMounted(async () => {
 /* TABLAS */
 .table-wrapper {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   min-height: 0;
 }
 
@@ -648,7 +654,7 @@ onMounted(async () => {
 .categorias-table th {
   background-color: #007bff;
   color: white;
-  padding: 10px 12px;
+  padding: 6px 8px;
   text-align: left;
   font-weight: bold;
   border: 2px solid #007bff;
@@ -660,7 +666,7 @@ onMounted(async () => {
 
 .events-table td,
 .categorias-table td {
-  padding: 8px 12px;
+  padding: 6px 8px;
   border: 2px solid #007bff;
   background-color: #e9f5ff;
   height: 40px;
@@ -672,6 +678,13 @@ onMounted(async () => {
 .events-table tr:hover td,
 .categorias-table tr:hover td {
   background-color: #d0eaff;
+}
+
+.categorias-table-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
 }
 
 .no-data {
@@ -771,6 +784,9 @@ onMounted(async () => {
   }
 
   .table-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto; 
     overflow-x: auto;
   }
 
