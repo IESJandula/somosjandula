@@ -51,6 +51,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
 
 interface Evento {
   titulo: string;

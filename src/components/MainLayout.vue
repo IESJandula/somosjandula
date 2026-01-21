@@ -69,6 +69,10 @@
             <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/events/users')">Eventos próximos</ion-item>
+
+
+
           </ion-list>
         </ion-list>
         <!-- Reservas -->

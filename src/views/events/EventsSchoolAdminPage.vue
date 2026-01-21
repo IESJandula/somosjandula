@@ -58,7 +58,7 @@
                     </td>
                     <td>
                       <button @click="eliminarCategoriaFn(categoria)" class="btn-eliminar-cat">
-                        Eliminar
+                        X
                       </button>
 
                     </td>
@@ -150,7 +150,7 @@
                   <td>{{ eventoItem.usuarioEmail }}</td>
                   <td>
                     <button @click="borrarEventoFn(eventoItem)" class="btn-eliminar">
-                      Eliminar
+                      X
                     </button>
                   </td>
                 </tr>
@@ -214,7 +214,7 @@ const toastColor = ref("success");
 
 const eventos = ref<Evento[]>([]);
 const categorias = ref<Categoria[]>([]);
-const eventoMismoDia = ref(false);
+const eventoMismoDia = ref(true);
 const fechaEspecial = ref<string>('');
 
 // Formulario evento
@@ -417,13 +417,16 @@ onMounted(async () => {
 <style scoped>
 /* CONTENEDOR PRINCIPAL */
 .main-container {
-  height: 100vh;
+  height: 100%;
   padding: 20px;
   background-color: var(--background-color, #f0f2f5);
   overflow: hidden; 
   display: flex;
   flex-direction: column;
   box-sizing: border-box;   
+  align-content: center;
+  gap: 20px;
+  overflow: hidden;
 }
 
 /* FILAS */
@@ -433,52 +436,37 @@ onMounted(async () => {
   gap: 20px;
   flex: 1;
   min-height: 0;
-  margin-bottom: 20px;
 }
 
 /* CONTENEDORES */
 .left-top-container,
+.left-bottom-container{
+  flex: 1;
+  min-height: 0;
+  align-content: center;
+}
+
 .right-top-container,
-.left-bottom-container,
 .right-bottom-container {
   flex: 1;
   min-height: 0;
-  display: flex;
+  align-content: center;
 }
 
-/* Ajustes de tamaño para cada contenedor */
-.left-top-container {
-  flex: 1;
-  /* Formulario más pequeño */
-}
-
-.right-top-container {
-  flex: 2;
-  /* Tabla más grande */
-}
-
-.left-bottom-container {
-  flex: 1;
-  /* Formulario categoría */
-}
-
-.right-bottom-container {
-  flex: 1;
-  /* Lista categorías */
-}
 
 /* ESTILOS COMUNES DE FORMULARIO */
 .form-container {
   background-color: var(--form-bg-light);
   border: 1px solid #444;
   border-radius: 10px;
-  padding: 15px;
+  padding: 20px;
   height: 100%;
   width: 100%;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  overflow: hidden; 
+  flex-direction: column; 
+  align-content: center;
+  min-height: 0;
 }
 
 .form-container-table {
@@ -493,18 +481,19 @@ onMounted(async () => {
   flex-direction: column;
   overflow: hidden; 
   min-height: 0;
+  align-content: center;
 }
 
 .window-title {
   color: var(--text-color);
   font-size: 16px;
   font-weight: bold;
-  text-align: left;
+  text-align: center;
   margin: 0 0 10px 0;
   padding-bottom: 6px;
   border-bottom: 2px solid #007bff;
   text-transform: uppercase;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* FORMULARIO EN GRID */
@@ -532,7 +521,7 @@ onMounted(async () => {
   min-width: 100px;
   font-weight: 600;
   color: var(--text-color);
-  font-size: 13px;
+  font-size: 16px;
   text-align: right;
 }
 
@@ -541,7 +530,7 @@ onMounted(async () => {
   padding: 6px 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 16px;
   background-color: white;
 }
 
@@ -552,7 +541,7 @@ onMounted(async () => {
   border-radius: 4px;
   background-color: white;
   color: #007bff;
-  font-size: 13px;
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -591,9 +580,9 @@ onMounted(async () => {
   background-color: #007bff;
   color: white;
   border: none;
-  padding: 10px 25px;
+  padding: 11px 28px;   
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 16px;      
   font-weight: 600;
   cursor: pointer;
 }
@@ -626,7 +615,7 @@ onMounted(async () => {
   min-width: 100px;
   font-weight: 600;
   color: var(--text-color);
-  font-size: 13px;
+  font-size: 23px;
   text-align: right;
 }
 
@@ -647,7 +636,7 @@ onMounted(async () => {
   width: 100%;
   border-collapse: collapse;
   border: 2px solid #007bff;
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .events-table th,
@@ -655,10 +644,10 @@ onMounted(async () => {
   background-color: #007bff;
   color: white;
   padding: 6px 8px;
-  text-align: left;
+  text-align: center;
   font-weight: bold;
   border: 2px solid #007bff;
-  font-size: 12px;
+  font-size: 16px;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -673,6 +662,7 @@ onMounted(async () => {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+  text-align: center;
 }
 
 .events-table tr:hover td,
@@ -691,7 +681,7 @@ onMounted(async () => {
   text-align: center;
   color: #666;
   font-style: italic;
-  padding: 15px;
+  padding: 25px;
 }
 
 .btn-eliminar,
@@ -699,7 +689,7 @@ onMounted(async () => {
   background-color: #dc3545;
   color: white;
   border: none;
-  padding: 5px 10px;
+  padding: 10px 20px;
   border-radius: 3px;
   font-size: 11px;
   cursor: pointer;
@@ -741,7 +731,7 @@ onMounted(async () => {
 }
 
 .color-name {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -754,10 +744,13 @@ onMounted(async () => {
   }
 
   .left-top-container,
-  .right-top-container,
-  .left-bottom-container,
-  .right-bottom-container {
-    width: 100%;
+  .left-bottom-container{
+    flex: 0 0 35%;  
+    max-width: 35%;
+  }
+  .right-bottom-container,
+  .right-top-container{
+    flex: 1;
   }
 }
 
@@ -792,7 +785,7 @@ onMounted(async () => {
 
   .events-table,
   .categorias-table {
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .toast {
