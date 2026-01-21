@@ -9,7 +9,7 @@
       <div class="section">
         <div class="row">
           <label>Curso (número):</label>
-          <input type="number" v-model.number="cursoGrupo" />
+          <input type="number" v-model.number="cursoGrupo" min="1" step="1"/>
         </div>
 
         <div class="row">
@@ -272,7 +272,6 @@ let inicializandoCurso = true;
 // ====================
 const lanzarToast = (color, mensaje) => {
   isToastOpen.value = false;
-
   setTimeout(() => {
     toastColor.value = color;
     toastMessage.value = mensaje;
@@ -305,7 +304,7 @@ const espaciosOrdenados = computed(() => {
 watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
   if (inicializandoCurso) return;
   if (!nuevoCurso || nuevoCurso === cursoAnterior) return;
-
+  if (nuevo < 0) { cursoGrupo.value = 0; }
   try {
     await seleccionarCursoAcademico(
       toastMessage,
@@ -392,15 +391,21 @@ const obtenerCursosAcademicosVista = async () => {
 };
 
 const crearGrupo = async () => {
+
   if (
     cursoGrupo.value === null ||
+    cursoGrupo.value === "" ||
     etapaGrupo.value.trim() === "" ||
     grupoGrupo.value.trim() === ""
   ) {
     lanzarToast("danger", "Rellena todos los campos");
     return;
   }
-
+  if (cursoGrupo.value < 1) {
+  lanzarToast("danger", "El curso no puede ser negativo ni cero");
+  return;
+  }
+  
   const cursoEtapaGrupoDto = {
     curso: cursoGrupo.value,
     etapa: etapaGrupo.value.trim(),
@@ -418,10 +423,6 @@ const crearGrupo = async () => {
     lanzarToast("success", "Grupo creado correctamente");
 
     await cargarGrupos();
-
-    cursoGrupo.value = null;
-    etapaGrupo.value = "";
-    grupoGrupo.value = "";
 
   } catch (error) {
     lanzarToast("danger", error.message);
