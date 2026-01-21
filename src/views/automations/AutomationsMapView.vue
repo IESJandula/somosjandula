@@ -395,13 +395,12 @@ const zoneIdToLocalizadorLabel = (zoneId: string): string =>
       'aseos1-f': 'Aseos (F)',
       'aseos2-m': 'Aseos (M)',
       'aseos2-f': 'Aseos (F)',
-      'aula1-10': 'TIC',
+      'aula1-10': 'Aula del Máquina!',
       'aula2-10': 'Audiovisuales',
       'aula2-21': 'Convivencia',
       'pista-padel': 'Pista de Padel',
-      'gimnasio':'Gimansio'
+      'gimnasio':'Gimnasio'
       
-
     }
 
     const isStaticZone = (zoneId: string) => !!STATIC_ZONE_LABELS[zoneId]
