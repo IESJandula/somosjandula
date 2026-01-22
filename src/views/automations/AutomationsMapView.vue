@@ -25,7 +25,11 @@
         <p v-if="loadingCursos">Cargando cursos…</p>
 
         <template v-else>
-          <select v-model="cursoAcademicoSeleccionado" @change="recargarEspaciosFijos" style="width: 100%; border-radius: 5px; padding: 6px;">
+          <select
+            v-model="cursoAcademicoSeleccionado"
+            @change="recargarEspaciosFijos"
+            style="width: 100%; border-radius: 5px; padding: 6px;"
+          >
             <option v-for="c in cursosAcademicos" :key="c.cursoAcademico" :value="c.cursoAcademico">
               {{ c.cursoAcademico }} <span v-if="c.seleccionado"> (seleccionado)</span>
             </option>
@@ -51,26 +55,32 @@
           </button>
         </div>
       </div>
+
       <!-- ROTACIÓN DE PLANTAS -->
-        <div id="contenedor-rotacion">
-          <p class="titulo-djg">
-            Rotación:
-            <span :class="rotationEnabled ? 'rot-on' : 'rot-off'">
-              {{ rotationEnabled ? 'Activada' : 'Desactivada' }}
-            </span>
-          </p>
+      <div id="contenedor-rotacion">
+        <p class="titulo-djg">
+          Rotación:
+          <span :class="rotationEnabled ? 'rot-on' : 'rot-off'">
+            {{ rotationEnabled ? 'Activada' : 'Desactivada' }}
+          </span>
+        </p>
 
-          <div class="rot-times">
-            <button @click="startRotation(5)"  :class="{ 'rot-active': rotationEnabled && rotationSeconds === 5 }">05s</button>
-            <button @click="startRotation(15)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 15 }">15s</button>
-            <button @click="startRotation(30)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 30 }">30s</button>
-          </div>
-
-          <button class="btn-secondary" @click="stopRotation" :disabled="!rotationEnabled">
-            Desactivar rotación
+        <div class="rot-times">
+          <button @click="startRotation(5)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 5 }">
+            05s
+          </button>
+          <button @click="startRotation(15)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 15 }">
+            15s
+          </button>
+          <button @click="startRotation(30)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 30 }">
+            30s
           </button>
         </div>
 
+        <button class="btn-secondary" @click="stopRotation" :disabled="!rotationEnabled">
+          Desactivar rotación
+        </button>
+      </div>
 
       <!-- Dimensiones -->
       <div id="contenedor-dimensiones">
@@ -98,7 +108,6 @@
 
         <template v-else>
           <p><strong>Zona:</strong> {{ zoneIdToLocalizadorLabel(selectedZoneId) }}</p>
-          
 
           <hr />
 
@@ -106,16 +115,28 @@
             Esta zona no tiene (de momento) curso/etapa/grupo asociado en espacios fijos.
           </p>
 
-          <p v-else>
-            
-          </p>
+          <!-- DISPOSITIVOS -->
+          <p class="titulo-djg" style="margin-top: 10px;">Dispositivos</p>
+
+          <p v-if="loadingDispositivos">Cargando dispositivos…</p>
+
+          <template v-else>
+            <p v-if="dispositivosZonaSeleccionada.length === 0">
+              No hay dispositivos en esta ubicación.
+            </p>
+
+            <ul v-else style="margin: 0; padding-left: 18px;">
+              <li v-for="(d, idx) in dispositivosZonaSeleccionada" :key="d?.id ?? d?._id ?? idx">
+                {{ d?.nombre ?? d?.name ?? d?.deviceName ?? 'Dispositivo' }}
+              </li>
+            </ul>
+          </template>
         </template>
       </div>
     </div>
 
     <!-- MAPAS -->
     <div class="contenedor">
-
       <!-- PLANTA BAJA -->
       <div v-show="planta === 'baja'" id="planta-baja" class="caja-mapa" :style="mapStyle(plantaBajaUrl)">
         <div
@@ -169,8 +190,13 @@
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount, onMounted } from 'vue'
-import { obtenerCursosAcademicos, obtenerEspaciosFijo, obtenerEspaciosDesdoble, obtenerEspaciosSinDocencia } from '@/services/automationsMap'
-
+import {
+  obtenerDispositivos,
+  obtenerCursosAcademicos,
+  obtenerEspaciosFijo,
+  obtenerEspaciosDesdoble,
+  obtenerEspaciosSinDocencia
+} from '@/services/automationsMap'
 
 // TOAST
 const isToastOpen = ref(false)
@@ -185,7 +211,6 @@ const rotationSeconds = ref(10)
 let rotationTimer: number | null = null
 
 const ROTATION_ORDER: Planta[] = ['baja', 'primera', 'segunda']
-
 
 const plantaBajaUrl = '/img/automations/Planta-baja.png'
 const plantaPrimeraUrl = '/img/automations/Planta-primera.png'
@@ -279,7 +304,7 @@ const loadingCursos = ref(false)
 const loadingEspacios = ref(false)
 
 // ------------------------------
-// ESPACIOS FIJOS (DTO)
+// ESPACIOS (DTO)
 // ------------------------------
 type EspacioFijoDto = {
   cursoAcademico: string
@@ -292,7 +317,6 @@ type EspacioDesdobleDto = {
   cursoAcademico: string
   nombre: string
 }
-
 type EspacioSinDocenciaDto = {
   cursoAcademico: string
   nombre: string
@@ -303,9 +327,14 @@ const espaciosSinDocencia = ref<EspacioSinDocenciaDto[]>([])
 const espaciosFijos = ref<EspacioFijoDto[]>([])
 
 // ------------------------------
+// DISPOSITIVOS
+// ------------------------------
+const loadingDispositivos = ref(false)
+const dispositivos = ref<any[]>([])
+
+// ------------------------------
 // NORMALIZACIÓN
 // ------------------------------
-
 const normalizarEspacioNombreAZoneId = (nombre: string): string =>
 {
   // nos quedamos solo con el prefijo si viene con " - ..."
@@ -339,6 +368,12 @@ const normalizarEspacioNombreAZoneId = (nombre: string): string =>
   return ''
 }
 
+const normalizarUbicacionDispositivoAZoneId = (ubicacion: string): string =>
+{
+  if (!ubicacion) return ''
+  return normalizarEspacioNombreAZoneId(ubicacion)
+}
+
 // "aula2-15" => "Aula 2.15"
 const zoneIdToAulaNombre = (zoneId: string): string =>
 {
@@ -353,7 +388,6 @@ const zoneIdToAulaNombre = (zoneId: string): string =>
 
   return `Aula ${planta}.${aula}${orientacion}`
 }
-
 
 // label completo para el localizador:
 // "Aula 2.15 - 3º ESO-A"  ó  "Aula 2.23"
@@ -376,36 +410,33 @@ const zoneIdToLocalizadorLabel = (zoneId: string): string =>
   return `${aulaNombre} - ${info}`
 }
 
-    const STATIC_ZONE_LABELS: Record<string, string> = {
-      'caldera': 'Caldera',
-      'cafeteria': 'Cafetería',
-      'aseos-f': 'Aseos (F)',
-      'aseos-m': 'Aseos (M)',
-      'conserjeria': 'Conserjería',
-      'ampa-visitas': 'Visitas',
-      'secretaria': 'Secretaría',
-      'biblioteca': 'Biblioteca',
-      'sala-profesores': 'Sala de profesores',
-      'salon-actos': 'Salón de actos',
-      'direccion': 'Dirección',
-      'jefatura-estudios': 'Jefatura de estudios',
-      'taller-lince': 'Taller Lince',
-      'aseos-central': 'Aseos',
-      'aseos1-m': 'Aseos (M)',
-      'aseos1-f': 'Aseos (F)',
-      'aseos2-m': 'Aseos (M)',
-      'aseos2-f': 'Aseos (F)',
-      'aula1-10': 'Aula del Máquina!',
-      'aula2-10': 'Audiovisuales',
-      'aula2-21': 'Convivencia',
-      'pista-padel': 'Pista de Padel',
-      'gimnasio':'Gimnasio'
-      
-    }
+const STATIC_ZONE_LABELS: Record<string, string> = {
+  caldera: 'Caldera',
+  cafeteria: 'Cafetería',
+  'aseos-f': 'Aseos (F)',
+  'aseos-m': 'Aseos (M)',
+  conserjeria: 'Conserjería',
+  'ampa-visitas': 'Visitas',
+  secretaria: 'Secretaría',
+  biblioteca: 'Biblioteca',
+  'sala-profesores': 'Sala de profesores',
+  'salon-actos': 'Salón de actos',
+  direccion: 'Dirección',
+  'jefatura-estudios': 'Jefatura de estudios',
+  'taller-lince': 'Taller Lince',
+  'aseos-central': 'Aseos',
+  'aseos1-m': 'Aseos (M)',
+  'aseos1-f': 'Aseos (F)',
+  'aseos2-m': 'Aseos (M)',
+  'aseos2-f': 'Aseos (F)',
+  'aula1-10': 'Aula del Máquina!',
+  'aula2-10': 'Audiovisuales',
+  'aula2-21': 'Convivencia',
+  'pista-padel': 'Pista de Padel',
+  gimnasio: 'Gimnasio'
+}
 
-    const isStaticZone = (zoneId: string) => !!STATIC_ZONE_LABELS[zoneId]
-
-
+const isStaticZone = (zoneId: string) => !!STATIC_ZONE_LABELS[zoneId]
 
 // ------------------------------
 // MAPEO zoneId -> "2 ESO A"
@@ -414,7 +445,6 @@ const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
 {
   const map: Record<string, string> = {}
 
-  
   for (const e of espaciosFijos.value)
   {
     const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
@@ -423,7 +453,6 @@ const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
     if (e.curso && e.etapa && e.grupo)
     {
       map[zoneId] = `${e.curso} ${e.etapa} ${e.grupo}`.replace(/\s+/g, ' ').trim()
-      //map[zoneId] = `${e.curso}º ${e.etapa}-${e.grupo}`
     }
   }
 
@@ -432,7 +461,6 @@ const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
   {
     const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
     if (!zoneId) continue
-
     map[zoneId] = 'Desdobles'
   }
 
@@ -441,13 +469,11 @@ const zoneIdToFinalLabel = computed<Record<string, string>>(() =>
   {
     const zoneId = normalizarEspacioNombreAZoneId(e.nombre)
     if (!zoneId) continue
-
     map[zoneId] = 'Sin docencia'
   }
 
   return map
 })
-
 
 const zonaGrupoLabel = (zoneId: string) =>
 {
@@ -465,6 +491,28 @@ const zonaGrupoLabel = (zoneId: string) =>
 }
 
 // ------------------------------
+// DISPOSITIVOS POR ZONA SELECCIONADA
+// ------------------------------
+const dispositivosZonaSeleccionada = computed(() =>
+{
+  if (!selectedZoneId.value) return []
+
+  return dispositivos.value.filter((d: any) =>
+  {
+    const ubic =
+      d?.ubicacion ??
+      d?.location ??
+      d?.aula ??
+      d?.zona ??
+      d?.nombreUbicacion ??
+      ''
+
+    const zoneId = normalizarUbicacionDispositivoAZoneId(String(ubic))
+    return zoneId === selectedZoneId.value
+  })
+})
+
+// ------------------------------
 // LOCALIZADOR
 // ------------------------------
 const selectedZoneKey = ref<string>('')
@@ -474,7 +522,6 @@ const zoneOptions = computed(() =>
     label: zoneIdToLocalizadorLabel(id)
   }))
 )
-
 
 // Selección (click)
 const selectedZoneId = ref<string>('')
@@ -533,6 +580,7 @@ const setPlant = (p: Planta) =>
   planta.value = p
   if (selectedZoneId.value) centerZone(selectedZoneId.value)
 }
+
 const advancePlant = () =>
 {
   const idx = ROTATION_ORDER.indexOf(planta.value)
@@ -568,7 +616,6 @@ const stopRotation = () =>
   }
 }
 
-
 // ------------------------------
 // DIMENSIONES
 // ------------------------------
@@ -603,7 +650,7 @@ const mapStyle = (imgUrl: string) =>
   }) as const
 
 // ------------------------------
-// CARGA DATOS (SOLO FIJOS)
+// CARGA DATOS
 // ------------------------------
 const cargarCursosYEspaciosFijos = async () =>
 {
@@ -615,7 +662,7 @@ const cargarCursosYEspaciosFijos = async () =>
     const cursos = await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen)
     cursosAcademicos.value = cursos as any
 
-    const sel = cursosAcademicos.value.find(c => c.seleccionado)
+    const sel = cursosAcademicos.value.find((c) => c.seleccionado)
     cursoAcademicoSeleccionado.value = sel?.cursoAcademico ?? cursosAcademicos.value[0]?.cursoAcademico ?? ''
 
     if (!cursoAcademicoSeleccionado.value)
@@ -623,16 +670,11 @@ const cargarCursosYEspaciosFijos = async () =>
       throw new Error('No hay cursos académicos disponibles')
     }
 
-    [
-      espaciosFijos.value,
-      espaciosDesdoble.value,
-      espaciosSinDocencia.value
-    ] = await Promise.all([
+    ;[espaciosFijos.value, espaciosDesdoble.value, espaciosSinDocencia.value] = (await Promise.all([
       obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value),
       obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value),
       obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value)
-    ]) as any
-
+    ])) as any
 
     console.log('CURSO ACADÉMICO:', cursoAcademicoSeleccionado.value)
     console.log('ESPACIOS FIJOS:', espaciosFijos.value)
@@ -657,12 +699,12 @@ const recargarEspaciosFijos = async () =>
   loadingEspacios.value = true
   try
   {
-    espaciosFijos.value = await obtenerEspaciosFijo(
+    espaciosFijos.value = (await obtenerEspaciosFijo(
       toastMessage,
       toastColor,
       isToastOpen,
       cursoAcademicoSeleccionado.value
-    ) as any
+    )) as any
   }
   catch (e: any)
   {
@@ -683,7 +725,22 @@ onMounted(async () =>
 {
   await cargarCursosYEspaciosFijos()
 
-
+  // Cargar dispositivos una vez
+  loadingDispositivos.value = true
+  try
+  {
+    dispositivos.value = (await obtenerDispositivos(toastMessage, toastColor, isToastOpen)) as any
+  }
+  catch (e: any)
+  {
+    toastMessage.value = e?.message ?? 'Error cargando dispositivos'
+    toastColor.value = 'danger'
+    isToastOpen.value = true
+  }
+  finally
+  {
+    loadingDispositivos.value = false
+  }
 })
 
 onBeforeUnmount(() =>
@@ -693,7 +750,6 @@ onBeforeUnmount(() =>
     window.clearInterval(rotationTimer)
   }
 })
-
 </script>
 
 <style scoped>
@@ -781,7 +837,7 @@ button:hover {
 
 .caja-mapa {
   position: relative;
-  border: 3px solid rgba(0,0,0,0.35);
+  border: 3px solid rgba(0, 0, 0, 0.35);
   background-repeat: no-repeat;
   background-position: top left;
   background-size: 100% 100%;
@@ -814,7 +870,7 @@ button:hover {
   background: rgba(255, 255, 255, 0.75);
   padding: 2px 6px;
   border-radius: 6px;
-  border: 1px solid rgba(0,0,0,0.25);
+  border: 1px solid rgba(0, 0, 0, 0.25);
   pointer-events: none; /* para que el click siga siendo de la zona */
   white-space: pre-line;
   text-align: center;
@@ -845,79 +901,77 @@ button:hover {
   font-weight: 800;
 }
 
-
 /* PLANTA BAJA */
-#aula0-12 { height: 14.5%; width: 7%; top: 1.6%; left: 14%; }
-#aula0-13 { height: 9%; width: 7%; top: 1.6%; left: 21%; }
-#aula0-14 { height: 9%; width: 7%; top: 1.6%; left: 28%; }
-#gimnasio { height: 11%; width: 18.4%; top: 29.5%; left: 12%; }
-#aula0-11 { height: 10.8%; width: 8.1%; top: 25.3%; left: 44.2%; }
-#aula0-9 { height: 10.8%; width: 11.9%; top: 25.3%; left: 52.6%; }
-#aula0-5 { height: 9.5%; width: 9%; top: 27.5%; right: 12.8%; }
-#pista-padel { height: 14.4%; width: 20.6%; top: 9.7%; right: 8.6%; transform: rotate(5.25deg); }
-#aula0-7 { height: 10.3%; width: 7.1%; top: 37.4%; right: 14.8%; }
-#aula0-3 { height: 10%; width: 3.6%; top: 61.6%; right: 13.8%; }
-#aula0-1 { height: 10%; width: 5.5%; top: 61.6%; right: 17.7%; }
-#aula0-2-norte { height: 13.2%; width: 4.5%; top: 72.8%; left: 12%; }
-#aula0-2-sur { height: 13.2%; width: 4.5%; top: 72.8%; left: 16.7%; }
+  #aula0-12 { height: 14.5%; width: 7%; top: 1.6%; left: 14%; }
+  #aula0-13 { height: 9%; width: 7%; top: 1.6%; left: 21%; }
+  #aula0-14 { height: 9%; width: 7%; top: 1.6%; left: 28%; }
+  #gimnasio { height: 11%; width: 18.4%; top: 29.5%; left: 12%; }
+  #aula0-11 { height: 10.8%; width: 8.1%; top: 25.3%; left: 44.2%; }
+  #aula0-9 { height: 10.8%; width: 11.9%; top: 25.3%; left: 52.6%; }
+  #aula0-5 { height: 9.5%; width: 9%; top: 27.5%; right: 12.8%; }
+  #pista-padel { height: 14.4%; width: 20.6%; top: 9.7%; right: 8.6%; transform: rotate(5.25deg); }
+  #aula0-7 { height: 10.3%; width: 7.1%; top: 37.4%; right: 14.8%; }
+  #aula0-3 { height: 10%; width: 3.6%; top: 61.6%; right: 13.8%; }
+  #aula0-1 { height: 10%; width: 5.5%; top: 61.6%; right: 17.7%; }
+  #aula0-2-norte { height: 13.2%; width: 4.5%; top: 72.8%; left: 12%; }
+  #aula0-2-sur { height: 13.2%; width: 4.5%; top: 72.8%; left: 16.7%; }
 
 /* ===== ZONAS FIJAS PLANTA BAJA ===== */
 
-#caldera {height:10%;width:4.6%;top:76%;left:21.3%;}
-#cafeteria {height:10%;width:7%;top:76%;left:25.8%;}
-#aseos-f {height:10%;width:3.5%;top:76%;left:33%;}
-#aseos-m {height:10%;width:3.5%;top:76%;left:36.5%;}
-#ampa-visitas {height:4%;width:4.8%;top:61.9%;left:35.3%;}
-#conserjeria {height:6.5%;width:4.8%;top:65.9%;left:35.3%;}
-#secretaria {height:10.4%;width:6.8%;top:61.5%;left:44.2%;}
-#biblioteca {height:10.4%;width:11.8%;top:61.5%;left:50.7%;}
-#sala-profesores {height:10.4%;width:9.4%;top:61.5%;left:62.8%;}
-#aseos-central {height:10.4%;width:4.4%;top:61.5%;left:72.2%;}
-#salon-actos {height:10.2%;width:23.4%;top:47.9%;left:44.0%;}
-#direccion {height:10.2%;width:4.7%;top:47.9%;left:67.4%;}
-#jefatura-estudios {height:10.2%;width:4.6%;top:47.9%;left:72%;}
-#taller-lince {height:10.2%;width:6.3%;top:47.9%;left:76.6%;}
+  #caldera {height:10%;width:4.6%;top:76%;left:21.3%;}
+  #cafeteria {height:10%;width:7%;top:76%;left:25.8%;}
+  #aseos-f {height:10%;width:3.5%;top:76%;left:33%;}
+  #aseos-m {height:10%;width:3.5%;top:76%;left:36.5%;}
+  #ampa-visitas {height:4%;width:4.8%;top:61.9%;left:35.3%;}
+  #conserjeria {height:6.5%;width:4.8%;top:65.9%;left:35.3%;}
+  #secretaria {height:10.4%;width:6.8%;top:61.5%;left:44.2%;}
+  #biblioteca {height:10.4%;width:11.8%;top:61.5%;left:50.7%;}
+  #sala-profesores {height:10.4%;width:9.4%;top:61.5%;left:62.8%;}
+  #aseos-central {height:10.4%;width:4.4%;top:61.5%;left:72.2%;}
+  #salon-actos {height:10.2%;width:23.4%;top:47.9%;left:44.0%;}
+  #direccion {height:10.2%;width:4.7%;top:47.9%;left:67.4%;}
+  #jefatura-estudios {height:10.2%;width:4.6%;top:47.9%;left:72%;}
+  #taller-lince {height:10.2%;width:6.3%;top:47.9%;left:76.6%;}
 
 /* PLANTA PRIMERA */
-#aula1-11 { height: 25.3%; width: 11.3%; top: 10.5%; right: 4.9%; }
-#aula1-9 { height: 11%; width: 11.6%; top: 54.5%; right: 6.1%; }
-#aula1-7 { height: 11%; width: 11%; top: 54.5%; right: 18.3%; }
-#aula1-5 { height: 11%; width: 11.2%; top: 54.5%; right: 29.75%; }
-#aula1-3 { height: 11%; width: 11.5%; top: 54.5%; right: 41.3%; }
-#aula1-1 { height: 11%; width: 5.5%; top: 54.5%; right: 53.1%; }
-#aula1-19 { height: 11.4%; width: 5.4%; top: 36.6%; right: 53.1%; }
-#aula1-17 { height: 11.4%; width: 11.6%; top: 36.6%; right: 41.2%; }
-#aula1-15 { height: 11.4%; width: 11.3%; top: 36.6%; right: 29.7%; }
-#aula1-13 { height: 11.4%; width: 11.2%; top: 36.6%; right: 18.2%; }
-#aula1-2 { height: 11.2%; width: 11.5%; top: 54.5%; left: 24.6%; }
-#aula1-4 { height: 11.2%; width: 11.5%; top: 54.5%; left: 12.9%; }
-#aula1-6 { height: 11.2%; width: 11.3%; top: 54.5%; left: 1.3%; }
-#aula1-8 { height: 11.3%; width: 11.3%; top: 72.3%; left: 1.3%; }
-#aula1-10 { height: 11.3%; width: 5.5%; top: 72.3%; left: 12.9%; }
-#aula1-12 { height: 11.3%; width: 11.4%; top: 72.3%; left: 18.7%; }
-#aseos1-m {height:11.6%;width:3.2%;top:72.4%;left:30%;}
-#aseos1-f {height:11.6%;width:3.2%;top:72.4%;left:33.2%;}
-
+  #aula1-11 { height: 25.3%; width: 11.3%; top: 10.5%; right: 4.9%; }
+  #aula1-9 { height: 11%; width: 11.6%; top: 54.5%; right: 6.1%; }
+  #aula1-7 { height: 11%; width: 11%; top: 54.5%; right: 18.3%; }
+  #aula1-5 { height: 11%; width: 11.2%; top: 54.5%; right: 29.75%; }
+  #aula1-3 { height: 11%; width: 11.5%; top: 54.5%; right: 41.3%; }
+  #aula1-1 { height: 11%; width: 5.5%; top: 54.5%; right: 53.1%; }
+  #aula1-19 { height: 11.4%; width: 5.4%; top: 36.6%; right: 53.1%; }
+  #aula1-17 { height: 11.4%; width: 11.6%; top: 36.6%; right: 41.2%; }
+  #aula1-15 { height: 11.4%; width: 11.3%; top: 36.6%; right: 29.7%; }
+  #aula1-13 { height: 11.4%; width: 11.2%; top: 36.6%; right: 18.2%; }
+  #aula1-2 { height: 11.2%; width: 11.5%; top: 54.5%; left: 24.6%; }
+  #aula1-4 { height: 11.2%; width: 11.5%; top: 54.5%; left: 12.9%; }
+  #aula1-6 { height: 11.2%; width: 11.3%; top: 54.5%; left: 1.3%; }
+  #aula1-8 { height: 11.3%; width: 11.3%; top: 72.3%; left: 1.3%; }
+  #aula1-10 { height: 11.3%; width: 5.5%; top: 72.3%; left: 12.9%; }
+  #aula1-12 { height: 11.3%; width: 11.4%; top: 72.3%; left: 18.7%; }
+  #aseos1-m {height:11.6%;width:3.2%;top:72.4%;left:30%;}
+  #aseos1-f {height:11.6%;width:3.2%;top:72.4%;left:33.2%;}
 
 /* PLANTA SEGUNDA */
-#aula2-11 { height: 12.2%; width: 11.3%; top: 9%; right: 4.5%; }
-#aula2-13 { height: 12.5%; width: 8.9%; top: 21.5%; right: 7%; }
-#aula2-9 { height: 11%; width: 11.7%; top: 52.8%; right: 5.9%; }
-#aula2-7 { height: 11%; width: 11.1%; top: 52.8%; right: 18%; }
-#aula2-5 { height: 11%; width: 11.2%; top: 52.8%; right: 29.45%; }
-#aula2-3 { height: 11%; width: 11.6%; top: 52.8%; right: 41%; }
-#aula2-1 { height: 11%; width: 5.5%; top: 52.8%; right: 52.9%; }
-#aula2-23 { height: 11.2%; width: 4.1%; top: 35%; right: 54.1%; }
-#aula2-21 { height: 11.2%; width: 3.9%; top: 35%; right: 50%; }
-#aula2-19 { height: 11.2%; width: 8.7%; top: 35%; right: 41%; }
-#aula2-17 { height: 11.2%; width: 11.3%; top: 35%; right: 29.4%; }
-#aula2-15 { height: 11.2%; width: 11.2%; top: 35%; right: 18%; }
-#aula2-2 { height: 11.2%; width: 11.5%; top: 52.8%; left: 24.8%; }
-#aula2-4 { height: 11.2%; width: 11.5%; top: 52.8%; left: 13%; }
-#aula2-6 { height: 11.2%; width: 11.3%; top: 52.8%; left: 1.5%; }
-#aula2-8 { height: 11.3%; width: 11.3%; top: 70.6%; left: 1.5%; }
-#aula2-10 { height: 11.3%; width: 5.5%; top: 70.6%; left: 13.1%; }
-#aula2-12 { height: 11.3%; width: 11.4%; top: 70.6%; left: 18.9%; }
-#aseos2-m {height:11.6%;width:3.2%;top:70.6%;left:30%;}
-#aseos2-f {height:11.6%;width:3.2%;top:70.6%;left:33.2%;}
+  #aula2-11 { height: 12.2%; width: 11.3%; top: 9%; right: 4.5%; }
+  #aula2-13 { height: 12.5%; width: 8.9%; top: 21.5%; right: 7%; }
+  #aula2-9 { height: 11%; width: 11.7%; top: 52.8%; right: 5.9%; }
+  #aula2-7 { height: 11%; width: 11.1%; top: 52.8%; right: 18%; }
+  #aula2-5 { height: 11%; width: 11.2%; top: 52.8%; right: 29.45%; }
+  #aula2-3 { height: 11%; width: 11.6%; top: 52.8%; right: 41%; }
+  #aula2-1 { height: 11%; width: 5.5%; top: 52.8%; right: 52.9%; }
+  #aula2-23 { height: 11.2%; width: 4.1%; top: 35%; right: 54.1%; }
+  #aula2-21 { height: 11.2%; width: 3.9%; top: 35%; right: 50%; }
+  #aula2-19 { height: 11.2%; width: 8.7%; top: 35%; right: 41%; }
+  #aula2-17 { height: 11.2%; width: 11.3%; top: 35%; right: 29.4%; }
+  #aula2-15 { height: 11.2%; width: 11.2%; top: 35%; right: 18%; }
+  #aula2-2 { height: 11.2%; width: 11.5%; top: 52.8%; left: 24.8%; }
+  #aula2-4 { height: 11.2%; width: 11.5%; top: 52.8%; left: 13%; }
+  #aula2-6 { height: 11.2%; width: 11.3%; top: 52.8%; left: 1.5%; }
+  #aula2-8 { height: 11.3%; width: 11.3%; top: 70.6%; left: 1.5%; }
+  #aula2-10 { height: 11.3%; width: 5.5%; top: 70.6%; left: 13.1%; }
+  #aula2-12 { height: 11.3%; width: 11.4%; top: 70.6%; left: 18.9%; }
+  #aseos2-m {height:11.6%;width:3.2%;top:70.6%;left:30%;}
+  #aseos2-f {height:11.6%;width:3.2%;top:70.6%;left:33.2%;}
 </style>
