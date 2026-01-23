@@ -48,7 +48,6 @@ import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage
 
 import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
 
-const routes = [  
 import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
