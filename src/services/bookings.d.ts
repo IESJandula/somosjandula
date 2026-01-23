@@ -49,3 +49,7 @@ export declare function deleteReservaTemporary(toastMessage: Ref<string>,
 export declare function deleteRecursoReserva(toastMessage: Ref<string>,
                                                 toastColor: Ref<string>,
                                                 isToastOpen: Ref<boolean>): Promise<void>;
+
+export declare function crearActuador(toastMessage: Ref<string>,
+                                    toastColor: Ref<string>,
+                                    isToastOpen: Ref<boolean>): Promise<string[]>;

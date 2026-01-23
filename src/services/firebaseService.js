@@ -253,3 +253,14 @@ export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
       }
   }).then(res => res.json());
 }
+
+export async function obtenerDatosUsuarioSesion(toastMessage, toastColor, isToastOpen)
+{
+  const email = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
+  const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+
+  return {
+    email,
+    roles,
+  };
+}

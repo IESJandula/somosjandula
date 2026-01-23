@@ -21,7 +21,6 @@ import AbsencesReviewPage from '@/views/absences/AbsencesReviewPage.vue';
 import AbsencesTasksPage from '@/views/absences/AbsencesTasksPage.vue';
 
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
-import ITIssuesPage from '@/views/documents/ITIssuesPage.vue';
 import PDIsTrainingPage from '@/views/documents/PDIsTrainingPage.vue';
 
 import ControlPanel from '@/views/projectors/ControlPanel.vue';
@@ -50,6 +49,18 @@ import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage
 import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
 
 const routes = [  
+import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
+import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
+import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
+
+import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
+import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
+
+import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
+
+import StatisticsView from '@/views/statistics/StatisticsView.vue';
+
+const routes = [
   {
     path: '/',
     redirect: '/login',
@@ -147,14 +158,6 @@ const routes = [
         },
       },
       {
-        path: 'documents/itIssues',
-        component: ITIssuesPage,
-        name: 'DocumentsITIssuesPage',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
         path: 'documents/pdisTraining',
         component: PDIsTrainingPage,
         name: 'DocumentsPDIsTrainingPage',
@@ -183,7 +186,7 @@ const routes = [
         component: ManageNotificationsPage,
         name: 'ManageNotificationsPage',
         meta: {
-          role: 'PROFESOR', 
+          role: 'PROFESOR',
         },
       },
       {
@@ -238,24 +241,24 @@ const routes = [
         path: 'projectors/ControlPanel',
         component: ControlPanel,
         name: 'ControlPanel',
-        meta: { 
-          role: 'ADMINISTRADOR' 
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
       {
         path: 'projectors/RemoteControl',
         component: RemoteControl,
         name: 'RemoteControl',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'projectors/EventsTable',
         component: EventsTable,
         name: 'EventsTable',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
@@ -310,8 +313,53 @@ const routes = [
         path: 'eventsSchool/admin',
         component: EventsSchoolAdminPage,
         name: 'EventsSchoolAdmin',
+        path: '/issues',
+        name: 'Issues',
+        component: IncidenciasTicPage,
+        meta: { role: 'PROFESOR' },
+      },
+      {
+        path: '/issues/stats',
+        name: 'IssuesStatsPage',
+        component: EstadisticasIncidenciasTicPage,
+        meta: { role: 'PROFESOR' },
+      },
+      {
+        path: '/issues/admin',
+        name: 'IssuesTicAdminPage',
+        component: IncidenciasTicAdminPage,
+        meta: { role: 'ADMINISTRADOR' },
+      },
+      {
+        path: 'automations/admin',
+        component: AutomationsAdminPage,
+        name: 'AutomationsAdmin',
         meta: {
           role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: 'automations/map',
+        component: AutomationsMapView,
+        name: 'AutomationsMapView',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'schoolBaseServer/admin',
+        component: SchoolBaseServerAdminPage,
+        name: 'SchoolBaseServerAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: '/statistics',
+        component: StatisticsView,
+        name: 'Statistics',
+        meta: {
+          role: 'PROFESOR'
         },
       },
     ],

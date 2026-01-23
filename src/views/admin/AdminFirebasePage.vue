@@ -24,15 +24,6 @@
       </div>
     </div>
 
-    <div class="form-container">
-      <h1 class="title">Configuración de Gmail</h1>
-      <div class="form-section">
-        <div style="margin-top: 15px;">
-          <ion-button expand="block" @click="autorizarGmailOAuthLlamadaServicio">Autorizar Gmail OAuth</ion-button>
-        </div>
-      </div>
-    </div>
-
     <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
       @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
   </div>
@@ -42,7 +33,6 @@
   import { IonButton, IonToast } from '@ionic/vue';
   import { ref } from 'vue';
   import { importarUsuarios, importarAplicaciones }  from '@/services/firebaseService';
-  import { autorizarGmailOAuth } from '@/services/notifications';
 
   const toastMessage = ref('');
   const toastColor = ref('success');
@@ -60,10 +50,6 @@
   const uploadApps = async () => {
     const file = fileInputApps.value.files[0];
     await importarAplicaciones(toastMessage, toastColor, isToastOpen, file);
-  };
-
-  const autorizarGmailOAuthLlamadaServicio = async () => {
-    await autorizarGmailOAuth(toastMessage, toastColor, isToastOpen);
   };
 </script>
 

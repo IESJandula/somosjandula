@@ -20,6 +20,11 @@ export interface NombreYApellidos {
   apellidos: string
 }
 
+export interface DatosUsuarioSesion {
+  email: string;
+  roles: string[];
+}
+
 export function validarRolesMenu(toastMessage: Ref<string>,
                                  toastColor: Ref<string>,
                                  isToastOpen: Ref<boolean>): Promise<RolesMenu>;
@@ -47,3 +52,8 @@ export async function obtenerTokenJWTValido(toastMessage: Ref<string>,
 export async function obtenerInfoUsuarios(toastMessage: Ref<string>,
                                           toastColor: Ref<string>,
                                           isToastOpen: Ref<boolean>): Promise<[]>;
+
+export declare function obtenerDatosUsuarioSesion(toastMessage: Ref<string>,
+                                                  toastColor: Ref<string>,
+                                                  isToastOpen: Ref<boolean>
+                                                ): Promise<DatosUsuarioSesion>;

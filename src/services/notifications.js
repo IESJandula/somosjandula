@@ -2,6 +2,10 @@ import { notificationsApiUrl } from '@/environment/apiUrls';
 import { crearToast } from '@/utils/toast.js';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
+/*************************************************/
+/******** Gestión de notificaciones web **********/
+/*************************************************/
+
 /**
  * Obtiene los receptores de usuario.
  */
@@ -194,6 +198,10 @@ export async function borrarNotificacionWeb(toastMessage, toastColor, isToastOpe
   }
 }
 
+/*********************************************************/
+/******************** Administración *********************/
+/*********************************************************/
+
 /**
  * Autoriza Gmail OAuth.
  * Obtiene la URL de autorización del servidor y la abre en el navegador.
@@ -230,6 +238,231 @@ export async function autorizarGmailOAuth(toastMessage, toastColor, isToastOpen)
 
     return true;
   } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Crea una nueva aplicación.
+ */
+export async function crearAplicacion(toastMessage, toastColor, isToastOpen, nombreAplicacion, notificacionesMaximasCalendar, notificacionesMaximasEmail, notificacionesMaximasWeb)
+{
+  try
+  {
+    // Obtenemos el token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // Enviamos la petición al backend
+    const response = await fetch(notificationsApiUrl + '/notifications/admin/',
+    {
+      method: 'POST',
+      headers:
+      {
+        Authorization: `Bearer ${token}`,
+        aplicacion: nombreAplicacion,
+        notificacionesMaximasCalendar: notificacionesMaximasCalendar,
+        notificacionesMaximasEmail: notificacionesMaximasEmail,
+        notificacionesMaximasWeb: notificacionesMaximasWeb
+      }
+    });
+
+    // Si la respuesta es de error, lanzamos la excepción
+    if (!response.ok)
+    {
+      const errorMessage = await response.json();
+      throw new Error(errorMessage.message || 'Error al crear la aplicación');
+    }
+
+    // Si llegamos aquí es porque la respuesta es correcta y mostramos el toast
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Aplicación creada correctamente");
+  }
+  catch (error)
+  {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Lista las aplicaciones.
+ */
+export async function listarAplicaciones(toastMessage, toastColor, isToastOpen, pageNumber, pageSize) {
+  try
+  {
+    // Obtenemos el token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // Enviamos la petición al backend
+    const response = await fetch(notificationsApiUrl + '/notifications/admin/?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
+    {
+      method: 'GET',
+      headers:
+      {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    // Obtenemos los datos de respuesta
+    const data = await response.json();
+
+    // Si la respuesta es de error, lanzamos la excepción
+    if (!response.ok)
+    {
+      throw new Error(data.message);
+    }
+    
+    // Si no hay datos, devolvemos un array vacío
+    if (!data || data.length === 0)
+    {
+      return [];
+    }
+
+    // Si llegamos aquí es porque la respuesta contiene datos, devolvemos los datos
+    return data;
+  }
+  catch (error)
+  {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza el valor máximo de notificaciones de calendario para una aplicación.
+ */
+export async function actualizarNotificacionesMaximasCalendar(toastMessage, toastColor, isToastOpen, nombreAplicacion, nuevoValorMaximoAplicacion)
+{
+  try
+  {
+    // Obtenemos el token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // Enviamos la petición al backend
+    const response = await fetch(notificationsApiUrl + '/notifications/admin/calendar',
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        aplicacion: nombreAplicacion,
+        notificacionesMaximas: nuevoValorMaximoAplicacion
+      },
+    });
+
+    if (!response.ok)
+    {
+      const errorMessage = await response.json();
+      throw new Error(errorMessage.message || 'Error al actualizar el máximo de calendario');
+    }
+  }
+  catch (error)
+  {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza el valor máximo de notificaciones de email para una aplicación.
+ */
+export async function actualizarNotificacionesMaximasEmail(toastMessage, toastColor, isToastOpen, nombreAplicacion, nuevoValorMaximoAplicacion)
+{
+  try
+  {
+    // Obtenemos el token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // Enviamos la petición al backend
+    const response = await fetch(notificationsApiUrl + '/notifications/admin/email',
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        aplicacion: nombreAplicacion,
+        notificacionesMaximas: nuevoValorMaximoAplicacion
+      },
+    });
+
+    if (!response.ok)
+      {
+      const errorMessage = await response.json();
+      throw new Error(errorMessage.message || 'Error al actualizar el máximo de email');
+    }
+  }
+  catch (error)
+  {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Actualiza el valor máximo de notificaciones de web para una aplicación.
+ */
+export async function actualizarNotificacionesMaximasWeb(toastMessage, toastColor, isToastOpen, nombreAplicacion, nuevoValorMaximoAplicacion)
+{
+  try
+  {
+    // Obtenemos el token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // Enviamos la petición al backend
+    const response = await fetch(notificationsApiUrl + '/notifications/admin/web',
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        aplicacion: nombreAplicacion,
+        notificacionesMaximas: nuevoValorMaximoAplicacion
+      },
+    });
+
+    if (!response.ok)
+    {
+      const errorMessage = await response.json();
+      throw new Error(errorMessage.message || 'Error al actualizar el máximo de web');
+    }
+  }
+  catch (error)
+  {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Borra una aplicación por su nombre.
+ */
+export async function borrarAplicacion(toastMessage, toastColor, isToastOpen, nombreAplicacion)
+{
+  try
+  {
+    // Obtenemos el token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // Enviamos la petición al backend
+    const response = await fetch(notificationsApiUrl + '/notifications/admin/',
+    {
+      method: 'DELETE',
+      headers:
+      {
+        Authorization: `Bearer ${token}`,
+        aplicacion: nombreAplicacion
+      },
+    });
+
+    // Si la respuesta es de error, lanzamos la excepción
+    if (!response.ok)
+    {
+      const errorMessage = await response.json();
+      throw new Error(errorMessage.message || 'Error al borrar la aplicación');
+    }
+
+    // Si llegamos aquí es porque la respuesta es correcta y mostramos el toast
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Aplicación borrada correctamente");
+  }
+  catch (error)
+  {
     crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
     throw error;
   }
