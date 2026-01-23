@@ -55,7 +55,9 @@ import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
 
 import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
 
-const routes = [  
+import StatisticsView from '@/views/statistics/StatisticsView.vue';
+
+const routes = [
   {
     path: '/',
     redirect: '/login',
@@ -181,7 +183,7 @@ const routes = [
         component: ManageNotificationsPage,
         name: 'ManageNotificationsPage',
         meta: {
-          role: 'PROFESOR', 
+          role: 'PROFESOR',
         },
       },
       {
@@ -236,24 +238,24 @@ const routes = [
         path: 'projectors/ControlPanel',
         component: ControlPanel,
         name: 'ControlPanel',
-        meta: { 
-          role: 'ADMINISTRADOR' 
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
       {
         path: 'projectors/RemoteControl',
         component: RemoteControl,
         name: 'RemoteControl',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'projectors/EventsTable',
         component: EventsTable,
         name: 'EventsTable',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
@@ -344,6 +346,14 @@ const routes = [
         name: 'SchoolBaseServerAdmin',
         meta: {
           role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: '/statistics',
+        component: StatisticsView,
+        name: 'Statistics',
+        meta: {
+          role: 'PROFESOR'
         },
       },
     ],
