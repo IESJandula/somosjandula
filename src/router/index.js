@@ -327,12 +327,12 @@ const routes = [
         name: 'EventsSchoolAdmin',
         meta: {role: 'ADMINISTRADOR'},
       },
-      /*{
+      {
         path: '/events/users',
         component: EventsSchoolPage,
         name: 'EventsSchoolPage',
         meta: {role: 'PROFESOR'},
-      },*/
+      },
       
     ],
   },

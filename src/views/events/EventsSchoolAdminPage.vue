@@ -4,31 +4,31 @@
       <div class="left-top-container">
         <div class="form-container">
           <h2 class="window-title">CREAR CATEGORÍA</h2>
-
-          <div class="form-grid">
-            <div class="form-row">
-              <label class="form-label">NOMBRE:</label>
-              <input type="text" v-model="nuevaCategoria.nombre" class="form-input" placeholder="" />
-            </div>
-
-            <div class="form-row">
-              <label class="form-label">COLOR:</label>
-              <div class="color-selection">
-                <select v-model="nuevaCategoria.color" class="form-select">
-                  <option value="">Seleccione color</option>
-                  <option v-for="color in coloresDisponibles" :key="color.value" :value="color.value">
-                    {{ color.nombre }}
-                  </option>
-                </select>
-                <div v-if="nuevaCategoria.color" class="color-preview"
-                  :style="{ backgroundColor: nuevaCategoria.color }"></div>
+          <div class="form-content">
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label">NOMBRE:</label>
+                <input type="text" v-model="nuevaCategoria.nombre" class="form-input" placeholder="" />
               </div>
-            </div>
 
-            <div class="top-row">
-              <button type="button" @click="agregarCategoriaFn" class="btn-enviar">
-                ENVIAR
-              </button>
+              <div class="form-row">
+                <label class="form-label">COLOR:</label>
+                <div class="color-selection">
+                  <select v-model="nuevaCategoria.color" class="form-select">
+                    <option value="">Seleccione color</option>
+                    <option v-for="color in coloresDisponibles" :key="color.value" :value="color.value">
+                      {{ color.nombre }}
+                    </option>
+                  </select>
+                  <div v-if="nuevaCategoria.color" class="color-preview"
+                    :style="{ backgroundColor: nuevaCategoria.color }"></div>
+                </div>
+              </div>
+              <div class="button">
+                <button type="button" @click="agregarCategoriaFn" class="btn-enviar">
+                  ENVIAR
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -77,46 +77,48 @@
       <div class="left-bottom-container">
         <div class="form-container usuario-container">
           <h2 class="window-title">CREAR EVENTO</h2>
-          <div class="form-grid">
-            <div class="form-row">
-              <label class="form-label">TÍTULO:</label>
-              <input type="text" v-model="evento.titulo" class="form-input" required />
-            </div>
-
-            <div class="form-row">
-              <label class="form-label">CATEGORIA:</label>
-              <select v-model="evento.nombre" class="form-select" required>
-                <option value="">Seleccione</option>
-                <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
-                  {{ categoria.nombre }}
-                </option>
-              </select>
-            </div>
-
-            <div class="form-row">
-              <label class="form-label">FECHA INICIO:</label>
-              <input type="date" v-model="evento.fechaInicio" class="form-input" required />
-            </div>
-
-            <div class="form-row combined-row">
-              <div class="checkbox-wrapper">
-                <input type="checkbox" id="eventoMismoDia" v-model="eventoMismoDia" @change="toggleMismoDia"
-                  class="form-checkbox" />
-                <label for="eventoMismoDia" class="checkbox-label">
-                  EVENTO FINALIZA ESE DIA
-                </label>
+          <div class="form-content">
+            <div class="form-grid">
+              <div class="form-row">
+                <label class="form-label">TÍTULO:</label>
+                <input type="text" v-model="evento.titulo" class="form-input" required />
               </div>
 
-              <div v-if="!eventoMismoDia" class="fecha-fin-wrapper">
-                <label class="form-label">FECHA FIN:</label>
-                <input type="date" v-model="evento.fechaFin" class="form-input" :required="!eventoMismoDia" />
+              <div class="form-row">
+                <label class="form-label">CATEGORIA:</label>
+                <select v-model="evento.nombre" class="form-select" required>
+                  <option value="">Seleccione</option>
+                  <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
+                    {{ categoria.nombre }}
+                  </option>
+                </select>
               </div>
-            </div>
 
-            <div class="button-row">
-              <button type="button" @click="crearEventoFn" class="btn-enviar">
-                ENVIAR
-              </button>
+              <div class="form-row">
+                <label class="form-label">FECHA INICIO:</label>
+                <input type="date" v-model="evento.fechaInicio" class="form-input" required />
+              </div>
+
+              <div class="form-row combined-row">
+                <div class="checkbox-wrapper">
+                  <input type="checkbox" id="eventoMismoDia" v-model="eventoMismoDia" @change="toggleMismoDia"
+                    class="form-checkbox" />
+                  <label for="eventoMismoDia" class="checkbox-label">
+                    EVENTO FINALIZA ESE DIA
+                  </label>
+                </div>
+
+                <div v-if="!eventoMismoDia" class="fecha-fin-wrapper">
+                  <label class="form-label">FECHA FIN:</label>
+                  <input type="date" v-model="evento.fechaFin" class="form-input" :required="!eventoMismoDia" />
+                </div>
+              </div>
+
+              <div class="button">
+                <button type="button" @click="crearEventoFn" class="btn-enviar">
+                  ENVIAR
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -133,9 +135,9 @@
                   <th>CATEGORIA</th>
                   <th>FECHA INICIO</th>
                   <th>FECHA FIN</th>
-                  <th>NOMBRE DEL USUARIO</th>
-                  <th>APELLIDOS DEL USUARIO</th>
-                  <th>EMAIL DEL USUARIO</th>
+                  <th>NOMBRE</th>
+                  <th>APELLIDOS</th>
+                  <th>EMAIL</th>
                   <th>ACCIONES</th>
                 </tr>
               </thead>
@@ -164,7 +166,7 @@
       </div>
     </div>
   </div>
-    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
@@ -236,9 +238,9 @@ const nuevaCategoria = ref({
 // Colores disponibles para seleccionar
 const coloresDisponibles = ref([
   { value: '#008000', nombre: 'VERDE' },
-  { value: '#0000FF', nombre: 'AZUL' },
-  { value: '#FFFF00', nombre: 'AMARILLO' },
-  { value: '#FF0000', nombre: 'ROJO' }
+  { value: '#4682B4', nombre: 'AZUL' },
+  { value: '#F4D03F', nombre: 'AMARILLO' },
+  { value: '#B9484E', nombre: 'ROJO' }
 ]);
 
 
@@ -259,10 +261,9 @@ async function cargarCategorias() {
 // Crear evento
 async function crearEventoFn() {
 
-    try {
-    
-    if (!evento.value.titulo || !evento.value.nombre || !evento.value.fechaInicio) 
-    {
+  try {
+
+    if (!evento.value.titulo || !evento.value.nombre || !evento.value.fechaInicio) {
       console.error("Faltan campos obligatorios", evento.value);
       return;
     }
@@ -289,8 +290,8 @@ async function crearEventoFn() {
       fechaInicio: fechaInicioLong,
       fechaFin: fechaFinLong,
       nombre: evento.value.nombre,
-      usuarioNombre : evento.value.usuarioNombre,
-      usuarioEmail : evento.value.usuarioEmail
+      usuarioNombre: evento.value.usuarioNombre,
+      usuarioEmail: evento.value.usuarioEmail
     });
 
     await crearEvento(
@@ -322,7 +323,7 @@ async function crearEventoFn() {
 
     // Limpiar formulario
     evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombre: "", usuarioNombre: "", usuarioApellidos: "", usuarioEmail: "" };
-    eventoMismoDia.value = false;
+    eventoMismoDia.value = true;
 
     // Recargar lista de eventos
     await cargarEventos();
@@ -356,9 +357,9 @@ function toggleMismoDia() {
 
 // Crear categoría
 
-async function agregarCategoriaFn(){
- if (!nuevaCategoria.value.nombre || !nuevaCategoria.value.color) {
-      crearToast(toastMessage, toastColor, isToastOpen,"error","Debes indicar un nombre y un color para la categoría");
+async function agregarCategoriaFn() {
+  if (!nuevaCategoria.value.nombre || !nuevaCategoria.value.color) {
+    crearToast(toastMessage, toastColor, isToastOpen, "error", "Debes indicar un nombre y un color para la categoría");
     return;
   }
   try {
@@ -420,10 +421,10 @@ onMounted(async () => {
   height: 100%;
   padding: 20px;
   background-color: var(--background-color, #f0f2f5);
-  overflow: hidden; 
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;   
+  box-sizing: border-box;
   align-content: center;
   gap: 20px;
   overflow: hidden;
@@ -440,7 +441,7 @@ onMounted(async () => {
 
 /* CONTENEDORES */
 .left-top-container,
-.left-bottom-container{
+.left-bottom-container {
   flex: 1;
   min-height: 0;
   align-content: center;
@@ -464,7 +465,7 @@ onMounted(async () => {
   width: 100%;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   align-content: center;
   min-height: 0;
 }
@@ -479,7 +480,7 @@ onMounted(async () => {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  overflow: hidden; 
+  overflow: hidden;
   min-height: 0;
   align-content: center;
 }
@@ -494,6 +495,13 @@ onMounted(async () => {
   border-bottom: 2px solid #007bff;
   text-transform: uppercase;
   font-size: 16px;
+}
+
+.form-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: 6px;
 }
 
 /* FORMULARIO EN GRID */
@@ -570,19 +578,20 @@ onMounted(async () => {
   gap: 10px;
 }
 
-.button-row {
+.button {
   display: flex;
   justify-content: flex-end;
   margin-top: auto;
+
 }
 
 .btn-enviar {
   background-color: #007bff;
   color: white;
   border: none;
-  padding: 11px 28px;   
+  padding: 11px 28px;
   border-radius: 4px;
-  font-size: 16px;      
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -714,12 +723,15 @@ onMounted(async () => {
   height: 25px;
   border-radius: 4px;
   border: 1px solid #ddd;
+
 }
 
 .color-cell {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: center;
+
 }
 
 .color-display {
@@ -728,11 +740,13 @@ onMounted(async () => {
   border-radius: 50%;
   border: 1px solid #ddd;
   display: inline-block;
+
 }
 
 .color-name {
   font-size: 12px;
   font-weight: 600;
+
 }
 
 /* RESPONSIVE */
@@ -743,14 +757,45 @@ onMounted(async () => {
     flex-direction: column;
   }
 
-  .left-top-container,
-  .left-bottom-container{
-    flex: 0 0 35%;  
-    max-width: 35%;
-  }
+
   .right-bottom-container,
-  .right-top-container{
+  .right-top-container {
     flex: 1;
+  }
+
+  .window-title {
+    font-size: 14px;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+  }
+
+  .form-label {
+    font-size: 14px;
+  }
+
+  .form-input,
+  .form-select {
+    font-size: 14px;
+    padding: 5px 7px;
+  }
+
+
+  .btn-enviar {
+    font-size: 14px;
+    padding: 8px 20px;
+  }
+
+
+  .events-table,
+  .categorias-table {
+    font-size: 14px;
+  }
+
+  .events-table th,
+  .categorias-table th,
+  .events-table td,
+  .categorias-table td {
+    padding: 5px 6px;
   }
 }
 
@@ -771,6 +816,8 @@ onMounted(async () => {
     align-items: flex-start;
   }
 
+  
+
   .form-input,
   .form-select {
     width: 100%;
@@ -779,7 +826,7 @@ onMounted(async () => {
   .table-wrapper {
     flex: 1;
     min-height: 0;
-    overflow-y: auto; 
+    overflow-y: auto;
     overflow-x: auto;
   }
 
@@ -818,7 +865,237 @@ onMounted(async () => {
   .info {
     background: #17a2b8;
   }
+
+  @media (max-width: 480px) {
+    .window-title {
+      font-size: 13px;
+    }
+
+    .form-label {
+      font-size: 13px;
+    }
+
+    .btn-enviar {
+      padding: 7px 16px;
+    }
+  }
+
+  @media (max-width: 360px) {
+
+    .form-container,
+    .form-container-table {
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .window-title {
+      font-size: 12px;
+      margin-bottom: 4px;
+      padding-bottom: 3px;
+    }
+
+    .form-label {
+      font-size: 12px;
+    }
+
+    .form-input,
+    .form-select {
+      font-size: 12px;
+      padding: 4px 6px;
+    }
+
+    .checkbox-label {
+      font-size: 11px;
+    }
+
+    .btn-enviar {
+      font-size: 12px;
+      padding: 6px 14px;
+    }
+
+    .events-table,
+    .categorias-table {
+      font-size: 12px;
+    }
+
+    .events-table th,
+    .categorias-table th {
+      padding: 4px 5px;
+    }
+
+    .events-table td,
+    .categorias-table td {
+      padding: 4px 5px;
+      height: 28px;
+    }
+
+    .btn-eliminar,
+    .btn-eliminar-cat {
+      padding: 6px 10px;
+      font-size: 10px;
+    }
+
+    .color-display {
+      width: 14px;
+      height: 14px;
+    }
+
+    .color-name {
+      font-size: 11px;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, .3);
+      border-radius: 3px;
+    }
+  }
+
+  .events-table th,
+  .categorias-table th {
+    font-size: 11px;
+    padding: 4px 5px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .events-table th {
+    height: 30px;
+  }
+/* CONTENEDORES */
+  .form-container,
+  .form-container-table {
+    padding: 6px;
+    border-radius: 5px;
+  }
+
+  /* SEPARACIÓN GENERAL */
+  .top-row,
+  .bottom-row,
+  .right-top-container,
+  .right-bottom-container {
+    gap: 6px;
+  }
+
+  /* TÍTULOS */
+  .window-title {
+    font-size: 10.5px;
+    margin-bottom: 2px;
+    padding-bottom: 1px;
+    line-height: 1;
+    letter-spacing: .2px;
+  }
+
+  /* LABELS */
+  .form-label {
+    font-size: 10.5px;
+    margin-bottom: 1px;
+    line-height: 1;
+  }
+
+  /* FORM ROWS */
+  .form-row {
+    gap: 3px;
+  }
+
+  /* INPUTS / SELECT */
+  .form-input,
+  .form-select {
+    font-size: 11px;
+    padding: 3px 5px;
+    height: 26px;
+  }
+
+  /* BOTONES */
+  .btn-enviar {
+    font-size: 11px;
+    padding: 5px 10px;
+    height: 28px;
+  }
+
+  .btn-eliminar,
+  .btn-eliminar-cat {
+    font-size: 9px;
+    padding: 4px 6px;
+    height: 24px;
+  }
+
+  /* TABLAS */
+  .events-table,
+  .categorias-table {
+    font-size: 10px;
+  }
+
+  /* HEADERS */
+  .events-table th,
+  .categorias-table th {
+    font-size: 9.5px;
+    padding: 2px 3px;
+    height: 22px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* CELDAS */
+  .events-table td,
+  .categorias-table td {
+    font-size: 10px;
+    padding: 2px 3px;
+    height: 22px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* COLUMNA ACCIONES MÁS ESTRECHA */
+  .categorias-table th:last-child,
+  .categorias-table td:last-child,
+  .events-table th:last-child,
+  .events-table td:last-child {
+    width: 1%;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  /* COLOR */
+  .color-display {
+    width: 10px;
+    height: 10px;
+  }
+
+  .color-name {
+    font-size: 9.5px;
+  }
+
+  /* TABLAS SCROLL */
+  .table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  /* SCROLLBAR ULTRA FINO */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,.35);
+    border-radius: 2px;
+  }
+
+  /* TOAST */
+  .toast {
+    font-size: 10.5px;
+    padding: 8px 10px;
+    right: 8px;
+    bottom: 8px;
+  }
 }
+
 
 /* MODO OSCURO */
 @media (prefers-color-scheme: dark) {
@@ -847,6 +1124,7 @@ onMounted(async () => {
   .categorias-table tr:hover td {
     background-color: #3a506b;
   }
+
   .form-input,
   .form-select {
     background-color: #2c3e50;
