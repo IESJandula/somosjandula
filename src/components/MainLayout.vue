@@ -20,6 +20,7 @@
             <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
           </ion-list>
         </ion-list>
 
@@ -87,7 +88,7 @@
               Imprime documentos
               <ion-icon slot="end" name="print"></ion-icon>
             </ion-item>
-            <!--<ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>-->
+            <!--<ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item> -->
             <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">
               Guía del profesorado
               <ion-icon slot="end" name="book"></ion-icon>
@@ -104,6 +105,7 @@
               Estadísticas
               <ion-icon slot="end" name="bar-chart"></ion-icon>
             </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/events/users')">Eventos próximos</ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->

@@ -59,6 +59,8 @@ import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServer
 
 import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
+import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
+
 const routes = [
   {
     path: '/',
@@ -315,6 +317,12 @@ const routes = [
         path: '/issues',
         name: 'Issues',
         component: IncidenciasTicPage,
+        meta: { role: 'PROFESOR' },
+      },
+      {
+        path: '/events/users',
+        component: EventsSchoolPage,
+        name: 'EventsSchoolPage',
         meta: { role: 'PROFESOR' },
       },
       {
