@@ -52,12 +52,16 @@
         <!-- Últimas noticias -->
         <ion-list>
           <ion-item button @click="toggleSubMenuNotifications">
-            Últimas noticias
+            Eventos y noticias
             <ion-icon slot="end" name="newspaper-outline"></ion-icon>
             <ion-icon slot="end" :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="notificationsSubmenuVisible" class="submenu">
             <!--  <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item> -->
+            <ion-item button @click="navigateAndCloseMenu('/events/users')">
+              Eventos próximos
+              <ion-icon slot="end" name="calendar-number"></ion-icon>
+            </ion-item>
             <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">
               Avisa de algo importante
               <ion-icon slot="end" name="megaphone"></ion-icon>
@@ -92,7 +96,6 @@
               Estadísticas
               <ion-icon slot="end" name="bar-chart"></ion-icon>
             </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/events/users')">Eventos próximos</ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->

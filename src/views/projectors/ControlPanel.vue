@@ -193,15 +193,12 @@ const fetchEventsOverView = async () => {
     } catch (error) {
 
         if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
             console.error("Server error:", error.response.status, error.response);
         }
         else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
             console.error("No response received from the server:", error.request);
         }
         else {
-            // Other errors (misconfigured request, axios setup issues)
             console.error("Request configuration error:", error.message);
         }
     }
@@ -481,17 +478,14 @@ const fetchProjectorModels = async () => {
         responseTypeDelC.value = RESPONSE_STATUS_ERROR;
 
         if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
             console.error("Server error:", error.response.status, error.response);
             responseDataDelC.value = error.response.message || "Error while retrieving models list.";
         }
         else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
             console.error("No response received from the server:", error.request);
             responseDataDelC.value = "The server is not responding. Please check your connection and try again.";
         }
         else {
-            // Other errors (misconfigured request, axios setup issues)
             console.error("Request configuration error:", error.message);
             responseDataDelC.value = "An unexpected error occurred. Please try again.";
         }
@@ -561,17 +555,14 @@ const loadActionsPage = async (page = 0, size = 5) => {
         responseTypeDelA.value = RESPONSE_STATUS_ERROR;
 
         if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
             console.error("Server error:", error.response.status, error.response);
             responseDataDelA.value = error.response.message || "Error while retrieving actions list.";
         }
         else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
             console.error("No response received from the server:", error.request);
             responseDataDelA.value = "The server is not responding. Please check your connection and try again.";
         }
         else {
-            // Other errors (misconfigured request, axios setup issues)
             console.error("Request configuration error:", error.message);
             responseDataDelA.value = "An unexpected error occurred. Please try again.";
         }
@@ -657,17 +648,14 @@ const loadCommandsPage = async (page = 0, size = 5, modelName, action) => {
         responseTypeDelP.value = RESPONSE_STATUS_ERROR;
 
         if (error.response) {
-            // Server responded with an error status (e.g., 400, 404, 500)
             console.error("Server error:", error.response.status, error.response);
             responseDataDelP.value = error.response.message || "Error while retrieving commands list.";
         }
         else if (error.request) {
-            // No response from server (network issue, server down, timeout, CORS issue)
             console.error("No response received from the server:", error.request);
             responseDataDelP.value = "The server is not responding. Please check your connection and try again.";
         }
         else {
-            // Other errors (misconfigured request, axios setup issues)
             console.error("Request configuration error:", error.message);
             responseDataDelP.value = "An unexpected error occurred. Please try again.";
         }

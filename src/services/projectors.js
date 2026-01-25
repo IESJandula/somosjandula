@@ -371,7 +371,7 @@ export const fetchCommandsPage = async (toastMessage, toastColor, isToastOpen, p
         'Authorization': `Bearer ${tokenPropio}`,
         'Content-Type': 'application/json',
         },
-        body: null, // El axios enviaba null explícito, lo mantenemos
+        body: null,
     });
 
     if (!response.ok) {
