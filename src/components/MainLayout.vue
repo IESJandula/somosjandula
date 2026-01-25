@@ -10,8 +10,7 @@
             <ion-icon slot="end" :icon="adminSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="adminSubmenuVisible" class="submenu">
-            <ion-item v-if="mostrarAdminFirebase" button
-              @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
+            <ion-item v-if="mostrarAdminFirebase" button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/printers/admin')">Impresión</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
@@ -28,35 +27,25 @@
         <ion-list>
           <ion-item v-if="mostrarTimetableAdmin" button @click="toggleSubMenuTimetableAdmin">
             Administración de horarios
-            <ion-icon slot="end"
-              :icon="timetableAdminSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="timetableAdminSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="timetableAdminSubmenuVisible" class="submenu">
-            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/admin')">1.
-              Administrar</ion-item>
-            <ion-item v-if="mostrarTimetableAdmin" button
-              @click="navigateAndCloseMenu('/timetable_admin/validation')">2. Validación de datos</ion-item>
-            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/generator')">3.
-              Generador de horarios</ion-item>
+            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/admin')">1. Administrar</ion-item>
+            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/validation')">2. Validación de datos</ion-item>
+            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/generator')">3. Generador de horarios</ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
           <ion-item v-if="mostrarSchoolManager" button @click="toggleSubMenuSchoolManager">
             Gestión de matriculas
-            <ion-icon slot="end"
-              :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">1. Carga de
-              matrículas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">2. Asignaturas y
-              bloques</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">3. Creación de
-              grupos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por
-              asignatura</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Asignaturas y
-              departamentos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">1. Carga de matrículas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">2. Asignaturas y bloques</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">3. Creación de grupos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por asignatura</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Asignaturas y departamentos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
           </ion-list>
         </ion-list>
@@ -65,8 +54,7 @@
           <ion-item button @click="toggleSubMenuNotifications">
             Últimas noticias
             <ion-icon slot="end" name="newspaper-outline"></ion-icon>
-            <ion-icon slot="end"
-              :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="notificationsSubmenuVisible" class="submenu">
             <!--  <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item> -->
@@ -80,8 +68,7 @@
           <ion-item button @click="toggleSubMenuUtilities">
             Mis utilidades
             <ion-icon slot="end" name="heart-outline"></ion-icon>
-            <ion-icon slot="end"
-              :icon="utilitiesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="utilitiesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="utilitiesSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/printers/print')">
@@ -113,8 +100,7 @@
           <ion-item button @click="toggleSubMenuBookings">
             Reservas
             <ion-icon slot="end" name="calendar-outline"></ion-icon>
-            <ion-icon slot="end"
-              :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="bookingsSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">
@@ -143,8 +129,7 @@
         <ion-list>
           <ion-item v-if="mostrarTimetableTeachers" button @click="toggleSubMenuTimetableTeachers">
             Horarios
-            <ion-icon slot="end"
-              :icon="timetableTeachersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="timetableTeachersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="timetableTeachersSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/choice')">1. Elección de
@@ -159,8 +144,7 @@
           <ion-item button @click="toggleSubMenuIssues">
             <ion-label>Incidencias</ion-label>
             <ion-icon slot="end" name="bag-add-outline"></ion-icon>
-            <ion-icon slot="end"
-              :icon="issuesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="issuesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
 
           <ion-list v-if="issuesSubmenuVisible" class="submenu">
