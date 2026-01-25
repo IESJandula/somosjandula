@@ -32,10 +32,6 @@ const buildOption = (): echarts.EChartsOption => ({
     trigger: "item",
     formatter: "{b}: {c} ({d}%)",
   },
-  legend: {
-    orient: "vertical",
-    left: "left",
-  },
   series: [
     {
       name: props.title,
