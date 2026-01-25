@@ -1,4 +1,4 @@
-import { schoolBaseServerApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
+import { schoolBaseServerApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
 export const obtenerCursosAcademicos = async (toastMessage, toastColor, isToastOpen) =>
