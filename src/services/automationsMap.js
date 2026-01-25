@@ -8,6 +8,7 @@ export const obtenerDispositivos = async (toastMessage, toastColor, isToastOpen)
     method: 'GET',
     headers: {
       Authorization: `Bearer ${tokenPropio}`,
+      Accept: 'application/json'
     },
   })
 

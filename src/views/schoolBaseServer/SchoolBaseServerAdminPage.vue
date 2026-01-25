@@ -9,7 +9,7 @@
       <div class="section">
         <div class="row">
           <label>Curso (número):</label>
-          <input type="number" v-model.number="cursoGrupo" />
+          <input type="number" v-model.number="cursoGrupo" min="1" step="1"/>
         </div>
 
         <div class="row">
@@ -74,7 +74,11 @@
       <div class="section">
         <div class="row">
           <select v-model="cursoElegido" class="custom-select">
-            <option v-for="curso in cursos" :key="curso.cursoAcademico" :value="curso.cursoAcademico">
+            <option
+              v-for="curso in cursos"
+              :key="curso.cursoAcademico"
+              :value="curso.cursoAcademico"
+            >
               {{ curso.cursoAcademico }}
             </option>
           </select>
@@ -84,10 +88,8 @@
   </div>
 
   <div class="form-wrapper">
-
     <!-- CREADOR DE ESPACIOS -->
     <div class="form-container">
-
       <div class="title-container">
         <h1 class="title">Creador de espacios</h1>
       </div>
@@ -126,25 +128,26 @@
           <label>Grupo:</label>
           <select v-model="grupoSeleccionado" class="custom-select">
             <option disabled value="">Selecciona un grupo</option>
-            <option v-for="g in grupos" :key="g.curso + g.etapa + g.grupo" :value="g">
+            <option
+              v-for="g in grupos"
+              :key="g.curso + g.etapa + g.grupo"
+              :value="g"
+            >
               {{ g.curso }} {{ g.etapa }} {{ g.grupo }}
             </option>
           </select>
         </div>
       </div>
 
-
       <div class="section">
         <button type="button" class="btn-primary" @click="crearEspacio">
           Crear / Modificar
         </button>
       </div>
-
     </div>
 
     <!-- TABLA DE ESPACIOS -->
     <div class="form-container-table">
-
       <div class="title-container">
         <h1 class="title">Listado de espacios</h1>
       </div>
@@ -200,23 +203,29 @@
               </button>
             </td>
           </tr>
-
         </tbody>
       </table>
 
       <div v-else>
         <span>No hay espacios creados.</span>
       </div>
-
     </div>
   </div>
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-             @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+
+  <!-- TOAST -->
+  <IonToast
+  :is-open="isToastOpen"
+  :message="toastMessage"
+  :color="toastColor"
+  duration="2000"
+  position="top"
+  @didDismiss="isToastOpen = false"
+/>
 </template>
 
 <script setup>
 import { ref, onMounted, watch, nextTick, computed } from "vue";
-
+import { IonToast } from "@ionic/vue";
 import {
   obtenerCursosAcademicos,
   seleccionarCursoAcademico,
@@ -233,7 +242,6 @@ import {
   borrarEspacioDesdoble,
   borrarEspacioFijo
 } from "@/services/schoolBaseServer";
-import { crearToast } from "@/utils/toast";
 
 // ====================
 // VARIABLES
@@ -246,39 +254,13 @@ const grupoGrupo = ref("");
 const grupos = ref([]);
 const grupoSeleccionado = ref(null);
 const nombre = ref("");
-// booleanos para los botones de CREAR
+
 const esConDocenciaForm = ref(false);
 const esDesdobleForm = ref(false);
-// booleanos para los botones de LISTAR
 const esConDocenciaLista = ref(false);
 const esDesdobleLista = ref(false);
 const espacios = ref([]);
 
-// Ordenar espacios por nombre alfabéticamente.
-const espaciosOrdenados = computed(() => {
-  let filtrados = [...espacios.value];
-
-  // SIN DOCENCIA
-  if (!esConDocenciaLista.value) {
-    filtrados = filtrados.filter(e => e.tipo === "SIN DOCENCIA");
-  }
-  // CON DOCENCIA
-  else {
-    if (!esDesdobleLista.value) {
-      // FIJO
-      filtrados = filtrados.filter(e => e.tipo === "FIJO");
-    } else {
-      // DESDOBLE
-      filtrados = filtrados.filter(e => e.tipo === "DESDOBLE");
-    }
-  }
-
-  return filtrados.sort((a, b) =>
-    a.nombre.localeCompare(b.nombre)
-  );
-});
-
-// Toast
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
@@ -286,12 +268,43 @@ const toastColor = ref("success");
 let inicializandoCurso = true;
 
 // ====================
+// TOAST FIABLE
+// ====================
+const lanzarToast = (color, mensaje) => {
+  isToastOpen.value = false;
+  setTimeout(() => {
+    toastColor.value = color;
+    toastMessage.value = mensaje;
+    isToastOpen.value = true;
+  }, 10);
+};
+
+// ====================
+// COMPUTED
+// ====================
+const espaciosOrdenados = computed(() => {
+  let filtrados = [...espacios.value];
+
+  if (!esConDocenciaLista.value) {
+    filtrados = filtrados.filter(e => e.tipo === "SIN DOCENCIA");
+  } else {
+    if (!esDesdobleLista.value) {
+      filtrados = filtrados.filter(e => e.tipo === "FIJO");
+    } else {
+      filtrados = filtrados.filter(e => e.tipo === "DESDOBLE");
+    }
+  }
+
+  return filtrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
+});
+
+// ====================
 // WATCH
 // ====================
 watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
   if (inicializandoCurso) return;
   if (!nuevoCurso || nuevoCurso === cursoAnterior) return;
-
+  if (nuevo < 0) { cursoGrupo.value = 0; }
   try {
     await seleccionarCursoAcademico(
       toastMessage,
@@ -300,10 +313,12 @@ watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
       nuevoCurso
     );
 
-    await cargarGrupos();
-    await cargarEspacios();
+    await Promise.all([
+      cargarGrupos(),
+      cargarEspacios()
+    ]);
   } catch (error) {
-    console.error("Error al seleccionar curso académico:", error);
+    lanzarToast("danger", error.message);
   }
 });
 
@@ -321,41 +336,76 @@ const cargarGrupos = async () => {
 
     grupos.value = Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Error cargando grupos:", error);
+    lanzarToast("danger", error.message);
+  }
+};
+
+const cargarEspacios = async () => {
+  try {
+    const [sinDocencia, fijos, desdobles] = await Promise.all([
+      obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoElegido.value),
+      obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoElegido.value),
+      obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoElegido.value)
+    ]);
+
+    const lista = [];
+
+    sinDocencia.forEach(e => lista.push({ nombre: e.nombre, tipo: "SIN DOCENCIA" }));
+    fijos.forEach(e => lista.push({
+      nombre: e.nombre,
+      tipo: "FIJO",
+      curso: e.curso,
+      etapa: e.etapa,
+      grupo: e.grupo
+    }));
+    desdobles.forEach(e => lista.push({ nombre: e.nombre, tipo: "DESDOBLE" }));
+
+    espacios.value = lista;
+
+  } catch (error) {
+    lanzarToast("danger", error.message);
   }
 };
 
 const obtenerCursosAcademicosVista = async () => {
-  const data = await obtenerCursosAcademicos(
-    isToastOpen,
-    toastMessage,
-    toastColor
-  );
+  try {
+    const data = await obtenerCursosAcademicos(
+      isToastOpen,
+      toastMessage,
+      toastColor
+    );
 
-  cursos.value = data;
+    cursos.value = data;
 
-  const cursoSeleccionado = data.find(
-    (curso) => curso.seleccionado === true
-  );
+    const cursoSeleccionado = data.find(
+      (curso) => curso.seleccionado === true
+    );
 
-  if (cursoSeleccionado) {
-    await nextTick();
-    cursoElegido.value = cursoSeleccionado.cursoAcademico;
+    if (cursoSeleccionado) {
+      await nextTick();
+      cursoElegido.value = cursoSeleccionado.cursoAcademico;
+    }
+  } catch (error) {
+    lanzarToast("danger", error.message);
   }
 };
 
 const crearGrupo = async () => {
+
   if (
     cursoGrupo.value === null ||
+    cursoGrupo.value === "" ||
     etapaGrupo.value.trim() === "" ||
     grupoGrupo.value.trim() === ""
   ) {
-    toastMessage.value = "Rellena todos los campos";
-    toastColor.value = "danger";
-    isToastOpen.value = true;
+    lanzarToast("danger", "Rellena todos los campos");
     return;
   }
-
+  if (cursoGrupo.value < 1) {
+  lanzarToast("danger", "El curso no puede ser negativo ni cero");
+  return;
+  }
+  
   const cursoEtapaGrupoDto = {
     curso: cursoGrupo.value,
     etapa: etapaGrupo.value.trim(),
@@ -370,23 +420,12 @@ const crearGrupo = async () => {
       cursoEtapaGrupoDto
     );
 
-    toastMessage.value = "Grupo creado correctamente.";
-    toastColor.value = "success";
-    isToastOpen.value = true;
+    lanzarToast("success", "Grupo creado correctamente");
 
     await cargarGrupos();
-    await cargarEspacios();
-
-    cursoGrupo.value = null;
-    etapaGrupo.value = "";
-    grupoGrupo.value = "";
 
   } catch (error) {
-    toastMessage.value = error.message || "Error al crear el grupo";
-    toastColor.value = "danger";
-    isToastOpen.value = true;
-
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    lanzarToast("danger", error.message);
   }
 };
 
@@ -403,22 +442,23 @@ const eliminarGrupo = async (grupo) => {
       }
     );
 
-    toastMessage.value = "Grupo eliminado correctamente";
-    toastColor.value = "success";
-    isToastOpen.value = true;
+    lanzarToast("success", "Grupo eliminado correctamente");
 
-    await cargarGrupos();
-    await cargarEspacios();
+    await Promise.all([
+      cargarGrupos(),
+      cargarEspacios()
+    ]);
 
   } catch (error) {
-    toastMessage.value = error.message;
-    toastColor.value = "danger";
-    isToastOpen.value = true;
+    lanzarToast("danger", error.message);
   }
 };
 
 const crearEspacio = async () => {
-  if (!nombre.value.trim()) return;
+  if (!nombre.value.trim()) {
+    lanzarToast("danger", "Introduce un nombre");
+    return;
+  }
 
   try {
     if (!esConDocenciaForm.value) {
@@ -438,11 +478,8 @@ const crearEspacio = async () => {
       await crearEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
     }
     else {
-      // 🔥 FIJO → aquí va el grupo
       if (!grupoSeleccionado.value) {
-        toastMessage.value = "Selecciona un grupo";
-        toastColor.value = "danger";
-        isToastOpen.value = true;
+        lanzarToast("danger", "Selecciona un grupo");
         return;
       }
 
@@ -457,43 +494,12 @@ const crearEspacio = async () => {
       await crearEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
     }
 
-    toastMessage.value = "Espacio creado correctamente";
-    toastColor.value = "success";
-    isToastOpen.value = true;
+    lanzarToast("success", "Espacio creado correctamente");
 
     await cargarEspacios();
 
   } catch (error) {
-    console.error(error);
-  }
-};
-
-
-const cargarEspacios = async () => {
-  try {
-    const sinDocencia = await obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoElegido.value);
-    const fijos = await obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoElegido.value);
-    const desdobles = await obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoElegido.value);
-
-    const lista = [];
-
-    sinDocencia.forEach(e => lista.push({ nombre: e.nombre, tipo: "SIN DOCENCIA" }));
-    fijos.forEach(e => lista.push({
-      nombre: e.nombre,
-      tipo: "FIJO",
-      curso: e.curso,
-      etapa: e.etapa,
-      grupo: e.grupo
-    }));
-    desdobles.forEach(e => lista.push({ nombre: e.nombre, tipo: "DESDOBLE" }));
-
-    espacios.value = [...lista];
-
-    await cargarGrupos();
-    await cargarEspacios();
-
-  } catch (error) {
-    console.error("Error cargando espacios", error);
+    lanzarToast("danger", error.message);
   }
 };
 
@@ -512,22 +518,24 @@ const eliminarEspacio = async (espacio) => {
       await borrarEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
     }
 
-    await cargarGrupos();
+    lanzarToast("success", "Espacio eliminado correctamente");
+
     await cargarEspacios();
 
   } catch (error) {
-    console.error(error);
+    lanzarToast("danger", error.message);
   }
 };
-
 
 // ====================
 // ON MOUNT
 // ====================
 onMounted(async () => {
   await obtenerCursosAcademicosVista();
-  await cargarGrupos();
-  await cargarEspacios();
+  await Promise.all([
+    cargarGrupos(),
+    cargarEspacios()
+  ]);
   inicializandoCurso = false;
 });
 </script>
@@ -548,9 +556,9 @@ onMounted(async () => {
 }
 
 .form-container-table {
-  min-width: 700px; 
-  width: 90%; 
-  max-width: 900px; 
+  min-width: 700px;
+  width: 90%;
+  max-width: 900px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
@@ -562,77 +570,73 @@ onMounted(async () => {
   margin-top: 2%;
 }
 
-
-.form-container-table-logs {
-  overflow-x: auto;
-  max-width: 83%;
-  overflow-y: auto;
-  display: block;
-  white-space: nowrap;
-}
-
-.sticky-column {
-  position: sticky;
-  left: 0;
-  background: white;
-  z-index: 2;
-}
-
-.decrementar-button {
-  background-color: #dc3545;
-  float: left;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 5px 10px;
-  margin-right: 10px;
-}
-
-.incrementar-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  float: right;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 5px 10px;
-}
-
-.numPagina {
-  display: flex;
-  align-items: center;
-  justify-content: block;
-}
-
-.pagina-container {
-  display: flex;
-  padding-top: 2%;
-  justify-content: space-between;
-  width: 100%;
-}
-
 .form-wrapper {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  /* Espaciado entre las tarjetas */
   justify-content: center;
-  /* Centrar las tarjetas */
 }
 
-.container {
+/* TITULOS */
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  text-align: center;
+}
+
+/* SECCIONES */
+.section {
+  margin-bottom: 25px;
+}
+
+.section.center {
+  display: flex;
+  justify-content: center;
+}
+
+.row {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  background-color: white;
-  color: #1a1a1a;
-  font-family: Arial, sans-serif;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
 }
 
+.row label {
+  margin-bottom: 10px;
+}
+
+/* BOTONES */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #2196f3;
+  border-radius: 6px;
+  margin-top: 10px;
+  text-transform: uppercase;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-delete {
+  padding: 5px 10px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* SELECT */
 .custom-select {
   width: 80%;
   margin-bottom: 20px;
@@ -644,7 +648,6 @@ onMounted(async () => {
   color: #000000;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .custom-select:hover {
@@ -652,6 +655,7 @@ onMounted(async () => {
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
+/* TABLAS */
 table {
   border-collapse: collapse;
   width: 100%;
@@ -662,13 +666,7 @@ table {
   margin-top: 10px;
   border-radius: 5px;
   overflow: hidden;
-  font-size: 13px; 
-}
-
-span {
-  cursor: pointer;
-  font-weight: bold;
-  font-style: oblique;
+  font-size: 13px;
 }
 
 th,
@@ -677,16 +675,6 @@ td {
   padding: 6px;
 }
 
-td {
-  height: 38px;
-  width: 120px; 
-  background-color: #e9f5ff;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  word-wrap: break-word;
-}
-
-
 th {
   background-color: #007bff;
   color: white;
@@ -694,117 +682,33 @@ th {
 }
 
 td {
-  height: 50px;
   background-color: #e9f5ff;
-}
-
-th:first-child {
-  background-color: #0056b3;
-  /* Diferenciar la columna de tramos horarios */
-}
-
-button {
-  padding: 5px 10px;
-  border: none;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
+  height: 38px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-wrap: break-word;
 }
 
 tr:hover td {
   background-color: #d0eaff;
-  /* Efecto hover en filas */
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  width: 300px;
-}
-
-.modal-content h2 {
-  margin-bottom: 10px;
-}
-
-.modal-content label {
+/* SCROLL TABLA */
+table tbody {
   display: block;
-  margin-bottom: 5px;
-}
-
-.row label {
-  display: block;
-  margin-bottom: 10px;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.modal-content button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.modal-content button:hover {
-  background-color: #0056b3;
-}
-
-.title-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  position: relative;
-  width: 100%;
-  padding: 20px;
-}
-
-.title {
-  margin: 0;
-  font-size: 24px;
-}
-
-.title {
-  text-align: center;
+  max-height: 200px;
+  overflow-y: auto;
   width: 100%;
 }
 
-.switch-container {
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-  margin-left: 14%;
+table thead,
+table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
 }
 
+/* SWITCHES */
 .switch-container-gestion {
   display: flex;
   align-items: center;
@@ -815,8 +719,8 @@ tr:hover td {
   width: 100%;
 }
 
-.switch-container span {
-  font-size: 20px;
+.switch-container-gestion span {
+  font-size: 16px;
 }
 
 .switch {
@@ -835,10 +739,7 @@ tr:hover td {
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: #ccc;
   transition: 0.4s;
   border-radius: 34px;
@@ -856,46 +757,18 @@ tr:hover td {
   border-radius: 50%;
 }
 
-input:checked+.slider {
+input:checked + .slider {
   background-color: #2196f3;
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-.btn-modify-lock {
-  color: white;
-  border: none;
-  margin-left: 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.btn-modify-unlock {
-  background-color: #025ec0;
-  color: white;
-  border: none;
-  margin-left: 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-/* Modo oscuro */
+/* MODO OSCURO */
 @media (prefers-color-scheme: dark) {
-  .form-container {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-
+  .form-container,
   .form-container-table {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-
-  .form-container-table-logs {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
@@ -906,103 +779,19 @@ input:checked+.slider:before {
   }
 }
 
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .form-container {
     border: 1px solid #444;
   }
 
-  .form-container-table table {
-    overflow-x: auto;
-    max-height: 300px;
-    overflow-y: auto;
-    display: block;
-    white-space: nowrap;
-  }
-
-  .form-container-table-logs table {
-    overflow-x: auto;
-    max-height: 300px;
-    overflow-y: auto;
-    display: block;
-    white-space: nowrap;
-  }
-
   table {
     font-size: 14px;
-    width: 100%;
   }
 
   .custom-select {
     width: 100%;
   }
-}
-
-@media (max-width: 576px) {
-
-  .switch-container {
-    margin-left: 0;
-  }
-
-}
-
-/* ===== SECCIONES (RESPIRACIÓN TIPO IONIC) ===== */
-.section {
-  margin-bottom: 25px;
-}
-
-.section.center {
-  display: flex;
-  justify-content: center;
-}
-
-.section .row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* centra horizontalmente */
-}
-
-/* Filas más limpias */
-.row {
-  margin-bottom: 15px;
-}
-
-/* Botón principal */
-.btn-primary {
-  width: 100%;
-  padding: 12px;
-  font-size: 14px;
-  font-weight: bold;
-  background-color: #2196f3;
-  border-radius: 6px;
-  margin-top: 10px;
-  text-transform: uppercase;
-}
-
-/* Centrar switches */
-.switch-container-gestion {
-  margin-left: 0;
-  justify-content: center;
-}
-
-/* Título más aireado */
-.title-container {
-  padding-bottom: 10px;
-}
-
-/* SCROLL INTERNO PARA TABLAS   */
-table tbody {
-  display: block;
-  max-height: 200px;
-  overflow-y: auto;
-  width: 100%;
-}
-
-table thead,
-table tbody tr {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
 }
 
 </style>
