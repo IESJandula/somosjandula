@@ -41,7 +41,21 @@ import {
   chevronUpOutline,
   refreshOutline,
   closeCircleOutline,
-  checkmarkCircleOutline
+  checkmarkCircleOutline,
+  newspaperOutline,
+  megaphone,
+  heartOutline,
+  print,
+  book,
+  browsers,
+  eye,
+  calendarOutline,
+  infinite,
+  gitCommit,  
+  bagAddOutline,
+  bandage,
+  barChart,
+  calendarNumber,
 } from "ionicons/icons";
 
 import { initializeApp } from "firebase/app";
@@ -64,8 +78,22 @@ addIcons({
   "chevron-down-outline": chevronDownOutline,
   "chevron-up-outline": chevronUpOutline,
   "refresh-outline": refreshOutline,
+  "newspaper-outline": newspaperOutline,
   "close-circle-outline": closeCircleOutline,
-  "checkmark-circle-outline": checkmarkCircleOutline
+  "checkmark-circle-outline": checkmarkCircleOutline,
+  "megaphone": megaphone,
+  "calendar-number": calendarNumber,
+  "heart-outline": heartOutline,
+  "print": print,
+  "book": book,
+  "browsers": browsers,
+  "eye": eye,
+  "calendar-outline": calendarOutline,
+  "infinite": infinite,
+  "git-commit": gitCommit,
+  "bag-add-outline": bagAddOutline,
+  "bandage": bandage,
+  "bar-chart": barChart,
 });
 
 // Variables para el toast

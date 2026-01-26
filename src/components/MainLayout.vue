@@ -15,8 +15,11 @@
             <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/eventsSchool/admin')">Eventos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
           </ion-list>
         </ion-list>
 
@@ -35,8 +38,7 @@
         <ion-list>
           <ion-item v-if="mostrarSchoolManager" button @click="toggleSubMenuSchoolManager">
             Gestión de matriculas
-            <ion-icon slot="end"
-              :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            <ion-icon slot="end" :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">1. Carga de matrículas</ion-item>
@@ -50,40 +52,72 @@
         <!-- Últimas noticias -->
         <ion-list>
           <ion-item button @click="toggleSubMenuNotifications">
-            Últimas noticias
+            Eventos y noticias
+            <ion-icon slot="end" name="newspaper-outline"></ion-icon>
             <ion-icon slot="end" :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="notificationsSubmenuVisible" class="submenu">
-          <!--  <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item> -->
-            <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">Avisa de algo importante</ion-item>
+            <!--  <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item> -->
+            <ion-item button @click="navigateAndCloseMenu('/events/users')">
+              Eventos próximos
+              <ion-icon slot="end" name="calendar-number"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">
+              Avisa de algo importante
+              <ion-icon slot="end" name="megaphone"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
         <ion-list>
           <ion-item button @click="toggleSubMenuUtilities">
             Mis utilidades
+            <ion-icon slot="end" name="heart-outline"></ion-icon>
             <ion-icon slot="end" :icon="utilitiesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="utilitiesSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprime documentos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/itIssues')">Crea incidencias TIC</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/automations/map')">Vista de pájaro</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/printers/print')">
+              Imprime documentos
+              <ion-icon slot="end" name="print"></ion-icon>
+            </ion-item>
+            <!--<ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item> -->
+            <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">
+              Guía del profesorado
+              <ion-icon slot="end" name="book"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">
+              Formación PDIs
+              <ion-icon slot="end" name="browsers"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/automations/map')">
+              Vista de pájaro
+              <ion-icon slot="end" name="eye"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/statistics')">
+              Estadísticas
+              <ion-icon slot="end" name="bar-chart"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->
         <ion-list>
           <ion-item button @click="toggleSubMenuBookings">
             Reservas
+            <ion-icon slot="end" name="calendar-outline"></ion-icon>
             <ion-icon slot="end" :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="bookingsSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">Realiza reservas fijas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">Realiza reservas temporales</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">
+              Reservas fijas
+              <ion-icon slot="end" name="infinite"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">
+              Reservas temporales
+              <ion-icon slot="end" name="git-commit"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
         <!-- Guardias -->
+        <!--
         <ion-list>
           <ion-item button @click="toggleSubMenuAbsences">
             Guardias
@@ -94,15 +128,37 @@
             <ion-item button @click="navigateAndCloseMenu('/absences/tasks')">Revisa las tareas de guardia</ion-item>
           </ion-list>
         </ion-list>
+        -->
         <ion-list>
           <ion-item v-if="mostrarTimetableTeachers" button @click="toggleSubMenuTimetableTeachers">
             Horarios
             <ion-icon slot="end" :icon="timetableTeachersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="timetableTeachersSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/choice')">1. Elección de horarios</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/personal')">2. Horario personal</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/choice')">1. Elección de
+              horarios</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/personal')">2. Horario
+              personal</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/groups')">3. Horario de grupos</ion-item>
+          </ion-list>
+        </ion-list>
+        <!--Incidencias-->
+        <ion-list>
+          <ion-item button @click="toggleSubMenuIssues">
+            <ion-label>Incidencias</ion-label>
+            <ion-icon slot="end" name="bag-add-outline"></ion-icon>
+            <ion-icon slot="end" :icon="issuesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+
+          <ion-list v-if="issuesSubmenuVisible" class="submenu">
+            <ion-item button @click="navigateAndCloseMenu('/issues')">
+              Gestiona tus incidencias
+              <ion-icon slot="end" name="bandage"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/issues/stats')">
+              Visualiza estadísticas
+              <ion-icon slot="end" name="bar-chart"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
       </ion-content>
@@ -121,34 +177,25 @@
               <transition name="fade">
                 <div
                   v-if="notificacionesSoloTexto.length > 0 && notificacionesSoloTextoIndex < notificacionesSoloTexto.length"
-                  :key="notificacionesSoloTextoIndex"
-                  class="notificacion-container"
+                  :key="notificacionesSoloTextoIndex" class="notificacion-container"
                   :ref="el => { if (el) notificationRefs[notificacionesSoloTextoIndex] = el }"
                   @mouseenter="handleMouseEnter(notificacionesSoloTextoIndex, $event)"
-                  @mouseleave="showNotificationTooltip = null; tooltipPosition = null"
-                >
+                  @mouseleave="showNotificationTooltip = null; tooltipPosition = null">
                   <p>{{ notificacionesSoloTexto[notificacionesSoloTextoIndex]?.texto }}</p>
                 </div>
               </transition>
             </div>
           </div>
           <teleport to="body">
-            <div 
-              v-if="showNotificationTooltip !== null && notificacionesSoloTexto[showNotificationTooltip]?.creador" 
-              class="notification-tooltip"
-              :style="tooltipPosition"
-            >
+            <div v-if="showNotificationTooltip !== null && notificacionesSoloTexto[showNotificationTooltip]?.creador"
+              class="notification-tooltip" :style="tooltipPosition">
               {{ notificacionesSoloTexto[showNotificationTooltip].creador }}
             </div>
           </teleport>
 
           <div class="end-section" slot="end">
             <div class="top-bar">
-              <div
-                class="button-container"
-                @mouseenter="showTooltip = true"
-                @mouseleave="showTooltip = false"
-              >
+              <div class="button-container" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
                 <ion-button @click="desconectar">Desconectar</ion-button>
                 <div v-if="showTooltip && userName" class="tooltip">
                   {{ userName }}
@@ -172,6 +219,7 @@ import {
   IonContent,
   IonList,
   IonItem,
+  IonLabel,
   IonPage,
   IonHeader,
   IonToolbar,
@@ -197,6 +245,7 @@ export default defineComponent({
     IonList,
     IonItem,
     IonPage,
+    IonLabel,
     IonHeader,
     IonToolbar,
     IonButtons,
@@ -223,6 +272,8 @@ export default defineComponent({
     const utilitiesSubmenuVisible = ref(false);
     const bookingsSubmenuVisible = ref(false);
     const absencesSubmenuVisible = ref(false);
+
+    const issuesSubmenuVisible = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -267,9 +318,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      //actualizarNotificacionesSoloTexto();
-      //notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
-      //setInterval(nextNotificacionesSoloTexto, 5000);
+      actualizarNotificacionesSoloTexto();
+      notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
+      setInterval(nextNotificacionesSoloTexto, 5000);
 
       obtenerNombreYApellidosUsuario().then((userInfo) => {
         userName.value = userInfo.nombre;
@@ -316,6 +367,7 @@ export default defineComponent({
       notificationsSubmenuVisible.value = false;
       utilitiesSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuTimetableAdmin = () => {
@@ -327,6 +379,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuTimetableTeachers = () => {
@@ -338,6 +391,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
     const toggleSubMenuSchoolManager = () => {
       adminSubmenuVisible.value = false;
@@ -359,6 +413,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuUtilities = () => {
@@ -370,6 +425,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = !utilitiesSubmenuVisible.value;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuBookings = () => {
@@ -381,6 +437,7 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
       absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     const toggleSubMenuAbsences = () => {
@@ -392,6 +449,18 @@ export default defineComponent({
       utilitiesSubmenuVisible.value = false;
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = !absencesSubmenuVisible.value;
+      issuesSubmenuVisible.value = false;
+    };
+
+    const toggleSubMenuIssues = () => {
+      adminSubmenuVisible.value = false;
+      timetableAdminSubmenuVisible.value = false;
+      timetableTeachersSubmenuVisible.value = false;
+      schoolManagerSubmenuVisible.value = false;
+      utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = !issuesSubmenuVisible.value;
     };
 
     onMounted(async () => {
@@ -436,6 +505,7 @@ export default defineComponent({
       utilitiesSubmenuVisible,
       bookingsSubmenuVisible,
       absencesSubmenuVisible,
+      issuesSubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuTimetableAdmin,
       toggleSubMenuTimetableTeachers,
@@ -450,6 +520,7 @@ export default defineComponent({
       tooltipPosition,
       notificationRefs,
       handleMouseEnter,
+      toggleSubMenuIssues
     };
   },
 });
@@ -459,6 +530,7 @@ export default defineComponent({
 .submenu {
   padding-left: 20px;
 }
+
 ion-button {
   display: flex;
   align-items: center;
@@ -470,13 +542,16 @@ ion-button {
   border-radius: 8px;
   opacity: 1;
 }
+
 ion-icon {
   font-size: 24px;
 }
+
 ion-header {
   overflow: visible !important;
   z-index: 1000;
 }
+
 ion-toolbar {
   display: flex;
   justify-content: space-between;
@@ -485,11 +560,13 @@ ion-toolbar {
   position: relative;
   z-index: 1000;
 }
+
 .end-section {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .notificacionesSoloTexto-carousel {
   flex: 1;
   text-align: center;
@@ -497,20 +574,26 @@ ion-toolbar {
   color: #000;
   position: relative;
 }
+
 .notificacionesSoloTexto {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE y Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE y Edge */
   width: 100%;
   text-align: center;
   position: relative;
   min-height: 1.5em;
 }
+
 .notificacionesSoloTexto::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
+  /* Chrome, Safari, Opera */
 }
+
 .notificacion-container {
   position: absolute;
   left: 0;
@@ -523,6 +606,7 @@ ion-toolbar {
   width: 100%;
   text-align: center;
 }
+
 .notificacionesSoloTexto-carousel p {
   margin: 0;
   color: #000;
@@ -530,18 +614,23 @@ ion-toolbar {
   white-space: nowrap;
   display: inline-block;
 }
+
 .fade-enter-active {
   transition: opacity 0.6s ease-in;
 }
+
 .fade-leave-active {
   transition: opacity 0.6s ease-out;
 }
+
 .fade-enter-from {
   opacity: 0;
 }
+
 .fade-leave-to {
   opacity: 0;
 }
+
 .tooltip {
   position: absolute;
   top: -5px;
@@ -558,15 +647,18 @@ ion-toolbar {
   opacity: 0.95;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
+
 .button-container {
   position: relative;
   display: inline-block;
 }
+
 @media (min-width: 768px) {
   ion-button {
     padding: 10px 30px;
     font-size: 18px;
   }
+
   ion-icon {
     font-size: 28px;
   }
@@ -577,13 +669,16 @@ ion-toolbar {
   .notificacionesSoloTexto-carousel {
     color: #fff;
   }
+
   .notificacionesSoloTexto-carousel p {
     color: #fff;
   }
+
   ion-button {
     --background: #4c8dff;
     --color: white;
   }
+
   .tooltip {
     background: #1a1a1a;
     color: #fff;
@@ -605,6 +700,7 @@ ion-toolbar {
   opacity: 0.95;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
+
 .notification-tooltip::before {
   content: '';
   position: absolute;
@@ -620,6 +716,7 @@ ion-toolbar {
     background: #1a1a1a;
     color: #fff;
   }
+
   .notification-tooltip::before {
     border-bottom-color: #1a1a1a;
   }
