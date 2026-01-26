@@ -8,13 +8,13 @@ export const obtenerDispositivos = async (toastMessage, toastColor, isToastOpen)
     method: 'GET',
     headers: {
       Authorization: `Bearer ${tokenPropio}`,
-      Accept: 'application/json'
+      Accept: 'application/json',
     },
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message)
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message ?? `HTTP ${response.status}`)
   }
 
   return await response.json()
@@ -27,12 +27,13 @@ export const obtenerCursosAcademicos = async (toastMessage, toastColor, isToastO
     method: 'GET',
     headers: {
       Authorization: `Bearer ${tokenPropio}`,
+      Accept: 'application/json',
     },
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message)
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message ?? `HTTP ${response.status}`)
   }
 
   return await response.json()
@@ -46,12 +47,13 @@ export const obtenerEspaciosFijo = async (toastMessage, toastColor, isToastOpen,
     headers: {
       Authorization: `Bearer ${tokenPropio}`,
       cursoAcademico: String(cursoAcademico),
+      Accept: 'application/json',
     },
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message)
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message ?? `HTTP ${response.status}`)
   }
 
   return await response.json()
@@ -65,12 +67,13 @@ export const obtenerEspaciosDesdoble = async (toastMessage, toastColor, isToastO
     headers: {
       Authorization: `Bearer ${tokenPropio}`,
       cursoAcademico: String(cursoAcademico),
+      Accept: 'application/json',
     },
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message)
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message ?? `HTTP ${response.status}`)
   }
 
   return await response.json()
@@ -84,12 +87,13 @@ export const obtenerEspaciosSinDocencia = async (toastMessage, toastColor, isToa
     headers: {
       Authorization: `Bearer ${tokenPropio}`,
       cursoAcademico: String(cursoAcademico),
+      Accept: 'application/json',
     },
   })
 
   if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message)
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message ?? `HTTP ${response.status}`)
   }
 
   return await response.json()

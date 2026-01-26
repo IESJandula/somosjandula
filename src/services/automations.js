@@ -1,7 +1,7 @@
 import { automationsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo) => {
+export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, aplicabilidad, umbralMinimo, umbralMaximo) => {
 
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -17,6 +17,7 @@ export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen,
         mac: mac.value ?? mac,
         estado: estado.value ?? estado,
         nombreUbicacion: nombreUbicacion.value ?? nombreUbicacion,
+        aplicabilidad: aplicabilidad.value ?? aplicabilidad,
         umbralMinimo: umbralMinimo.value ?? umbralMinimo,
         umbralMaximo: umbralMaximo.value ?? umbralMaximo,
       })
@@ -69,7 +70,7 @@ export const eliminarSensorBooleano = async (toastMessage, toastColor, isToastOp
   return true;
 };
 
-export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, umbralMinimo, umbralMaximo) => {
+export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, aplicabilidad, umbralMinimo, umbralMaximo) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(automationsApiUrl + '/automations/admin/sensor/numerico',
@@ -84,6 +85,7 @@ export const crearSensorNumerico = async (toastMessage, toastColor, isToastOpen,
         mac: mac.value ?? mac,
         estado: estado.value ?? estado,
         nombreUbicacion: nombreUbicacion.value ?? nombreUbicacion,
+        aplicabilidad: aplicabilidad.value ?? aplicabilidad,
         umbralMinimo: umbralMinimo.value ?? umbralMinimo,
         umbralMaximo: umbralMaximo.value ?? umbralMaximo,
       })
@@ -135,7 +137,7 @@ export const eliminarSensorNumerico = async (toastMessage, toastColor, isToastOp
   return true;
 };
 
-export const crearActuador = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion) => {
+export const crearActuador = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, aplicabilidad) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
@@ -149,7 +151,8 @@ export const crearActuador = async (toastMessage, toastColor, isToastOpen, mac, 
       body: JSON.stringify({
         mac: mac.value ?? mac,
         estado: estado.value ?? estado,
-        nombreUbicacion: nombreUbicacion.value ?? nombreUbicacion
+        nombreUbicacion: nombreUbicacion.value ?? nombreUbicacion,
+        aplicabilidad: aplicabilidad.value ?? aplicabilidad,
       })
     }
   );
@@ -204,6 +207,25 @@ export const obtenerUbicaciones = async (toastMessage, toastColor, isToastOpen) 
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(automationsApiUrl + '/automations/admin/ubicacion',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    })
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+  return await response.json()
+}
+
+export const obtenerAplicabilidad = async (toastMessage, toastColor, isToastOpen) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(automationsApiUrl + '/automations/admin/aplicabilidad',
     {
       method: 'GET',
       headers:
