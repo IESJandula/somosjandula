@@ -666,11 +666,77 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+
+
+/* Tema claro por defecto */
+#djg-main-box {
+  --bg: rgb(241, 241, 224);
+  --panel-bg: #ffffff;
+  --text: #111111;
+  --border: #9a9a9a;
+
+  --btn-bg: rgb(238, 243, 242);
+  --btn-hover: rgb(253, 255, 121);
+  --btn-text: #111111;
+
+  --zone-bg: rgba(255, 255, 0, 0.26);
+  --zone-hover: rgba(28, 46, 146, 0.5);
+
+  --zone-text-bg: rgba(255, 255, 255, 0.75);
+  --zone-text-border: rgba(0, 0, 0, 0.25);
+
+  --map-border: rgba(0, 0, 0, 0.35);
+}
+
+/* Modo oscuro por sistema */
+@media (prefers-color-scheme: dark) {
+  #djg-main-box {
+    --bg: #0f1115;
+    --panel-bg: #151922;
+    --text: #e7eaf0;
+    --border: rgba(255, 255, 255, 0.14);
+
+    --btn-bg: #1b2230;
+    --btn-hover: #2a3550;
+    --btn-text: #e7eaf0;
+
+    --zone-bg: rgba(255, 255, 255, 0.08);
+    --zone-hover: rgba(120, 160, 255, 0.22);
+
+    --zone-text-bg: rgba(15, 17, 21, 0.72);
+    --zone-text-border: rgba(255, 255, 255, 0.18);
+
+    --map-border: rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* Modo oscuro por clase .dark  */
+:global(.dark) #djg-main-box {
+  --bg: #0f1115;
+  --panel-bg: #151922;
+  --text: #e7eaf0;
+  --border: rgba(255, 255, 255, 0.14);
+
+  --btn-bg: #1b2230;
+  --btn-hover: #2a3550;
+  --btn-text: #e7eaf0;
+
+  --zone-bg: rgba(255, 255, 255, 0.08);
+  --zone-hover: rgba(120, 160, 255, 0.22);
+
+  --zone-text-bg: rgba(15, 17, 21, 0.72);
+  --zone-text-border: rgba(255, 255, 255, 0.18);
+
+  --map-border: rgba(255, 255, 255, 0.18);
+}
+
 /* ===== LAYOUT ===== */
+  
 #djg-main-box {
   display: flex;
   align-items: flex-start;
-  background-color: rgb(241, 241, 224);
+  background-color: var(--bg);
+  color: var(--text);
   min-height: 100vh;
 }
 
@@ -681,8 +747,8 @@ onBeforeUnmount(() => {
 
 #panel > * {
   border-radius: 5px;
-  border: 1px solid grey;
-  background-color: #fff;
+  border: 1px solid var(--border);
+  background-color: var(--panel-bg);
   padding: 10px;
   margin: 5px 0;
 }
@@ -693,11 +759,15 @@ onBeforeUnmount(() => {
 }
 
 #panel-selector select,
-#selector-dimensiones {
+#selector-dimensiones,
+#panel-curso select {
   width: 100%;
   border-radius: 5px;
   margin-top: 6px;
   padding: 6px;
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 #contenedor-botones-plantas {
@@ -710,16 +780,17 @@ onBeforeUnmount(() => {
 
 button {
   cursor: pointer;
-  background-color: rgb(238, 243, 242);
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
   transition: 0.2s;
   border-radius: 5px;
-  border: 1px solid black;
+  border: 1px solid var(--border);
   margin: 4px;
   padding: 6px 10px;
 }
 
 button:hover {
-  background-color: rgb(253, 255, 121);
+  background-color: var(--btn-hover);
 }
 
 .boton-active {
@@ -750,7 +821,7 @@ button:hover {
 
 .caja-mapa {
   position: relative;
-  border: 3px solid rgba(0, 0, 0, 0.35);
+  border: 3px solid var(--map-border);
   background-repeat: no-repeat;
   background-position: top left;
   background-size: 100% 100%;
@@ -758,8 +829,8 @@ button:hover {
 
 .zona {
   position: absolute;
-  background-color: rgba(255, 255, 0, 0.26);
-  border: 1px solid rgb(0, 0, 0);
+  background-color: var(--zone-bg);
+  border: 1px solid var(--border);
   cursor: pointer;
 
   display: flex;
@@ -768,8 +839,8 @@ button:hover {
 }
 
 .zona:hover {
-  background-color: rgba(28, 46, 146, 0.5);
-  border: 1px solid gray;
+  background-color: var(--zone-hover);
+  border: 1px solid var(--border);
 }
 
 .zone-selected {
@@ -780,13 +851,28 @@ button:hover {
 .zone-text {
   font-size: 12px;
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--zone-text-bg);
+  color: var(--text);
   padding: 2px 6px;
   border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--zone-text-border);
   pointer-events: none;
   white-space: pre-line;
   text-align: center;
+}
+
+/* FIX contraste de etiquetas sobre el plano en modo oscuro */
+:global(.dark) #djg-main-box .zone-text {
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  border-color: rgba(0, 0, 0, 0.25);
+}
+@media (prefers-color-scheme: dark) {
+  #djg-main-box .zone-text {
+    background: rgba(255, 255, 255, 0.92);
+    color: #111;
+    border-color: rgba(0, 0, 0, 0.25);
+  }
 }
 
 /* ✅ CIRCULITO ESTADO PUERTA */
@@ -801,6 +887,15 @@ button:hover {
   pointer-events: none;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
 }
+:global(.dark) .door-dot {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  .door-dot {
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+}
+
 .door-undef { background-color: yellow; }
 .door-on { background-color: green; }
 .door-off { background-color: red; }
@@ -829,6 +924,10 @@ button:hover {
   color: #fff;
   font-weight: 800;
 }
+
+/* =========================================================
+   POSICIONES (tus zonas) - SIN TOCAR
+   ========================================================= */
 
 /* PLANTA BAJA */
 #aula0-12 { height: 14.5%; width: 7%; top: 1.6%; left: 14%; }
