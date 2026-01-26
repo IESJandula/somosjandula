@@ -36,27 +36,30 @@
         <h1 class="title">Listado de Grupos</h1>
       </div>
 
-      <table v-if="grupos.length > 0">
-        <thead>
-          <tr>
-            <th>Curso</th>
-            <th>Etapa</th>
-            <th>Grupo</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
+      <!-- wrapper para scroll horizontal -->
+      <div class="table-scroll" v-if="grupos.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Curso</th>
+              <th>Etapa</th>
+              <th>Grupo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          <tr v-for="g in grupos" :key="`${g.curso}-${g.etapa}-${g.grupo}`">
-            <td>{{ g.curso }}</td>
-            <td>{{ g.etapa }}</td>
-            <td>{{ g.grupo }}</td>
-            <td>
-              <button class="btn-delete" @click="eliminarGrupo(g)">X</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          <tbody>
+            <tr v-for="g in grupos" :key="`${g.curso}-${g.etapa}-${g.grupo}`">
+              <td>{{ g.curso }}</td>
+              <td>{{ g.etapa }}</td>
+              <td>{{ g.grupo }}</td>
+              <td>
+                <button class="btn-delete" @click="eliminarGrupo(g)">X</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div v-else>
         <span>No hay grupos creados.</span>
@@ -174,37 +177,40 @@
         </div>
       </div>
 
-      <table v-if="espaciosOrdenados.length > 0">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th v-if="!esDesdobleLista && esConDocenciaLista">Curso</th>
-            <th v-if="!esDesdobleLista && esConDocenciaLista">Etapa</th>
-            <th v-if="!esDesdobleLista && esConDocenciaLista">Grupo</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
+      <!-- wrapper para scroll horizontal -->
+      <div class="table-scroll" v-if="espaciosOrdenados.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th v-if="!esDesdobleLista && esConDocenciaLista">Curso</th>
+              <th v-if="!esDesdobleLista && esConDocenciaLista">Etapa</th>
+              <th v-if="!esDesdobleLista && esConDocenciaLista">Grupo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
 
-        <tbody>
-          <tr v-for="e in espaciosOrdenados" :key="e.nombre + e.tipo">
-            <td>{{ e.nombre }}</td>
-            <td v-if="!esDesdobleLista && esConDocenciaLista">
-              {{ e.curso ?? "-" }}
-            </td>
-            <td v-if="!esDesdobleLista && esConDocenciaLista">
-              {{ e.etapa ?? "-" }}
-            </td>
-            <td v-if="!esDesdobleLista && esConDocenciaLista">
-              {{ e.grupo ?? "-" }}
-            </td>
-            <td>
-              <button type="button" class="btn-delete" @click="eliminarEspacio(e)">
-                X
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+          <tbody>
+            <tr v-for="e in espaciosOrdenados" :key="e.nombre + e.tipo">
+              <td>{{ e.nombre }}</td>
+              <td v-if="!esDesdobleLista && esConDocenciaLista">
+                {{ e.curso ?? "-" }}
+              </td>
+              <td v-if="!esDesdobleLista && esConDocenciaLista">
+                {{ e.etapa ?? "-" }}
+              </td>
+              <td v-if="!esDesdobleLista && esConDocenciaLista">
+                {{ e.grupo ?? "-" }}
+              </td>
+              <td>
+                <button type="button" class="btn-delete" @click="eliminarEspacio(e)">
+                  X
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div v-else>
         <span>No hay espacios creados.</span>
@@ -214,13 +220,13 @@
 
   <!-- TOAST -->
   <IonToast
-  :is-open="isToastOpen"
-  :message="toastMessage"
-  :color="toastColor"
-  duration="2000"
-  position="top"
-  @didDismiss="isToastOpen = false"
-/>
+    :is-open="isToastOpen"
+    :message="toastMessage"
+    :color="toastColor"
+    duration="2000"
+    position="top"
+    @didDismiss="isToastOpen = false"
+  />
 </template>
 
 <script setup>
@@ -402,10 +408,10 @@ const crearGrupo = async () => {
     return;
   }
   if (cursoGrupo.value < 1) {
-  lanzarToast("danger", "El curso no puede ser negativo ni cero");
-  return;
+    lanzarToast("danger", "El curso no puede ser negativo ni cero");
+    return;
   }
-  
+
   const cursoEtapaGrupoDto = {
     curso: cursoGrupo.value,
     etapa: etapaGrupo.value.trim(),
@@ -527,9 +533,7 @@ const eliminarEspacio = async (espacio) => {
   }
 };
 
-// ====================
-// ON MOUNT
-// ====================
+
 onMounted(async () => {
   await obtenerCursosAcademicosVista();
   await Promise.all([
@@ -708,6 +712,17 @@ table tbody tr {
   table-layout: fixed;
 }
 
+/* scroll horizontal */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Fuerza desbordamiento horizontal cuando haga falta */
+.table-scroll table {
+  min-width: 700px;
+}
+
 /* SWITCHES */
 .switch-container-gestion {
   display: flex;
@@ -793,5 +808,4 @@ input:checked + .slider:before {
     width: 100%;
   }
 }
-
 </style>
