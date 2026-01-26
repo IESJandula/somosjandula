@@ -1,10 +1,8 @@
 <template>
-  <div class="year-calendar">
+  <div class="calendar-header-top">
     <!-- TÍTULO -->
-    <h1 class="year-title">
-      Calendario escolar
-    </h1>
-
+    <h1 class="year-title">Calendario escolar</h1>
+    
     <!-- CONTROLES -->
     <div class="year-controls">
       <button @click="prevYear">◀</button>
@@ -12,72 +10,84 @@
       <button @click="nextYear">▶</button>
     </div>
 
-    <!-- GRID DE MESES -->
-    <div class="months-grid">
-      <template v-for="(month, index) in months" :key="month.name">
-        <!-- SEPARADOR AÑO -->
-        <div v-if="index === 4" class="year-separator">
-          {{ schoolYearEnd }}
+     <!-- LEYENDA AGRUPADA POR COLOR-->
+    <div class="calendar-legend">
+    <div
+      v-for="(nombres, color) in categoriasPorColor"
+      :key="color"
+      class="legend-group"
+      >
+        <span
+          class="legend-color"
+          :style="{ backgroundColor: color }"
+        ></span>
+        <span class="legend-text">
+          {{ nombres.join(', ') }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <!-- GRID DE MESES -->
+  <div class="months-grid">
+    <template v-for="(month, index) in months" :key="month.name">
+      <div class="month-card">
+        <h2 class="month-title">{{ month.name }}</h2>
+
+        <div class="weekdays">
+          <span v-for="d in weekDays" :key="d">{{ d }}</span>
         </div>
 
-        <div class="month-card">
-          <h2 class="month-title">{{ month.name }}</h2>
+        <div class="days-grid">
+          <span
+            v-for="n in getFirstDayOffset(month.month, month.year)"
+            :key="'e-' + n"
+            class="empty-day"
+          >
+          </span>
 
-          <div class="weekdays">
-            <span v-for="d in weekDays" :key="d">{{ d }}</span>
-          </div>
-
-          <div class="days-grid">
-            <span
-              v-for="n in getFirstDayOffset(month.month, month.year)"
-              :key="'e-' + n"
-              class="empty-day"
+          <div
+            v-for="day in getDaysInMonth(month.month, month.year)"
+            :key="day"
+            class="day-cell"
+            @click="onDayClick(month.month, month.year, day)"
+          >
+            <!-- CAPAS DE EVENTOS -->
+            <div
+              v-for="(event, idx) in getEventsForDay(month.month, month.year, day)"
+              :key="event.titulo + idx"
+              class="event-layer"
+              :style="getEventLayerStyle(event.color, idx)"
             >
+            </div>
+
+            <!-- NÚMERO DEL DÍA -->
+            <span
+              class="day-number"
+              :style="getDayNumberStyle(month.month, month.year, day)"
+            >
+              {{ day }}
             </span>
 
+            <!-- TOOLTIP -->
             <div
-              v-for="day in getDaysInMonth(month.month, month.year)"
-              :key="day"
-              class="day-cell"
-              @click="onDayClick(month.month, month.year, day)"
+              v-if="getEventsForDay(month.month, month.year, day).length"
+              class="tooltip"
             >
-              <!-- CAPAS DE EVENTOS -->
               <div
-                v-for="(event, idx) in getEventsForDay(month.month, month.year, day)"
-                :key="event.titulo + idx"
-                class="event-layer"
-                :style="getEventLayerStyle(event.color, idx)"
+                v-for="event in getEventsForDay(month.month, month.year, day)"
+                :key="event.titulo"
+                class="tooltip-item"
+                :style="{ color: isLightColor(event.color) ? '#000' : '#fff' }"
               >
-              </div>
-
-              <!-- NÚMERO DEL DÍA -->
-              <span
-                class="day-number"
-                :style="getDayNumberStyle(month.month, month.year, day)"
-              >
-                {{ day }}
-              </span>
-
-              <!-- TOOLTIP -->
-              <div
-                v-if="getEventsForDay(month.month, month.year, day).length"
-                class="tooltip"
-              >
-                <div
-                  v-for="event in getEventsForDay(month.month, month.year, day)"
-                  :key="event.titulo"
-                  class="tooltip-item"
-                  :style="{ color: isLightColor(event.color) ? '#000' : '#fff' }"
-                >
-                  <strong>{{ event.titulo }}</strong><br />
-                  <span>{{ event.categoria }}</span>
-                </div>
+                <strong>{{ event.titulo }}</strong><br />
+                <span>{{ event.categoria }}</span>
               </div>
             </div>
           </div>
         </div>
-      </template>
-    </div>
+      </div>
+    </template>
+  </div>
 
     <!-- MODAL -->
     <div
@@ -110,18 +120,16 @@
           Cerrar
         </button>
       </div>
+          <!-- TOAST -->
+          <ion-toast
+            :is-open="isToastOpen"
+            :message="toastMessage"
+            :color="toastColor"
+            duration="2000"
+            position="top"
+            @did-dismiss="isToastOpen = false"
+          />
     </div>
-
-    <!-- TOAST -->
-    <ion-toast
-      :is-open="isToastOpen"
-      :message="toastMessage"
-      :color="toastColor"
-      duration="2000"
-      position="top"
-      @did-dismiss="isToastOpen = false"
-    />
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -305,6 +313,18 @@ function getDayNumberStyle(month: number, year: number, day: number) {
   return { color: "#fff" };
 }
 
+const categoriasPorColor = computed(() => {
+  const map: Record<string, string[]> = {};
+
+  categorias.value.forEach(cat => {
+    if (!map[cat.color]) {
+      map[cat.color] = [];
+    }
+    map[cat.color].push(cat.nombre);
+  });
+
+  return map;
+});
 
 onMounted(async () => {
   await cargarCategorias();
@@ -321,21 +341,64 @@ onMounted(async () => {
 /* =========================
    TÍTULO PRINCIPAL
 ========================= */
-.year-title {
+.calendar-header-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: white;
+  padding: 12px 0 16px;
   text-align: center;
-  margin-bottom: 10px;
+}
+.calendar-legend {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+
+  width: fit-content;
+  margin: 0 auto;           
+  padding-left: 0; 
+}
+
+.legend-group {
+  display: grid;
+  grid-template-columns: 18px auto; 
+  align-items: center;
+  column-gap: 8px;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,.25);
+}
+
+.legend-names {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.legend-text {
+  font-size: 16px;   
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* =========================
    CONTROLES DE AÑO 
 ========================= */
 .year-controls {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: auto 1fr auto; 
   align-items: center;
-  gap: 30px;
-  margin: 25px 0 35px;
+  column-gap: 30px;
+  justify-content: center;
+  margin: 20px auto 8px;
+  width: fit-content;
 }
+
 
 .year-controls button {
   font-size: 22px;
@@ -469,19 +532,6 @@ onMounted(async () => {
   display: block;
 }
 
-/* =========================
-   SEPARADOR DE AÑO
-========================= */
-.year-separator {
-  grid-column: 1 / -1;
-  text-align: center;
-  font-weight: bold;
-  font-size: 25px;
-  padding: 14px 0;
-  margin: 30px 0;
-  background: #4465c1;
-  border-radius: 10px;
-}
 
 /* =========================
    MODAL DE EVENTOS
