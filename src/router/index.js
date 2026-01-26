@@ -368,7 +368,7 @@ const routes = [
         meta: {
           role: 'PROFESOR'
         },
-      },
+      },      
     ],
   },
 ];
