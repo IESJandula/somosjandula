@@ -1,27 +1,4 @@
 <template>
-  <div class="form-wrapper">
-    <!-- Elección de curso académico-->
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Elige curso académico</h1>
-      </div>
-
-      <div class="section">
-        <div class="row">
-          <select v-model="cursoElegido" class="custom-select">
-            <option
-              v-for="curso in cursos"
-              :key="curso.cursoAcademico"
-              :value="curso.cursoAcademico"
-            >
-              {{ curso.cursoAcademico }}
-            </option>
-          </select>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Creador de grupos -->
   <div class="form-wrapper">
     <div class="form-container">
@@ -32,7 +9,7 @@
       <div class="section">
         <div class="row">
           <label>Curso (número):</label>
-          <input type="number" v-model.number="cursoGrupo" />
+          <input type="number" v-model.number="cursoGrupo" min="1" step="1"/>
         </div>
 
         <div class="row">
@@ -86,17 +63,185 @@
       </div>
     </div>
   </div>
+
+  <div class="form-wrapper">
+    <!-- Elección de curso académico-->
+    <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Elige curso académico</h1>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <select v-model="cursoElegido" class="custom-select">
+            <option
+              v-for="curso in cursos"
+              :key="curso.cursoAcademico"
+              :value="curso.cursoAcademico"
+            >
+              {{ curso.cursoAcademico }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-wrapper">
+    <!-- CREADOR DE ESPACIOS -->
+    <div class="form-container">
+      <div class="title-container">
+        <h1 class="title">Creador de espacios</h1>
+      </div>
+
+      <div class="section">
+        <div class="row">
+          <label>Nombre:</label>
+          <input type="text" v-model="nombre" />
+        </div>
+      </div>
+
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Sin Docencia</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esConDocenciaForm" />
+            <span class="slider"></span>
+          </label>
+          <span>Con Docencia</span>
+        </div>
+      </div>
+
+      <div class="section center" v-if="esConDocenciaForm">
+        <div class="switch-container-gestion">
+          <span>Fijo</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esDesdobleForm" />
+            <span class="slider"></span>
+          </label>
+          <span>Desdoble</span>
+        </div>
+      </div>
+
+      <div class="section" v-if="esConDocenciaForm && !esDesdobleForm">
+        <div class="row">
+          <label>Grupo:</label>
+          <select v-model="grupoSeleccionado" class="custom-select">
+            <option disabled value="">Selecciona un grupo</option>
+            <option
+              v-for="g in grupos"
+              :key="g.curso + g.etapa + g.grupo"
+              :value="g"
+            >
+              {{ g.curso }} {{ g.etapa }} {{ g.grupo }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section">
+        <button type="button" class="btn-primary" @click="crearEspacio">
+          Crear / Modificar
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLA DE ESPACIOS -->
+    <div class="form-container-table">
+      <div class="title-container">
+        <h1 class="title">Listado de espacios</h1>
+      </div>
+
+      <div class="section center">
+        <div class="switch-container-gestion">
+          <span>Sin Docencia</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esConDocenciaLista" />
+            <span class="slider"></span>
+          </label>
+          <span>Con Docencia</span>
+        </div>
+      </div>
+
+      <div class="section center" v-if="esConDocenciaLista">
+        <div class="switch-container-gestion">
+          <span>Fijo</span>
+          <label class="switch">
+            <input type="checkbox" v-model="esDesdobleLista" />
+            <span class="slider"></span>
+          </label>
+          <span>Desdoble</span>
+        </div>
+      </div>
+
+      <table v-if="espaciosOrdenados.length > 0">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Curso</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Etapa</th>
+            <th v-if="!esDesdobleLista && esConDocenciaLista">Grupo</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr v-for="e in espaciosOrdenados" :key="e.nombre + e.tipo">
+            <td>{{ e.nombre }}</td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.curso ?? "-" }}
+            </td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.etapa ?? "-" }}
+            </td>
+            <td v-if="!esDesdobleLista && esConDocenciaLista">
+              {{ e.grupo ?? "-" }}
+            </td>
+            <td>
+              <button type="button" class="btn-delete" @click="eliminarEspacio(e)">
+                X
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-else>
+        <span>No hay espacios creados.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <IonToast
+  :is-open="isToastOpen"
+  :message="toastMessage"
+  :color="toastColor"
+  duration="2000"
+  position="top"
+  @didDismiss="isToastOpen = false"
+/>
 </template>
 
 <script setup>
-import { schoolBaseServerApiUrl } from "@/environment/apiUrls.ts";
-import { ref, onMounted, watch, nextTick } from "vue";
-
-import { obtenerCursosAcademicos } from "@/services/schoolBaseServer";
-import { seleccionarCursoAcademico } from "@/services/schoolBaseServer";
-import { obtenerCursosEtapasGrupos } from "@/services/schoolBaseServer";
-import { crearCursoEtapaGrupo } from "@/services/schoolBaseServer";
-import { borrarCursoEtapaGrupo } from "@/services/schoolBaseServer";
+import { ref, onMounted, watch, nextTick, computed } from "vue";
+import { IonToast } from "@ionic/vue";
+import {
+  obtenerCursosAcademicos,
+  seleccionarCursoAcademico,
+  obtenerCursosEtapasGrupos,
+  crearCursoEtapaGrupo,
+  borrarCursoEtapaGrupo,
+  crearEspacioSinDocencia,
+  crearEspacioDesdoble,
+  crearEspacioFijo,
+  obtenerEspaciosSinDocencia,
+  obtenerEspaciosDesdoble,
+  obtenerEspaciosFijo,
+  borrarEspacioSinDocencia,
+  borrarEspacioDesdoble,
+  borrarEspacioFijo
+} from "@/services/schoolBaseServer";
 
 // ====================
 // VARIABLES
@@ -107,8 +252,15 @@ const cursoGrupo = ref(null);
 const etapaGrupo = ref("");
 const grupoGrupo = ref("");
 const grupos = ref([]);
+const grupoSeleccionado = ref(null);
+const nombre = ref("");
 
-// Toast
+const esConDocenciaForm = ref(false);
+const esDesdobleForm = ref(false);
+const esConDocenciaLista = ref(false);
+const esDesdobleLista = ref(false);
+const espacios = ref([]);
+
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
@@ -116,12 +268,43 @@ const toastColor = ref("success");
 let inicializandoCurso = true;
 
 // ====================
+// TOAST FIABLE
+// ====================
+const lanzarToast = (color, mensaje) => {
+  isToastOpen.value = false;
+  setTimeout(() => {
+    toastColor.value = color;
+    toastMessage.value = mensaje;
+    isToastOpen.value = true;
+  }, 10);
+};
+
+// ====================
+// COMPUTED
+// ====================
+const espaciosOrdenados = computed(() => {
+  let filtrados = [...espacios.value];
+
+  if (!esConDocenciaLista.value) {
+    filtrados = filtrados.filter(e => e.tipo === "SIN DOCENCIA");
+  } else {
+    if (!esDesdobleLista.value) {
+      filtrados = filtrados.filter(e => e.tipo === "FIJO");
+    } else {
+      filtrados = filtrados.filter(e => e.tipo === "DESDOBLE");
+    }
+  }
+
+  return filtrados.sort((a, b) => a.nombre.localeCompare(b.nombre));
+});
+
+// ====================
 // WATCH
 // ====================
 watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
   if (inicializandoCurso) return;
   if (!nuevoCurso || nuevoCurso === cursoAnterior) return;
-
+  if (nuevo < 0) { cursoGrupo.value = 0; }
   try {
     await seleccionarCursoAcademico(
       toastMessage,
@@ -130,9 +313,12 @@ watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
       nuevoCurso
     );
 
-    await cargarGrupos();
+    await Promise.all([
+      cargarGrupos(),
+      cargarEspacios()
+    ]);
   } catch (error) {
-    console.error("Error al seleccionar curso académico:", error);
+    lanzarToast("danger", error.message);
   }
 });
 
@@ -148,44 +334,78 @@ const cargarGrupos = async () => {
       cursoElegido.value
     );
 
-    console.log("RAW DATA:", data);
     grupos.value = Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("Error cargando grupos:", error);
+    lanzarToast("danger", error.message);
+  }
+};
+
+const cargarEspacios = async () => {
+  try {
+    const [sinDocencia, fijos, desdobles] = await Promise.all([
+      obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoElegido.value),
+      obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoElegido.value),
+      obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoElegido.value)
+    ]);
+
+    const lista = [];
+
+    sinDocencia.forEach(e => lista.push({ nombre: e.nombre, tipo: "SIN DOCENCIA" }));
+    fijos.forEach(e => lista.push({
+      nombre: e.nombre,
+      tipo: "FIJO",
+      curso: e.curso,
+      etapa: e.etapa,
+      grupo: e.grupo
+    }));
+    desdobles.forEach(e => lista.push({ nombre: e.nombre, tipo: "DESDOBLE" }));
+
+    espacios.value = lista;
+
+  } catch (error) {
+    lanzarToast("danger", error.message);
   }
 };
 
 const obtenerCursosAcademicosVista = async () => {
-  const data = await obtenerCursosAcademicos(
-    isToastOpen,
-    toastMessage,
-    toastColor
-  );
+  try {
+    const data = await obtenerCursosAcademicos(
+      isToastOpen,
+      toastMessage,
+      toastColor
+    );
 
-  cursos.value = data;
+    cursos.value = data;
 
-  const cursoSeleccionado = data.find(
-    (curso) => curso.seleccionado === true
-  );
+    const cursoSeleccionado = data.find(
+      (curso) => curso.seleccionado === true
+    );
 
-  if (cursoSeleccionado) {
-    await nextTick();
-    cursoElegido.value = cursoSeleccionado.cursoAcademico;
+    if (cursoSeleccionado) {
+      await nextTick();
+      cursoElegido.value = cursoSeleccionado.cursoAcademico;
+    }
+  } catch (error) {
+    lanzarToast("danger", error.message);
   }
 };
 
 const crearGrupo = async () => {
+
   if (
     cursoGrupo.value === null ||
+    cursoGrupo.value === "" ||
     etapaGrupo.value.trim() === "" ||
     grupoGrupo.value.trim() === ""
   ) {
-    toastMessage.value = "Rellena todos los campos";
-    toastColor.value = "danger";
-    isToastOpen.value = true;
+    lanzarToast("danger", "Rellena todos los campos");
     return;
   }
-
+  if (cursoGrupo.value < 1) {
+  lanzarToast("danger", "El curso no puede ser negativo ni cero");
+  return;
+  }
+  
   const cursoEtapaGrupoDto = {
     curso: cursoGrupo.value,
     etapa: etapaGrupo.value.trim(),
@@ -200,20 +420,12 @@ const crearGrupo = async () => {
       cursoEtapaGrupoDto
     );
 
-    toastMessage.value = "Grupo creado correctamente";
-    toastColor.value = "success";
-    isToastOpen.value = true;
+    lanzarToast("success", "Grupo creado correctamente");
 
     await cargarGrupos();
 
-    cursoGrupo.value = null;
-    etapaGrupo.value = "";
-    grupoGrupo.value = "";
-
   } catch (error) {
-    toastMessage.value = error.message || "Error al crear el grupo";
-    toastColor.value = "danger";
-    isToastOpen.value = true;
+    lanzarToast("danger", error.message);
   }
 };
 
@@ -230,15 +442,88 @@ const eliminarGrupo = async (grupo) => {
       }
     );
 
-    toastMessage.value = "Grupo eliminado correctamente";
-    toastColor.value = "success";
-    isToastOpen.value = true;
+    lanzarToast("success", "Grupo eliminado correctamente");
 
-    await cargarGrupos();
+    await Promise.all([
+      cargarGrupos(),
+      cargarEspacios()
+    ]);
+
   } catch (error) {
-    toastMessage.value = error.message;
-    toastColor.value = "danger";
-    isToastOpen.value = true;
+    lanzarToast("danger", error.message);
+  }
+};
+
+const crearEspacio = async () => {
+  if (!nombre.value.trim()) {
+    lanzarToast("danger", "Introduce un nombre");
+    return;
+  }
+
+  try {
+    if (!esConDocenciaForm.value) {
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim()
+      };
+
+      await crearEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
+    }
+    else if (esDesdobleForm.value) {
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim()
+      };
+
+      await crearEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
+    }
+    else {
+      if (!grupoSeleccionado.value) {
+        lanzarToast("danger", "Selecciona un grupo");
+        return;
+      }
+
+      const dto = {
+        cursoAcademico: cursoElegido.value,
+        nombre: nombre.value.trim(),
+        curso: grupoSeleccionado.value.curso,
+        etapa: grupoSeleccionado.value.etapa,
+        grupo: grupoSeleccionado.value.grupo
+      };
+
+      await crearEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
+    }
+
+    lanzarToast("success", "Espacio creado correctamente");
+
+    await cargarEspacios();
+
+  } catch (error) {
+    lanzarToast("danger", error.message);
+  }
+};
+
+const eliminarEspacio = async (espacio) => {
+  try {
+    const dto = {
+      cursoAcademico: cursoElegido.value,
+      nombre: espacio.nombre
+    };
+
+    if (espacio.tipo === "SIN DOCENCIA") {
+      await borrarEspacioSinDocencia(toastMessage, toastColor, isToastOpen, dto);
+    } else if (espacio.tipo === "FIJO") {
+      await borrarEspacioFijo(toastMessage, toastColor, isToastOpen, dto);
+    } else {
+      await borrarEspacioDesdoble(toastMessage, toastColor, isToastOpen, dto);
+    }
+
+    lanzarToast("success", "Espacio eliminado correctamente");
+
+    await cargarEspacios();
+
+  } catch (error) {
+    lanzarToast("danger", error.message);
   }
 };
 
@@ -247,7 +532,10 @@ const eliminarGrupo = async (grupo) => {
 // ====================
 onMounted(async () => {
   await obtenerCursosAcademicosVista();
-  await cargarGrupos();
+  await Promise.all([
+    cargarGrupos(),
+    cargarEspacios()
+  ]);
   inicializandoCurso = false;
 });
 </script>
@@ -268,90 +556,87 @@ onMounted(async () => {
 }
 
 .form-container-table {
-  min-width: 1200px;
-  width: fit-content;
+  min-width: 700px;
+  width: 90%;
+  max-width: 900px;
   background-color: var(--form-bg-light);
   box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   border: 1px solid #444;
   border-radius: 10px;
   box-sizing: border-box;
-  padding: 20px 30px;
+  padding: 12px 15px;
   margin: auto;
   font-family: "Roboto", sans-serif;
   margin-top: 2%;
-}
-
-
-.form-container-table-logs {
-  overflow-x: auto;
-  max-width: 83%;
-  overflow-y: auto;
-  display: block;
-  white-space: nowrap;
-}
-
-.sticky-column {
-  position: sticky;
-  left: 0;
-  background: white;
-  z-index: 2;
-}
-
-.decrementar-button {
-  background-color: #dc3545;
-  float: left;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 5px 10px;
-  margin-right: 10px;
-}
-
-.incrementar-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  float: right;
-  border-radius: 5px;
-  cursor: pointer;
-  padding: 5px 10px;
-}
-
-.numPagina {
-  display: flex;
-  align-items: center;
-  justify-content: block;
-}
-
-.pagina-container {
-  display: flex;
-  padding-top: 2%;
-  justify-content: space-between;
-  width: 100%;
 }
 
 .form-wrapper {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  /* Espaciado entre las tarjetas */
   justify-content: center;
-  /* Centrar las tarjetas */
 }
 
-.container {
+/* TITULOS */
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  text-align: center;
+}
+
+/* SECCIONES */
+.section {
+  margin-bottom: 25px;
+}
+
+.section.center {
+  display: flex;
+  justify-content: center;
+}
+
+.row {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  background-color: white;
-  color: #1a1a1a;
-  font-family: Arial, sans-serif;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
 }
 
+.row label {
+  margin-bottom: 10px;
+}
+
+/* BOTONES */
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #2196f3;
+  border-radius: 6px;
+  margin-top: 10px;
+  text-transform: uppercase;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-delete {
+  padding: 5px 10px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* SELECT */
 .custom-select {
   width: 80%;
   margin-bottom: 20px;
@@ -363,7 +648,6 @@ onMounted(async () => {
   color: #000000;
   outline: none;
   cursor: pointer;
-  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .custom-select:hover {
@@ -371,6 +655,7 @@ onMounted(async () => {
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
+/* TABLAS */
 table {
   border-collapse: collapse;
   width: 100%;
@@ -378,34 +663,16 @@ table {
   background-color: #f8f9fa;
   color: #1a1a1a;
   border: 2px solid #007bff;
-  margin-top: 20px;
+  margin-top: 10px;
   border-radius: 5px;
   overflow: hidden;
-}
-
-span {
-  cursor: pointer;
-  font-weight: bold;
-  font-style: oblique;
+  font-size: 13px;
 }
 
 th,
 td {
   border: 2px solid #007bff;
-  padding: 10px;
-}
-
-td {
-  height: 50px;
-  width: 150px;
-  /* Establece un ancho fijo */
-  background-color: #e9f5ff;
-  text-overflow: ellipsis;
-  /* Para manejar contenido largo */
-  overflow: hidden;
-  /* Oculta cualquier contenido que desborde */
-  word-wrap: break-word;
-  /* Permite que el texto largo se divida y se ajuste */
+  padding: 6px;
 }
 
 th {
@@ -415,128 +682,45 @@ th {
 }
 
 td {
-  height: 50px;
   background-color: #e9f5ff;
-}
-
-th:first-child {
-  background-color: #0056b3;
-  /* Diferenciar la columna de tramos horarios */
-}
-
-button {
-  padding: 5px 10px;
-  border: none;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
+  height: 38px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  word-wrap: break-word;
 }
 
 tr:hover td {
   background-color: #d0eaff;
-  /* Efecto hover en filas */
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-  width: 300px;
-}
-
-.modal-content h2 {
-  margin-bottom: 10px;
-}
-
-.modal-content label {
+/* SCROLL TABLA */
+table tbody {
   display: block;
-  margin-bottom: 5px;
-}
-
-.row label {
-  display: block;
-  margin-bottom: 10px;
-}
-
-.modal-content input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-.modal-content button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.modal-content button:hover {
-  background-color: #0056b3;
-}
-
-.title-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  position: relative;
-  width: 100%;
-  padding: 20px;
-}
-
-.title {
-  margin: 0;
-  font-size: 24px;
-}
-
-.title {
-  text-align: center;
+  max-height: 200px;
+  overflow-y: auto;
   width: 100%;
 }
 
-.switch-container {
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-  margin-left: 14%;
+table thead,
+table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
 }
 
+/* SWITCHES */
 .switch-container-gestion {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 15px;
   margin-top: 10px;
   margin-bottom: 10px;
-  margin-left: 8%;
+  width: 100%;
 }
 
-.switch-container span {
-  font-size: 20px;
+.switch-container-gestion span {
+  font-size: 16px;
 }
 
 .switch {
@@ -555,10 +739,7 @@ tr:hover td {
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: #ccc;
   transition: 0.4s;
   border-radius: 34px;
@@ -576,46 +757,18 @@ tr:hover td {
   border-radius: 50%;
 }
 
-input:checked+.slider {
+input:checked + .slider {
   background-color: #2196f3;
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-.btn-modify-lock {
-  color: white;
-  border: none;
-  margin-left: 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.btn-modify-unlock {
-  background-color: #025ec0;
-  color: white;
-  border: none;
-  margin-left: 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-/* Modo oscuro */
+/* MODO OSCURO */
 @media (prefers-color-scheme: dark) {
-  .form-container {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-
+  .form-container,
   .form-container-table {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-
-  .form-container-table-logs {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
     border: 1px solid #444;
@@ -626,30 +779,14 @@ input:checked+.slider:before {
   }
 }
 
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .form-container {
     border: 1px solid #444;
   }
 
-  .form-container-table table {
-    overflow-x: auto;
-    max-height: 300px;
-    overflow-y: auto;
-    display: block;
-    white-space: nowrap;
-  }
-
-  .form-container-table-logs table {
-    overflow-x: auto;
-    max-height: 300px;
-    overflow-y: auto;
-    display: block;
-    white-space: nowrap;
-  }
-
   table {
     font-size: 14px;
-    width: 100%;
   }
 
   .custom-select {
@@ -657,54 +794,4 @@ input:checked+.slider:before {
   }
 }
 
-@media (max-width: 576px) {
-
-  .switch-container {
-    margin-left: 0;
-  }
-
-}
-
-/* ===== SECCIONES (RESPIRACIÓN TIPO IONIC) ===== */
-.section {
-  margin-bottom: 25px;
-}
-
-.section.center {
-  display: flex;
-  justify-content: center;
-}
-
-.section .row {
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* centra horizontalmente */
-}
-/* Filas más limpias */
-.row {
-  margin-bottom: 15px;
-}
-
-/* Botón principal */
-.btn-primary {
-  width: 100%;
-  padding: 12px;
-  font-size: 14px;
-  font-weight: bold;
-  background-color: #2196f3;
-  border-radius: 6px;
-  margin-top: 10px;
-  text-transform: uppercase;
-}
-
-/* Centrar switches */
-.switch-container-gestion {
-  margin-left: 0;
-  justify-content: center;
-}
-
-/* Título más aireado */
-.title-container {
-  padding-bottom: 10px;
-}
 </style>

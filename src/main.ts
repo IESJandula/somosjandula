@@ -55,6 +55,7 @@ import {
   bagAddOutline,
   bandage,
   barChart,
+  calendarNumber,
 } from "ionicons/icons";
 
 import { initializeApp } from "firebase/app";
@@ -81,6 +82,7 @@ addIcons({
   "close-circle-outline": closeCircleOutline,
   "checkmark-circle-outline": checkmarkCircleOutline,
   "megaphone": megaphone,
+  "calendar-number": calendarNumber,
   "heart-outline": heartOutline,
   "print": print,
   "book": book,
