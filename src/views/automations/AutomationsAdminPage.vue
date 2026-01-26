@@ -18,9 +18,27 @@
         <div class="row">
           <label>Ubicación:</label>
           <select v-model="ubicacionElegida">
-            <option v-for="ubicacion in ubicaciones" :key="ubicacion.nombreUbicacion"
-              :value="ubicacion.nombreUbicacion">
+            <option
+              v-for="ubicacion in ubicaciones"
+              :key="ubicacion.nombreUbicacion"
+              :value="ubicacion.nombreUbicacion"
+            >
               {{ ubicacion.nombreUbicacion }}
+            </option>
+          </select>
+        </div>
+
+        <!-- ✅ APLICABILIDAD (nuevo) -->
+        <div class="row">
+          <label>Aplicabilidad:</label>
+          <select v-model="aplicabilidadElegida">
+            <option disabled value="">Selecciona aplicabilidad</option>
+            <option
+              v-for="ap in aplicabilidades"
+              :key="ap.id ?? ap.nombreAplicabilidad ?? ap"
+              :value="ap.nombreAplicabilidad ?? ap"
+            >
+              {{ ap.nombreAplicabilidad ?? ap }}
             </option>
           </select>
         </div>
@@ -67,21 +85,29 @@
       <div class="section">
 
         <!-- ACTUADOR -->
-        <button v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && !esSensorForm" class="btn-primary"
-          @click="crearActuadorVista">
+        <button
+          v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && !esSensorForm"
+          class="btn-primary"
+          @click="crearActuadorVista"
+        >
           Crear / Modificar
         </button>
 
         <!-- SENSOR BOOLEANO -->
         <button
           v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && esSensorForm && !esNumericoForm && umbralMin < umbralMax"
-          class="btn-primary" @click="crearSensorBooleanoVista">
+          class="btn-primary"
+          @click="crearSensorBooleanoVista"
+        >
           Crear / Modificar
         </button>
 
         <!-- SENSOR NUMÉRICO -->
-        <button v-if="dispositivo && ubicacionElegida && esSensorForm && esNumericoForm && umbralMin < umbralMax"
-          class="btn-primary" @click="crearSensorNumericoVista">
+        <button
+          v-if="dispositivo && ubicacionElegida && esSensorForm && esNumericoForm && umbralMin < umbralMax"
+          class="btn-primary"
+          @click="crearSensorNumericoVista"
+        >
           Crear / Modificar
         </button>
 
@@ -132,10 +158,12 @@
             <th>MAC</th>
             <th>Estado</th>
             <th>Ubicación</th>
+            <th>Aplicabilidad</th>
+
             <th v-if="esSensorLista">Valor actual</th>
-            <th v-if="esSensorLista">Última actualización</th>
-            <th v-if="esSensorLista">Umbral mínimo</th>
             <th v-if="esSensorLista">Umbral máximo</th>
+            <th v-if="esSensorLista">Umbral mínimo</th>
+            <th v-if="esSensorLista">Última actualización</th>
 
             <th>Acciones</th>
           </tr>
@@ -147,6 +175,8 @@
             <td>{{ dispositivo.mac }}</td>
             <td>{{ dispositivo.estado }}</td>
             <td>{{ dispositivo.nombreUbicacion }}</td>
+            <td>{{ dispositivo.aplicabilidad }}</td>
+
             <td>
               <button @click="eliminarActuadorVista(dispositivo.mac)">
                 X
@@ -161,6 +191,8 @@
             <td>{{ sensor.mac }}</td>
             <td>{{ sensor.estado }}</td>
             <td>{{ sensor.nombreUbicacion }}</td>
+            <td>{{ sensor.aplicabilidad }}</td>
+
             <td>
               <span v-if="sensor.valorActual !== null">
                 {{ sensor.valorActual }}
@@ -189,6 +221,7 @@
             <td>{{ sensor.mac }}</td>
             <td>{{ sensor.estado }}</td>
             <td>{{ sensor.nombreUbicacion }}</td>
+            <td>{{ sensor.aplicabilidad }}</td>
             <td>
               <span v-if="sensor.ultimaActualizacion !== null">
                 {{ sensor.ultimaActualizacion }}
@@ -219,7 +252,19 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { crearToast } from "@/utils/toast.js";
-import { crearActuador, crearSensorBooleano, crearSensorNumerico, obtenerActuadores, obtenerUbicaciones, obtenerSensorNumerico, obtenerSensorBooleano, eliminarActuador, eliminarSensorBooleano, eliminarSensorNumerico } from "@/services/automations";
+import {
+  obtenerAplicabilidad,
+  crearActuador,
+  crearSensorBooleano,
+  crearSensorNumerico,
+  obtenerActuadores,
+  obtenerUbicaciones,
+  obtenerSensorNumerico,
+  obtenerSensorBooleano,
+  eliminarActuador,
+  eliminarSensorBooleano,
+  eliminarSensorNumerico
+} from "@/services/automations";
 
 // DATOS
 const dispositivo = ref("");
@@ -232,6 +277,10 @@ const actuadores = ref([]);
 const sensoresNumericos = ref([]);
 const sensoresBooleanos = ref([]);
 const ubicaciones = ref([]);
+
+// ✅ APLICABILIDAD (nuevo)
+const aplicabilidadElegida = ref("");
+const aplicabilidades = ref([]);
 
 // booleanos para los botones de CREAR
 const esSensorForm = ref(false);
@@ -247,6 +296,20 @@ const toastMessage = ref("");
 const toastColor = ref("success");
 
 // ********* FUNCIONES ********
+
+// ✅ Obtener lista de APLICABILIDAD (nuevo)
+const obtenerAplicabilidadVista = async () => {
+  try {
+    aplicabilidades.value = await obtenerAplicabilidad(
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+  } catch (error) {
+    aplicabilidades.value = [];
+    crearToast(toastMessage, toastColor, isToastOpen, error.message);
+  }
+};
 
 // Obtener la lista de UBICACIONES
 const obtenerUbicacionesVista = async () => {
@@ -266,7 +329,8 @@ const crearActuadorVista = async () => {
       isToastOpen,
       dispositivo,
       estado,
-      ubicacionElegida
+      ubicacionElegida,
+      aplicabilidadElegida
     );
 
     crearToast(
@@ -432,13 +496,18 @@ const eliminarSensorNumericoVista = async (mac) => {
 };
 
 onMounted(async () => {
+  // ✅ antes llamabas obtenerAplicabilidad() sin guardar nada
+  await obtenerAplicabilidadVista();
+
   await obtenerUbicacionesVista();
   await obtenerActuadoresVista();
   await obtenerSensorNumericoVista();
   await obtenerSensorBooleanoVista();
-  await eliminarActuadorVista();
-  await eliminarSensorBooleano();
-  await eliminarSensorNumericoVista();
+
+  // ❌ Eliminaciones automáticas quitadas (no tiene sentido y te rompe porque falta mac)
+  // await eliminarActuadorVista();
+  // await eliminarSensorBooleano();
+  // await eliminarSensorNumericoVista();
 });
 </script>
 
@@ -470,7 +539,6 @@ onMounted(async () => {
   font-family: "Roboto", sans-serif;
   margin-top: 2%;
 }
-
 
 .form-container-table-logs {
   overflow-x: auto;
@@ -525,9 +593,7 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  /* Espaciado entre las tarjetas */
   justify-content: center;
-  /* Centrar las tarjetas */
 }
 
 .container {
@@ -588,14 +654,10 @@ td {
 td {
   height: 50px;
   width: 150px;
-  /* Establece un ancho fijo */
   background-color: #e9f5ff;
   text-overflow: ellipsis;
-  /* Para manejar contenido largo */
   overflow: hidden;
-  /* Oculta cualquier contenido que desborde */
   word-wrap: break-word;
-  /* Permite que el texto largo se divida y se ajuste */
 }
 
 th {
@@ -611,7 +673,6 @@ td {
 
 th:first-child {
   background-color: #0056b3;
-  /* Diferenciar la columna de tramos horarios */
 }
 
 button {
@@ -625,7 +686,6 @@ button {
 
 tr:hover td {
   background-color: #d0eaff;
-  /* Efecto hover en filas */
 }
 
 .modal-overlay {
@@ -843,11 +903,9 @@ input:checked+.slider:before {
 }
 
 @media (max-width: 576px) {
-
   .switch-container {
     margin-left: 0;
   }
-
 }
 
 /* ===== SECCIONES (RESPIRACIÓN TIPO IONIC) ===== */
