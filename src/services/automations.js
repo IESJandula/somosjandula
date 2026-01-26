@@ -241,6 +241,25 @@ export const obtenerAplicabilidad = async (toastMessage, toastColor, isToastOpen
   return await response.json()
 }
 
+export const obtenerDispositivos = async (toastMessage, toastColor, isToastOpen) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen)
+
+  const response = await fetch(automationsApiUrl + '/automations/map/ubicacion/', {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${tokenPropio}`,
+      Accept: 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(errorData.message ?? `HTTP ${response.status}`)
+  }
+
+  return await response.json()
+}
+
 
 
 

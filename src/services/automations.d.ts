@@ -1,3 +1,12 @@
+export type VistaPajaroResponseDto = {
+  mapaActuadores: Record<string, any[]>
+  mapaSensoresBooleanos: Record<string, any[]>
+  mapaSensoresNumericos: Record<string, any[]>
+}
+export declare function obtenerDispositivos(toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>): Promise<VistaPajaroResponseDto>
+
 export declare function crearSensorBooleano(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>,

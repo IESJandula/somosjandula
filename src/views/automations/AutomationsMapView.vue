@@ -199,13 +199,13 @@
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount, onMounted } from 'vue'
+import { obtenerDispositivos, } from '@/services/automations'
 import {
-  obtenerDispositivos,
   obtenerCursosAcademicos,
   obtenerEspaciosFijo,
   obtenerEspaciosDesdoble,
   obtenerEspaciosSinDocencia
-} from '@/services/automationsMap'
+} from '@/services/schoolBaseServer'
 
 // TOAST
 const isToastOpen = ref(false)
