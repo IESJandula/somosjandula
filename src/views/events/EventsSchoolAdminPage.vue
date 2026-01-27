@@ -447,11 +447,17 @@ onMounted(async () => {
   align-content: center;
 }
 
-.right-top-container,
+.right-top-container {
+  flex: 1;
+  min-height: 0;
+  align-content: center;
+}
 .right-bottom-container {
   flex: 1;
   min-height: 0;
   align-content: center;
+  overflow-y: auto;
+  overflow-x: auto;
 }
 
 
@@ -748,7 +754,6 @@ onMounted(async () => {
   font-weight: 600;
 
 }
-
 /* RESPONSIVE */
 @media (max-width: 1024px) {
 
@@ -1128,7 +1133,7 @@ onMounted(async () => {
   .form-input,
   .form-select {
     background-color: #2c3e50;
-    color: #ecf0f1;
+    color: #b4cdd3;
     border: 1px solid #555;
   }
 

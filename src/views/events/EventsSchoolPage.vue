@@ -577,6 +577,29 @@ onMounted(async () => {
 ========================= */
 @media (prefers-color-scheme: dark) {
 
+  .calendar-header-top {
+    background: #1f2933;        
+    border-bottom: 1px solid #374151;
+  }
+
+  .calendar-header-top h1,
+  .calendar-header-top,
+  .calendar-header-top span {
+    color: #f3f4f6;             
+  }
+
+  .calendar-legend {
+    background: transparent;    
+  }
+
+  .legend-text {
+    color: #e5e7eb;             
+  }
+
+  .legend-color {
+    border: 1px solid rgba(255,255,255,.4);
+  }
+
   .month-card {
     background-color: var(--form-bg-dark);
     border: 1px solid #444;
@@ -624,5 +647,108 @@ onMounted(async () => {
   .day-cell:hover .event-layer {
     filter: brightness(1.35);
   }
+}
+
+@media (max-width: 480px) {
+
+/* ===== CONTENEDOR STICKY DEL HEADER ===== */
+  .calendar-header-top {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: #1e2a36;
+    padding: 6px 7px 7px;
+  }
+
+  /* ===== TÍTULO ===== */
+  .calendar-title {
+    font-size: 8px;
+    text-align: center;
+    margin-bottom: 3px;
+    color: #ffffff;
+  }
+
+  /* ===== CONTROLES DEL AÑO ===== */
+  .year-controls button {
+    font-size: 10px;
+    font-weight: bold;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background-color: #e0e0e0;
+  }
+
+  .year-controls button:hover {
+    background-color: #d0d0d0;
+  }
+  .year-title{
+    font-size: 15px;
+  }
+  .year-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+
+  /* ===== LEYENDA ===== */
+  .calendar-legend {
+    width: max-content;
+    margin: 0 auto;
+    gap: 4px;
+  }
+
+  .legend-group {
+    display: grid;
+    grid-template-columns: 5px auto;
+    column-gap: 5px;
+  }
+
+  .legend-color {
+    width: 8px;
+    height: 8px;
+    border-radius: 3px;
+  }
+
+  .legend-text {
+    font-size: 10px;
+    line-height: 1.1;
+    font-weight: 500;
+    color: #e6e6e6;
+  }
+
+  /* ===== SCROLL INTERNO DEL CALENDARIO ===== */
+  .calendar-scroll-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+  }
+
+  /* ===== SCROLLBAR FINO ===== */
+  .calendar-scroll-container::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .calendar-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 2px;
+  }
+    /* CONTENEDOR GENERAL DEL CALENDARIO */
+  .year-calendar {
+    height: calc(100vh - 60px); 
+    overflow: hidden;
+  }
+
+  /* GRID DE MESES */
+  .months-grid {
+    height: 100%;
+    overflow-x: auto;      
+    overflow-y: auto;     
+    -webkit-overflow-scrolling: touch;
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+  }
+
+
 }
 </style>
