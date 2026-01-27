@@ -324,6 +324,7 @@ const routes = [
         name: 'EventsSchoolPage',
         meta: { role: 'PROFESOR' },
       },
+      
       {
         path: '/issues',
         component: IncidenciasTicPage,
@@ -376,6 +377,18 @@ const routes = [
           role: 'PROFESOR'
         },
       },
+        path: 'eventsSchool/admin',
+        component: EventsSchoolAdminPage,
+        name: 'EventsSchoolAdmin',
+        meta: {role: 'ADMINISTRADOR'},
+      },
+      {
+        path: '/events/users',
+        component: EventsSchoolPage,
+        name: 'EventsSchoolPage',
+        meta: {role: 'PROFESOR'},
+      },
+      
     ],
   },
 ];
