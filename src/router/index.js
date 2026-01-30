@@ -61,6 +61,8 @@ import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
+import vozAppPage from '@/views/vozApp/App.vue'
+
 const routes = [
   {
     path: '/',
@@ -376,7 +378,19 @@ const routes = [
         meta: {
           role: 'PROFESOR'
         },
+<<<<<<< Updated upstream
       },      
+=======
+      },
+      {
+        path: 'vozApp/admin',
+        component: vozAppPage,
+        name: 'vozAppAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+>>>>>>> Stashed changes
     ],
   },
 ];
