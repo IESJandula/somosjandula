@@ -1,4 +1,5 @@
 <template>
+  <!--
   <div class="main-container">
     <div class="top-row">
       <div class="left-top-container">
@@ -80,10 +81,11 @@
   </div>
     <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
-
+-->
 </template>
 
 <script setup lang="ts">
+/*
 import { ref, onMounted } from "vue";
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
@@ -311,6 +313,7 @@ onMounted(async () => {
   await cargarCategorias();
   await cargarEventos();
 });
+*/
 </script>
 
 <style scoped>
