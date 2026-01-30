@@ -310,7 +310,7 @@ const espaciosOrdenados = computed(() => {
 watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
   if (inicializandoCurso) return;
   if (!nuevoCurso || nuevoCurso === cursoAnterior) return;
-  if (nuevo < 0) { cursoGrupo.value = 0; }
+  if (nuevoCurso < 0) { cursoGrupo.value = 0; }
   try {
     await seleccionarCursoAcademico(
       toastMessage,

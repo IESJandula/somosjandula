@@ -17,6 +17,7 @@ export interface Ubicacion {
  */
 export interface Categoria {
   nombre: string;
+  imprimirInforme: boolean;
 }
 
 /**
@@ -69,7 +70,7 @@ export declare function listarCategorias(
 
 /** Crear categoría */
 export declare function crearCategoria(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string, imprimirInforme: boolean): Promise<any>;
 
 /** Borrar categoría */
 export declare function borrarCategoria(

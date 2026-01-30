@@ -59,7 +59,18 @@
 
           <div class="section">
             <label class="t-3">Nombre de la categoría (TIC, DIRECCIÓN...)</label>
-            <input v-model="nuevaCategoria" class="input" />
+            <input v-model="nuevaCategoriaNombre" class="input" />
+
+            <div class="checkbox-row">
+              <input
+                id="nuevaCategoriaImprimir"
+                v-model="nuevaCategoriaImprimir"
+                type="checkbox"
+              />
+              <label for="nuevaCategoriaImprimir" class="t-3 checkbox-label">
+                Imprimir informe
+              </label>
+            </div>
 
             <button class="btn" @click="crearNuevaCategoriaFunc">Guardar categoría</button>
           </div>
@@ -73,12 +84,14 @@
             <thead>
               <tr>
                 <th class="th">Nombre categoría</th>
+                <th class="th">Imprimir informe</th>
                 <th class="th">Acción</th>
               </tr>
             </thead>
             <tbody class="t-3">
               <tr v-for="categoria in categorias" :key="categoria.nombre">
                 <td class="th">{{ categoria.nombre }}</td>
+                <td class="th">{{ categoria.imprimirInforme ? "Sí" : "No" }}</td>
                 <td class="th">
                   <button class="eliminar" @click="borrarCategoriaFunc(categoria.nombre)">
                     &times;
@@ -183,27 +196,17 @@ import {
   listarUsuariosCategoria,
   crearUsuarioCategoria,
   borrarUsuarioCategoria,
+  Ubicacion,
+  Categoria,
+  UsuarioCategoria,
 } from "@/services/issues.js";
-
-interface Ubicacion {
-  nombre: string;
-}
-
-interface Categoria {
-  nombre: string;
-}
-
-interface UsuarioCategoria {
-  nombreCategoria: string;
-  nombreResponsable: string;
-  emailResponsable: string;
-}
 
 const ubicaciones = ref<Ubicacion[]>([]);
 const nuevaUbicacion = ref("");
 
 const categorias = ref<Categoria[]>([]);
-const nuevaCategoria = ref<string>("");
+const nuevaCategoriaNombre = ref<string>("");
+const nuevaCategoriaImprimir = ref<boolean>(false);
 
 const usuariosCategoria = ref<UsuarioCategoria[]>([]);
 const nuevoUsuarioCategoria = ref<UsuarioCategoria>({
@@ -268,8 +271,8 @@ async function cargarCategorias() {
 
 async function crearNuevaCategoriaFunc() {
   try {
-    const nombreCategoria = nuevaCategoria.value.trim();
-
+    const nombreCategoria = nuevaCategoriaNombre.value.trim();
+    
     if (!nombreCategoria) {
       crearToast(
         toastMessage,
@@ -300,11 +303,13 @@ async function crearNuevaCategoriaFunc() {
       toastMessage,
       toastColor,
       isToastOpen,
-      nombreCategoria
+      nombreCategoria,
+      nuevaCategoriaImprimir.value
     );
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría creada");
     await cargarCategorias();
-    nuevaCategoria.value = "";
+    nuevaCategoriaNombre.value = "";
+    nuevaCategoriaImprimir.value = false;
   } catch (e: any) {
     crearToast(toastMessage, toastColor, isToastOpen, "danger", e?.message || "Error al crear categoría");
   }
@@ -534,6 +539,15 @@ onMounted(async () => {
   border-radius: 6px;
   padding: 0.5rem;
   width: 100%;
+}
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.checkbox-label {
+  margin-top: 0;
+  cursor: pointer;
 }
 .btn {
   padding: 0.5rem;

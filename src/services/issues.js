@@ -137,9 +137,10 @@ export const listarCategorias = async (toastMessage, toastColor, isToastOpen) =>
  * @param toastColor - El color de toast.
  * @param isToastOpen - Indica si el toast está abierto.
  * @param nombre - El nombre de la categoría.
+ * @param imprimirInforme - Indica si se debe imprimir el informe
  * @returns La respuesta de la API con la categoría creada.
  */
-export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nombre) =>
+export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nombre, imprimirInforme) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -148,6 +149,7 @@ export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nomb
     headers: {
       'Authorization': `Bearer ${token}`,
       'nombre': nombre,
+      'imprimirInforme': imprimirInforme,
     },
   });
 

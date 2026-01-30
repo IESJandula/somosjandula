@@ -105,7 +105,7 @@ export const imprimir = async (toastMessage, toastColor, isToastOpen, payload) =
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-    return await fetch(printersApiUrl + '/printers/web/print',
+    return await fetch(printersApiUrl + '/printers/web/print/user',
     {
         method: 'POST',
         headers:
