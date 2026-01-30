@@ -20,6 +20,7 @@
             <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/vozApp/admin')">Voz app</ion-item>
           </ion-list>
         </ion-list>
 
