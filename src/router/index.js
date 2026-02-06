@@ -377,19 +377,18 @@ const routes = [
           role: 'PROFESOR'
         },
       },
-        path: 'eventsSchool/admin',
-        component: EventsSchoolAdminPage,
-        name: 'EventsSchoolAdmin',
+      {
+        path: 'strikesSchool/admin',
+        component: StrikesSchoolAdminPage,
+        name: 'StrikesSchoolAdmin',
         meta: {role: 'ADMINISTRADOR'},
       },
       {
-        path: '/events/users',
-        component: EventsSchoolPage,
-        name: 'EventsSchoolPage',
+        path: '/strikes/users',
+        component: StrikesSchoolPage,
+        name: 'StrikesSchoolPage',
         meta: {role: 'PROFESOR'},
-      },
-      
-      },      
+      }    
     ],
   },
 ];
