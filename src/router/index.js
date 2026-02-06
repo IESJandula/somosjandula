@@ -46,14 +46,22 @@ import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';
 import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
 import NotificationsAdminPage from '@/views/notifications/NotificationsAdminPage.vue';
 
+import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
+
 import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
-import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
+import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
+import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
+
+import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
+
+import StatisticsView from '@/views/statistics/StatisticsView.vue';
+
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
-const routes = [  
+const routes = [
   {
     path: '/',
     redirect: '/login',
@@ -179,7 +187,7 @@ const routes = [
         component: ManageNotificationsPage,
         name: 'ManageNotificationsPage',
         meta: {
-          role: 'PROFESOR', 
+          role: 'PROFESOR',
         },
       },
       {
@@ -234,24 +242,24 @@ const routes = [
         path: 'projectors/ControlPanel',
         component: ControlPanel,
         name: 'ControlPanel',
-        meta: { 
-          role: 'ADMINISTRADOR' 
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
       {
         path: 'projectors/RemoteControl',
         component: RemoteControl,
         name: 'RemoteControl',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
         path: 'projectors/EventsTable',
         component: EventsTable,
         name: 'EventsTable',
-        meta: { 
-          role: 'PROFESOR' 
+        meta: {
+          role: 'PROFESOR'
         },
       },
       {
@@ -303,12 +311,28 @@ const routes = [
         },
       },
       {
-        path: '/issues',
-        name: 'Issues',
-        component: IncidenciasTicPage,
+        path: 'eventsSchool/admin',
+        component: EventsSchoolAdminPage,
+        name: 'EventsSchoolAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: '/events/users',
+        component: EventsSchoolPage,
+        name: 'EventsSchoolPage',
         meta: { role: 'PROFESOR' },
       },
-      
+
+      {
+        path: '/issues',
+        component: IncidenciasTicPage,
+        name: 'Issues',
+        meta: { 
+          role: 'PROFESOR' 
+        },
+      },
       {
         path: '/issues/stats',
         name: 'IssuesStatsPage',
@@ -322,6 +346,37 @@ const routes = [
         meta: { role: 'ADMINISTRADOR' },
       },
       {
+        path: 'automations/admin',
+        component: AutomationsAdminPage,
+        name: 'AutomationsAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: 'automations/map',
+        component: AutomationsMapView,
+        name: 'AutomationsMapView',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'schoolBaseServer/admin',
+        component: SchoolBaseServerAdminPage,
+        name: 'SchoolBaseServerAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+      {
+        path: '/statistics',
+        component: StatisticsView,
+        name: 'Statistics',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
         path: 'eventsSchool/admin',
         component: EventsSchoolAdminPage,
         name: 'EventsSchoolAdmin',
@@ -334,6 +389,7 @@ const routes = [
         meta: {role: 'PROFESOR'},
       },
       
+      },      
     ],
   },
 ];
