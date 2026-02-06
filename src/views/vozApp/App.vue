@@ -2,7 +2,7 @@
   <div class="container">
     <h1>Asistente de Voz en PC 🎤</h1>
 
-    <button @click="iniciarReconocimiento" :disabled="escuchando">
+    <button @click="activarMicrofono" :disabled="escuchando">
       {{ escuchando ? "Escuchando..." : "Hablar" }}
     </button>
 
@@ -24,6 +24,22 @@ const escuchando = ref(false)
 const error = ref('')
 
 let recognition = null
+
+async function activarMicrofono() {
+  error.value = ''
+  texto.value = ''
+
+  try {
+    // 🔐 Pedimos permiso oficial al micrófono
+    await navigator.mediaDevices.getUserMedia({ audio: true })
+
+    // Si el usuario acepta, arrancamos el reconocimiento
+    iniciarReconocimiento()
+
+  } catch (err) {
+    error.value = "El navegador bloqueó el acceso al micrófono"
+  }
+}
 
 function iniciarReconocimiento() {
   error.value = ''
