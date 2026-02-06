@@ -110,9 +110,6 @@
             <div class="day-modal-event-content">
               <strong>{{ event.titulo }}</strong><br />
               <small>{{ event.categoria }}</small><br />
-              <small class="event-dates">
-                {{ getEventDateLabel(event) }}
-              </small>
           </div>
         </div>
 
@@ -233,21 +230,6 @@ function formatDate(timestamp: number): string {
   const d = new Date(timestamp);
   return d.toLocaleDateString("es-ES");
 }
-
-function getEventDateLabel(event: EventoCalendario): string {
- const inicio = formatDate(event.fechaInicio);
-
-  // No hay fecha fin
-  if (!event.fechaFin) {
-    return ` ${inicio}`;
-  }
-
-  const fin = formatDate(event.fechaFin);
-
-  // Rango de fechas
-  return ` ${inicio} – ${fin}`;
-}
-
 
 /* ===== MODAL ===== */
 const selectedDayEvents = ref<EventoCalendario[]>([]);
