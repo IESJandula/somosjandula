@@ -378,9 +378,6 @@ const routes = [
         meta: {
           role: 'PROFESOR'
         },
-<<<<<<< Updated upstream
-      },      
-=======
       },
       {
         path: 'vozApp/admin',
@@ -390,7 +387,6 @@ const routes = [
           role: 'ADMINISTRADOR'
         },
       },
->>>>>>> Stashed changes
     ],
   },
 ];
