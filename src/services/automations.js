@@ -260,6 +260,74 @@ export const obtenerDispositivos = async (toastMessage, toastColor, isToastOpen)
   return await response.json()
 }
 
+export const crearOrdenSimpleTexto = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  frase
+) => {
+
+  const tokenPropio = await obtenerTokenJWTValido(
+    toastMessage,
+    toastColor,
+    isToastOpen
+  );
+
+  const response = await fetch(
+    automationsApiUrl + "/automations/ordensimple/texto",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ frase })
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message ?? `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+};
+
+export const crearOrdenSimpleAudio = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  file
+) => {
+
+  const tokenPropio = await obtenerTokenJWTValido(
+    toastMessage,
+    toastColor,
+    isToastOpen
+  );
+
+  const formData = new FormData();
+  formData.append("file", file, "audio.wav");
+
+  const response = await fetch(
+    automationsApiUrl + "/automations/ordensimple/audio",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`
+      },
+      body: formData
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message ?? `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+};
+
 
 
 

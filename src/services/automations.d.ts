@@ -69,3 +69,16 @@ export declare function obtenerUbicaciones(toastMessage: Ref<string>,
 export declare function obtenerAplicabilidad(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
+
+export declare function crearOrdenSimpleTexto(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>,
+                                        frase: string): Promise<any>;
+
+export declare function crearOrdenSimpleAudio(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>,
+                                        file: Blob): Promise<any>;
+
+
+

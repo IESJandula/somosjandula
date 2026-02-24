@@ -61,7 +61,7 @@ import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
-import vozAppPage from '@/views/vozApp/App.vue'
+import IAView from '@/views/ia/IAView.vue'
 
 const routes = [
   {
@@ -380,11 +380,11 @@ const routes = [
         },
       },
       {
-        path: 'vozApp/admin',
-        component: vozAppPage,
-        name: 'vozAppAdmin',
+        path: '/ia',
+        component: IAView,
+        name: 'IAView',
         meta: {
-          role: 'ADMINISTRADOR'
+          role: 'PROFESOR'
         },
       },
     ],
