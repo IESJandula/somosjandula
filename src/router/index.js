@@ -54,14 +54,13 @@ import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
 import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
 import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
+import AutomationsVoiceControlView from '@/views/automations/AutomationsVoiceControlView.vue'
 
 import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
 
 import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
-
-import vozAppPage from '@/views/vozApp/App.vue'
 
 const routes = [
   {
@@ -380,9 +379,9 @@ const routes = [
         },
       },
       {
-        path: 'vozApp/admin',
-        component: vozAppPage,
-        name: 'vozAppAdmin',
+        path: 'automations/VoiceControl',
+        component: AutomationsVoiceControlView,
+        name: 'AutomationsVoiceControlView',
         meta: {
           role: 'ADMINISTRADOR'
         },
