@@ -97,6 +97,10 @@
               Estadísticas
               <ion-icon slot="end" name="bar-chart"></ion-icon>
             </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/ia')">
+              Jandu-GPT
+              <ion-icon slot="end" name="logo-electron"></ion-icon>
+            </ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->

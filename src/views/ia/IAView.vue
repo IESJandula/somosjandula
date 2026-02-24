@@ -3,12 +3,12 @@
 
     <!-- TÍTULO -->
     <h1 class="title" style="color: #7edfd0;">
-      🎙️ Asistente Inteligente de Control por Voz
+      Jandu-GPT: tu asistente de Inteligencia Artificial
     </h1>
 
     <!-- SUBTÍTULO -->
     <p class="subtitle" style="color: #7edfd0;">
-      Controla aulas, puertas y dispositivos mediante comandos de voz
+      Apertura de puertas en remoto. Próximamente: reservas, impresión, noticias, ...
     </p>
 
     <!-- HISTORIAL -->
@@ -41,7 +41,7 @@
     <div class="manual-input-wrapper">
       <div class="manual-input">
 
-        <input v-model="textoManual" type="text" placeholder="Introduce un comando, por ejemplo: Enciende aula 2.13"
+        <input v-model="textoManual" type="text" placeholder="Introduce un comando, por ejemplo: Abre el aula 1.10"
           @keyup.enter="enviarTextoManual" />
 
         <!-- MIC -->
@@ -553,7 +553,7 @@ function limpiarHistorial() {
 ========================================= */
 
 .title {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: bold;
   margin-bottom: 10px;
 }
