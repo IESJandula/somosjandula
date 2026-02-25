@@ -145,7 +145,7 @@
 
           <button
             class="btn-primary"
-            :disabled="!dispositivoSeleccionado || !keywordCmd || !comandoTexto || !textoOk"
+            :disabled="!dispositivoSeleccionado || !keywordCmd || !textoOk"
             @click="crearComandoActuadorVista"
           >
             Crear / Modificar
