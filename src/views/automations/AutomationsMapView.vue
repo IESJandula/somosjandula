@@ -151,7 +151,7 @@
             {{ zonaGrupoLabel(id) }}
           </span>
 
-          <!-- ✅ CIRCULITO ESTADO PUERTA -->
+          <!--CIRCULITO ESTADO PUERTA -->
           <span v-if="doorDotState(id)" class="door-dot" :class="doorDotState(id)"></span>
         </div>
       </div>

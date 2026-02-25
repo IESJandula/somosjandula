@@ -13,7 +13,7 @@ export declare function crearSensorBooleano(toastMessage: Ref<string>,
                                         mac: Ref<string>,
                                         estado: Ref<string>,
                                         nombreUbicacion: Ref<string>,
-                                        aplicabilidad: Ref<string>,
+                                        tipo: Ref<string>,
                                         umbralMinimo: Ref<number>,
                                         umbralMaximo: Ref<number>): Promise<string[]>;
 
@@ -32,7 +32,7 @@ export declare function crearSensorNumerico(toastMessage: Ref<string>,
                                         mac: Ref<string>,
                                         estado: Ref<string>,
                                         nombreUbicacion: Ref<string>,
-                                        aplicabilidad: Ref<string>, 
+                                        tipo: Ref<string>, 
                                         umbralMinimo: Ref<number>,
                                         umbralMaximo: Ref<number>): Promise<string[]>;
 
@@ -51,7 +51,7 @@ export declare function crearActuador(toastMessage: Ref<string>,
                                         mac: Ref<string>,
                                         estado: Ref<string>,
                                         nombreUbicacion: Ref<string>,
-                                        aplicabilidad: Ref<string>): Promise<string[]>;
+                                        tipo: Ref<string>): Promise<string[]>;
 
 export declare function obtenerActuadores(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
@@ -66,6 +66,52 @@ export declare function obtenerUbicaciones(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
 
-export declare function obtenerAplicabilidad(toastMessage: Ref<string>,
+export declare function obtenerTipos(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
+export type ComandoResponseDto = {keyword: string
+                                  mac: string
+                                  ordenId: number
+}
+
+export declare function crearComando(toastMessage: Ref<string>,
+                                      toastColor: Ref<string>,
+                                      isToastOpen: Ref<boolean>,
+                                      keyword: Ref<string>,
+                                      mac: Ref<string>,
+                                      ordenId: Ref<number>): Promise<void>
+
+export declare function obtenerComandos(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>): Promise<ComandoResponseDto[]>
+
+export declare function eliminarComando(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>,
+                                          keyword: Ref<string>,
+                                          mac: Ref<string>,
+                                          ordenId: Ref<number>): Promise<void>
+export type ComandoActuadorResponseDto = {
+                                          mac: string
+                                          keyword: string
+                                          comandos: string
+                                          textoOk: string
+}
+
+export declare function crearComandoActuador(toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>,
+                                            mac: string | Ref<string>,
+                                            keyword: Ref<string> | string,
+                                            comandos: Ref<string> | string,
+                                            textoOk: Ref<string> | string): Promise<boolean>
+
+export declare function obtenerComandosActuador(toastMessage: Ref<string>,
+                                                toastColor: Ref<string>,
+                                                isToastOpen: Ref<boolean>): Promise<ComandoActuadorResponseDto[]>
+
+export declare function eliminarComandoActuador(toastMessage: Ref<string>,
+                                                toastColor: Ref<string>,
+                                                isToastOpen: Ref<boolean>,
+                                                mac: string | Ref<string>,
+                                                keyword: string | Ref<string>): Promise<boolean>
