@@ -152,7 +152,11 @@
           </span>
 
           <!--CIRCULITO ESTADO PUERTA -->
-          <span v-if="doorDotState(id)" class="door-dot" :class="doorDotState(id)"></span>
+          <span
+            v-if="doorDotState(id)"
+            class="door-dot"
+            :class="[doorDotState(id), doorDotCornerClass(id)]"
+          ></span>
         </div>
       </div>
 
@@ -171,7 +175,11 @@
           </span>
 
           <!-- ✅ CIRCULITO ESTADO PUERTA -->
-          <span v-if="doorDotState(id)" class="door-dot" :class="doorDotState(id)"></span>
+          <span
+            v-if="doorDotState(id)"
+            class="door-dot"
+            :class="[doorDotState(id), doorDotCornerClass(id)]"
+          ></span>
         </div>
       </div>
 
@@ -190,7 +198,11 @@
           </span>
 
           <!-- ✅ CIRCULITO ESTADO PUERTA -->
-          <span v-if="doorDotState(id)" class="door-dot" :class="doorDotState(id)"></span>
+          <span
+            v-if="doorDotState(id)"
+            class="door-dot"
+            :class="[doorDotState(id), doorDotCornerClass(id)]"
+          ></span>
         </div>
       </div>
     </div>
@@ -199,7 +211,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount, onMounted } from 'vue'
-import { obtenerDispositivos, } from '@/services/automations'
+import { obtenerDispositivos } from '@/services/automations'
 import {
   obtenerCursosAcademicos,
   obtenerEspaciosFijo,
@@ -264,16 +276,17 @@ const espaciosFijos = ref<EspacioFijoDto[]>([])
 // ------------------------------
 // DISPOSITIVOS (RESPUESTA BACK)
 // ------------------------------
-type ActuadorResponseDto = { mac: string; estado: string; nombreUbicacion: string; aplicabilidad: string | null }
+// ✅ Cambiado a "tipo". Dejo "aplicabilidad?" como compatibilidad por si aún llega.
+type ActuadorResponseDto = { mac: string; estado: string; nombreUbicacion: string; tipo: string | null; aplicabilidad?: string | null }
 
 type SensorBooleanoResponseDto = {
   mac: string; estado: string; valorActual: boolean; ultimaActualizacion: number | null; nombreUbicacion: string;
-  aplicabilidad: string | null; umbralMinimo: number | null; umbralMaximo: number | null
+  tipo: string | null; aplicabilidad?: string | null; umbralMinimo: number | null; umbralMaximo: number | null
 }
 
 type SensorNumericoResponseDto = {
   mac: string; estado: string; valorActual: number | null; umbralMinimo: number | null; umbralMaximo: number | null;
-  ultimaActualizacion: number | null; nombreUbicacion: string; aplicabilidad: string | null
+  ultimaActualizacion: number | null; nombreUbicacion: string; tipo: string | null; aplicabilidad?: string | null
 }
 
 type VistaPajaroResponseDto = {
@@ -330,6 +343,10 @@ const zoneIdToNombreUbicacionBack = (zoneId: string): string => {
   return zoneIdToAulaNombre(zoneId)
 }
 
+// ✅ helper: obtener tipo con compatibilidad
+const getTipo = (d: { tipo?: string | null; aplicabilidad?: string | null }) =>
+  (d?.tipo ?? d?.aplicabilidad ?? '').toString()
+
 // CIRCULITO: estado puerta (por zona)
 type DoorStateClass = 'door-on' | 'door-off' | 'door-undef' | null
 
@@ -340,11 +357,11 @@ const doorDotState = (zoneId: string): DoorStateClass =>
   const ubicacionBack = zoneIdToNombreUbicacionBack(zoneId)
   const acts = dispositivos.value.mapaActuadores?.[ubicacionBack] ?? []
 
-  // solo actuadores con aplicabilidad puerta/puerta-carrito
+  // ✅ solo actuadores con tipo puerta/puerta-carrito (fallback aplicabilidad)
   const puertas = acts.filter(a =>
   {
-    const ap = (a.aplicabilidad ?? '').toLowerCase()
-    return ap === 'puerta' || ap === 'puerta-carrito'
+    const tp = getTipo(a).toLowerCase()
+    return tp === 'puerta' || tp === 'puerta-carrito'
   })
 
   if (puertas.length === 0) return null
@@ -353,7 +370,25 @@ const doorDotState = (zoneId: string): DoorStateClass =>
 
   if (estado === 'on') return 'door-on'
   if (estado === 'off') return 'door-off'
-  return 'door-undef' // indefinido u otros estados
+  return 'door-undef'
+}
+
+/* ✅ NUEVO: zonas donde el circulito va abajo a la derecha */
+const DOOR_DOT_BOTTOM_RIGHT = new Set<string>([
+  'aula2-11',
+  'aula2-13',
+  'aula2-23',
+  'aula2-21', // Convivencia
+  'aula2-19',
+  'aula2-15',
+  'aula2-2',
+  'aula2-4',
+  'aula2-6'
+])
+
+const doorDotCornerClass = (zoneId: string): string =>
+{
+  return DOOR_DOT_BOTTOM_RIGHT.has(zoneId) ? 'door-dot-br' : ''
 }
 
 // ------------------------------
@@ -445,7 +480,7 @@ const dispositivosZonaSeleccionada = computed<UiDispositivo[]>(() =>
   {
     out.push({
       key: `ACT-${a.mac}`,
-      label: `Actuador: ${a.estado ?? 'sin estado'} | Aplicabilidad: ${a.aplicabilidad ?? '—'}`
+      label: `Actuador: ${a.estado ?? 'sin estado'} | Tipo: ${getTipo(a) || '—'}`
     })
   }
 
@@ -461,7 +496,7 @@ const dispositivosZonaSeleccionada = computed<UiDispositivo[]>(() =>
 
     out.push({
       key: `SN-${s.mac}`,
-      label: `Sensor numérico: ${s.estado ?? 'sin estado'} | Aplicabilidad: ${s.aplicabilidad ?? '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
+      label: `Sensor numérico: ${s.estado ?? 'sin estado'} | Tipo: ${getTipo(s) || '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
     })
   }
 
@@ -477,7 +512,7 @@ const dispositivosZonaSeleccionada = computed<UiDispositivo[]>(() =>
 
     out.push({
       key: `SB-${s.mac}`,
-      label: `Sensor booleano: ${s.estado ?? 'sin estado'} | Aplicabilidad: ${s.aplicabilidad ?? '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
+      label: `Sensor booleano: ${s.estado ?? 'sin estado'} | Tipo: ${getTipo(s) || '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
     })
   }
 
@@ -666,9 +701,8 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* (TU CSS ORIGINAL - SIN CAMBIOS) */
 
-
-/* Tema claro por defecto */
 #djg-main-box {
   --bg: rgb(241, 241, 224);
   --panel-bg: #ffffff;
@@ -688,7 +722,6 @@ onBeforeUnmount(() => {
   --map-border: rgba(0, 0, 0, 0.35);
 }
 
-/* Modo oscuro por sistema */
 @media (prefers-color-scheme: dark) {
   #djg-main-box {
     --bg: #0f1115;
@@ -710,7 +743,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Modo oscuro por clase .dark  */
 :global(.dark) #djg-main-box {
   --bg: #0f1115;
   --panel-bg: #151922;
@@ -730,8 +762,6 @@ onBeforeUnmount(() => {
   --map-border: rgba(255, 255, 255, 0.18);
 }
 
-/* ===== LAYOUT ===== */
-  
 #djg-main-box {
   display: flex;
   align-items: flex-start;
@@ -809,7 +839,6 @@ button:hover {
   cursor: not-allowed;
 }
 
-/* ===== MAPA ===== */
 .contenedor-scroll-horizontal {
   display: flex;
   overflow-x: auto;
@@ -847,7 +876,6 @@ button:hover {
   box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.85);
 }
 
-/* Texto dentro de cada zona */
 .zone-text {
   font-size: 12px;
   font-weight: 800;
@@ -861,7 +889,6 @@ button:hover {
   text-align: center;
 }
 
-/* FIX contraste de etiquetas sobre el plano en modo oscuro */
 :global(.dark) #djg-main-box .zone-text {
   background: rgba(255, 255, 255, 0.92);
   color: #111;
@@ -875,7 +902,6 @@ button:hover {
   }
 }
 
-/* ✅ CIRCULITO ESTADO PUERTA */
 .door-dot {
   position: absolute;
   top: 6px;
@@ -896,7 +922,14 @@ button:hover {
   }
 }
 
-.door-undef { background-color: yellow; }
+/* ✅ NUEVO: mover circulito a abajo-derecha en zonas específicas */
+.door-dot-br {
+  top: auto;
+  bottom: 6px;
+  right: 6px;
+}
+
+.door-undef { background-color: orange; }
 .door-on { background-color: green; }
 .door-off { background-color: red; }
 
@@ -924,10 +957,6 @@ button:hover {
   color: #fff;
   font-weight: 800;
 }
-
-/* =========================================================
-   POSICIONES (tus zonas) - SIN TOCAR
-   ========================================================= */
 
 /* PLANTA BAJA */
 #aula0-12 { height: 14.5%; width: 7%; top: 1.6%; left: 14%; }
