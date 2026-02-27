@@ -9,36 +9,48 @@ export interface EstadisticaRecurso {
 }
 
 /**
- * Representa una estadística del día y del tramo más reservado.
+ * Representa una estadística del DÍA de la semana más reservado.
  */
-export interface EstadisticaDiaTramo {
+export interface EstadisticaDia {
+    diaSemana: string;
+    totalReservas: number;
+}
+
+/**
+ * Representa una estadística del TRAMO HORARIO más reservado.
+ */
+export interface EstadisticaTramo {
     diaSemana: string;
     tramoHorario: string;
     totalReservas: number;
 }
 
-/**
- * Obtiene el recurso más reservado según los logs del sistema.
- * @param toastMessage - El mensaje de toast.
- * @param toastColor - El color de toast.
- * @param isToastOpen - Indica si el toast está abierto.
- * @returns Lista de objetos con recurso y totalReservas.
- */
-export declare function obtenerRecursoMasReservado(
+// ===== RESERVAS FIJAS =====
+
+export declare function obtenerRecursoMasReservadoFija(
     toastMessage: Ref<string>,
     toastColor: Ref<string>,
     isToastOpen: Ref<boolean>
 ): Promise<EstadisticaRecurso[]>;
 
-/**
- * Obtiene el día de la semana y tramo horario más reservado según los logs del sistema.
- * @param toastMessage - El mensaje de toast.
- * @param toastColor - El color de toast.
- * @param isToastOpen - Indica si el toast está abierto.
- * @returns Lista de objetos con diaSemana, tramoHorario y totalReservas.
- */
-export declare function obtenerDiaTramoMasReservado(
+// ===== RESERVAS TEMPORALES =====
+
+export declare function obtenerRecursoMasReservadoTemporal(
     toastMessage: Ref<string>,
     toastColor: Ref<string>,
     isToastOpen: Ref<boolean>
-): Promise<EstadisticaDiaTramo[]>;
+): Promise<EstadisticaRecurso[]>;
+
+// ===== ESTADÍSTICAS COMBINADAS =====
+
+export declare function obtenerDiaMasReservado(
+    toastMessage: Ref<string>,
+    toastColor: Ref<string>,
+    isToastOpen: Ref<boolean>
+): Promise<EstadisticaDia[]>;
+
+export declare function obtenerTramoMasReservado(
+    toastMessage: Ref<string>,
+    toastColor: Ref<string>,
+    isToastOpen: Ref<boolean>
+): Promise<EstadisticaTramo[]>;

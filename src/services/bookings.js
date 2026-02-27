@@ -353,24 +353,23 @@ export const getCantMaxResource = async (toastMessage, toastColor, isToastOpen) 
   return await response.json()
 }
 
-export const getCheckAvailable = async (toastMessage, toastColor, isToastOpen,diaDeLaSemana,recurso,tramoHorario,numAlumnos,semanas) =>
-{
-  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-
-  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings/available',
-  {
+export const getCheckAvailable = async (toastMessage, toastColor, isToastOpen, diaDeLaSemana, recurso, tramoHorario, numAlumnos, semanas) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+    
+  const semanasString = Array.isArray(semanas) ? semanas.join(',') : semanas;
+  
+  const response = await fetch(bookingsApiUrl + '/bookings/temporary/bookings/available', {
     method: 'GET',
-    headers:
-    {
+    headers: {
       'Authorization': `Bearer ${tokenPropio}`,
       'diaDeLaSemana': diaDeLaSemana,
       'recurso': recurso,
       'tramoHorario': tramoHorario,
       'numAlumnos': numAlumnos,
-      'semanas': semanas
+      'semanas': semanasString 
     },
   })
-
+  
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message);

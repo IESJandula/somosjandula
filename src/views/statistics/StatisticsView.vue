@@ -1,54 +1,93 @@
 <template>
     <div class="stats-page">
-        <!-- Título principal -->
-        <h1 class="stats-title">ESTADÍSTICAS</h1>
+        <h1 class="stats-title">📊 ESTADÍSTICAS</h1>
 
-        <!-- Estado de carga -->
         <div v-if="isLoading" class="stats-loading">
-            Cargando estadísticas...
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+            <p>Cargando estadísticas...</p>
         </div>
 
-        <!-- Sin datos -->
-        <div v-else-if="!hayDatos" class="stats-empty">
-            No hay datos registrados para mostrar estadísticas.
+        <div v-else-if="error" class="stats-error">
+            <ion-icon :icon="alertCircleOutline" color="danger"></ion-icon>
+            <p>{{ error }}</p>
+            <ion-button @click="cargarEstadisticas" color="primary" fill="outline">
+                <ion-icon :icon="refreshOutline" slot="start"></ion-icon>
+                Reintentar
+            </ion-button>
         </div>
 
-        <!-- Layout de dos columnas -->
         <div v-else class="stats-grid">
-            <!-- Columna 1: Reservas -->
-            <section class="stats-column">
-                <h2>Estadísticas de reservas</h2>
-                <div class="charts-container">
-                    <div v-if="recursos.length" class="chart-item">
-                        <PieChart :title="'Recurso más reservado'" :data="datosPorRecurso" :show-percentages="true" />
+            <!-- FILA 1: Recursos más reservados -->
+            <div class="stats-row">
+                <!-- Recursos Fijas -->
+                <section class="stats-column">
+                    <h2>🏆 Recursos más reservados (Fijas)</h2>
+                    <div class="chart-item">
+                        <div v-if="recursosFijos.length">
+                            <PieChart :title="''" :data="datosPorRecursoFijo" :show-percentages="true" />
+                        </div>
+                        <p v-else class="no-data">Sin reservas fijas</p>
                     </div>
-                    <div v-if="diaTramos.length" class="chart-item">
-                        <PieChart :title="'Día y tramo más reservado'" :data="datosPorDiaTramo"
-                            :show-percentages="true" />
-                    </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Columna 2: Incidencias -->
-            <section class="stats-column">
-                <h2>Estadísticas de incidencias</h2>
-                <div class="charts-container">
-                    <div v-if="datosPorCategoria.length" class="chart-item">
-                        <PieChart :title="'Incidencias por categoría'" :data="datosPorCategoria"
-                            :show-percentages="true" />
+                <!-- Recursos Temporales -->
+                <section class="stats-column">
+                    <h2>⏰ Recursos más reservados (Temporales)</h2>
+                    <div class="chart-item">
+                        <div v-if="recursosTemporales.length">
+                            <PieChart :title="''" :data="datosPorRecursoTemporal" :show-percentages="true" />
+                        </div>
+                        <p v-else class="no-data">Sin reservas temporales</p>
                     </div>
-                    <div v-if="datosPorEstado.length" class="chart-item">
-                        <PieChart :title="'Incidencias por estado'" :data="datosPorEstado" :show-percentages="true" />
+                </section>
+            </div>
+
+            <!-- FILA 2: Días y Tramos más reservados -->
+            <div class="stats-row">
+                <!-- Día más reservado -->
+                <section class="stats-column">
+                    <h2>📅 Día más reservado (Total)</h2>
+                    <div class="chart-item">
+                        <p class="chart-info">Suma de reservas fijas y temporales</p>
+                        <div v-if="diasMasReservados.length">
+                            <PieChart :title="''" :data="datosPorDia" :show-percentages="true" />
+                        </div>
+                        <p v-else class="no-data">Sin datos de días</p>
                     </div>
-                    <div v-if="datosPorUbicacion.length" class="chart-item">
-                        <PieChart :title="'Incidencias por ubicación'" :data="datosPorUbicacion"
-                            :show-percentages="true" />
+                </section>
+
+                <!-- Tramo más reservado -->
+                <section class="stats-column">
+                    <h2>🕒 Tramo horario más reservado (Total)</h2>
+                    <div class="chart-item">
+                        <p class="chart-info">Suma de reservas fijas y temporales</p>
+                        <div v-if="tramosMasReservados.length">
+                            <PieChart :title="''" :data="datosPorTramo" :show-percentages="true" />
+                        </div>
+                        <p v-else class="no-data">Sin datos de tramos</p>
                     </div>
-                </div>
-            </section>
+                </section>
+            </div>
+
+            <!-- FILA 3: Incidencias -->
+            <div class="stats-row">
+                <section class="stats-column">
+                    <h2>🔧 Estadísticas de incidencias</h2>
+                    <div class="charts-container">
+                        <div v-if="datosPorCategoria.length" class="chart-item">
+                            <PieChart :title="'Por categoría'" :data="datosPorCategoria" :show-percentages="true" />
+                        </div>
+                        <div v-if="datosPorEstado.length" class="chart-item">
+                            <PieChart :title="'Por estado'" :data="datosPorEstado" :show-percentages="true" />
+                        </div>
+                        <div v-if="datosPorUbicacion.length" class="chart-item">
+                            <PieChart :title="'Por ubicación'" :data="datosPorUbicacion" :show-percentages="true" />
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
 
-        <!-- Toast -->
         <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
             @did-dismiss="() => (isToastOpen = false)" position="top" />
     </div>
@@ -56,26 +95,32 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { IonToast } from "@ionic/vue";
-
+import { IonToast, IonSpinner, IonButton, IonIcon } from "@ionic/vue";
+import { alertCircleOutline, refreshOutline } from "ionicons/icons";
 import PieChart from "@/components/issues/PieChart.vue";
 import { crearToast } from "@/utils/toast";
 
-// Servicios
-import { obtenerRecursoMasReservado, obtenerDiaTramoMasReservado } from "@/services/statistics";
+import {
+    obtenerRecursoMasReservadoFija,
+    obtenerRecursoMasReservadoTemporal,
+    obtenerDiaMasReservado,
+    obtenerTramoMasReservado
+} from "@/services/statistics";
 import { listarIncidencias } from "@/services/issues";
 
-// ====== ESTADO GENERAL ======
 const isLoading = ref(false);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref<"success" | "danger" | "warning" | "primary" | string>("success");
+const error = ref<string | null>(null);
 
-// ====== DATOS DE RESERVAS ======
-const recursos = ref<Array<{ recurso: string; totalReservas: number }>>([]);
-const diaTramos = ref<Array<{ diaSemana: string; tramoHorario: string; totalReservas: number }>>([]);
+// ===== DATOS DE RESERVAS =====
+const recursosFijos = ref<Array<{ recurso: string; totalReservas: number }>>([]);
+const recursosTemporales = ref<Array<{ recurso: string; totalReservas: number }>>([]);
+const diasMasReservados = ref<Array<{ diaSemana: string; totalReservas: number }>>([]);
+const tramosMasReservados = ref<Array<{ diaSemana: string; tramoHorario: string; totalReservas: number }>>([]);
 
-// ====== DATOS DE INCIDENCIAS ======
+// ===== DATOS DE INCIDENCIAS =====
 interface Incidencia {
     ubicacion?: string;
     estado?: string;
@@ -83,7 +128,7 @@ interface Incidencia {
 }
 const incidencias = ref<Incidencia[]>([]);
 
-// ====== HELPERS ======
+// ===== HELPERS =====
 function contarPor<T extends Record<string, any>>(
     lista: T[],
     campo: keyof T | ((item: T) => string | undefined | null)
@@ -91,60 +136,66 @@ function contarPor<T extends Record<string, any>>(
     const mapa = new Map<string, number>();
     lista.forEach((item) => {
         let clave = typeof campo === "function" ? campo(item) : item[campo];
-
         if (!clave || (typeof clave === 'string' && (clave as string).trim() === '')) {
             clave = "Sin datos";
         }
-
-        const actual = mapa.get(clave) || 0;
-        mapa.set(clave, actual + 1);
+        const actual = mapa.get(clave as string) || 0;
+        mapa.set(clave as string, actual + 1);
     });
-
-    return Array.from(mapa.entries()).map(([name, value]) => ({
-        name,
-        value,
-    }));
+    return Array.from(mapa.entries()).map(([name, value]) => ({ name, value }));
 }
 
-// ====== COMPUTED ======
-const datosPorRecurso = computed(() =>
-    recursos.value.map(item => ({ name: item.recurso, value: item.totalReservas }))
+// ===== COMPUTED PARA GRÁFICAS =====
+const datosPorRecursoFijo = computed(() =>
+    recursosFijos.value.slice(0, 5).map(item => ({ name: item.recurso, value: item.totalReservas }))
 );
 
-const datosPorDiaTramo = computed(() =>
-    diaTramos.value.map(item => ({
-        name: `${item.diaSemana} — ${item.tramoHorario}`,
-        value: item.totalReservas
-    }))
+const datosPorRecursoTemporal = computed(() =>
+    recursosTemporales.value.slice(0, 5).map(item => ({ name: item.recurso, value: item.totalReservas }))
+);
+
+const datosPorDia = computed(() =>
+    diasMasReservados.value.slice(0, 5).map(item => ({ name: item.diaSemana, value: item.totalReservas }))
+);
+
+const datosPorTramo = computed(() =>
+    tramosMasReservados.value.slice(0, 5).map(item => ({ name: item.tramoHorario, value: item.totalReservas }))
 );
 
 const datosPorCategoria = computed(() => contarPor(incidencias.value, (i) => i.categoria));
 const datosPorEstado = computed(() => contarPor(incidencias.value, (i) => i.estado));
 const datosPorUbicacion = computed(() => contarPor(incidencias.value, (i) => i.ubicacion));
 
-const hayDatos = computed(() =>
-    recursos.value.length > 0 ||
-    diaTramos.value.length > 0 ||
-    incidencias.value.length > 0
-);
-
-// ====== CARGA DE DATOS ======
+// ===== CARGA DE DATOS =====
 async function cargarEstadisticas() {
     try {
         isLoading.value = true;
-        recursos.value = await obtenerRecursoMasReservado(toastMessage, toastColor, isToastOpen);
-        diaTramos.value = await obtenerDiaTramoMasReservado(toastMessage, toastColor, isToastOpen);
-        const lista = await listarIncidencias(toastMessage, toastColor, isToastOpen);
-        incidencias.value = lista as Incidencia[];
-    } catch (error: any) {
-        console.error("Error al cargar estadísticas:", error);
-        crearToast(
-            toastMessage,
-            toastColor,
-            isToastOpen,
-            "danger",
-            error?.message || "Error al cargar las estadísticas"
-        );
+        error.value = null;
+
+        const [
+            fijosRecurso,
+            temporalesRecurso,
+            dias,
+            tramos,
+            listaIncidencias
+        ] = await Promise.all([
+            obtenerRecursoMasReservadoFija(toastMessage, toastColor, isToastOpen),
+            obtenerRecursoMasReservadoTemporal(toastMessage, toastColor, isToastOpen),
+            obtenerDiaMasReservado(toastMessage, toastColor, isToastOpen),
+            obtenerTramoMasReservado(toastMessage, toastColor, isToastOpen),
+            listarIncidencias(toastMessage, toastColor, isToastOpen)
+        ]);
+
+        recursosFijos.value = fijosRecurso;
+        recursosTemporales.value = temporalesRecurso;
+        diasMasReservados.value = dias;
+        tramosMasReservados.value = tramos;
+        incidencias.value = listaIncidencias as Incidencia[];
+
+    } catch (err: any) {
+        console.error("Error al cargar estadísticas:", err);
+        error.value = err.message || "Error al conectar con el servidor";
+        crearToast(toastMessage, toastColor, isToastOpen, "danger", error.value || "Error al cargar estadísticas");
     } finally {
         isLoading.value = false;
     }
@@ -164,22 +215,44 @@ onMounted(() => {
 }
 
 .stats-title {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 700;
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    color: var(--ion-color-primary);
 }
 
-.stats-loading,
-.stats-empty {
+.stats-loading {
     text-align: center;
-    margin-top: 2rem;
-    font-size: 1rem;
-    opacity: 0.8;
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 }
 
-/* Layout de dos columnas */
+.stats-loading ion-spinner {
+    width: 40px;
+    height: 40px;
+}
+
+.stats-error {
+    text-align: center;
+    margin: 3rem auto;
+    max-width: 500px;
+    padding: 2rem;
+    background: var(--ion-color-danger-contrast);
+    border-radius: 12px;
+    border: 2px solid var(--ion-color-danger);
+}
+
 .stats-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.stats-row {
     display: flex;
     gap: 2rem;
     flex-wrap: wrap;
@@ -188,67 +261,58 @@ onMounted(() => {
 .stats-column {
     flex: 1;
     min-width: 450px;
-    display: flex;
-    flex-direction: column;
 }
 
 .stats-column h2 {
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
     color: #333;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 0.5rem;
-}
-
-.charts-container {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    flex: 1;
+    border-left: 4px solid var(--ion-color-primary);
+    padding-left: 12px;
 }
 
 .chart-item {
     background: white;
     border-radius: 12px;
-    padding: 1.8rem;
+    padding: 1.5rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    min-height: 320px;
+    margin-bottom: 1.5rem;
+    min-height: 350px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
 }
 
-/* Modo oscuro */
-@media (prefers-color-scheme: dark) {
+.chart-info {
+    font-size: 0.9rem;
+    color: var(--ion-color-medium);
+    margin-bottom: 1rem;
+    font-style: italic;
+    text-align: center;
+}
 
+.no-data {
+    text-align: center;
+    color: var(--ion-color-medium);
+    padding: 1rem;
+    font-style: italic;
+}
+
+@media (max-width: 1200px) {
+    .stats-column {
+        min-width: 100%;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
     .stats-title,
     .stats-column h2 {
         color: #e5e7eb;
     }
 
-    .stats-loading,
-    .stats-empty {
-        color: #9ca3af;
-    }
-
     .chart-item {
         background: #1f2937;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-}
-
-/* Móvil: una columna */
-@media (max-width: 900px) {
-    .stats-grid {
-        flex-direction: column;
-    }
-
-    .stats-column {
-        min-width: 100%;
-    }
-
-    .chart-item {
-        min-height: 280px;
-        padding: 1.5rem;
     }
 }
 </style>
