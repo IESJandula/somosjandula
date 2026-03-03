@@ -483,6 +483,12 @@ const repetirReserva = async () => {
     }
 
     if (opcionRepeticion.value === 'Semanal') {
+      // 1. Guardamos la semana actual original para restaurarla luego
+      const semanaInicio = +semana.value;
+      const semanaFin = semanaLimite.value;
+
+      let semanaActual = semanaInicio;
+
       do {
         await postReservaTemporary(
           isToastOpen,
@@ -493,18 +499,19 @@ const repetirReserva = async () => {
           currentDia.value.id,
           currentTramo.value.id,
           numAlumnos.value,
-          +semana.value,
+          semanaActual, // Usamos la variable local del bucle
           true,
           motivo,
         );
-        semana.value = parseInt(semana.value) + 1;
-      }
-      while (semana.value <= semanaLimite.value);
+        semanaActual++;
+      } while (semanaActual <= semanaFin);
+
+      // 2. Restauramos la semana al valor original para que la UI no salte
+      semana.value = semanaInicio;
       resetearSemana();
     }
     getReserva(recursoSeleccionado);
-  }
-  catch (error) {
+  } catch (error) {
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
@@ -515,6 +522,8 @@ const verificarRecursos = () => {
     mostrarTabla.value = false;
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay recursos')
     logRecursos = 'No hay recursos'
+  } else {    
+    mostrarTabla.value = true;
   }
 };
 
@@ -579,7 +588,6 @@ const saveChanges = async () => {
     return;
   }
 
-  // Validar si ya existe un email en la reserva del mismo día y tramo
   const reservaExistente = reservas.value[currentTramo.value.id]?.[currentDia.value.id];
   if (reservaExistente && reservaExistente.email[0] && !recursoSeleccionadoCompartible.value) {
     mensajeColor = 'danger';
@@ -597,7 +605,6 @@ const saveChanges = async () => {
     let mensajeActualizacion = 'Reserva guardada correctamente';
     mensajeColor = 'success';
 
-    // Normalizar número de alumnos
     let alumnos = Math.abs(parseInt(numAlumnos.value) || 0);
     const maxAlumnos = parseInt(cantidadSeleccionada.value) || 0;
 
@@ -606,13 +613,13 @@ const saveChanges = async () => {
     }
 
     if (opcionRepeticion.value === 'Semanal') {
-      repetirReserva();
+      await repetirReserva();
       getReserva(recursoSeleccionado);
-    }
-    else {
+    } else {
       if (profesorSeleccionado.value === '') {
         profesorSeleccionado.value = emailUsuarioActual.value;
       }
+
       await postReservaTemporary(
         isToastOpen,
         toastMessage,
@@ -626,22 +633,39 @@ const saveChanges = async () => {
         false,
         motivoCurso.value,
       );
+      
+      const emailFinal = profesorSeleccionado.value || emailUsuarioActual.value;
+      const profName = users.value.find(u => u.email === emailFinal)?.nombre || emailFinal;
 
-      // Actualizar reservas localmente
-      if (!reservas.value[currentDia.value.id]) {
-        reservas.value[currentDia.value.id] = {};
+      if (!reservas.value[currentTramo.value.id]) {
+        reservas.value[currentTramo.value.id] = {};
       }
 
-      reservas.value[currentDia.value.id][currentTramo.value.id] = {
-        email: correoProfesor.value,
-        nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
-        nalumnos: alumnos,
-      };
+      const existente = reservas.value[currentTramo.value.id][currentDia.value.id];
+
+      if (existente && recursoSeleccionadoCompartible.value) {
+        existente.email.push(emailFinal);
+        existente.nombreYapellidos.push(profName);
+        existente.nalumnos.push(alumnos);
+        existente.motivoCurso.push(motivoCurso.value);
+        existente.plazasRestantes -= alumnos;
+      } else {
+        reservas.value[currentTramo.value.id][currentDia.value.id] = {
+          email: [emailFinal],
+          nombreYapellidos: [profName],
+          nalumnos: [alumnos],
+          plazasRestantes: cantidadSeleccionada.value - alumnos,
+          motivoCurso: [motivoCurso.value],
+          esfija: [false],
+          esSemanal: [false]
+        };
+      }
 
       if (valorConstante.value != '') {
         mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
         mensajeColor = 'danger';
       }
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
   } catch (error) {
@@ -728,15 +752,16 @@ const getReserva = async () => {
         estructuraReservas[tramo] = {}
       }
 
-      estructuraReservas[tramo][dia] =
-      {
+
+      estructuraReservas[tramo][dia] = {
         nalumnos: reserva.nalumnos,
         nombreYapellidos: reserva.nombreYapellidos,
         email: reserva.email,
         plazasRestantes: reserva.plazasRestantes,
-        esfija: reserva.esfija,
+        // Convertir listas de números (0/1) a booleanos reales
+        esfija: reserva.esfija.map(val => val === 1 || val === true),
         motivoCurso: reserva.motivoCurso,
-        esSemanal: reserva.esSemanal,
+        esSemanal: reserva.esSemanal.map(val => val === 1 || val === true),
       }
     }
     reservas.value = estructuraReservas
@@ -747,43 +772,27 @@ const getReserva = async () => {
   }
 }
 
-const deleteReservas = async (tramo, dia, event, recursoSeleccionado, email, esFija, esSemanal) => {
+const deleteReservas = async (tramo, dia, event, recurso, email, esFija, esSemanal) => {
   try {
-    event.stopPropagation() // Evitar que se abra el modal al hacer clic en el botón
+    event.stopPropagation();
 
-    if (esSemanal && esFija) {
-      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value, false)
-      mensajeColor = 'success'
-      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva cancelada correctamente')
-      getReserva(recursoSeleccionado)
-      return;
+    // Si es una reserva FIJA -> Usar endpoint de fijas
+    if (esFija) {
+      await deleteReserva(isToastOpen, toastMessage, toastColor, email, recurso, dia.id, tramo.id);
     }
-    // Llamar a la API para cancelar la reserva
-    if (rolesUsuario.value.includes('ADMINISTRADOR') || rolesUsuario.value.includes('DIRECCION')) {
-      if (!esFija) {
-        await deleteReserva(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id)
-      }
-      else {
-        await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
-      }
-    }
+    // Si es una reserva TEMPORAL -> Usar endpoint de temporales
     else {
-      if (email !== emailUsuarioActual.value) {
-        mensajeColor = 'danger'
-        crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'No puedes borrar reservas de otras personas')
-      }
-      else {
-        await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recursoSeleccionado, dia.id, tramo.id, +semana.value)
-      }
+      // esSemanal indicará si borramos en cascada o solo esa (aunque aquí suele ser false si viene de click directo)
+      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, email, recurso, dia.id, tramo.id, +semana.value, esSemanal || false);
     }
-    mensajeColor = 'success'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva cancelada correctamente')
+
+    mensajeColor = 'success';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva cancelada correctamente');
+  } catch (error) {
+    mensajeColor = 'danger';
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
   }
-  catch (error) {
-    mensajeColor = 'danger'
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message)
-  }
-  getReserva(recursoSeleccionado) // Actualizar reservas después de cancelar
+  getReserva(recurso);
 }
 
 // Watcher para actualizar cantidadSeleccionada cuando recursoSeleccionado cambie
@@ -831,20 +840,32 @@ const comprobarDisponibilidad = async () => {
   try {
     const data = ref(true);
 
-    // Array para almacenar las semanas
-
     if (opcionRepeticion.value == 'Semanal') {
-      for (let i = +semana.value; i <= getWeek(fechaLimite.value); i++) {
-        semanas.push(i);  // Se agrega la semana al array
+      // 1. Usar variable LOCAL, no la global 'semanas'
+      const semanasLocales = [];
+      const limite = getWeek(fechaLimite.value);
+
+      for (let i = +semana.value; i <= limite; i++) {
+        semanasLocales.push(i);
       }
-      data.value = await getCheckAvailable(isToastOpen, toastMessage, toastColor, currentDia.value.id, recursoSeleccionado.value, currentTramo.value.id, numAlumnos.value, semanas);
-      semanas = []; // Se reinicia el array
+
+      // 2. Pasar el array local al servicio
+      data.value = await getCheckAvailable(
+        isToastOpen,
+        toastMessage,
+        toastColor,
+        currentDia.value.id,
+        recursoSeleccionado.value,
+        currentTramo.value.id,
+        numAlumnos.value,
+        semanasLocales
+      );
     }
     disponibleSemanal.value = data.value;
-  }
-  catch (error) {
+  } catch (error) {
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    disponibleSemanal.value = false;
   }
 }
 
@@ -864,8 +885,6 @@ onMounted(async () => {
   semana.value = getWeek(new Date());
   emailLogged.value = emailUserActual;
   await incrementarFecha();
-
-
 })
 
 </script>

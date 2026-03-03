@@ -183,6 +183,8 @@ const verificarRecursos = () => {
     mostrarTabla.value = false;
     crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay recursos')
     logRecursos = 'No hay recursos'
+  } else {    
+    mostrarTabla.value = true;
   }
 };
 
@@ -191,7 +193,13 @@ const verificarConstantes = async () => {
     constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
 
     const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas fijas');
-    valorConstante.value = reservaDeshabilitada.valor
+    
+    // Verificar si existe antes de acceder a .valor
+    if (reservaDeshabilitada) {
+      valorConstante.value = reservaDeshabilitada.valor;
+    } else {
+      valorConstante.value = ''; // Default a vacío si no existe la constante
+    }
   }
   catch (error) {
     mensajeColor = 'danger';
@@ -287,15 +295,31 @@ const saveChanges = async () => {
     );
 
     // Actualizar reservas localmente
-    if (!reservas.value[currentDia.value.id]) {
-      reservas.value[currentDia.value.id] = {};
-    }
+    const emailFinal = profesorSeleccionado.value || emailUsuarioActual.value;
+const profName = users.value.find(u => u.email === emailFinal)?.nombre || emailFinal;
 
-    reservas.value[currentDia.value.id][currentTramo.value.id] = {
-      email: correoProfesor.value, // Guardamos el email del profesor
-      nombreYapellidos: users.value.find(u => u.email === correoProfesor.value)?.nombre || correoProfesor.value,
-      nalumnos: alumnos,
+
+if (!reservas.value[currentTramo.value.id]) {
+  reservas.value[currentTramo.value.id] = {};
+}
+
+const existente = reservas.value[currentTramo.value.id][currentDia.value.id];
+
+if (existente && recursoSeleccionadoCompartible.value) {
+    existente.email.push(emailFinal);
+    existente.nombreYapellidos.push(profName);
+    existente.nalumnos.push(alumnos);
+    existente.motivoCurso.push(motivoCurso.value);
+    existente.plazasRestantes -= alumnos;
+} else {    
+    reservas.value[currentTramo.value.id][currentDia.value.id] = {
+        email: [emailFinal],
+        nombreYapellidos: [profName],
+        nalumnos: [alumnos],
+        plazasRestantes: cantidadSeleccionada.value - alumnos,
+        motivoCurso: [motivoCurso.value],
     };
+}
 
     if (valorConstante.value != '' && !rolesUsuario.value.includes('ADMINISTRADOR') && !rolesUsuario.value.includes('DIRECCION')) {
       mensajeActualizacion = 'Error al crear la reserva -> ' + valorConstante.value;
