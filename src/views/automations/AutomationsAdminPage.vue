@@ -9,7 +9,6 @@
           <h1 class="title">Dispositivos</h1>
         </div>
 
-        <!-- ===== DATOS BÁSICOS ===== -->
         <div class="section">
           <div class="row">
             <label>MAC:</label>
@@ -34,12 +33,8 @@
             <label>Tipo:</label>
             <select v-model="tipoElegido">
               <option disabled value="">Selecciona tipo</option>
-              <option
-                v-for="t in tipos"
-                :key="t.id ?? t.nombreAplicabilidad ?? t"
-                :value="t.nombreAplicabilidad ?? t"
-              >
-                {{ t.nombreAplicabilidad ?? t }}
+              <option v-for="t in tipos" :key="t.id ?? t.tipo" :value="t.tipo">
+                {{ t.tipo }}
               </option>
             </select>
           </div>
@@ -126,18 +121,18 @@
               </option>
             </select>
           </div>
-
           <div class="row">
             <label>Keyword:</label>
             <input type="text" v-model="keywordCmd" />
           </div>
-
           <div class="row">
             <label>Comando:</label>
             <input type="text" v-model="comandoTexto" />
           </div>
+<<<<<<< Updated upstream
 
-          <!-- ✅ NUEVO: Texto OK debajo de comando -->
+=======
+>>>>>>> Stashed changes
           <div class="row">
             <label>Texto OK:</label>
             <input type="text" v-model="textoOk" />
@@ -153,7 +148,6 @@
         </div>
       </div>
     </div>
-
     <!-- ================== COLUMNA DERECHA ================== -->
     <div class="right-col">
       <!-- ====== CUADRO 3: LISTA DISPOSITIVOS ====== -->
@@ -302,7 +296,6 @@
 import { ref, onMounted, computed } from "vue";
 import { crearToast } from "@/utils/toast.js";
 
-// ===== AutomationsServer (dispositivos + comandos) =====
 import {
   obtenerTipos,
   crearActuador,
@@ -328,7 +321,6 @@ import {
   obtenerEspaciosSinDocencia,
 } from "@/services/schoolBaseServer";
 
-// ======================= STATE =======================
 const dispositivo = ref("");
 const ubicacionElegida = ref("");
 const estado = ref("indefinido");
@@ -344,7 +336,7 @@ const sensoresBooleanos = ref([]);
 const ubicaciones = ref([]);
 const cursoAcademicoElegido = ref("");
 
-// Tipo (antes aplicabilidad)
+// Tipo
 const tipoElegido = ref("");
 const tipos = ref([]);
 
@@ -359,14 +351,12 @@ const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
-// ======================= COMANDOS =======================
 const dispositivoSeleccionado = ref("");
 const keywordCmd = ref("");
 const comandoTexto = ref("");
 const textoOk = ref("");
 const listaComandosActuador = ref([]);
 
-// ✅ lista filtrada para la zona izquierda (solo del dispositivo seleccionado)
 const comandosActuadorSeleccionado = computed(() => {
   const mac = (dispositivoSeleccionado.value || "").trim();
   if (!mac) return [];
@@ -394,18 +384,29 @@ const dispositivosParaComandos = computed(() => {
   return Array.from(uniq.values());
 });
 
-// ======================= FUNCIONES =======================
-
 const obtenerTiposVista = async () => {
   try {
-    tipos.value = await obtenerTipos(toastMessage, toastColor, isToastOpen);
+    const raw = await obtenerTipos(toastMessage, toastColor, isToastOpen);
+
+    tipos.value = (raw ?? [])
+      .map((t) => {
+        if (typeof t === "string") return { id: t, tipo: t };
+
+        const tipo =
+          t?.tipo ??
+          t?.nombreTipo ??
+          "";
+
+        return { ...t, tipo };
+      })
+      .filter((t) => String(t.tipo).trim() !== "");
   } catch (error) {
     tipos.value = [];
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
 };
 
-// ✅ Ubicaciones desde SchoolBaseServer
+// Ubicaciones desde SchoolBaseServer
 const obtenerUbicacionesVista = async () => {
   try {
     const cursos = await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen);
@@ -573,7 +574,6 @@ const eliminarSensorNumericoVista = async (mac) => {
 
 // ===== Comandos actuador =====
 
-// ✅ AHORA: carga todos (GET /comando/actuador)
 const cargarComandosActuador = async () => {
   try {
     listaComandosActuador.value = await obtenerComandosActuador(
@@ -587,9 +587,7 @@ const cargarComandosActuador = async () => {
 };
 
 const onSeleccionDispositivoComandos = async () => {
-  // Mantengo tu línea para no romper nada que dependa de 'dispositivo'
   dispositivo.value = dispositivoSeleccionado.value;
-  // ya no hace falta pedir por MAC: ya está todo cargado y se filtra en computed
 };
 
 const crearComandoActuadorVista = async () => {
@@ -610,7 +608,7 @@ const crearComandoActuadorVista = async () => {
     comandoTexto.value = "";
     textoOk.value = "";
 
-    await cargarComandosActuador(); // ✅ recarga todos
+    await cargarComandosActuador();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -620,7 +618,7 @@ const eliminarComandoActuadorVista = async (mac, keyword) => {
   try {
     await eliminarComandoActuador(toastMessage, toastColor, isToastOpen, mac, keyword);
     crearToast(toastMessage, toastColor, isToastOpen, "Comando eliminado correctamente");
-    await cargarComandosActuador(); // ✅ recarga todos
+    await cargarComandosActuador();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -629,23 +627,80 @@ const eliminarComandoActuadorVista = async (mac, keyword) => {
 onMounted(async () => {
   await obtenerTiposVista();
   await obtenerUbicacionesVista();
-
   await obtenerActuadoresVista();
   await obtenerSensorNumericoVista();
   await obtenerSensorBooleanoVista();
 
-  await cargarComandosActuador(); // ✅ carga todos al iniciar
+  await cargarComandosActuador();
 });
 </script>
 
 <style scoped>
+
+:global(:root) {
+  color-scheme: light dark;
+
+  /* Claro */
+  --bg-page: #f4f6f9;
+  --card-bg: #ffffff;
+  --text: #1a1a1a;
+  --muted: #5a5a5a;
+  --border: #dcdcdc;
+
+  --input-bg: #ffffff;
+  --input-border: #cfcfcf;
+
+  --table-bg: #ffffff;
+  --table-head-bg: #007bff;
+  --table-row: #ffffff;
+  --table-row-alt: #f1f6ff;
+  --table-hover: #e2efff;
+
+  --primary: #2196f3;
+  --primary-hover: #1976d2;
+  --danger: #dc3545;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root) {
+    --bg-page: #0f1115;
+    --card-bg: #161a22;
+    --text: #e8e9ee;
+    --muted: #b8bcc8;
+    --border: #2a2f3a;
+
+    --input-bg: #0f1320;
+    --input-border: #2e3442;
+
+    --table-bg: #121624;
+    --table-head-bg: #2c2f36;
+    --table-row: #161a22;
+    --table-row-alt: #121724;
+    --table-hover: #1b2130;
+
+    --primary: #3ea6ff;
+    --primary-hover: #1e88e5;
+    --danger: #ff4d4f;
+  }
+}
+
+
+:global(html),
+:global(body) {
+  background: var(--bg-page);
+}
+
+
 .page-grid {
+  background: var(--bg-page);
+  min-height: 100vh;
+
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 20px;
   align-items: start;
   justify-content: center;
-  padding: 10px;
+  padding: 20px;
 }
 
 .left-col,
@@ -655,29 +710,29 @@ onMounted(async () => {
   gap: 20px;
 }
 
+.form-container,
+.form-container-table {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-sizing: border-box;
+  padding: 20px 25px;
+  font-family: "Roboto", sans-serif;
+  color: var(--text);
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
 .form-container {
   width: 100%;
   max-width: 400px;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-  border: 1px solid #444;
-  border-radius: 10px;
-  box-sizing: border-box;
-  padding: 20px 30px;
-  font-family: "Roboto", sans-serif;
 }
 
 .form-container-table {
   width: 100%;
   min-width: 900px;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-  border: 1px solid #444;
-  border-radius: 10px;
-  box-sizing: border-box;
-  padding: 20px 30px;
-  font-family: "Roboto", sans-serif;
 }
+
 
 .title-container {
   display: flex;
@@ -691,7 +746,9 @@ onMounted(async () => {
   font-size: 24px;
   text-align: center;
   width: 100%;
+  color: var(--text);
 }
+
 
 .section {
   margin-bottom: 18px;
@@ -711,14 +768,29 @@ onMounted(async () => {
 
 label {
   font-weight: 600;
+  color: var(--text);
 }
+
 
 input,
 select {
   width: 100%;
   padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #999;
+  border-radius: 8px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text);
+}
+
+input::placeholder {
+  color: var(--muted);
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(62, 166, 255, 0.22);
 }
 
 .btn-primary {
@@ -726,13 +798,17 @@ select {
   padding: 12px;
   font-size: 14px;
   font-weight: bold;
-  background-color: #2196f3;
+  background-color: var(--primary);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   margin-top: 10px;
   text-transform: uppercase;
   color: white;
   cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
 }
 
 .btn-primary:disabled {
@@ -740,21 +816,23 @@ select {
   cursor: not-allowed;
 }
 
-.btn-secondary {
-  padding: 8px 14px;
+
+button {
+  padding: 6px 10px;
   border: none;
-  border-radius: 6px;
-  background: #025ec0;
+  background-color: var(--danger);
   color: white;
+  border-radius: 6px;
   cursor: pointer;
 }
 
-/* Switch */
+
 .switch-container-gestion {
   display: flex;
   align-items: center;
   gap: 10px;
   justify-content: center;
+  color: var(--text);
 }
 
 .switch {
@@ -773,12 +851,9 @@ select {
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: 0.4s;
+  inset: 0;
+  background-color: #bdbdbd;
+  transition: 0.25s;
   border-radius: 34px;
 }
 
@@ -789,63 +864,58 @@ select {
   width: 26px;
   left: 4px;
   bottom: 4px;
-  background-color: white;
-  transition: 0.4s;
+  background-color: #ffffff;
+  transition: 0.25s;
   border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: #2196f3;
+  background-color: var(--primary);
 }
 
 input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-/* Table */
+
 table {
   border-collapse: collapse;
   width: 100%;
   text-align: center;
-  background-color: #f8f9fa;
-  color: #1a1a1a;
-  border: 2px solid #007bff;
+  background-color: var(--table-bg);
+  color: var(--text);
   margin-top: 10px;
-  border-radius: 5px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
 th,
 td {
-  border: 2px solid #007bff;
+  border: 1px solid var(--border);
   padding: 10px;
 }
 
 th {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--table-head-bg);
+  color: #ffffff;
   font-weight: bold;
 }
 
 td {
-  background-color: #e9f5ff;
+  background-color: var(--table-row);
   text-overflow: ellipsis;
   overflow: hidden;
   word-wrap: break-word;
 }
 
-button {
-  padding: 5px 10px;
-  border: none;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
+tr:nth-child(even) td {
+  background-color: var(--table-row-alt);
 }
 
 tr:hover td {
-  background-color: #d0eaff;
+  background-color: var(--table-hover);
 }
+
 
 @media (max-width: 1200px) {
   .page-grid {
@@ -853,6 +923,19 @@ tr:hover td {
   }
   .form-container-table {
     min-width: 0;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(::-webkit-scrollbar) {
+    width: 8px;
+  }
+  :global(::-webkit-scrollbar-track) {
+    background: #0b0d12;
+  }
+  :global(::-webkit-scrollbar-thumb) {
+    background: #2a2f3a;
+    border-radius: 4px;
   }
 }
 </style>
