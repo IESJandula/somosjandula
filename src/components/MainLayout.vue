@@ -159,11 +159,7 @@
             <ion-item button @click="navigateAndCloseMenu('/issues')">
               Gestiona tus incidencias
               <ion-icon slot="end" name="bandage"></ion-icon>
-            </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/issues/stats')">
-              Visualiza estadísticas
-              <ion-icon slot="end" name="bar-chart"></ion-icon>
-            </ion-item>
+            </ion-item>            
           </ion-list>
         </ion-list>
       </ion-content>
@@ -241,6 +237,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { validarRolesMenu, obtenerNombreYApellidosUsuario } from "@/services/firebaseService";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
 import { obtenerNotificacionesVigentesPorTipo } from "@/services/notifications";
+import { crearToast } from "@/utils/toast.js";
 
 export default defineComponent({
   name: "MainLayout",

@@ -473,14 +473,14 @@ const cargarRecursos = async () => {
       recursosCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
-        esCompartible: item.esCompartibleLista,
+        esCompartible: item.esCompartible,
         bloqueado: item.bloqueado,
       }));
     } else {
       recursosNoCompartido.value = data.map((item) => ({
         recursos: item.id,
         cantidad: item.cantidad,
-        esCompartible: item.esCompartibleLista,
+        esCompartible: item.esCompartible,
         bloqueado: item.bloqueado,
       }));
     }
@@ -568,7 +568,8 @@ const switchRecurso = async () => {
 const paginarLogs = async (pagina) => {
   try {
     const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
-    if (data.length >= 0) {
+    
+    if (data && data.length > 0) {
       const formatearFecha = (fecha) => {
         const date = new Date(fecha);
         const pad = (n) => n.toString().padStart(2, '0');
@@ -583,23 +584,25 @@ const paginarLogs = async (pagina) => {
       };
 
       logsPaginados.value = data.map((item) => ({
-        numRegistro: item.numRegistro,
-        fecha: formatearFecha(item.fecha),
+        numRegistro: item.id,
+        fecha: formatearFecha(item.fechaReserva),
         usuario: item.usuario,
         accion: item.accion,
         tipo: item.tipo,
         recurso: item.recurso,
-        locReserva: item.locReserva,
-        superusuario: item.superusuario,
-        countMax: item.countMax,
+        locReserva: `${item.diaSemana} ${item.tramoHorario}`,
+        superusuario: item.superUsuario,
       }));
 
-      if (logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax) {
+      // Si recibimos menos de 20 registros, no hay más páginas
+      const TAMANO_PAGINA = 20;
+      if (data.length < TAMANO_PAGINA) {
         disableLogsPaginated.value = false;
-      }
-      else {
+      } else {
         disableLogsPaginated.value = true;
       }
+      
+      log.info(`Logs cargados: ${data.length} registros en página ${pagina + 1}`);
     }
     else {
       mensajeColor = "warning";
@@ -610,10 +613,12 @@ const paginarLogs = async (pagina) => {
         mensajeColor,
         "No hay logs disponibles para la página seleccionada"
       );
+      logsPaginados.value = [];
+      disableLogsPaginated.value = false;
     }
   }
   catch (error) {
-    mensajeColor = "warning";
+    mensajeColor = "danger";
     crearToast(
       toastMessage,
       toastColor,
@@ -621,6 +626,8 @@ const paginarLogs = async (pagina) => {
       mensajeColor,
       error.message
     );
+    logsPaginados.value = [];
+    disableLogsPaginated.value = false;
   }
 }
 
@@ -631,7 +638,6 @@ onMounted(async () => {
   await cargarRecursos();
   await getRecurso();
   await switchRecurso();
-  await getCantMaxResource();
 });
 </script>
 
