@@ -11,6 +11,7 @@ export const obtenerCursosAcademicos = async (toastMessage, toastColor, isToastO
       headers:
       {
         'Authorization': `Bearer ${tokenPropio}`,
+        'Accept': 'application/json',
       },
     })
 

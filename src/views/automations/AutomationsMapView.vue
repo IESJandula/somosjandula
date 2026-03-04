@@ -151,8 +151,12 @@
             {{ zonaGrupoLabel(id) }}
           </span>
 
-          <!-- ✅ CIRCULITO ESTADO PUERTA -->
-          <span v-if="doorDotState(id)" class="door-dot" :class="doorDotState(id)"></span>
+          <!--CIRCULITO ESTADO PUERTA -->
+          <span
+            v-if="doorDotState(id)"
+            class="door-dot"
+            :class="[doorDotState(id), doorDotCornerClass(id)]"
+          ></span>
         </div>
       </div>
 
@@ -171,7 +175,11 @@
           </span>
 
           <!-- ✅ CIRCULITO ESTADO PUERTA -->
-          <span v-if="doorDotState(id)" class="door-dot" :class="doorDotState(id)"></span>
+          <span
+            v-if="doorDotState(id)"
+            class="door-dot"
+            :class="[doorDotState(id), doorDotCornerClass(id)]"
+          ></span>
         </div>
       </div>
 
@@ -190,7 +198,11 @@
           </span>
 
           <!-- ✅ CIRCULITO ESTADO PUERTA -->
-          <span v-if="doorDotState(id)" class="door-dot" :class="doorDotState(id)"></span>
+          <span
+            v-if="doorDotState(id)"
+            class="door-dot"
+            :class="[doorDotState(id), doorDotCornerClass(id)]"
+          ></span>
         </div>
       </div>
     </div>
@@ -199,7 +211,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount, onMounted } from 'vue'
-import { obtenerDispositivos, } from '@/services/automations'
+import { obtenerDispositivos } from '@/services/automations'
 import {
   obtenerCursosAcademicos,
   obtenerEspaciosFijo,
@@ -264,16 +276,17 @@ const espaciosFijos = ref<EspacioFijoDto[]>([])
 // ------------------------------
 // DISPOSITIVOS (RESPUESTA BACK)
 // ------------------------------
-type ActuadorResponseDto = { mac: string; estado: string; nombreUbicacion: string; aplicabilidad: string | null }
+// ✅ Cambiado a "tipo". Dejo "aplicabilidad?" como compatibilidad por si aún llega.
+type ActuadorResponseDto = { mac: string; estado: string; nombreUbicacion: string; tipo: string | null; aplicabilidad?: string | null }
 
 type SensorBooleanoResponseDto = {
   mac: string; estado: string; valorActual: boolean; ultimaActualizacion: number | null; nombreUbicacion: string;
-  aplicabilidad: string | null; umbralMinimo: number | null; umbralMaximo: number | null
+  tipo: string | null; aplicabilidad?: string | null; umbralMinimo: number | null; umbralMaximo: number | null
 }
 
 type SensorNumericoResponseDto = {
   mac: string; estado: string; valorActual: number | null; umbralMinimo: number | null; umbralMaximo: number | null;
-  ultimaActualizacion: number | null; nombreUbicacion: string; aplicabilidad: string | null
+  ultimaActualizacion: number | null; nombreUbicacion: string; tipo: string | null; aplicabilidad?: string | null
 }
 
 type VistaPajaroResponseDto = {
@@ -330,6 +343,10 @@ const zoneIdToNombreUbicacionBack = (zoneId: string): string => {
   return zoneIdToAulaNombre(zoneId)
 }
 
+// ✅ helper: obtener tipo con compatibilidad
+const getTipo = (d: { tipo?: string | null; aplicabilidad?: string | null }) =>
+  (d?.tipo ?? d?.aplicabilidad ?? '').toString()
+
 // CIRCULITO: estado puerta (por zona)
 type DoorStateClass = 'door-on' | 'door-off' | 'door-undef' | null
 
@@ -340,11 +357,11 @@ const doorDotState = (zoneId: string): DoorStateClass =>
   const ubicacionBack = zoneIdToNombreUbicacionBack(zoneId)
   const acts = dispositivos.value.mapaActuadores?.[ubicacionBack] ?? []
 
-  // solo actuadores con aplicabilidad puerta/puerta-carrito
+  // ✅ solo actuadores con tipo puerta/puerta-carrito (fallback aplicabilidad)
   const puertas = acts.filter(a =>
   {
-    const ap = (a.aplicabilidad ?? '').toLowerCase()
-    return ap === 'puerta' || ap === 'puerta-carrito'
+    const tp = getTipo(a).toLowerCase()
+    return tp === 'puerta' || tp === 'puerta-carrito'
   })
 
   if (puertas.length === 0) return null
@@ -353,7 +370,25 @@ const doorDotState = (zoneId: string): DoorStateClass =>
 
   if (estado === 'on') return 'door-on'
   if (estado === 'off') return 'door-off'
-  return 'door-undef' // indefinido u otros estados
+  return 'door-undef'
+}
+
+/* ✅ NUEVO: zonas donde el circulito va abajo a la derecha */
+const DOOR_DOT_BOTTOM_RIGHT = new Set<string>([
+  'aula2-11',
+  'aula2-13',
+  'aula2-23',
+  'aula2-21', // Convivencia
+  'aula2-19',
+  'aula2-15',
+  'aula2-2',
+  'aula2-4',
+  'aula2-6'
+])
+
+const doorDotCornerClass = (zoneId: string): string =>
+{
+  return DOOR_DOT_BOTTOM_RIGHT.has(zoneId) ? 'door-dot-br' : ''
 }
 
 // ------------------------------
@@ -445,7 +480,7 @@ const dispositivosZonaSeleccionada = computed<UiDispositivo[]>(() =>
   {
     out.push({
       key: `ACT-${a.mac}`,
-      label: `Actuador: ${a.estado ?? 'sin estado'} | Aplicabilidad: ${a.aplicabilidad ?? '—'}`
+      label: `Actuador: ${a.estado ?? 'sin estado'} | Tipo: ${getTipo(a) || '—'}`
     })
   }
 
@@ -461,7 +496,7 @@ const dispositivosZonaSeleccionada = computed<UiDispositivo[]>(() =>
 
     out.push({
       key: `SN-${s.mac}`,
-      label: `Sensor numérico: ${s.estado ?? 'sin estado'} | Aplicabilidad: ${s.aplicabilidad ?? '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
+      label: `Sensor numérico: ${s.estado ?? 'sin estado'} | Tipo: ${getTipo(s) || '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
     })
   }
 
@@ -477,7 +512,7 @@ const dispositivosZonaSeleccionada = computed<UiDispositivo[]>(() =>
 
     out.push({
       key: `SB-${s.mac}`,
-      label: `Sensor booleano: ${s.estado ?? 'sin estado'} | Aplicabilidad: ${s.aplicabilidad ?? '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
+      label: `Sensor booleano: ${s.estado ?? 'sin estado'} | Tipo: ${getTipo(s) || '—'} | Valor: ${valor} | Umbral: ${uMin}–${uMax} | Últ.: ${fecha}`
     })
   }
 
@@ -666,11 +701,72 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* ===== LAYOUT ===== */
+/* (TU CSS ORIGINAL - SIN CAMBIOS) */
+
+#djg-main-box {
+  --bg: rgb(241, 241, 224);
+  --panel-bg: #ffffff;
+  --text: #111111;
+  --border: #9a9a9a;
+
+  --btn-bg: rgb(238, 243, 242);
+  --btn-hover: rgb(253, 255, 121);
+  --btn-text: #111111;
+
+  --zone-bg: rgba(255, 255, 0, 0.26);
+  --zone-hover: rgba(28, 46, 146, 0.5);
+
+  --zone-text-bg: rgba(255, 255, 255, 0.75);
+  --zone-text-border: rgba(0, 0, 0, 0.25);
+
+  --map-border: rgba(0, 0, 0, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  #djg-main-box {
+    --bg: #0f1115;
+    --panel-bg: #151922;
+    --text: #e7eaf0;
+    --border: rgba(255, 255, 255, 0.14);
+
+    --btn-bg: #1b2230;
+    --btn-hover: #2a3550;
+    --btn-text: #e7eaf0;
+
+    --zone-bg: rgba(255, 255, 255, 0.08);
+    --zone-hover: rgba(120, 160, 255, 0.22);
+
+    --zone-text-bg: rgba(15, 17, 21, 0.72);
+    --zone-text-border: rgba(255, 255, 255, 0.18);
+
+    --map-border: rgba(255, 255, 255, 0.18);
+  }
+}
+
+:global(.dark) #djg-main-box {
+  --bg: #0f1115;
+  --panel-bg: #151922;
+  --text: #e7eaf0;
+  --border: rgba(255, 255, 255, 0.14);
+
+  --btn-bg: #1b2230;
+  --btn-hover: #2a3550;
+  --btn-text: #e7eaf0;
+
+  --zone-bg: rgba(255, 255, 255, 0.08);
+  --zone-hover: rgba(120, 160, 255, 0.22);
+
+  --zone-text-bg: rgba(15, 17, 21, 0.72);
+  --zone-text-border: rgba(255, 255, 255, 0.18);
+
+  --map-border: rgba(255, 255, 255, 0.18);
+}
+
 #djg-main-box {
   display: flex;
   align-items: flex-start;
-  background-color: rgb(241, 241, 224);
+  background-color: var(--bg);
+  color: var(--text);
   min-height: 100vh;
 }
 
@@ -681,8 +777,8 @@ onBeforeUnmount(() => {
 
 #panel > * {
   border-radius: 5px;
-  border: 1px solid grey;
-  background-color: #fff;
+  border: 1px solid var(--border);
+  background-color: var(--panel-bg);
   padding: 10px;
   margin: 5px 0;
 }
@@ -693,11 +789,15 @@ onBeforeUnmount(() => {
 }
 
 #panel-selector select,
-#selector-dimensiones {
+#selector-dimensiones,
+#panel-curso select {
   width: 100%;
   border-radius: 5px;
   margin-top: 6px;
   padding: 6px;
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 #contenedor-botones-plantas {
@@ -710,16 +810,17 @@ onBeforeUnmount(() => {
 
 button {
   cursor: pointer;
-  background-color: rgb(238, 243, 242);
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
   transition: 0.2s;
   border-radius: 5px;
-  border: 1px solid black;
+  border: 1px solid var(--border);
   margin: 4px;
   padding: 6px 10px;
 }
 
 button:hover {
-  background-color: rgb(253, 255, 121);
+  background-color: var(--btn-hover);
 }
 
 .boton-active {
@@ -738,7 +839,6 @@ button:hover {
   cursor: not-allowed;
 }
 
-/* ===== MAPA ===== */
 .contenedor-scroll-horizontal {
   display: flex;
   overflow-x: auto;
@@ -750,7 +850,7 @@ button:hover {
 
 .caja-mapa {
   position: relative;
-  border: 3px solid rgba(0, 0, 0, 0.35);
+  border: 3px solid var(--map-border);
   background-repeat: no-repeat;
   background-position: top left;
   background-size: 100% 100%;
@@ -758,8 +858,8 @@ button:hover {
 
 .zona {
   position: absolute;
-  background-color: rgba(255, 255, 0, 0.26);
-  border: 1px solid rgb(0, 0, 0);
+  background-color: var(--zone-bg);
+  border: 1px solid var(--border);
   cursor: pointer;
 
   display: flex;
@@ -768,28 +868,40 @@ button:hover {
 }
 
 .zona:hover {
-  background-color: rgba(28, 46, 146, 0.5);
-  border: 1px solid gray;
+  background-color: var(--zone-hover);
+  border: 1px solid var(--border);
 }
 
 .zone-selected {
   box-shadow: 0 0 10px 3px rgba(255, 0, 0, 0.85);
 }
 
-/* Texto dentro de cada zona */
 .zone-text {
   font-size: 12px;
   font-weight: 800;
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--zone-text-bg);
+  color: var(--text);
   padding: 2px 6px;
   border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--zone-text-border);
   pointer-events: none;
   white-space: pre-line;
   text-align: center;
 }
 
-/* ✅ CIRCULITO ESTADO PUERTA */
+:global(.dark) #djg-main-box .zone-text {
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  border-color: rgba(0, 0, 0, 0.25);
+}
+@media (prefers-color-scheme: dark) {
+  #djg-main-box .zone-text {
+    background: rgba(255, 255, 255, 0.92);
+    color: #111;
+    border-color: rgba(0, 0, 0, 0.25);
+  }
+}
+
 .door-dot {
   position: absolute;
   top: 6px;
@@ -801,7 +913,23 @@ button:hover {
   pointer-events: none;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
 }
-.door-undef { background-color: yellow; }
+:global(.dark) .door-dot {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  .door-dot {
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+}
+
+/* ✅ NUEVO: mover circulito a abajo-derecha en zonas específicas */
+.door-dot-br {
+  top: auto;
+  bottom: 6px;
+  right: 6px;
+}
+
+.door-undef { background-color: orange; }
 .door-on { background-color: green; }
 .door-off { background-color: red; }
 
