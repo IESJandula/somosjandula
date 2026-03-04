@@ -9,7 +9,6 @@
           <h1 class="title">Dispositivos</h1>
         </div>
 
-        <!-- ===== DATOS BÁSICOS ===== -->
         <div class="section">
           <div class="row">
             <label>MAC:</label>
@@ -34,12 +33,8 @@
             <label>Tipo:</label>
             <select v-model="tipoElegido">
               <option disabled value="">Selecciona tipo</option>
-              <option
-                v-for="t in tipos"
-                :key="t.id ?? t.nombreAplicabilidad ?? t"
-                :value="t.nombreAplicabilidad ?? t"
-              >
-                {{ t.nombreAplicabilidad ?? t }}
+              <option v-for="t in tipos" :key="t.id ?? t.tipo" :value="t.tipo">
+                {{ t.tipo }}
               </option>
             </select>
           </div>
@@ -126,17 +121,18 @@
               </option>
             </select>
           </div>
-
           <div class="row">
             <label>Keyword:</label>
             <input type="text" v-model="keywordCmd" />
           </div>
-
           <div class="row">
             <label>Comando:</label>
             <input type="text" v-model="comandoTexto" />
           </div>
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
           <div class="row">
             <label>Texto OK:</label>
             <input type="text" v-model="textoOk" />
@@ -152,7 +148,6 @@
         </div>
       </div>
     </div>
-
     <!-- ================== COLUMNA DERECHA ================== -->
     <div class="right-col">
       <!-- ====== CUADRO 3: LISTA DISPOSITIVOS ====== -->
@@ -301,7 +296,6 @@
 import { ref, onMounted, computed } from "vue";
 import { crearToast } from "@/utils/toast.js";
 
-// ===== AutomationsServer (dispositivos + comandos) =====
 import {
   obtenerTipos,
   crearActuador,
@@ -390,10 +384,22 @@ const dispositivosParaComandos = computed(() => {
   return Array.from(uniq.values());
 });
 
-
 const obtenerTiposVista = async () => {
   try {
-    tipos.value = await obtenerTipos(toastMessage, toastColor, isToastOpen);
+    const raw = await obtenerTipos(toastMessage, toastColor, isToastOpen);
+
+    tipos.value = (raw ?? [])
+      .map((t) => {
+        if (typeof t === "string") return { id: t, tipo: t };
+
+        const tipo =
+          t?.tipo ??
+          t?.nombreTipo ??
+          "";
+
+        return { ...t, tipo };
+      })
+      .filter((t) => String(t.tipo).trim() !== "");
   } catch (error) {
     tipos.value = [];
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
@@ -581,9 +587,7 @@ const cargarComandosActuador = async () => {
 };
 
 const onSeleccionDispositivoComandos = async () => {
-
   dispositivo.value = dispositivoSeleccionado.value;
-
 };
 
 const crearComandoActuadorVista = async () => {
@@ -604,7 +608,7 @@ const crearComandoActuadorVista = async () => {
     comandoTexto.value = "";
     textoOk.value = "";
 
-    await cargarComandosActuador(); // ✅ recarga todos
+    await cargarComandosActuador();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -614,7 +618,7 @@ const eliminarComandoActuadorVista = async (mac, keyword) => {
   try {
     await eliminarComandoActuador(toastMessage, toastColor, isToastOpen, mac, keyword);
     crearToast(toastMessage, toastColor, isToastOpen, "Comando eliminado correctamente");
-    await cargarComandosActuador(); // ✅ recarga todos
+    await cargarComandosActuador();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -623,7 +627,6 @@ const eliminarComandoActuadorVista = async (mac, keyword) => {
 onMounted(async () => {
   await obtenerTiposVista();
   await obtenerUbicacionesVista();
-
   await obtenerActuadoresVista();
   await obtenerSensorNumericoVista();
   await obtenerSensorBooleanoVista();
