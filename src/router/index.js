@@ -61,6 +61,8 @@
 
   import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
+  import IAView from '@/views/ia/IAView.vue';
+
   const routes = [
     {
       path: '/',
@@ -319,13 +321,13 @@
           },
         },
         {
-          path: '/events/users',
+          path: 'events/users',
           component: EventsSchoolPage,
           name: 'EventsSchoolPage',
           meta: { role: 'PROFESOR' },
         },
         {
-          path: '/issues',
+          path: 'issues',
           component: IncidenciasTicPage,
           name: 'Issues',
           meta: { 
@@ -333,13 +335,13 @@
           },
         },
         {
-          path: '/issues/stats',
+          path: 'issues/stats',
           name: 'IssuesStatsPage',
           component: EstadisticasIncidenciasTicPage,
           meta: { role: 'PROFESOR' },
         },
         {
-          path: '/issues/admin',
+          path: 'issues/admin',
           name: 'IssuesTicAdminPage',
           component: IncidenciasTicAdminPage,
           meta: { role: 'ADMINISTRADOR' },
@@ -369,13 +371,21 @@
           },
         },
         {
-          path: '/statistics',
+          path: 'statistics',
           component: StatisticsView,
           name: 'Statistics',
           meta: {
-            role: 'ADMINISTRADOR'
+            role: 'PROFESOR'
           },
-        },      
+        },
+        {
+          path: 'ia',
+          component: IAView,
+          name: 'IAView',
+          meta: {
+            role: 'PROFESOR'
+          },  
+        },
       ],
     },
   ];

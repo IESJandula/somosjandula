@@ -177,20 +177,20 @@ async function cargarEstadisticas() {
             temporalesRecurso,
             dias,
             tramos,
-            listaIncidencias
+            //listaIncidencias
         ] = await Promise.all([
             obtenerRecursoMasReservadoFija(toastMessage, toastColor, isToastOpen),
             obtenerRecursoMasReservadoTemporal(toastMessage, toastColor, isToastOpen),
             obtenerDiaMasReservado(toastMessage, toastColor, isToastOpen),
             obtenerTramoMasReservado(toastMessage, toastColor, isToastOpen),
-            listarIncidencias(toastMessage, toastColor, isToastOpen)
+            //listarIncidencias(toastMessage, toastColor, isToastOpen)
         ]);
 
         recursosFijos.value = fijosRecurso;
         recursosTemporales.value = temporalesRecurso;
         diasMasReservados.value = dias;
         tramosMasReservados.value = tramos;
-        incidencias.value = listaIncidencias as Incidencia[];
+        //incidencias.value = listaIncidencias as Incidencia[];
 
     } catch (err: any) {
         console.error("Error al cargar estadísticas:", err);

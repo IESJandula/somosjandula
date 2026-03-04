@@ -129,10 +129,6 @@
             <label>Comando:</label>
             <input type="text" v-model="comandoTexto" />
           </div>
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
           <div class="row">
             <label>Texto OK:</label>
             <input type="text" v-model="textoOk" />

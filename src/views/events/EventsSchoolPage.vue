@@ -244,11 +244,6 @@ function getEventDateLabel(event: EventoCalendario): string {
 
   const fin = formatDate(event.fechaFin);
 
-  // Finaliza el mismo día
-  if (event.fechaFin === event.fechaInicio) {
-    return ` ${inicio} (finaliza el mismo día)`;
-  }
-
   // Rango de fechas
   return ` ${inicio} – ${fin}`;
 }
