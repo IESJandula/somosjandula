@@ -20,7 +20,6 @@
             <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/automations/VoiceControl')">Voz app</ion-item>
           </ion-list>
         </ion-list>
 
@@ -97,10 +96,10 @@
               Estadísticas
               <ion-icon slot="end" name="bar-chart"></ion-icon>
             </ion-item>
-            <!--<ion-item button @click="navigateAndCloseMenu('/ia')">
+            <ion-item button @click="navigateAndCloseMenu('/ia')">
               Jandu-GPT
               <ion-icon slot="end" name="logo-electron"></ion-icon>
-            </ion-item> -->
+            </ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->
