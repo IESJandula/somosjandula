@@ -20,14 +20,26 @@
         </button>
       </div>
 
-      <div v-for="(comando, index) in historial" :key="index" class="history-item">
+      <div v-for="(item, index) in historial" :key="index" class="history-item">
+
+        <!-- TEXTO USUARIO -->
         <div class="history-label">
           Has dicho:
         </div>
 
         <div class="history-bubble">
-          "{{ comando }}"
+          "{{ item.pregunta }}"
         </div>
+
+        <!-- RESPUESTA IA -->
+        <div class="history-label ia">
+          Respuesta Jandu-GPT:
+        </div>
+
+        <div class="history-bubble ia">
+          "{{ item.respuesta }}"
+        </div>
+
       </div>
 
     </div>
@@ -252,7 +264,13 @@ async function detenerGrabacion() {
     )
 
     texto.value = data.frase
-    historial.value.push(data.frase)
+
+    // 🔥 CAMBIO: ahora guardamos pregunta + respuesta del servidor
+    historial.value.push({
+      pregunta: data.frase,
+      respuesta: data.textoRespuesta || "No se ha entendido la orden"
+    })
+
     await nextTick()
 
     if (historyContainer.value) {
@@ -278,7 +296,23 @@ async function enviarTextoManual() {
 
   try {
     texto.value = textoManual.value
-    historial.value.push(textoManual.value)
+
+    // 🔥 NUEVO: guardamos la pregunta
+    const pregunta = textoManual.value
+
+    // 🔥 NUEVO: obtenemos respuesta del servidor
+    const data = await crearOrdenSimpleTexto(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      pregunta
+    )
+
+    // 🔥 CAMBIO: historial ahora guarda pregunta + respuesta
+    historial.value.push({
+      pregunta: pregunta,
+      respuesta: data.textoRespuesta || "No se ha entendido la orden"
+    })
 
     await nextTick()
 
@@ -286,13 +320,6 @@ async function enviarTextoManual() {
       historyContainer.value.scrollTop =
         historyContainer.value.scrollHeight
     }
-
-    await crearOrdenSimpleTexto(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      textoManual.value
-    )
 
     puedeEnviar.value = false
     contador.value = 5
@@ -411,8 +438,7 @@ function limpiarHistorial() {
 
 <style scoped>
 /* =========================================================
-   🔥 NUEVO BLOQUE → INPUT CON MICRO DENTRO
-   (NO modifica nada anterior)
+  NUEVO BLOQUE → INPUT CON MICRO DENTRO
 ========================================================= */
 
 .manual-input-wrapper {
@@ -444,7 +470,7 @@ function limpiarHistorial() {
   outline: none;
 }
 
-/* 🎤 Micro */
+/* Micro */
 .mic-inline {
   width: 36px;
   height: 36px;
@@ -478,7 +504,7 @@ function limpiarHistorial() {
   filter: grayscale(100%) brightness(0);
 }
 
-/* 🚀 Botón enviar dentro */
+/* Botón enviar dentro */
 .send-inline {
   padding: 8px 14px;
 
@@ -500,7 +526,7 @@ function limpiarHistorial() {
   transform: translateY(-1px);
 }
 
-/* 🎵 Animación barras */
+/* Animación barras */
 .sound-bars-inline {
   display: flex;
   gap: 3px;
@@ -791,7 +817,7 @@ function limpiarHistorial() {
 /* Contenedor principal */
 .history-container {
   margin-top: 30px;
-  
+
   width: 90vw;
   max-width: 1000px;
   margin-left: 50%;
@@ -804,7 +830,7 @@ function limpiarHistorial() {
   border: 2px solid #7edfd0;
   border-radius: 16px;
 
-   padding: 0px 20px 20px 20px;
+  padding: 0px 20px 20px 20px;
 
   display: flex;
   flex-direction: column;
@@ -819,6 +845,7 @@ function limpiarHistorial() {
   flex-direction: column;
   gap: 6px;
   padding: 0 20px;
+  align-items: flex-start;
 }
 
 /* Texto superior */
@@ -838,7 +865,10 @@ function limpiarHistorial() {
   font-weight: 500;
   text-align: left;
   font-size: 16px;
+  display: fit-content;
+  max-width: 80%; 
 }
+
 .history-header {
   padding: 15px 20px;
 }
@@ -867,7 +897,7 @@ function limpiarHistorial() {
   justify-content: flex-end;
   align-items: center;
 
-  padding: 10px 20px; /* 👈 solo ajustamos padding lateral */
+  padding: 10px 20px;
 
   background: #2a2a2a;
 }
@@ -895,5 +925,22 @@ function limpiarHistorial() {
 
 .clear-history-btn:active {
   transform: scale(0.96);
+}
+
+/* =========================================
+   RESPUESTA DE JANDU-GPT (verde más oscuro)
+========================================= */
+
+.history-label.ia {
+  color: #66cbbd;
+  align-self: flex-end;
+  text-align: right;
+}
+
+.history-bubble.ia {
+  background: rgba(40, 140, 130, 0.35);
+  color: #bffaf2;
+  text-align: left;
+  align-self: flex-end;
 }
 </style>
