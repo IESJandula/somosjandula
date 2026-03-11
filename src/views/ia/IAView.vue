@@ -98,6 +98,7 @@ const historialGuardado = localStorage.getItem('historialComandos')
 if (historialGuardado) {
   historial.value = JSON.parse(historialGuardado)
 }
+
 const historyContainer = ref(null)
 
 const toastMessage = ref('')
@@ -142,25 +143,21 @@ let audioData = []
 let recognition = null
 let silenceTimer = null
 let silenceStart = null
+let grabacionActiva = false
 
-// Detecta si el dispositivo del usuario es iPhone, iPad o iPod para aplicar compatibilidad con iOS
+/* Detecta iPhone/iPad/iPod */
 function esIOS() {
   return /iPhone|iPad|iPod/i.test(navigator.userAgent)
 }
 
 /* ACTIVAR MICRO */
-// Activa el micrófono usando reconocimiento del navegador si está disponible; si no, usa grabación de audio para enviarla al servidor
 async function activarMicrofono() {
 
   error.value = ''
 
-  // Chrome / Edge / Android
   if (typeof window.webkitSpeechRecognition !== "undefined" && !esIOS()) {
     usarReconocimientoNavegador()
-  }
-
-  // Firefox / iPhone / Safari
-  else {
+  } else {
     grabarAudioFallback()
   }
 
@@ -194,11 +191,9 @@ function usarReconocimientoNavegador() {
       }
     }
 
-    // 🔥 Mostrar en tiempo real
     textoManual.value = (textoFinal + textoIntermedio).trim()
     puedeEnviar.value = textoManual.value !== ''
 
-    // 🔥 Solo reiniciar temporizador cuando hay resultado FINAL
     if (textoFinal.trim() !== '') {
 
       if (silenceTimer) clearTimeout(silenceTimer)
@@ -222,41 +217,60 @@ function usarReconocimientoNavegador() {
   recognition.start()
 }
 
-/* FALLBACK AUDIO */
+/* FALLBACK AUDIO (Firefox / iPhone) */
 async function grabarAudioFallback() {
+
   try {
+
     globalStream = await navigator.mediaDevices.getUserMedia({ audio: true })
 
     audioContext = new AudioContext({ sampleRate: 16000 })
     input = audioContext.createMediaStreamSource(globalStream)
-    processor = audioContext.createScriptProcessor(4096, 1, 1)
+    processor = audioContext.createScriptProcessor(2048, 1, 1)
+
+    audioData = []
+    silenceStart = null
+    grabacionActiva = true
 
     processor.onaudioprocess = (e) => {
 
+      if (!grabacionActiva) return
+
       const channelData = e.inputBuffer.getChannelData(0)
+
       audioData.push(new Float32Array(channelData))
 
-      // calcular volumen medio
-      let volume = 0
-      for (let i = 0; i < channelData.length; i++) {
-        volume += Math.abs(channelData[i])
-      }
-      volume = volume / channelData.length
+      // 🔊 cálculo RMS (mucho más preciso)
+      let sumSquares = 0
 
-      // si el volumen es bajo → posible silencio
-      if (volume < 0.01) {
+      for (let i = 0; i < channelData.length; i++) {
+        sumSquares += channelData[i] * channelData[i]
+      }
+
+      const rms = Math.sqrt(sumSquares / channelData.length)
+
+      const threshold = 0.02
+
+      // silencio detectado
+      if (rms < threshold) {
 
         if (!silenceStart) {
           silenceStart = Date.now()
         }
 
-        // si llevamos 2 segundos en silencio → parar
-        if (Date.now() - silenceStart > 2000) {
+        // 2 segundos de silencio
+        if (Date.now() - silenceStart > 1000 && grabacionActiva) {
+
+          grabacionActiva = false
           detenerGrabacion()
+
         }
 
       } else {
+
+        // hay voz → reset silencio
         silenceStart = null
+
       }
 
     }
@@ -267,59 +281,103 @@ async function grabarAudioFallback() {
     escuchando.value = true
 
   } catch {
+
     error.value = 'No se pudo acceder al micrófono'
+
   }
+
 }
 
 /* DETENER GRABACIÓN */
 async function detenerGrabacion() {
+
+  grabacionActiva = false
+  escuchando.value = false
 
   if (recognition) {
     recognition.stop()
     recognition = null
   }
 
-  escuchando.value = false
+  if (processor) {
+    processor.disconnect()
+    processor = null
+  }
 
-  if (processor) processor.disconnect()
-  if (input) input.disconnect()
-  if (globalStream) globalStream.getTracks().forEach(track => track.stop())
+  if (input) {
+    input.disconnect()
+    input = null
+  }
+
+  if (globalStream) {
+    globalStream.getTracks().forEach(track => track.stop())
+    globalStream = null
+  }
+
+  if (audioContext) {
+    audioContext.close()
+    audioContext = null
+  }
+
+  silenceStart = null
 
   if (audioData.length === 0) return
+
+  if (audioData.length > 2) {
+    audioData = audioData.slice(0, audioData.length - 2)
+  }
 
   const wavBlob = crearWav(audioData)
   audioData = []
 
   try {
+
     const data = await crearOrdenSimpleAudio(
       toastMessage,
       toastColor,
       isToastOpen,
       wavBlob
     )
-
-    texto.value = data.frase
-
-    // 🔥 CAMBIO: ahora guardamos pregunta + respuesta del servidor
-    historial.value.push({
-      pregunta: data.frase,
-      respuesta: data.textoRespuesta || "No se ha entendido la orden"
-    })
-
-    await nextTick()
-
-    if (historyContainer.value) {
-      historyContainer.value.scrollTop =
-        historyContainer.value.scrollHeight
-    }
+    escribirTextoGradual(data.frase)
+    puedeEnviar.value = true
 
   } catch {
-    error.value = 'Error enviando audio al servidor'
+
+    error.value = 'No se pudo transcribir el audio'
+
   }
+
+}
+
+// Escribe el texto poco a poco para simular reconocimiento en tiempo real
+function escribirTextoGradual(texto) {
+
+  textoManual.value = ''
+
+  let i = 0
+
+  const intervalo = setInterval(() => {
+
+    textoManual.value += texto[i]
+
+    i++
+
+    if (i >= texto.length) {
+
+      clearInterval(intervalo)
+
+      // habilitamos botón enviar cuando termina
+      puedeEnviar.value = true
+
+    }
+
+  }, 10)
+
 }
 
 /* ENVIAR TEXTO */
 async function enviarTextoManual() {
+
   error.value = ''
 
   if (!textoManual.value || textoManual.value.trim() === '') {
@@ -330,12 +388,10 @@ async function enviarTextoManual() {
   if (!puedeEnviar.value) return
 
   try {
-    texto.value = textoManual.value
 
-    // 🔥 NUEVO: guardamos la pregunta
+    texto.value = textoManual.value
     const pregunta = textoManual.value
 
-    // 🔥 NUEVO: obtenemos respuesta del servidor
     const data = await crearOrdenSimpleTexto(
       toastMessage,
       toastColor,
@@ -343,7 +399,6 @@ async function enviarTextoManual() {
       pregunta
     )
 
-    // 🔥 CAMBIO: historial ahora guarda pregunta + respuesta
     historial.value.push({
       pregunta: pregunta,
       respuesta: data.textoRespuesta || "No se ha entendido la orden"
@@ -360,29 +415,39 @@ async function enviarTextoManual() {
     contador.value = 5
 
     intervalo = setInterval(() => {
+
       contador.value--
 
       if (contador.value <= 0) {
+
         clearInterval(intervalo)
+
         if (textoManual.value.trim() !== '') {
           puedeEnviar.value = true
         }
+
       }
+
     }, 1000)
 
     textoManual.value = ''
 
   } catch {
+
     error.value = 'Error enviando el comando escrito'
+
   }
+
 }
 
 /* WAV */
 function crearWav(buffers) {
+
   let length = 0
   buffers.forEach(b => length += b.length)
 
   const pcmData = new Float32Array(length)
+
   let offset = 0
 
   buffers.forEach(b => {
@@ -396,19 +461,25 @@ function crearWav(buffers) {
   escribirCabeceraWav(view, pcmData.length)
 
   let index = 44
+
   for (let i = 0; i < pcmData.length; i++, index += 2) {
+
     let sample = Math.max(-1, Math.min(1, pcmData[i]))
+
     view.setInt16(
       index,
       sample < 0 ? sample * 0x8000 : sample * 0x7FFF,
       true
     )
+
   }
 
   return new Blob([view], { type: 'audio/wav' })
+
 }
 
 function escribirCabeceraWav(view, samples) {
+
   const sampleRate = 16000
   const channels = 1
 
@@ -431,26 +502,35 @@ function escribirCabeceraWav(view, samples) {
   view.setUint16(34, 16, true)
   writeString(36, 'data')
   view.setUint32(40, samples * 2, true)
+
 }
 
-/* PC → modo toggle */
+/* BOTÓN MIC */
 function manejarClickPC() {
 
   if (!escuchando.value) {
+
     activarMicrofono()
+
   } else {
+
     if (recognition) {
       recognition.stop()
       recognition = null
     }
+
     detenerGrabacion()
-    escuchando.value = false
+
   }
+
 }
 
+/* LIMPIAR HISTORIAL */
 function limpiarHistorial() {
+
   historial.value = []
   localStorage.removeItem('historialComandos')
+
 }
 </script>
 
