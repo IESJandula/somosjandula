@@ -57,9 +57,7 @@
           @keyup.enter="enviarTextoManual" />
 
         <!-- MIC -->
-        <button class="mic-inline" :class="{ listening: escuchando }" @click="manejarClickPC"
-          @mousedown="iniciarGrabacionMovil" @mouseup="detenerGrabacionMovil" @mouseleave="detenerGrabacionMovil"
-          @touchstart.prevent="iniciarGrabacionMovil" @touchend.prevent="detenerGrabacionMovil">
+        <button class="mic-inline" :class="{ listening: escuchando }" @click="manejarClickPC">
           <span v-if="!escuchando" class="mic-emoji">🎙️</span>
 
           <div v-else class="sound-bars-inline">
@@ -70,8 +68,8 @@
         </button>
 
         <!-- BOTÓN ENVIAR -->
-        <button class="send-button" :disabled="!puedeEnviar" :class="{ disabled: !puedeEnviar }"
-          @click="enviarTextoManual">
+        <button class="send-button" :disabled="!puedeEnviar || escuchando"
+          :class="{ disabled: !puedeEnviar || escuchando }" @click="enviarTextoManual">
           <span v-if="contador > 0">
             {{ contador }}s
           </span>
@@ -143,16 +141,29 @@ let globalStream
 let audioData = []
 let recognition = null
 let silenceTimer = null
+let silenceStart = null
+
+// Detecta si el dispositivo del usuario es iPhone, iPad o iPod para aplicar compatibilidad con iOS
+function esIOS() {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent)
+}
 
 /* ACTIVAR MICRO */
+// Activa el micrófono usando reconocimiento del navegador si está disponible; si no, usa grabación de audio para enviarla al servidor
 async function activarMicrofono() {
+
   error.value = ''
 
-  if ('webkitSpeechRecognition' in window) {
+  // Chrome / Edge / Android
+  if (typeof window.webkitSpeechRecognition !== "undefined" && !esIOS()) {
     usarReconocimientoNavegador()
-  } else {
+  }
+
+  // Firefox / iPhone / Safari
+  else {
     grabarAudioFallback()
   }
+
 }
 
 /* RECONOCIMIENTO NATIVO */
@@ -221,15 +232,39 @@ async function grabarAudioFallback() {
     processor = audioContext.createScriptProcessor(4096, 1, 1)
 
     processor.onaudioprocess = (e) => {
+
       const channelData = e.inputBuffer.getChannelData(0)
       audioData.push(new Float32Array(channelData))
+
+      // calcular volumen medio
+      let volume = 0
+      for (let i = 0; i < channelData.length; i++) {
+        volume += Math.abs(channelData[i])
+      }
+      volume = volume / channelData.length
+
+      // si el volumen es bajo → posible silencio
+      if (volume < 0.01) {
+
+        if (!silenceStart) {
+          silenceStart = Date.now()
+        }
+
+        // si llevamos 2 segundos en silencio → parar
+        if (Date.now() - silenceStart > 2000) {
+          detenerGrabacion()
+        }
+
+      } else {
+        silenceStart = null
+      }
+
     }
 
     input.connect(processor)
     processor.connect(audioContext.destination)
 
     escuchando.value = true
-    setTimeout(detenerGrabacion, 4000)
 
   } catch {
     error.value = 'No se pudo acceder al micrófono'
@@ -398,36 +433,19 @@ function escribirCabeceraWav(view, samples) {
   view.setUint32(40, samples * 2, true)
 }
 
-/* DETECTAR DISPOSITIVO */
-function esMovil() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-}
-
 /* PC → modo toggle */
 function manejarClickPC() {
 
-  if (esMovil()) return
-
   if (!escuchando.value) {
-    usarReconocimientoNavegador()
+    activarMicrofono()
   } else {
     if (recognition) {
       recognition.stop()
       recognition = null
     }
+    detenerGrabacion()
     escuchando.value = false
   }
-}
-
-/* MÓVIL → mantener pulsado */
-function iniciarGrabacionMovil() {
-  if (!esMovil()) return
-  if (!escuchando.value) activarMicrofono()
-}
-
-function detenerGrabacionMovil() {
-  if (!esMovil()) return
-  if (escuchando.value) detenerGrabacion()
 }
 
 function limpiarHistorial() {
@@ -438,7 +456,34 @@ function limpiarHistorial() {
 
 <style scoped>
 /* =========================================================
-  NUEVO BLOQUE → INPUT CON MICRO DENTRO
+   CONTENEDOR GENERAL
+========================================================= */
+
+.container {
+  max-width: 600px;
+  margin: auto;
+  padding: 30px 20px;
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* =========================================================
+   TÍTULOS
+========================================================= */
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 25px;
+}
+
+/* =========================================================
+   INPUT + MIC + BOTÓN
 ========================================================= */
 
 .manual-input-wrapper {
@@ -449,9 +494,11 @@ function limpiarHistorial() {
 }
 
 .manual-input {
+  margin-top: 30px;
+
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px;
 
   background: #2a2a2a;
   border-radius: 14px;
@@ -470,7 +517,10 @@ function limpiarHistorial() {
   outline: none;
 }
 
-/* Micro */
+/* =========================================================
+   BOTÓN MICRÓFONO
+========================================================= */
+
 .mic-inline {
   width: 36px;
   height: 36px;
@@ -504,29 +554,10 @@ function limpiarHistorial() {
   filter: grayscale(100%) brightness(0);
 }
 
-/* Botón enviar dentro */
-.send-inline {
-  padding: 8px 14px;
+/* =========================================================
+   ANIMACIÓN BARRAS SONIDO
+========================================================= */
 
-  border-radius: 10px;
-  border: none;
-
-  background: #7edfd0;
-  color: #000;
-
-  font-weight: 600;
-  font-size: 14px;
-
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.send-inline:hover {
-  background: #5fd2c2;
-  transform: translateY(-1px);
-}
-
-/* Animación barras */
 .sound-bars-inline {
   display: flex;
   gap: 3px;
@@ -562,204 +593,9 @@ function limpiarHistorial() {
   }
 }
 
-/* =========================================
-   CONTENEDOR GENERAL
-========================================= */
-
-.container {
-  max-width: 600px;
-  margin: auto;
-  padding: 30px 20px;
-  text-align: center;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-/* =========================================
-   TÍTULOS
-========================================= */
-
-.title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.subtitle {
-  color: #666;
-  margin-bottom: 25px;
-}
-
-/* =========================================
-   CONTENEDOR BOTÓN MICRÓFONO (CENTRADO)
-========================================= */
-
-.mic-container {
-  display: flex;
-  justify-content: center;
-  margin: 30px 0;
-}
-
-/* =========================================
-   BOTÓN MICRÓFONO NORMAL
-========================================= */
-
-.mic-button {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-
-  border: none;
-  background: #7edfd0;
-  /* verde agua */
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  transition: all 0.25s ease;
-
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
-
-.mic-button:hover {
-  transform: scale(1.08);
-}
-
-.mic-button:active {
-  transform: scale(0.95);
-}
-
-/* =========================================
-   ESTADO ESCUCHANDO (ROJO)
-========================================= */
-
-.mic-button.listening {
-  background: #ff3b3b;
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
-}
-
-/* =========================================
-   ICONO MICRÓFONO
-========================================= */
-
-.mic-icon {
-  font-size: 24px;
-  color: #000;
-}
-
-/* =========================================
-   ANIMACIÓN BARRAS SONIDO
-========================================= */
-
-.sound-bars {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.sound-bars span {
-  width: 4px;
-  height: 12px;
-  background: white;
-  animation: sound 0.8s infinite ease-in-out;
-}
-
-.sound-bars span:nth-child(2) {
-  animation-delay: 0.1s;
-}
-
-.sound-bars span:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-@keyframes sound {
-  0% {
-    height: 8px;
-  }
-
-  50% {
-    height: 18px;
-  }
-
-  100% {
-    height: 8px;
-  }
-}
-
-/* =========================================
-   TARJETA DE RESULTADO
-========================================= */
-
-.result-card {
-  margin-top: 25px;
-  padding: 20px;
-  border-radius: 12px;
-
-  /* ✅ Verde agua más intenso pero elegante */
-  background: #7edfd0;
-
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-.recognized-text {
-  font-size: 18px;
-  font-weight: 500;
-  color: #000;
-}
-
-/* =========================================
-   MENSAJE DE ERROR
-========================================= */
-
-.error-box {
-  margin-top: 20px;
-  padding: 12px;
-  border-radius: 8px;
-  background-color: #ffe5e5;
-  color: #cc0000;
-  font-weight: bold;
-}
-
-/* =========================================
-   INPUT MANUAL
-========================================= */
-
-.manual-input {
-  margin-top: 30px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  /* 🔥 separación real entre input y botón */
-}
-
-.manual-input input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 16px;
-}
-
-/* =========================================
-   RESPONSIVE MÓVIL
-========================================= */
-
-@media (max-width: 480px) {
-
-  .title {
-    font-size: 20px;
-  }
-
-  .mic-button {
-    font-size: 16px;
-  }
-
-  .recognized-text {
-    font-size: 16px;
-  }
-
-}
+/* =========================================================
+   BOTÓN ENVIAR
+========================================================= */
 
 .send-button {
   margin-left: 12px;
@@ -769,7 +605,6 @@ function limpiarHistorial() {
   border: none;
 
   background: #7edfd0;
-  /* MISMO VERDE QUE LAS CAJAS */
   color: #000;
 
   font-weight: 600;
@@ -781,22 +616,16 @@ function limpiarHistorial() {
   transition: all 0.25s ease;
 }
 
-/* Hover elegante */
 .send-button:hover {
   background: #5fd2c2;
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
 }
 
-/* Click */
 .send-button:active {
   transform: translateY(0);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
-
-/* =========================================
-   ESTADO DESHABILITADO BOTÓN ENVIAR
-========================================= */
 
 .send-button:disabled {
   background: #999;
@@ -810,11 +639,23 @@ function limpiarHistorial() {
   background: #999;
 }
 
-/* =========================================
-   HISTORIAL GRANDE TIPO CHAT
-========================================= */
+/* =========================================================
+   MENSAJE ERROR
+========================================================= */
 
-/* Contenedor principal */
+.error-box {
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #ffe5e5;
+  color: #cc0000;
+  font-weight: bold;
+}
+
+/* =========================================================
+   HISTORIAL CHAT
+========================================================= */
+
 .history-container {
   margin-top: 30px;
 
@@ -839,41 +680,6 @@ function limpiarHistorial() {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Cada bloque */
-.history-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0 20px;
-  align-items: flex-start;
-}
-
-/* Texto superior */
-.history-label {
-  font-size: 14px;
-  color: #8fded4;
-  /* diferente tono */
-  text-align: left;
-}
-
-/* Burbuja del comando */
-.history-bubble {
-  background: rgba(126, 223, 208, 0.15);
-  padding: 14px 18px;
-  border-radius: 12px;
-  color: #7edfd0;
-  font-weight: 500;
-  text-align: left;
-  font-size: 16px;
-  display: fit-content;
-  max-width: 80%; 
-}
-
-.history-header {
-  padding: 15px 20px;
-}
-
-/* Scroll bonito */
 .history-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -883,11 +689,10 @@ function limpiarHistorial() {
   border-radius: 10px;
 }
 
-/* =========================================
-   BOTÓN LIMPIAR HISTORIAL
-========================================= */
+/* =========================================================
+   HEADER HISTORIAL
+========================================================= */
 
-/* Header fijo dentro del historial */
 .history-header {
   position: sticky;
   top: 0;
@@ -902,7 +707,10 @@ function limpiarHistorial() {
   background: #2a2a2a;
 }
 
-/* Botón elegante integrado */
+/* =========================================================
+   BOTÓN LIMPIAR HISTORIAL
+========================================================= */
+
 .clear-history-btn {
   background: rgba(126, 223, 208, 0.15);
   border: 1px solid #7edfd0;
@@ -927,9 +735,40 @@ function limpiarHistorial() {
   transform: scale(0.96);
 }
 
-/* =========================================
-   RESPUESTA DE JANDU-GPT (verde más oscuro)
-========================================= */
+/* =========================================================
+   MENSAJES CHAT
+========================================================= */
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 20px;
+  align-items: flex-start;
+}
+
+.history-label {
+  font-size: 14px;
+  color: #8fded4;
+  text-align: left;
+}
+
+.history-bubble {
+  background: rgba(126, 223, 208, 0.15);
+  padding: 14px 18px;
+  border-radius: 12px;
+  color: #7edfd0;
+  font-weight: 500;
+  text-align: left;
+  font-size: 16px;
+
+  display: fit-content;
+  max-width: 80%;
+}
+
+/* =========================================================
+   RESPUESTA IA
+========================================================= */
 
 .history-label.ia {
   color: #66cbbd;
@@ -942,5 +781,17 @@ function limpiarHistorial() {
   color: #bffaf2;
   text-align: left;
   align-self: flex-end;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 480px) {
+
+  .title {
+    font-size: 20px;
+  }
+
 }
 </style>
