@@ -249,7 +249,7 @@ async function grabarAudioFallback() {
 
       const rms = Math.sqrt(sumSquares / channelData.length)
 
-      const threshold = 0.02
+      const threshold = 0.008
 
       // silencio detectado
       if (rms < threshold) {
@@ -259,7 +259,7 @@ async function grabarAudioFallback() {
         }
 
         // 2 segundos de silencio
-        if (Date.now() - silenceStart > 1000 && grabacionActiva) {
+        if (Date.now() - silenceStart > 2000 && grabacionActiva) {
 
           grabacionActiva = false
           detenerGrabacion()
@@ -338,8 +338,11 @@ async function detenerGrabacion() {
       isToastOpen,
       wavBlob
     )
+    if (!data || !data.frase || data.frase.trim() === "") {
+      return
+    }
     escribirTextoGradual(data.frase)
-    puedeEnviar.value = true
+    puedeEnviar.value = false
 
   } catch {
 
