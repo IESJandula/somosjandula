@@ -68,13 +68,14 @@
 
                   <button
                     v-else-if="!reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
-                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
+                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], reservas[tramo.id][dia.id].numSemana)"
+>
                     Borrar
-                  </button>
+                    </button>
 
                   <button
                     v-else-if="!reservas[tramo.id][dia.id].esfija[index] && !reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index], !reservas[tramo.id][dia.id].esSemanal[index])">
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], !reservas[tramo.id][dia.id].esSemanal[index])">
                     Borrar
                   </button>
 
@@ -280,15 +281,26 @@ const isDeleteModalOpen = ref(false);
 const deleteOption = ref('');
 const reservaParaBorrar = ref(null);
 
-const openDeleteModal = (tramo, dia, recurso, email, fija, semana) => {
-  reservaParaBorrar.value = { tramo, dia, recurso, email, fija, semana };
-  isDeleteModalOpen.value = true;
-};
+// Función para abrir el modal de confirmación de borrado
+const openDeleteModal = (tramo, dia, recurso, email, fija, semanaReserva) => {
+  // Almacenar todos los datos de la reserva que se quiere borrar
+  reservaParaBorrar.value = {
+    tramo: tramo,
+    dia: dia,
+    recurso: recurso,
+    email: email,
+    fija: fija,
+    semana: semanaReserva  // ← este es el número de semana real de la reserva
+  };
 
-const closeDeleteModal = () => {
-  isDeleteModalOpen.value = false;
-  reservaParaBorrar.value = null;
-  getReserva();
+  // Reiniciar la opción de borrado (por defecto, individual)
+  deleteOption.value = "";
+
+  // Abrir el modal
+  isDeleteModalOpen.value = true;
+
+  // Log para depuración (puedes borrarlo después)
+  console.log("Modal abierto para reserva:", reservaParaBorrar.value);
 };
 
 function disableWeekends(date) {
@@ -369,23 +381,52 @@ const resetearSemana = () => {
   semana.value = reseteoFecha.value;
 }
 
+// Función para confirmar el borrado desde el modal
 const confirmacionBorrado = async () => {
-
   try {
-    if (deleteOption.value == "Semanal") {
-      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, true);
-      closeDeleteModal();
-    }
-    else {
-      await deleteReservaTemporary(isToastOpen, toastMessage, toastColor, reservaParaBorrar.value.email, reservaParaBorrar.value.recurso, reservaParaBorrar.value.dia.id, reservaParaBorrar.value.tramo.id, reservaParaBorrar.value.semana, false);
-      closeDeleteModal();
-    }
+    // Mostrar en consola los datos que se van a enviar (para depuración)
+    console.log("Confirmando borrado con opción:", deleteOption.value);
+    console.log("Reserva a borrar:", reservaParaBorrar.value);
+
+    // Determinar si es borrado semanal (opción "Semanal") o individual
+    const esSemanal = deleteOption.value === "Semanal";
+
+    // Llamar al servicio de borrado con los datos de la reserva
+    await deleteReservaTemporary(
+      isToastOpen,
+      toastMessage,
+      toastColor,
+      reservaParaBorrar.value.email,
+      reservaParaBorrar.value.recurso,
+      reservaParaBorrar.value.dia.id,
+      reservaParaBorrar.value.tramo.id,
+      reservaParaBorrar.value.semana,  // ← importante: usar la semana almacenada en la reserva
+      esSemanal
+    );
+
+    // Mostrar mensaje de éxito
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Reserva cancelada correctamente");
+
+    // Cerrar el modal de confirmación
+    closeDeleteModal();
+
+    // Actualizar la vista de reservas para reflejar el cambio
+    await getReserva();
+
+  } catch (error) {
+    // En caso de error, mostrar mensaje de error
+    console.error("Error al borrar reserva:", error);
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message || "Error al cancelar la reserva");
+    closeDeleteModal();
   }
-  catch (error) {
-    mensajeColor = 'danger';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
-  }
-}
+};
+
+// Función para cerrar el modal y limpiar la selección
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false;
+  deleteOption.value = "";        // Reiniciar la opción seleccionada
+  reservaParaBorrar.value = null; // Limpiar la reserva almacenada
+};
 
 const deshabilitarSemanaAnterior = () => {
   if (parseInt(semana.value) === parseInt(getWeek(fechaInicioCurso.value))) {
@@ -752,7 +793,6 @@ const getReserva = async () => {
         estructuraReservas[tramo] = {}
       }
 
-
       estructuraReservas[tramo][dia] = {
         nalumnos: reserva.nalumnos,
         nombreYapellidos: reserva.nombreYapellidos,
@@ -762,6 +802,7 @@ const getReserva = async () => {
         esfija: reserva.esfija.map(val => val === 1 || val === true),
         motivoCurso: reserva.motivoCurso,
         esSemanal: reserva.esSemanal.map(val => val === 1 || val === true),
+        numSemana: reserva.numSemana,
       }
     }
     reservas.value = estructuraReservas
