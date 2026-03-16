@@ -68,8 +68,8 @@
         </button>
 
         <!-- BOTÓN ENVIAR -->
-        <button class="send-button" :disabled="!puedeEnviar || escuchando"
-          :class="{ disabled: !puedeEnviar || escuchando }" @click="enviarTextoManual">
+        <button class="send-button" :disabled="!puedeEnviar || escuchando || enviando"
+          :class="{ disabled: !puedeEnviar || escuchando || enviando }" @click="enviarTextoManual">
           <span v-if="contador > 0">
             {{ contador }}s
           </span>
@@ -85,8 +85,9 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import { crearOrdenSimpleTexto, crearOrdenSimpleAudio } from '@/services/automations'
+import { conectarWebSocket } from "@/services/websocket"
 
 /* VARIABLES */
 const texto = ref('')
@@ -100,12 +101,42 @@ if (historialGuardado) {
 }
 
 const historyContainer = ref(null)
-
 const toastMessage = ref('')
 const toastColor = ref('')
 const isToastOpen = ref(false)
-
 const textoManual = ref('')
+const esperandoRespuesta = ref(false)
+const enviando = ref(false)
+
+onMounted(() => {
+
+  conectarWebSocket(async (mensaje) => {
+
+    esperandoRespuesta.value = false
+    enviando.value = false
+
+    const data = typeof mensaje === "string"
+      ? JSON.parse(mensaje)
+      : mensaje
+
+    const index = historial.value.findIndex(
+      item => item.pregunta === data.pregunta
+    )
+
+    if (index !== -1) {
+      historial.value[index].respuesta = data.respuesta
+    }
+
+    await nextTick()
+
+    historyContainer.value.scrollTo({
+      top: historyContainer.value.scrollHeight,
+      behavior: "smooth"
+    })
+
+  })
+
+})
 
 /* AUTO SCROLL SUAVE */
 watch(historial, async () => {
@@ -388,32 +419,32 @@ async function enviarTextoManual() {
     return
   }
 
-  if (!puedeEnviar.value) return
+  if (!puedeEnviar.value || enviando.value) return
 
   try {
 
-    texto.value = textoManual.value
-    const pregunta = textoManual.value
+    enviando.value = true
 
-    const data = await crearOrdenSimpleTexto(
+    const pregunta = textoManual.value
+    texto.value = pregunta
+
+    historial.value.push({
+      pregunta: pregunta,
+      respuesta: "Pensando..."
+    })
+
+    esperandoRespuesta.value = true
+
+    await crearOrdenSimpleTexto(
       toastMessage,
       toastColor,
       isToastOpen,
       pregunta
     )
 
-    historial.value.push({
-      pregunta: pregunta,
-      respuesta: data.textoRespuesta || "No se ha entendido la orden"
-    })
+    textoManual.value = ''
 
-    await nextTick()
-
-    if (historyContainer.value) {
-      historyContainer.value.scrollTop =
-        historyContainer.value.scrollHeight
-    }
-
+    // activamos contador de bloqueo
     puedeEnviar.value = false
     contador.value = 5
 
@@ -433,14 +464,12 @@ async function enviarTextoManual() {
 
     }, 1000)
 
-    textoManual.value = ''
-
   } catch {
+    enviando.value = false
+    esperandoRespuesta.value = false
 
     error.value = 'Error enviando el comando escrito'
-
   }
-
 }
 
 /* WAV */
