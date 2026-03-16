@@ -20,13 +20,22 @@
             <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
+          </ion-list>
+        </ion-list>
+        <!-- Friends and Family -->
+        <ion-list>
+          <ion-item v-if="mostrarFriendsAndFamily" button @click="toggleSubMenuFriendsAndFamily">
+            Friends and Family
+            <ion-icon slot="end" name="people-outline"></ion-icon>
+            <ion-icon slot="end" :icon="friendsAndFamilySubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+          </ion-item>
+          <ion-list v-if="friendsAndFamilySubmenuVisible" class="submenu">
             <ion-item button @click="navigateAndCloseMenu('/ia')">
               Jandu-GPT
               <ion-icon slot="end" name="logo-electron"></ion-icon>
             </ion-item>
           </ion-list>
         </ion-list>
-
         <!-- Menú de Cola de impresión -->
         <ion-list>
           <ion-item v-if="mostrarTimetableAdmin" button @click="toggleSubMenuTimetableAdmin">
@@ -260,12 +269,14 @@ export default defineComponent({
     const userName = ref("");
     const showTooltip = ref(false);
     const mostrarAdmin = ref(false);
+    const mostrarFriendsAndFamily = ref(false);
     const mostrarAdminFirebase = ref(false);
     const mostrarTimetableAdmin = ref(false);
     const mostrarTimetableTeachers = ref(false);
     const mostrarSchoolManager = ref(false);
 
     const adminSubmenuVisible = ref(false);
+    const friendsAndFamilySubmenuVisible = ref(false);
     const timetableAdminSubmenuVisible = ref(false);
     const schoolManagerSubmenuVisible = ref(false);
     const timetableTeachersSubmenuVisible = ref(false);
@@ -362,6 +373,7 @@ export default defineComponent({
     // Toggle submenus
     const toggleSubMenuAdmin = () => {
       adminSubmenuVisible.value = !adminSubmenuVisible.value;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
@@ -373,6 +385,7 @@ export default defineComponent({
 
     const toggleSubMenuTimetableAdmin = () => {
       adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = !timetableAdminSubmenuVisible.value;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
@@ -386,6 +399,7 @@ export default defineComponent({
     const toggleSubMenuTimetableTeachers = () => {
       adminSubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = !timetableTeachersSubmenuVisible.value;
       schoolManagerSubmenuVisible.value = false;
       notificationsSubmenuVisible.value = false;
@@ -396,6 +410,7 @@ export default defineComponent({
     };
     const toggleSubMenuSchoolManager = () => {
       adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
@@ -407,6 +422,7 @@ export default defineComponent({
 
     const toggleSubMenuNotifications = () => {
       adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
@@ -419,6 +435,7 @@ export default defineComponent({
 
     const toggleSubMenuUtilities = () => {
       adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
@@ -431,6 +448,7 @@ export default defineComponent({
 
     const toggleSubMenuBookings = () => {
       adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
@@ -443,6 +461,7 @@ export default defineComponent({
 
     const toggleSubMenuAbsences = () => {
       adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
@@ -455,6 +474,7 @@ export default defineComponent({
 
     const toggleSubMenuIssues = () => {
       adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = false;
       timetableAdminSubmenuVisible.value = false;
       timetableTeachersSubmenuVisible.value = false;
       schoolManagerSubmenuVisible.value = false;
@@ -462,6 +482,19 @@ export default defineComponent({
       bookingsSubmenuVisible.value = false;
       absencesSubmenuVisible.value = false;
       issuesSubmenuVisible.value = !issuesSubmenuVisible.value;
+    };
+
+    const toggleSubMenuFriendsAndFamily = () => {
+      adminSubmenuVisible.value = false;
+      friendsAndFamilySubmenuVisible.value = !friendsAndFamilySubmenuVisible.value;
+      timetableAdminSubmenuVisible.value = false;
+      timetableTeachersSubmenuVisible.value = false;
+      schoolManagerSubmenuVisible.value = false;
+      notificationsSubmenuVisible.value = false;
+      utilitiesSubmenuVisible.value = false;
+      bookingsSubmenuVisible.value = false;
+      absencesSubmenuVisible.value = false;
+      issuesSubmenuVisible.value = false;
     };
 
     onMounted(async () => {
@@ -476,6 +509,7 @@ export default defineComponent({
         mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
         mostrarTimetableTeachers.value = rolesMenu.mostrarDireccion;
         mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
+        mostrarFriendsAndFamily.value = rolesMenu.mostrarFriendsAndFamily;
       }
       catch (error) {
         crearToast(
@@ -494,6 +528,7 @@ export default defineComponent({
       desconectar,
       navigateAndCloseMenu,
       mostrarAdmin,
+      mostrarFriendsAndFamily,
       mostrarAdminFirebase,
       mostrarSchoolManager,
       mostrarTimetableAdmin,
@@ -507,6 +542,7 @@ export default defineComponent({
       bookingsSubmenuVisible,
       absencesSubmenuVisible,
       issuesSubmenuVisible,
+      friendsAndFamilySubmenuVisible,
       toggleSubMenuAdmin,
       toggleSubMenuTimetableAdmin,
       toggleSubMenuTimetableTeachers,
@@ -515,6 +551,7 @@ export default defineComponent({
       toggleSubMenuUtilities,
       toggleSubMenuBookings,
       toggleSubMenuAbsences,
+      toggleSubMenuFriendsAndFamily,
       notificacionesSoloTexto,
       notificacionesSoloTextoIndex,
       showNotificationTooltip,
