@@ -110,25 +110,35 @@ const enviando = ref(false)
 
 onMounted(() => {
 
+  // Llamamos a la función que conecta el WebSocket
+  // Le pasamos un callback que se ejecutará cada vez que llegue un mensaje
   conectarWebSocket(async (mensaje) => {
 
+    // Indicamos que ya no estamos esperando respuesta
     esperandoRespuesta.value = false
+    // Indicamos que ya no se está enviando nada
     enviando.value = false
 
-    const data = typeof mensaje === "string"
-      ? JSON.parse(mensaje)
-      : mensaje
+    // Si el mensaje viene como string → lo convertimos a objeto JSON
+    // Si ya es objeto → lo usamos directamente
+    const data = typeof mensaje === "string" ? JSON.parse(mensaje) : mensaje
 
+    // Buscamos en el historial la pregunta que coincide con la recibida
     const index = historial.value.findIndex(
       item => item.pregunta === data.pregunta
     )
 
+    // Si encontramos esa pregunta en el historial
     if (index !== -1) {
+      // Actualizamos su respuesta con la que llega del backend
       historial.value[index].respuesta = data.respuesta
-    }
+    } 
 
+    // Esperamos a que Vue actualice el DOM
+    // (para que el scroll funcione correctamente)
     await nextTick()
 
+    // Hacemos scroll automático hacia abajo del contenedor
     historyContainer.value.scrollTo({
       top: historyContainer.value.scrollHeight,
       behavior: "smooth"

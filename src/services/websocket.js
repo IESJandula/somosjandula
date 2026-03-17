@@ -4,11 +4,7 @@ let stompClient = null
 
 export function conectarWebSocket(callback) {
 
-  stompClient = new Client({
-    brokerURL: "ws://localhost:8092/ws",
-    reconnectDelay: 5000,
-    debug: () => {}
-  })
+  stompClient = new Client({brokerURL: "ws://localhost:8092/ws", reconnectDelay: 5000, debug: () => {}})
 
   stompClient.onConnect = () => {
 
