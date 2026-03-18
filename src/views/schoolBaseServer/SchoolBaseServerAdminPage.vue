@@ -310,13 +310,20 @@ const espaciosOrdenados = computed(() => {
 watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
   if (inicializandoCurso) return;
   if (!nuevoCurso || nuevoCurso === cursoAnterior) return;
-  if (nuevoCurso < 0) { cursoGrupo.value = 0; }
   try {
     await seleccionarCursoAcademico(
       toastMessage,
       toastColor,
       isToastOpen,
       nuevoCurso
+    );
+
+    // NUEVO: guardar y notificar cambio para otras vistas
+    localStorage.setItem("cursoAcademicoSeleccionado", nuevoCurso);
+    window.dispatchEvent(
+      new CustomEvent("curso-academico-cambiado", {
+        detail: { cursoAcademico: nuevoCurso }
+      })
     );
 
     await Promise.all([
@@ -390,6 +397,7 @@ const obtenerCursosAcademicosVista = async () => {
     if (cursoSeleccionado) {
       await nextTick();
       cursoElegido.value = cursoSeleccionado.cursoAcademico;
+      localStorage.setItem("cursoAcademicoSeleccionado", cursoSeleccionado.cursoAcademico);
     }
   } catch (error) {
     lanzarToast("danger", error.message);
@@ -532,7 +540,6 @@ const eliminarEspacio = async (espacio) => {
     lanzarToast("danger", error.message);
   }
 };
-
 
 onMounted(async () => {
   await obtenerCursosAcademicosVista();

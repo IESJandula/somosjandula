@@ -69,20 +69,11 @@ export declare function obtenerUbicaciones(toastMessage: Ref<string>,
 export declare function obtenerTipos(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
-
-export declare function crearOrdenSimpleTexto(toastMessage: Ref<string>,
-                                        toastColor: Ref<string>,
-                                        isToastOpen: Ref<boolean>,
-                                        frase: string): Promise<any>;
-
-export declare function crearOrdenSimpleAudio(toastMessage: Ref<string>,
-                                        toastColor: Ref<string>,
-                                        isToastOpen: Ref<boolean>,
-                                        file: Blob): Promise<any>;
-
-export type ComandoResponseDto = {keyword: string
-                                  mac: string
-                                  ordenId: number
+export type ComandoResponseDto = 
+{
+keyword: string
+mac: string
+ordenId: number
 }
 
 export declare function crearComando(toastMessage: Ref<string>,
@@ -102,11 +93,12 @@ export declare function eliminarComando(toastMessage: Ref<string>,
                                           keyword: Ref<string>,
                                           mac: Ref<string>,
                                           ordenId: Ref<number>): Promise<void>
-export type ComandoActuadorResponseDto = {
-                                          mac: string
-                                          keyword: string
-                                          comandos: string
-                                          textoOk: string
+export type ComandoActuadorResponseDto = 
+{
+mac: string
+keyword: string
+comandos: string
+textoOk: string
 }
 
 export declare function crearComandoActuador(toastMessage: Ref<string>,
@@ -126,3 +118,24 @@ export declare function eliminarComandoActuador(toastMessage: Ref<string>,
                                                 isToastOpen: Ref<boolean>,
                                                 mac: string | Ref<string>,
                                                 keyword: string | Ref<string>): Promise<boolean>
+export type AccionResponseDto = 
+{
+  id: number
+  resultado: string
+  mac: string
+  orden_id: number
+}
+export declare function obtenerAcciones(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>): Promise<AccionResponseDto[]>
+
+export type OrdenSimpleResponseDto = {
+  id: number
+  email: string
+  nombre: string
+  apellidos: string
+  fecha: string
+}
+export declare function obtenerOrdenesSimples(toastMessage: Ref<string>,
+                                              toastColor: Ref<string>,
+                                              isToastOpen: Ref<boolean>): Promise<OrdenSimpleResponseDto[]>

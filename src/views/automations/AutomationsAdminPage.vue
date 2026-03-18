@@ -144,6 +144,7 @@
         </div>
       </div>
     </div>
+
     <!-- ================== COLUMNA DERECHA ================== -->
     <div class="right-col">
       <!-- ====== CUADRO 3: LISTA DISPOSITIVOS ====== -->
@@ -193,18 +194,21 @@
 
           <!-- ACTUADOR -->
           <tbody v-if="!esSensorLista">
-            <tr v-for="d in actuadores" :key="d.mac">
+            <tr v-for="d in actuadoresPaginados" :key="d.mac">
               <td>{{ d.mac }}</td>
               <td>{{ d.estado }}</td>
               <td>{{ d.nombreUbicacion }}</td>
               <td>{{ d.tipo }}</td>
               <td><button @click="eliminarActuadorVista(d.mac)">X</button></td>
             </tr>
+            <tr v-if="(actuadoresPaginados?.length ?? 0) === 0">
+              <td colspan="5">No hay actuadores</td>
+            </tr>
           </tbody>
 
           <!-- SENSOR BOOLEANO -->
           <tbody v-if="esSensorLista && !esNumericoLista">
-            <tr v-for="s in sensoresBooleanos" :key="s.mac">
+            <tr v-for="s in sensoresBooleanosPaginados" :key="s.mac">
               <td>{{ s.mac }}</td>
               <td>{{ s.estado }}</td>
               <td>{{ s.nombreUbicacion }}</td>
@@ -223,11 +227,14 @@
 
               <td><button @click="eliminarSensorBooleanoVista(s.mac)">X</button></td>
             </tr>
+            <tr v-if="(sensoresBooleanosPaginados?.length ?? 0) === 0">
+              <td colspan="8">No hay sensores booleanos</td>
+            </tr>
           </tbody>
 
           <!-- SENSOR NUMÉRICO -->
           <tbody v-if="esSensorLista && esNumericoLista">
-            <tr v-for="s in sensoresNumericos" :key="s.mac">
+            <tr v-for="s in sensoresNumericosPaginados" :key="s.mac">
               <td>{{ s.mac }}</td>
               <td>{{ s.estado }}</td>
               <td>{{ s.nombreUbicacion }}</td>
@@ -246,8 +253,33 @@
 
               <td><button @click="eliminarSensorNumericoVista(s.mac)">X</button></td>
             </tr>
+            <tr v-if="(sensoresNumericosPaginados?.length ?? 0) === 0">
+              <td colspan="8">No hay sensores numéricos</td>
+            </tr>
           </tbody>
         </table>
+
+        <div class="pagination-container">
+          <button
+            class="btn-pagination"
+            :disabled="paginaActualDispositivos === 1"
+            @click="paginaAnteriorDispositivos"
+          >
+            Anterior
+          </button>
+
+          <span class="pagination-info">
+            Página {{ paginaActualDispositivos }} de {{ totalPaginasDispositivos }}
+          </span>
+
+          <button
+            class="btn-pagination"
+            :disabled="paginaActualDispositivos === totalPaginasDispositivos"
+            @click="paginaSiguienteDispositivos"
+          >
+            Siguiente
+          </button>
+        </div>
       </div>
 
       <!-- ====== CUADRO 4: LISTA COMANDOS ====== -->
@@ -268,7 +300,7 @@
           </thead>
 
           <tbody>
-            <tr v-for="c in listaComandosActuador" :key="c.mac + '_' + c.keyword">
+            <tr v-for="c in comandosActuadorPaginados" :key="c.mac + '_' + c.keyword">
               <td>{{ c.mac }}</td>
               <td>{{ c.keyword }}</td>
               <td>{{ c.comandos }}</td>
@@ -278,18 +310,93 @@
               </td>
             </tr>
 
-            <tr v-if="(listaComandosActuador?.length ?? 0) === 0">
+            <tr v-if="(comandosActuadorPaginados?.length ?? 0) === 0">
               <td colspan="5">No hay comandos</td>
             </tr>
           </tbody>
         </table>
+
+        <div class="pagination-container">
+          <button
+            class="btn-pagination"
+            :disabled="paginaActualComandos === 1"
+            @click="paginaAnteriorComandos"
+          >
+            Anterior
+          </button>
+
+          <span class="pagination-info">
+            Página {{ paginaActualComandos }} de {{ totalPaginasComandos }}
+          </span>
+
+          <button
+            class="btn-pagination"
+            :disabled="paginaActualComandos === totalPaginasComandos"
+            @click="paginaSiguienteComandos"
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+
+      <!-- ====== CUADRO 5: HISTÓRICO DE ACCIONES ====== -->
+      <div class="form-container-table">
+        <div class="title-container">
+          <h1 class="title">Histórico de acciones</h1>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Dispositivo</th>
+              <th>Fecha</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr v-for="a in accionesPaginadas" :key="a.idAccion">
+              <td>{{ a.usuario }}</td>
+              <td>{{ a.dispositivo }}</td>
+              <td>{{ a.fecha }}</td>
+              <td>{{ a.resultado }}</td>
+            </tr>
+
+            <tr v-if="(accionesPaginadas?.length ?? 0) === 0">
+              <td colspan="4">No hay acciones registradas</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination-container">
+          <button
+            class="btn-pagination"
+            :disabled="paginaActualAcciones === 1"
+            @click="paginaAnteriorAcciones"
+          >
+            Anterior
+          </button>
+
+          <span class="pagination-info">
+            Página {{ paginaActualAcciones }} de {{ totalPaginasAcciones }}
+          </span>
+
+          <button
+            class="btn-pagination"
+            :disabled="paginaActualAcciones === totalPaginasAcciones"
+            @click="paginaSiguienteAcciones"
+          >
+            Siguiente
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { crearToast } from "@/utils/toast.js";
 
 import {
@@ -303,10 +410,11 @@ import {
   eliminarActuador,
   eliminarSensorBooleano,
   eliminarSensorNumerico,
-
   crearComandoActuador,
   obtenerComandosActuador,
   eliminarComandoActuador,
+  obtenerAcciones,
+  obtenerOrdenesSimples,
 } from "@/services/automations";
 
 // ===== SchoolBaseServer (ubicaciones) =====
@@ -353,6 +461,106 @@ const comandoTexto = ref("");
 const textoOk = ref("");
 const listaComandosActuador = ref([]);
 
+// ===== PAGINACIÓN DISPOSITIVOS =====
+const paginaActualDispositivos = ref(1);
+const dispositivosPorPagina = ref(5);
+
+const listaDispositivosActual = computed(() => {
+  if (!esSensorLista.value) return actuadores.value ?? [];
+  if (!esNumericoLista.value) return sensoresBooleanos.value ?? [];
+  return sensoresNumericos.value ?? [];
+});
+
+const totalPaginasDispositivos = computed(() => {
+  return Math.max(
+    1,
+    Math.ceil((listaDispositivosActual.value?.length ?? 0) / dispositivosPorPagina.value)
+  );
+});
+
+const actuadoresPaginados = computed(() => {
+  const inicio = (paginaActualDispositivos.value - 1) * dispositivosPorPagina.value;
+  const fin = inicio + dispositivosPorPagina.value;
+  return (actuadores.value ?? []).slice(inicio, fin);
+});
+
+const sensoresBooleanosPaginados = computed(() => {
+  const inicio = (paginaActualDispositivos.value - 1) * dispositivosPorPagina.value;
+  const fin = inicio + dispositivosPorPagina.value;
+  return (sensoresBooleanos.value ?? []).slice(inicio, fin);
+});
+
+const sensoresNumericosPaginados = computed(() => {
+  const inicio = (paginaActualDispositivos.value - 1) * dispositivosPorPagina.value;
+  const fin = inicio + dispositivosPorPagina.value;
+  return (sensoresNumericos.value ?? []).slice(inicio, fin);
+});
+
+const paginaAnteriorDispositivos = () => {
+  if (paginaActualDispositivos.value > 1) {
+    paginaActualDispositivos.value--;
+  }
+};
+
+const paginaSiguienteDispositivos = () => {
+  if (paginaActualDispositivos.value < totalPaginasDispositivos.value) {
+    paginaActualDispositivos.value++;
+  }
+};
+
+// ===== PAGINACIÓN COMANDOS =====
+const paginaActualComandos = ref(1);
+const comandosPorPagina = ref(5);
+
+const totalPaginasComandos = computed(() => {
+  return Math.max(1, Math.ceil((listaComandosActuador.value?.length ?? 0) / comandosPorPagina.value));
+});
+
+const comandosActuadorPaginados = computed(() => {
+  const inicio = (paginaActualComandos.value - 1) * comandosPorPagina.value;
+  const fin = inicio + comandosPorPagina.value;
+  return (listaComandosActuador.value ?? []).slice(inicio, fin);
+});
+
+const paginaAnteriorComandos = () => {
+  if (paginaActualComandos.value > 1) {
+    paginaActualComandos.value--;
+  }
+};
+
+const paginaSiguienteComandos = () => {
+  if (paginaActualComandos.value < totalPaginasComandos.value) {
+    paginaActualComandos.value++;
+  }
+};
+
+// ===== PAGINACIÓN ACCIONES =====
+const listaAcciones = ref([]);
+const paginaActualAcciones = ref(1);
+const accionesPorPagina = ref(5);
+
+const totalPaginasAcciones = computed(() => {
+  return Math.max(1, Math.ceil((listaAcciones.value?.length ?? 0) / accionesPorPagina.value));
+});
+
+const accionesPaginadas = computed(() => {
+  const inicio = (paginaActualAcciones.value - 1) * accionesPorPagina.value;
+  const fin = inicio + accionesPorPagina.value;
+  return (listaAcciones.value ?? []).slice(inicio, fin);
+});
+
+const paginaAnteriorAcciones = () => {
+  if (paginaActualAcciones.value > 1) {
+    paginaActualAcciones.value--;
+  }
+};
+
+const paginaSiguienteAcciones = () => {
+  if (paginaActualAcciones.value < totalPaginasAcciones.value) {
+    paginaActualAcciones.value++;
+  }
+};
+
 const comandosActuadorSeleccionado = computed(() => {
   const mac = (dispositivoSeleccionado.value || "").trim();
   if (!mac) return [];
@@ -388,11 +596,7 @@ const obtenerTiposVista = async () => {
       .map((t) => {
         if (typeof t === "string") return { id: t, tipo: t };
 
-        const tipo =
-          t?.tipo ??
-          t?.nombreTipo ??
-          "";
-
+        const tipo = t?.tipo ?? t?.nombreTipo ?? "";
         return { ...t, tipo };
       })
       .filter((t) => String(t.tipo).trim() !== "");
@@ -455,7 +659,8 @@ const obtenerUbicacionesVista = async () => {
 // ===== Dispositivos =====
 const obtenerActuadoresVista = async () => {
   try {
-    actuadores.value = await obtenerActuadores(isToastOpen, toastMessage, toastColor);
+    actuadores.value = await obtenerActuadores(toastMessage, toastColor, isToastOpen);
+    paginaActualDispositivos.value = 1;
   } catch {
     actuadores.value = [];
   }
@@ -463,7 +668,8 @@ const obtenerActuadoresVista = async () => {
 
 const obtenerSensorBooleanoVista = async () => {
   try {
-    sensoresBooleanos.value = await obtenerSensorBooleano(isToastOpen, toastMessage, toastColor);
+    sensoresBooleanos.value = await obtenerSensorBooleano(toastMessage, toastColor, isToastOpen);
+    paginaActualDispositivos.value = 1;
   } catch {
     sensoresBooleanos.value = [];
   }
@@ -471,7 +677,8 @@ const obtenerSensorBooleanoVista = async () => {
 
 const obtenerSensorNumericoVista = async () => {
   try {
-    sensoresNumericos.value = await obtenerSensorNumerico(isToastOpen, toastMessage, toastColor);
+    sensoresNumericos.value = await obtenerSensorNumerico(toastMessage, toastColor, isToastOpen);
+    paginaActualDispositivos.value = 1;
   } catch {
     sensoresNumericos.value = [];
   }
@@ -569,7 +776,6 @@ const eliminarSensorNumericoVista = async (mac) => {
 };
 
 // ===== Comandos actuador =====
-
 const cargarComandosActuador = async () => {
   try {
     listaComandosActuador.value = await obtenerComandosActuador(
@@ -577,6 +783,7 @@ const cargarComandosActuador = async () => {
       toastColor,
       isToastOpen
     );
+    paginaActualComandos.value = 1;
   } catch {
     listaComandosActuador.value = [];
   }
@@ -620,19 +827,107 @@ const eliminarComandoActuadorVista = async (mac, keyword) => {
   }
 };
 
+// ===== ACCIONES + ORDENES SIMPLES =====
+const cargarAcciones = async () => {
+  try {
+    const [accionesRaw, ordenesRaw] = await Promise.all([
+      obtenerAcciones(toastMessage, toastColor, isToastOpen),
+      obtenerOrdenesSimples(toastMessage, toastColor, isToastOpen),
+    ]);
+    console.log("ACCIONES RAW:", accionesRaw);
+    console.log("ORDENES RAW:", ordenesRaw);
+
+    const mapaOrdenes = new Map();
+
+    for (const orden of (ordenesRaw ?? [])) {
+      const ordenId = orden?.id ?? orden?.ordenId ?? orden?.idOrden;
+      if (ordenId != null) {
+        mapaOrdenes.set(Number(ordenId), orden);
+      }
+    }
+
+listaAcciones.value = (accionesRaw ?? []).map((accion) => {
+  const ordenId = accion?.ordenId ?? accion?.orden_id ?? accion?.idOrden ?? null;
+  const orden = ordenId != null ? mapaOrdenes.get(Number(ordenId)) : null;
+
+  console.log("ACCION:", accion);
+  console.log("ORDEN ENCONTRADA:", orden);
+
+  const usuario =
+    `${orden?.nombre ?? ""} ${orden?.apellidos ?? ""}`.trim() ||
+    orden?.email ||
+    orden?.usuario ||
+    orden?.nombreUsuario ||
+    "-";
+
+  const dispositivo =
+    accion?.actuadorMac ??
+    accion?.mac ??
+    accion?.dispositivo ??
+    accion?.nombreDispositivo ??
+    "-";
+
+  const fechaRaw =
+    orden?.fecha ||
+    orden?.fechaCreacion ||
+    orden?.createdAt ||
+    null;
+
+let fecha = "-";
+if (fechaRaw) {
+  try {
+    fecha = new Intl.DateTimeFormat("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }).format(new Date(fechaRaw));
+  } catch {
+    fecha = String(fechaRaw);
+  }
+}
+
+  const resultado =
+    accion?.resultado ||
+    accion?.textoRespuesta ||
+    accion?.estado ||
+    "-";
+
+  return {
+    idAccion: accion?.idAccion ?? accion?.id ?? `${ordenId}_${dispositivo}_${resultado}`,
+    usuario,
+    dispositivo,
+    fecha,
+    resultado,
+  };
+});
+
+    paginaActualAcciones.value = 1;
+  } catch (error) {
+    listaAcciones.value = [];
+    crearToast(toastMessage, toastColor, isToastOpen, error.message);
+  }
+};
+
+// reset de página al cambiar de tipo de lista de dispositivos
+watch([esSensorLista, esNumericoLista], () => {
+  paginaActualDispositivos.value = 1;
+});
+
 onMounted(async () => {
   await obtenerTiposVista();
   await obtenerUbicacionesVista();
   await obtenerActuadoresVista();
   await obtenerSensorNumericoVista();
   await obtenerSensorBooleanoVista();
-
   await cargarComandosActuador();
+  await cargarAcciones();
 });
 </script>
 
 <style scoped>
-
 :global(:root) {
   color-scheme: light dark;
 
@@ -680,17 +975,14 @@ onMounted(async () => {
   }
 }
 
-
 :global(html),
 :global(body) {
   background: var(--bg-page);
 }
 
-
 .page-grid {
   background: var(--bg-page);
   min-height: 100vh;
-
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: 20px;
@@ -715,7 +1007,6 @@ onMounted(async () => {
   padding: 20px 25px;
   font-family: "Roboto", sans-serif;
   color: var(--text);
-
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 }
 
@@ -728,7 +1019,6 @@ onMounted(async () => {
   width: 100%;
   min-width: 900px;
 }
-
 
 .title-container {
   display: flex;
@@ -744,7 +1034,6 @@ onMounted(async () => {
   width: 100%;
   color: var(--text);
 }
-
 
 .section {
   margin-bottom: 18px;
@@ -766,7 +1055,6 @@ label {
   font-weight: 600;
   color: var(--text);
 }
-
 
 input,
 select {
@@ -812,7 +1100,6 @@ select:focus {
   cursor: not-allowed;
 }
 
-
 button {
   padding: 6px 10px;
   border: none;
@@ -821,7 +1108,6 @@ button {
   border-radius: 6px;
   cursor: pointer;
 }
-
 
 .switch-container-gestion {
   display: flex;
@@ -873,7 +1159,6 @@ input:checked + .slider:before {
   transform: translateX(26px);
 }
 
-
 table {
   border-collapse: collapse;
   width: 100%;
@@ -912,11 +1197,44 @@ tr:hover td {
   background-color: var(--table-hover);
 }
 
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.pagination-info {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.btn-pagination {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--primary);
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-pagination:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-pagination:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 @media (max-width: 1200px) {
   .page-grid {
     grid-template-columns: 1fr;
   }
+
   .form-container-table {
     min-width: 0;
   }
@@ -926,9 +1244,11 @@ tr:hover td {
   :global(::-webkit-scrollbar) {
     width: 8px;
   }
+
   :global(::-webkit-scrollbar-track) {
     background: #0b0d12;
   }
+
   :global(::-webkit-scrollbar-thumb) {
     background: #2a2f3a;
     border-radius: 4px;

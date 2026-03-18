@@ -53,11 +53,12 @@ export const eliminarSensorBooleano = async (toastMessage, toastColor, isToastOp
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + `/automations/admin/sensor/booleano/${mac?.value ?? mac}`,
+    automationsApiUrl + '/automations/admin/sensor/booleano',
     {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
       },
     }
   );
@@ -120,11 +121,12 @@ export const eliminarSensorNumerico = async (toastMessage, toastColor, isToastOp
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + `/automations/admin/sensor/numerico/${mac?.value ?? mac}`,
+    automationsApiUrl + '/automations/admin/sensor/numerico',
     {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
       },
     }
   );
@@ -186,11 +188,12 @@ export const eliminarActuador = async (toastMessage, toastColor, isToastOpen, ma
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + `/automations/admin/actuador/${mac?.value ?? mac}`,
+    automationsApiUrl + '/automations/admin/actuador',
     {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${tokenPropio}`,
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
       },
     }
   );
@@ -239,7 +242,6 @@ export const obtenerTipos = async (toastMessage, toastColor, isToastOpen) => {
 
   const data = await response.json();
 
-  // ✅ Asegura que SIEMPRE sea un array
   if (Array.isArray(data)) return data;
   return data?.tipos ?? data?.APLICABILIDAD ?? data?.data ?? [];
 };
@@ -404,11 +406,14 @@ export const eliminarComando = async (
   const k = keyword?.value ?? keyword;
 
   const response = await fetch(
-    automationsApiUrl + `/automations/admin/comando/${orden}/${m}/${k}`,
+    automationsApiUrl + '/automations/admin/comando',
     {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${tokenPropio}`
+        Authorization: `Bearer ${tokenPropio}`,
+        ordenId: String(orden),
+        mac: m,
+        keyword: k,
       }
     }
   );
@@ -417,6 +422,8 @@ export const eliminarComando = async (
     const errorData = await response.json();
     throw new Error(errorData.message);
   }
+
+  return true;
 };
 
 
@@ -443,7 +450,7 @@ export const crearComandoActuador = async (
         mac: mac?.value ?? mac,
         keyword: keyword?.value ?? keyword,
         comandos: comandos?.value ?? comandos,
-        textoOk: textoOk?.value ?? textoOk, // ✅ NUEVO
+        textoOk: textoOk?.value ?? textoOk, 
       }),
     }
   );
@@ -491,10 +498,35 @@ export const eliminarComandoActuador = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl +
-      `/automations/admin/comando/actuador/${mac?.value ?? mac}/${keyword?.value ?? keyword}`,
+    automationsApiUrl + '/automations/admin/comando/actuador',
     {
-      method: "DELETE",
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
+        keyword: keyword?.value ?? keyword,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
+export const obtenerAcciones = async (
+  toastMessage,
+  toastColor,
+  isToastOpen
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + "/automations/admin/accion",
+    {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${tokenPropio}`,
       },
@@ -506,5 +538,30 @@ export const eliminarComandoActuador = async (
     throw new Error(errorData.message);
   }
 
-  return true;
+  return await response.json();
+};
+
+export const obtenerOrdenesSimples = async (
+  toastMessage,
+  toastColor,
+  isToastOpen
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + "/automations/ordensimple/",
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message ?? `HTTP ${response.status}`);
+  }
+
+  return await response.json();
 };

@@ -284,3 +284,25 @@ export const borrarEspacioDesdoble = async (toastMessage, toastColor, isToastOpe
     throw new Error(errorData.message);
   }
 }
+export const obtenerCursoAcademicoSeleccionado = async (toastMessage, toastColor, isToastOpen) =>
+{
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen)
+
+  const response = await fetch(
+    schoolBaseServerApiUrl + '/school_base_server/curso_academico/',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    }
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.message)
+  }
+
+  return await response.text()
+}

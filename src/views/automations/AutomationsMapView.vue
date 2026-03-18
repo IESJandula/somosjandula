@@ -1,9 +1,9 @@
 <template>
-  <div class="contenedor-scroll-horizontal" id="djg-main-box">
-    <!-- PANEL IZQUIERDO -->
-    <div id="panel">
+  <div id="djg-main-box">
+    <!-- PANEL SUPERIOR -->
+    <div id="panel-top">
       <!-- Localizador -->
-      <div id="panel-selector">
+      <div id="panel-selector" class="panel-block panel-localizador">
         <label for="selector-zona" class="titulo-djg">Localizador (zona):</label>
 
         <select id="selector-zona" v-model="selectedZoneKey" @change="onZoneChange">
@@ -18,90 +18,8 @@
         </button>
       </div>
 
-      <!-- Curso académico -->
-      <div id="panel-curso">
-        <p class="titulo-djg">Curso académico</p>
-
-        <p v-if="loadingCursos">Cargando cursos…</p>
-
-        <template v-else>
-          <select
-            v-model="cursoAcademicoSeleccionado"
-            @change="recargarEspaciosFijos"
-            style="width: 100%; border-radius: 5px; padding: 6px;"
-          >
-            <option v-for="c in cursosAcademicos" :key="c.cursoAcademico" :value="c.cursoAcademico">
-              {{ c.cursoAcademico }} <span v-if="c.seleccionado"> (seleccionado)</span>
-            </option>
-          </select>
-        </template>
-
-        <p v-if="loadingEspacios" style="margin-top: 8px;">Cargando espacios fijos…</p>
-      </div>
-
-      <!-- Plantas -->
-      <div class="scroll-container" id="contenedor-botones-plantas-box">
-        <p class="titulo-djg">Mostrar planta.</p>
-
-        <div id="contenedor-botones-plantas">
-          <button @click="setPlant('baja')" :class="{ 'boton-active': planta === 'baja' }">
-            Planta<br />baja
-          </button>
-          <button @click="setPlant('primera')" :class="{ 'boton-active': planta === 'primera' }">
-            Planta<br />primera
-          </button>
-          <button @click="setPlant('segunda')" :class="{ 'boton-active': planta === 'segunda' }">
-            Planta<br />segunda
-          </button>
-        </div>
-      </div>
-
-      <!-- ROTACIÓN DE PLANTAS -->
-      <div id="contenedor-rotacion">
-        <p class="titulo-djg">
-          Rotación:
-          <span :class="rotationEnabled ? 'rot-on' : 'rot-off'">
-            {{ rotationEnabled ? 'Activada' : 'Desactivada' }}
-          </span>
-        </p>
-
-        <div class="rot-times">
-          <button @click="startRotation(5)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 5 }">
-            05s
-          </button>
-          <button @click="startRotation(15)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 15 }">
-            15s
-          </button>
-          <button @click="startRotation(30)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 30 }">
-            30s
-          </button>
-        </div>
-
-        <button class="btn-secondary" @click="stopRotation" :disabled="!rotationEnabled">
-          Desactivar rotación
-        </button>
-      </div>
-
-      <!-- Dimensiones -->
-      <div id="contenedor-dimensiones">
-        <label for="selector-dimensiones" class="titulo-djg">Dimensiones plano.</label>
-
-        <select id="selector-dimensiones" v-model="selectedDimensionKey" @change="applyDimensions">
-          <option value="res1">662px * 936px</option>
-          <option value="res2">777px * 1100px</option>
-          <option value="res3">827px * 1170px</option>
-          <option value="res4">910px * 1287px</option>
-          <option value="res5">992px * 1404px</option>
-          <option value="res6">1984px * 2808px</option>
-        </select>
-
-        <button class="btn-secondary" id="restablecer" @click="resetDimensions">
-          Restablecer
-        </button>
-      </div>
-
       <!-- INFO -->
-      <div id="contenedor-info">
+      <div id="contenedor-info" class="panel-block panel-info">
         <p class="titulo-djg">Zona seleccionada</p>
 
         <p v-if="!selectedZoneId"><span>Seleccione una zona del mapa.</span></p>
@@ -133,76 +51,136 @@
           </template>
         </template>
       </div>
+
+      <!-- Plantas -->
+      <div class="panel-block panel-desktop-only" id="contenedor-botones-plantas-box">
+        <p class="titulo-djg">Mostrar planta.</p>
+
+        <div id="contenedor-botones-plantas">
+          <button @click="setPlant('baja')" :class="{ 'boton-active': planta === 'baja' }">
+            Planta<br />baja
+          </button>
+          <button @click="setPlant('primera')" :class="{ 'boton-active': planta === 'primera' }">
+            Planta<br />primera
+          </button>
+          <button @click="setPlant('segunda')" :class="{ 'boton-active': planta === 'segunda' }">
+            Planta<br />segunda
+          </button>
+        </div>
+      </div>
+
+      <!-- ROTACIÓN DE PLANTAS -->
+      <div id="contenedor-rotacion" class="panel-block panel-desktop-only">
+        <p class="titulo-djg">
+          Rotación:
+          <span :class="rotationEnabled ? 'rot-on' : 'rot-off'">
+            {{ rotationEnabled ? 'Activada' : 'Desactivada' }}
+          </span>
+        </p>
+
+        <div class="rot-times">
+          <button @click="startRotation(5)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 5 }">
+            05s
+          </button>
+          <button @click="startRotation(15)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 15 }">
+            15s
+          </button>
+          <button @click="startRotation(30)" :class="{ 'rot-active': rotationEnabled && rotationSeconds === 30 }">
+            30s
+          </button>
+        </div>
+
+        <button class="btn-secondary" @click="stopRotation" :disabled="!rotationEnabled">
+          Desactivar rotación
+        </button>
+      </div>
+
+      <!-- Dimensiones -->
+      <div id="contenedor-dimensiones" class="panel-block panel-desktop-only">
+        <label for="selector-dimensiones" class="titulo-djg">Dimensiones plano.</label>
+
+        <select id="selector-dimensiones" v-model="selectedDimensionKey" @change="applyDimensions">
+          <option value="res1">662px * 936px</option>
+          <option value="res2">777px * 1100px</option>
+          <option value="res3">827px * 1170px</option>
+          <option value="res4">910px * 1287px</option>
+          <option value="res5">992px * 1404px</option>
+          <option value="res6">1984px * 2808px</option>
+        </select>
+
+        <button class="btn-secondary" id="restablecer" @click="resetDimensions">
+          Restablecer
+        </button>
+      </div>
     </div>
 
     <!-- MAPAS -->
-    <div class="contenedor">
-      <!-- PLANTA BAJA -->
-      <div v-show="planta === 'baja'" id="planta-baja" class="caja-mapa" :style="mapStyle(plantaBajaUrl)">
-        <div
-          v-for="id in zonasBaja"
-          :key="id"
-          :id="id"
-          class="zona"
-          :class="{ 'zone-selected': selectedZoneId === id }"
-          @click="selectZone(id, 'baja')"
-        >
-          <span v-if="zonaGrupoLabel(id)" class="zone-text">
-            {{ zonaGrupoLabel(id) }}
-          </span>
+    <div class="contenedor-scroll-horizontal">
+      <div class="contenedor">
+        <!-- PLANTA BAJA -->
+        <div v-show="planta === 'baja'" id="planta-baja" class="caja-mapa" :style="mapStyle(plantaBajaUrl)">
+          <div
+            v-for="id in zonasBaja"
+            :key="id"
+            :id="id"
+            class="zona"
+            :class="{ 'zone-selected': selectedZoneId === id }"
+            @click="selectZone(id, 'baja')"
+          >
+            <span v-if="zonaGrupoLabel(id)" class="zone-text">
+              {{ zonaGrupoLabel(id) }}
+            </span>
 
-          <!--CIRCULITO ESTADO PUERTA -->
-          <span
-            v-if="doorDotState(id)"
-            class="door-dot"
-            :class="[doorDotState(id), doorDotCornerClass(id)]"
-          ></span>
+            <span
+              v-if="doorDotState(id)"
+              class="door-dot"
+              :class="[doorDotState(id), doorDotCornerClass(id)]"
+            ></span>
+          </div>
         </div>
-      </div>
 
-      <!-- PLANTA PRIMERA -->
-      <div v-show="planta === 'primera'" id="planta-primera" class="caja-mapa" :style="mapStyle(plantaPrimeraUrl)">
-        <div
-          v-for="id in zonasPrimera"
-          :key="id"
-          :id="id"
-          class="zona"
-          :class="{ 'zone-selected': selectedZoneId === id }"
-          @click="selectZone(id, 'primera')"
-        >
-          <span v-if="zonaGrupoLabel(id)" class="zone-text">
-            {{ zonaGrupoLabel(id) }}
-          </span>
+        <!-- PLANTA PRIMERA -->
+        <div v-show="planta === 'primera'" id="planta-primera" class="caja-mapa" :style="mapStyle(plantaPrimeraUrl)">
+          <div
+            v-for="id in zonasPrimera"
+            :key="id"
+            :id="id"
+            class="zona"
+            :class="{ 'zone-selected': selectedZoneId === id }"
+            @click="selectZone(id, 'primera')"
+          >
+            <span v-if="zonaGrupoLabel(id)" class="zone-text">
+              {{ zonaGrupoLabel(id) }}
+            </span>
 
-          <!-- ✅ CIRCULITO ESTADO PUERTA -->
-          <span
-            v-if="doorDotState(id)"
-            class="door-dot"
-            :class="[doorDotState(id), doorDotCornerClass(id)]"
-          ></span>
+            <span
+              v-if="doorDotState(id)"
+              class="door-dot"
+              :class="[doorDotState(id), doorDotCornerClass(id)]"
+            ></span>
+          </div>
         </div>
-      </div>
 
-      <!-- PLANTA SEGUNDA -->
-      <div v-show="planta === 'segunda'" id="planta-segunda" class="caja-mapa" :style="mapStyle(plantaSegundaUrl)">
-        <div
-          v-for="id in zonasSegunda"
-          :key="id"
-          :id="id"
-          class="zona"
-          :class="{ 'zone-selected': selectedZoneId === id }"
-          @click="selectZone(id, 'segunda')"
-        >
-          <span v-if="zonaGrupoLabel(id)" class="zone-text">
-            {{ zonaGrupoLabel(id) }}
-          </span>
+        <!-- PLANTA SEGUNDA -->
+        <div v-show="planta === 'segunda'" id="planta-segunda" class="caja-mapa" :style="mapStyle(plantaSegundaUrl)">
+          <div
+            v-for="id in zonasSegunda"
+            :key="id"
+            :id="id"
+            class="zona"
+            :class="{ 'zone-selected': selectedZoneId === id }"
+            @click="selectZone(id, 'segunda')"
+          >
+            <span v-if="zonaGrupoLabel(id)" class="zone-text">
+              {{ zonaGrupoLabel(id) }}
+            </span>
 
-          <!-- ✅ CIRCULITO ESTADO PUERTA -->
-          <span
-            v-if="doorDotState(id)"
-            class="door-dot"
-            :class="[doorDotState(id), doorDotCornerClass(id)]"
-          ></span>
+            <span
+              v-if="doorDotState(id)"
+              class="door-dot"
+              :class="[doorDotState(id), doorDotCornerClass(id)]"
+            ></span>
+          </div>
         </div>
       </div>
     </div>
@@ -213,7 +191,7 @@
 import { computed, ref, onBeforeUnmount, onMounted } from 'vue'
 import { obtenerDispositivos } from '@/services/automations'
 import {
-  obtenerCursosAcademicos,
+  obtenerCursoAcademicoSeleccionado,
   obtenerEspaciosFijo,
   obtenerEspaciosDesdoble,
   obtenerEspaciosSinDocencia
@@ -255,8 +233,6 @@ const zonasSegunda = [
 // ------------------------------
 // CURSOS ACADÉMICOS
 // ------------------------------
-type CursoAcademicoDto = { cursoAcademico: string; seleccionado: boolean | null }
-const cursosAcademicos = ref<CursoAcademicoDto[]>([])
 const cursoAcademicoSeleccionado = ref<string>('')
 
 const loadingCursos = ref(false)
@@ -276,7 +252,6 @@ const espaciosFijos = ref<EspacioFijoDto[]>([])
 // ------------------------------
 // DISPOSITIVOS (RESPUESTA BACK)
 // ------------------------------
-// ✅ Cambiado a "tipo". Dejo "aplicabilidad?" como compatibilidad por si aún llega.
 type ActuadorResponseDto = { mac: string; estado: string; nombreUbicacion: string; tipo: string | null; aplicabilidad?: string | null }
 
 type SensorBooleanoResponseDto = {
@@ -337,17 +312,14 @@ const STATIC_ZONE_LABELS: Record<string, string> = {
 }
 const isStaticZone = (zoneId: string) => !!STATIC_ZONE_LABELS[zoneId]
 
-// convierte zoneId del mapa -> nombreUbicacion tal cual lo guarda el back
 const zoneIdToNombreUbicacionBack = (zoneId: string): string => {
   if (isStaticZone(zoneId)) return STATIC_ZONE_LABELS[zoneId]
   return zoneIdToAulaNombre(zoneId)
 }
 
-// ✅ helper: obtener tipo con compatibilidad
 const getTipo = (d: { tipo?: string | null; aplicabilidad?: string | null }) =>
   (d?.tipo ?? d?.aplicabilidad ?? '').toString()
 
-// CIRCULITO: estado puerta (por zona)
 type DoorStateClass = 'door-on' | 'door-off' | 'door-undef' | null
 
 const doorDotState = (zoneId: string): DoorStateClass =>
@@ -357,7 +329,6 @@ const doorDotState = (zoneId: string): DoorStateClass =>
   const ubicacionBack = zoneIdToNombreUbicacionBack(zoneId)
   const acts = dispositivos.value.mapaActuadores?.[ubicacionBack] ?? []
 
-  // ✅ solo actuadores con tipo puerta/puerta-carrito (fallback aplicabilidad)
   const puertas = acts.filter(a =>
   {
     const tp = getTipo(a).toLowerCase()
@@ -373,17 +344,24 @@ const doorDotState = (zoneId: string): DoorStateClass =>
   return 'door-undef'
 }
 
-/* ✅ NUEVO: zonas donde el circulito va abajo a la derecha */
 const DOOR_DOT_BOTTOM_RIGHT = new Set<string>([
   'aula2-11',
   'aula2-13',
   'aula2-23',
-  'aula2-21', // Convivencia
+  'aula2-21',
   'aula2-19',
   'aula2-15',
   'aula2-2',
   'aula2-4',
-  'aula2-6'
+  'aula2-6',
+  'aula1-11',
+  'aula1-13',
+  'aula1-15',
+  'aula1-17',
+  'aula1-19',
+  'aula1-2',
+  'aula1-4',
+  'aula1-6',
 ])
 
 const doorDotCornerClass = (zoneId: string): string =>
@@ -419,7 +397,7 @@ const normalizarEspacioNombreAZoneId = (nombre: string): string => {
   if (normalized === 'aseos (f)' || normalized === 'aseos f') return 'aseos-f'
   if (normalized === 'gimnasio') return 'gimnasio'
   if (normalized === 'pista de padel' || normalized === 'pista pádel' || normalized === 'pista padel') return 'pista-padel'
-  if (normalized === 'Aula TIC') return 'aula1-10'
+  if (normalized === 'aula tic') return 'aula1-10'
   return ''
 }
 
@@ -628,25 +606,40 @@ const mapStyle = (imgUrl: string) =>
 // ------------------------------
 // CARGA DATOS
 // ------------------------------
+
 const cargarCursosYEspaciosFijos = async () => {
   loadingCursos.value = true
   loadingEspacios.value = true
 
   try {
-    const cursos = await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen)
-    cursosAcademicos.value = cursos as any
+    const respuestaCursoSeleccionado = await obtenerCursoAcademicoSeleccionado(
+      toastMessage,
+      toastColor,
+      isToastOpen
+    )
 
-    const sel = cursosAcademicos.value.find((c) => c.seleccionado)
-    cursoAcademicoSeleccionado.value = sel?.cursoAcademico ?? cursosAcademicos.value[0]?.cursoAcademico ?? ''
+    console.log('RESPUESTA CURSO SELECCIONADO:', respuestaCursoSeleccionado)
 
-    if (!cursoAcademicoSeleccionado.value) throw new Error('No hay cursos académicos disponibles')
+    cursoAcademicoSeleccionado.value = respuestaCursoSeleccionado
 
-    ;[espaciosFijos.value, espaciosDesdoble.value, espaciosSinDocencia.value] = (await Promise.all([
+    console.log('CURSO ACADÉMICO FINAL:', cursoAcademicoSeleccionado.value)
+
+    if (!cursoAcademicoSeleccionado.value) {
+      throw new Error('No hay curso académico seleccionado')
+    }
+
+    ;[espaciosFijos.value, espaciosDesdoble.value, espaciosSinDocencia.value] = await Promise.all([
       obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value),
       obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value),
       obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, cursoAcademicoSeleccionado.value)
-    ])) as any
+    ])
+
+    console.log('ESPACIOS FIJOS:', espaciosFijos.value)
+    console.log('ESPACIOS DESDOBLE:', espaciosDesdoble.value)
+    console.log('ESPACIOS SIN DOCENCIA:', espaciosSinDocencia.value)
+
   } catch (e: any) {
+    console.error('ERROR CARGANDO DATOS DEL MAPA:', e)
     toastMessage.value = e?.message ?? 'Error cargando datos'
     toastColor.value = 'danger'
     isToastOpen.value = true
@@ -656,25 +649,40 @@ const cargarCursosYEspaciosFijos = async () => {
   }
 }
 
-const recargarEspaciosFijos = async () => {
+const recargarEspacios = async () => {
   if (!cursoAcademicoSeleccionado.value) return
 
   loadingEspacios.value = true
   try {
-    espaciosFijos.value = (await obtenerEspaciosFijo(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      cursoAcademicoSeleccionado.value
-    )) as any
+    ;[espaciosFijos.value, espaciosDesdoble.value, espaciosSinDocencia.value] = (await Promise.all([
+      obtenerEspaciosFijo(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        cursoAcademicoSeleccionado.value
+      ),
+      obtenerEspaciosDesdoble(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        cursoAcademicoSeleccionado.value
+      ),
+      obtenerEspaciosSinDocencia(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        cursoAcademicoSeleccionado.value
+      )
+    ])) as any
   } catch (e: any) {
-    toastMessage.value = e?.message ?? 'Error recargando espacios fijos'
+    toastMessage.value = e?.message ?? 'Error recargando espacios'
     toastColor.value = 'danger'
     isToastOpen.value = true
   } finally {
     loadingEspacios.value = false
   }
 }
+
 
 // init
 applyDimensions()
@@ -701,8 +709,6 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* (TU CSS ORIGINAL - SIN CAMBIOS) */
-
 #djg-main-box {
   --bg: rgb(241, 241, 224);
   --panel-bg: #ffffff;
@@ -764,23 +770,67 @@ onBeforeUnmount(() => {
 
 #djg-main-box {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
   background-color: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  width: 100%;
 }
 
-#panel {
-  width: 310px;
+#panel-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
   padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-#panel > * {
+.panel-block {
   border-radius: 5px;
   border: 1px solid var(--border);
   background-color: var(--panel-bg);
   padding: 10px;
-  margin: 5px 0;
+  box-sizing: border-box;
+  min-width: 220px;
+  flex: 1 1 240px;
+}
+
+.panel-localizador {
+  order: 1;
+  flex: 0 0 280px;
+}
+
+.panel-info {
+  order: 2;
+  flex: 0 0 280px;
+}
+
+#contenedor-info p {
+  margin: 0;
+}
+
+#contenedor-info hr {
+  display: none;
+}
+
+#contenedor-info .titulo-djg {
+  margin-bottom: 4px;
+}
+#contenedor-botones-plantas-box {
+  order: 3;
+  flex: 0 0 320px;
+}
+
+#contenedor-rotacion {
+  order: 4;
+  flex: 0 0 300px;
+}
+
+#contenedor-dimensiones {
+  order: 5;
+  flex: 0 0 300px;
 }
 
 .titulo-djg {
@@ -789,8 +839,7 @@ onBeforeUnmount(() => {
 }
 
 #panel-selector select,
-#selector-dimensiones,
-#panel-curso select {
+#selector-dimensiones {
   width: 100%;
   border-radius: 5px;
   margin-top: 6px;
@@ -803,9 +852,17 @@ onBeforeUnmount(() => {
 #contenedor-botones-plantas {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
+  align-items: stretch;
+  flex-wrap: nowrap;
   gap: 6px;
   margin-bottom: 8px;
+}
+
+#contenedor-botones-plantas button {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  line-height: 1.1;
 }
 
 button {
@@ -840,12 +897,13 @@ button:hover {
 }
 
 .contenedor-scroll-horizontal {
-  display: flex;
+  width: 100%;
   overflow-x: auto;
 }
 
 .contenedor {
   padding: 10px;
+  width: max-content;
 }
 
 .caja-mapa {
@@ -861,7 +919,6 @@ button:hover {
   background-color: var(--zone-bg);
   border: 1px solid var(--border);
   cursor: pointer;
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -906,23 +963,69 @@ button:hover {
   position: absolute;
   top: 6px;
   right: 6px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.7);
+  width: 14px;
+  height: 18px;
   pointer-events: none;
+  box-sizing: border-box;
+
+  /* forma de puerta */
+  border: 2px solid rgba(0, 0, 0, 0.75);
+  border-bottom-width: 3px;
+  border-radius: 3px 3px 1px 1px;
+
+  /* pequeño efecto visual */
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
 }
-:global(.dark) .door-dot {
-  border-color: rgba(255, 255, 255, 0.55);
+
+.door-dot::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 50%;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
 }
+
+.door-dot::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+:global(.dark) .door-dot {
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+:global(.dark) .door-dot::before {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+:global(.dark) .door-dot::after {
+  background: rgba(255, 255, 255, 0.8);
+}
+
 @media (prefers-color-scheme: dark) {
   .door-dot {
-    border-color: rgba(255, 255, 255, 0.55);
+    border-color: rgba(255, 255, 255, 0.75);
+  }
+
+  .door-dot::before {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .door-dot::after {
+    background: rgba(255, 255, 255, 0.8);
   }
 }
 
-/* ✅ NUEVO: mover circulito a abajo-derecha en zonas específicas */
 .door-dot-br {
   top: auto;
   bottom: 6px;
@@ -933,7 +1036,7 @@ button:hover {
 .door-on { background-color: green; }
 .door-off { background-color: red; }
 
-/* ===== ROTACIÓN ===== */
+/* ROTACIÓN */
 #contenedor-rotacion .rot-times {
   display: flex;
   flex-wrap: wrap;
@@ -973,7 +1076,7 @@ button:hover {
 #aula0-2-norte { height: 13.2%; width: 4.5%; top: 72.8%; left: 12%; }
 #aula0-2-sur { height: 13.2%; width: 4.5%; top: 72.8%; left: 16.7%; }
 
-/* ===== ZONAS FIJAS PLANTA BAJA ===== */
+/* ZONAS FIJAS PLANTA BAJA */
 #caldera {height:10%;width:4.6%;top:76%;left:21.3%;}
 #cafeteria {height:10%;width:7%;top:76%;left:25.8%;}
 #aseos-f {height:10%;width:3.5%;top:76%;left:33%;}
@@ -1030,4 +1133,42 @@ button:hover {
 #aula2-12 { height: 11.3%; width: 11.4%; top: 70.6%; left: 18.9%; }
 #aseos2-m {height:11.6%;width:3.2%;top:70.6%;left:30%;}
 #aseos2-f {height:11.6%;width:3.2%;top:70.6%;left:33.2%;}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  #panel-top {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .panel-desktop-only {
+    display: none;
+  }
+
+  .panel-localizador,
+  .panel-info {
+    display: block;
+    min-width: 0;
+    width: 100%;
+    flex: initial;
+  }
+
+  .panel-localizador {
+    order: 1;
+  }
+
+  .panel-info {
+    order: 2;
+  }
+
+  .contenedor {
+    padding: 8px;
+  }
+
+  .zone-text {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+}
 </style>

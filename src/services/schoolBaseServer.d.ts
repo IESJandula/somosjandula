@@ -69,6 +69,10 @@ export declare function obtenerEspaciosDesdoble(toastMessage: Ref<string>,
                                                 cursoAcademico: string): Promise<any[]>
 
 export declare function obtenerEspaciosSinDocencia(toastMessage: Ref<string>,
-                                                toastColor: Ref<string>,
-                                                isToastOpen: Ref<boolean>,
-                                                cursoAcademico: string): Promise<any[]>
+                                                    toastColor: Ref<string>,
+                                                    isToastOpen: Ref<boolean>,
+                                                    cursoAcademico: string): Promise<any[]>
+                                                    
+export declare function obtenerCursoAcademicoSeleccionado(toastMessage: Ref<string>,
+                                                        toastColor: Ref<string>,
+                                                        isToastOpen: Ref<boolean>): Promise<string>
