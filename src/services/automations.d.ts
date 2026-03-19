@@ -1,7 +1,44 @@
-export type VistaPajaroResponseDto = {
+export type VistaPajaroResponseDto = 
+{
   mapaActuadores: Record<string, any[]>
   mapaSensoresBooleanos: Record<string, any[]>
   mapaSensoresNumericos: Record<string, any[]>
+}
+export type PageResponseDto<T> = 
+{
+  content: T[]
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+}
+export type ComandoResponseDto = 
+{
+keyword: string
+mac: string
+ordenId: number
+}
+export type ComandoActuadorResponseDto = 
+{
+mac: string
+keyword: string
+comandos: string
+textoOk: string
+}
+export type AccionResponseDto = 
+{
+  id: number
+  resultado: string
+  mac: string
+  orden_id: number
+}
+export type OrdenSimpleResponseDto = 
+{
+  id: number
+  email: string
+  nombre: string
+  apellidos: string
+  fecha: string
 }
 export declare function obtenerDispositivos(toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
@@ -69,12 +106,6 @@ export declare function obtenerUbicaciones(toastMessage: Ref<string>,
 export declare function obtenerTipos(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
-export type ComandoResponseDto = 
-{
-keyword: string
-mac: string
-ordenId: number
-}
 
 export declare function crearComando(toastMessage: Ref<string>,
                                       toastColor: Ref<string>,
@@ -93,13 +124,7 @@ export declare function eliminarComando(toastMessage: Ref<string>,
                                           keyword: Ref<string>,
                                           mac: Ref<string>,
                                           ordenId: Ref<number>): Promise<void>
-export type ComandoActuadorResponseDto = 
-{
-mac: string
-keyword: string
-comandos: string
-textoOk: string
-}
+
 
 export declare function crearComandoActuador(toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
@@ -111,31 +136,41 @@ export declare function crearComandoActuador(toastMessage: Ref<string>,
 
 export declare function obtenerComandosActuador(toastMessage: Ref<string>,
                                                 toastColor: Ref<string>,
-                                                isToastOpen: Ref<boolean>): Promise<ComandoActuadorResponseDto[]>
+                                                isToastOpen: Ref<boolean>,
+                                                page?: number,
+                                                size?: number): Promise<PageResponseDto<ComandoActuadorResponseDto>>
+
 
 export declare function eliminarComandoActuador(toastMessage: Ref<string>,
                                                 toastColor: Ref<string>,
                                                 isToastOpen: Ref<boolean>,
                                                 mac: string | Ref<string>,
                                                 keyword: string | Ref<string>): Promise<boolean>
-export type AccionResponseDto = 
-{
-  id: number
-  resultado: string
-  mac: string
-  orden_id: number
-}
+
 export declare function obtenerAcciones(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
-                                        isToastOpen: Ref<boolean>): Promise<AccionResponseDto[]>
+                                        isToastOpen: Ref<boolean>,
+                                        page?: number,
+                                        size?: number): Promise<PageResponseDto<AccionResponseDto>>
 
-export type OrdenSimpleResponseDto = {
-  id: number
-  email: string
-  nombre: string
-  apellidos: string
-  fecha: string
-}
 export declare function obtenerOrdenesSimples(toastMessage: Ref<string>,
                                               toastColor: Ref<string>,
                                               isToastOpen: Ref<boolean>): Promise<OrdenSimpleResponseDto[]>
+                                              
+export declare function obtenerActuadoresPaginacion(toastMessage: Ref<string>,
+                                                    toastColor: Ref<string>,
+                                                    isToastOpen: Ref<boolean>,
+                                                    page?: number,
+                                                    size?: number): Promise<PageResponseDto<any>>;
+
+export declare function obtenerSensorBooleanoPaginacion(toastMessage: Ref<string>,
+                                                        toastColor: Ref<string>,
+                                                        isToastOpen: Ref<boolean>,
+                                                        page?: number,
+                                                        size?: number): Promise<PageResponseDto<any>>;
+
+export declare function obtenerSensorNumericoPaginacion(toastMessage: Ref<string>,
+                                                        toastColor: Ref<string>,
+                                                        isToastOpen: Ref<boolean>,
+                                                        page?: number,
+                                                        size?: number): Promise<PageResponseDto<any>>;

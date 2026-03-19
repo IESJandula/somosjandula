@@ -466,12 +466,14 @@ export const crearComandoActuador = async (
 export const obtenerComandosActuador = async (
   toastMessage,
   toastColor,
-  isToastOpen
+  isToastOpen,
+  page = 0,
+  size = 5
 ) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + "/automations/admin/comando/actuador",
+    automationsApiUrl + `/automations/admin/comando/actuador?page=${page}&size=${size}`,
     {
       method: "GET",
       headers: {
@@ -519,12 +521,14 @@ export const eliminarComandoActuador = async (
 export const obtenerAcciones = async (
   toastMessage,
   toastColor,
-  isToastOpen
+  isToastOpen,
+  page = 0,
+  size = 5
 ) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + "/automations/admin/accion",
+    automationsApiUrl + `/automations/admin/accion?page=${page}&size=${size}`,
     {
       method: "GET",
       headers: {
@@ -540,7 +544,6 @@ export const obtenerAcciones = async (
 
   return await response.json();
 };
-
 export const obtenerOrdenesSimples = async (
   toastMessage,
   toastColor,
@@ -561,6 +564,68 @@ export const obtenerOrdenesSimples = async (
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message ?? `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+};
+export const obtenerActuadoresPaginacion = async (toastMessage, toastColor, isToastOpen, page = 0, size = 5) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + `/automations/admin/actuador/paginacion?page=${page}&size=${size}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const obtenerSensorBooleanoPaginacion = async (toastMessage, toastColor, isToastOpen, page = 0, size = 5) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + `/automations/admin/sensor/booleano/paginacion?page=${page}&size=${size}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const obtenerSensorNumericoPaginacion = async (toastMessage, toastColor, isToastOpen, page = 0, size = 5) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + `/automations/admin/sensor/numerico/paginacion?page=${page}&size=${size}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
   }
 
   return await response.json();

@@ -405,8 +405,9 @@ import {
   crearSensorBooleano,
   crearSensorNumerico,
   obtenerActuadores,
-  obtenerSensorNumerico,
-  obtenerSensorBooleano,
+  obtenerActuadoresPaginacion,
+  obtenerSensorNumericoPaginacion,
+  obtenerSensorBooleanoPaginacion,
   eliminarActuador,
   eliminarSensorBooleano,
   eliminarSensorNumerico,
@@ -435,6 +436,8 @@ const umbralMax = ref(0);
 const actuadores = ref([]);
 const sensoresNumericos = ref([]);
 const sensoresBooleanos = ref([]);
+const actuadoresParaComandos = ref([]);
+
 
 // Ubicaciones (vienen de SchoolBaseServer)
 const ubicaciones = ref([]);
@@ -464,73 +467,50 @@ const listaComandosActuador = ref([]);
 // ===== PAGINACIÓN DISPOSITIVOS =====
 const paginaActualDispositivos = ref(1);
 const dispositivosPorPagina = ref(5);
+const totalPaginasDispositivos = ref(1);
 
-const listaDispositivosActual = computed(() => {
-  if (!esSensorLista.value) return actuadores.value ?? [];
-  if (!esNumericoLista.value) return sensoresBooleanos.value ?? [];
-  return sensoresNumericos.value ?? [];
-});
+const actuadoresPaginados = computed(() => actuadores.value ?? []);
+const sensoresBooleanosPaginados = computed(() => sensoresBooleanos.value ?? []);
+const sensoresNumericosPaginados = computed(() => sensoresNumericos.value ?? []);
 
-const totalPaginasDispositivos = computed(() => {
-  return Math.max(
-    1,
-    Math.ceil((listaDispositivosActual.value?.length ?? 0) / dispositivosPorPagina.value)
-  );
-});
-
-const actuadoresPaginados = computed(() => {
-  const inicio = (paginaActualDispositivos.value - 1) * dispositivosPorPagina.value;
-  const fin = inicio + dispositivosPorPagina.value;
-  return (actuadores.value ?? []).slice(inicio, fin);
-});
-
-const sensoresBooleanosPaginados = computed(() => {
-  const inicio = (paginaActualDispositivos.value - 1) * dispositivosPorPagina.value;
-  const fin = inicio + dispositivosPorPagina.value;
-  return (sensoresBooleanos.value ?? []).slice(inicio, fin);
-});
-
-const sensoresNumericosPaginados = computed(() => {
-  const inicio = (paginaActualDispositivos.value - 1) * dispositivosPorPagina.value;
-  const fin = inicio + dispositivosPorPagina.value;
-  return (sensoresNumericos.value ?? []).slice(inicio, fin);
-});
-
-const paginaAnteriorDispositivos = () => {
+const paginaAnteriorDispositivos = async () => {
   if (paginaActualDispositivos.value > 1) {
     paginaActualDispositivos.value--;
+
+    if (!esSensorLista.value) await obtenerActuadoresVista();
+    else if (!esNumericoLista.value) await obtenerSensorBooleanoVista();
+    else await obtenerSensorNumericoVista();
   }
 };
 
-const paginaSiguienteDispositivos = () => {
+const paginaSiguienteDispositivos = async () => {
   if (paginaActualDispositivos.value < totalPaginasDispositivos.value) {
     paginaActualDispositivos.value++;
+
+    if (!esSensorLista.value) await obtenerActuadoresVista();
+    else if (!esNumericoLista.value) await obtenerSensorBooleanoVista();
+    else await obtenerSensorNumericoVista();
   }
 };
 
 // ===== PAGINACIÓN COMANDOS =====
 const paginaActualComandos = ref(1);
 const comandosPorPagina = ref(5);
+const totalPaginasComandos = ref(1);
 
-const totalPaginasComandos = computed(() => {
-  return Math.max(1, Math.ceil((listaComandosActuador.value?.length ?? 0) / comandosPorPagina.value));
-});
+const comandosActuadorPaginados = computed(() => listaComandosActuador.value ?? []);
 
-const comandosActuadorPaginados = computed(() => {
-  const inicio = (paginaActualComandos.value - 1) * comandosPorPagina.value;
-  const fin = inicio + comandosPorPagina.value;
-  return (listaComandosActuador.value ?? []).slice(inicio, fin);
-});
-
-const paginaAnteriorComandos = () => {
+const paginaAnteriorComandos = async () => {
   if (paginaActualComandos.value > 1) {
     paginaActualComandos.value--;
+    await cargarComandosActuador();
   }
 };
 
-const paginaSiguienteComandos = () => {
+const paginaSiguienteComandos = async () => {
   if (paginaActualComandos.value < totalPaginasComandos.value) {
     paginaActualComandos.value++;
+    await cargarComandosActuador();
   }
 };
 
@@ -538,54 +518,31 @@ const paginaSiguienteComandos = () => {
 const listaAcciones = ref([]);
 const paginaActualAcciones = ref(1);
 const accionesPorPagina = ref(5);
+const totalPaginasAcciones = ref(1);
 
-const totalPaginasAcciones = computed(() => {
-  return Math.max(1, Math.ceil((listaAcciones.value?.length ?? 0) / accionesPorPagina.value));
-});
+const accionesPaginadas = computed(() => listaAcciones.value ?? []);
 
-const accionesPaginadas = computed(() => {
-  const inicio = (paginaActualAcciones.value - 1) * accionesPorPagina.value;
-  const fin = inicio + accionesPorPagina.value;
-  return (listaAcciones.value ?? []).slice(inicio, fin);
-});
-
-const paginaAnteriorAcciones = () => {
+const paginaAnteriorAcciones = async () => {
   if (paginaActualAcciones.value > 1) {
     paginaActualAcciones.value--;
+    await cargarAcciones();
   }
 };
 
-const paginaSiguienteAcciones = () => {
+const paginaSiguienteAcciones = async () => {
   if (paginaActualAcciones.value < totalPaginasAcciones.value) {
     paginaActualAcciones.value++;
+    await cargarAcciones();
   }
 };
-
-const comandosActuadorSeleccionado = computed(() => {
-  const mac = (dispositivoSeleccionado.value || "").trim();
-  if (!mac) return [];
-  return (listaComandosActuador.value ?? []).filter((c) => c.mac === mac);
-});
 
 // Para el desplegable "Aula - Tipo (MAC)"
 const dispositivosParaComandos = computed(() => {
-  const lista = [];
-
-  for (const a of (actuadores.value ?? [])) {
-    lista.push({ mac: a.mac, aula: a.nombreUbicacion, tipo: a.tipo ?? "Actuador" });
-  }
-
-  for (const s of (sensoresBooleanos.value ?? [])) {
-    lista.push({ mac: s.mac, aula: s.nombreUbicacion, tipo: s.tipo ?? "Sensor booleano" });
-  }
-
-  for (const s of (sensoresNumericos.value ?? [])) {
-    lista.push({ mac: s.mac, aula: s.nombreUbicacion, tipo: s.tipo ?? "Sensor numérico" });
-  }
-
-  const uniq = new Map();
-  for (const d of lista) uniq.set(d.mac, d);
-  return Array.from(uniq.values());
+  return (actuadoresParaComandos.value ?? []).map((a) => ({
+    mac: a.mac,
+    aula: a.nombreUbicacion,
+    tipo: a.tipo ?? "Actuador",
+  }));
 });
 
 const obtenerTiposVista = async () => {
@@ -657,30 +614,68 @@ const obtenerUbicacionesVista = async () => {
 };
 
 // ===== Dispositivos =====
+const cargarActuadoresParaComandos = async () => {
+  try {
+    actuadoresParaComandos.value = await obtenerActuadores(
+      toastMessage,
+      toastColor,
+      isToastOpen
+    );
+  } catch {
+    actuadoresParaComandos.value = [];
+  }
+};
 const obtenerActuadoresVista = async () => {
   try {
-    actuadores.value = await obtenerActuadores(toastMessage, toastColor, isToastOpen);
-    paginaActualDispositivos.value = 1;
+    const response = await obtenerActuadoresPaginacion(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      paginaActualDispositivos.value - 1,
+      dispositivosPorPagina.value
+    );
+
+    actuadores.value = response?.content ?? [];
+    totalPaginasDispositivos.value = Math.max(1, response?.totalPages ?? 1);
   } catch {
     actuadores.value = [];
+    totalPaginasDispositivos.value = 1;
   }
 };
 
 const obtenerSensorBooleanoVista = async () => {
   try {
-    sensoresBooleanos.value = await obtenerSensorBooleano(toastMessage, toastColor, isToastOpen);
-    paginaActualDispositivos.value = 1;
+    const response = await obtenerSensorBooleanoPaginacion(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      paginaActualDispositivos.value - 1,
+      dispositivosPorPagina.value
+    );
+
+    sensoresBooleanos.value = response?.content ?? [];
+    totalPaginasDispositivos.value = Math.max(1, response?.totalPages ?? 1);
   } catch {
     sensoresBooleanos.value = [];
+    totalPaginasDispositivos.value = 1;
   }
 };
 
 const obtenerSensorNumericoVista = async () => {
   try {
-    sensoresNumericos.value = await obtenerSensorNumerico(toastMessage, toastColor, isToastOpen);
-    paginaActualDispositivos.value = 1;
+    const response = await obtenerSensorNumericoPaginacion(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      paginaActualDispositivos.value - 1,
+      dispositivosPorPagina.value
+    );
+
+    sensoresNumericos.value = response?.content ?? [];
+    totalPaginasDispositivos.value = Math.max(1, response?.totalPages ?? 1);
   } catch {
     sensoresNumericos.value = [];
+    totalPaginasDispositivos.value = 1;
   }
 };
 
@@ -698,6 +693,7 @@ const crearActuadorVista = async () => {
 
     crearToast(toastMessage, toastColor, isToastOpen, "Actuador creado correctamente");
     await obtenerActuadoresVista();
+    await cargarActuadoresParaComandos();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -719,6 +715,7 @@ const crearSensorBooleanoVista = async () => {
 
     crearToast(toastMessage, toastColor, isToastOpen, "Sensor booleano creado correctamente");
     await obtenerSensorBooleanoVista();
+    await cargarActuadoresParaComandos();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -740,6 +737,7 @@ const crearSensorNumericoVista = async () => {
 
     crearToast(toastMessage, toastColor, isToastOpen, "Sensor numérico creado correctamente");
     await obtenerSensorNumericoVista();
+    await cargarActuadoresParaComandos();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -750,6 +748,7 @@ const eliminarActuadorVista = async (mac) => {
     await eliminarActuador(toastMessage, toastColor, isToastOpen, mac);
     crearToast(toastMessage, toastColor, isToastOpen, "Actuador eliminado correctamente");
     await obtenerActuadoresVista();
+    await cargarActuadoresParaComandos();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -760,6 +759,7 @@ const eliminarSensorBooleanoVista = async (mac) => {
     await eliminarSensorBooleano(toastMessage, toastColor, isToastOpen, mac);
     crearToast(toastMessage, toastColor, isToastOpen, "Sensor booleano eliminado correctamente");
     await obtenerSensorBooleanoVista();
+    await cargarActuadoresParaComandos();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -770,6 +770,7 @@ const eliminarSensorNumericoVista = async (mac) => {
     await eliminarSensorNumerico(toastMessage, toastColor, isToastOpen, mac);
     crearToast(toastMessage, toastColor, isToastOpen, "Sensor numérico eliminado correctamente");
     await obtenerSensorNumericoVista();
+    await cargarActuadoresParaComandos();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -778,14 +779,19 @@ const eliminarSensorNumericoVista = async (mac) => {
 // ===== Comandos actuador =====
 const cargarComandosActuador = async () => {
   try {
-    listaComandosActuador.value = await obtenerComandosActuador(
+    const response = await obtenerComandosActuador(
       toastMessage,
       toastColor,
-      isToastOpen
+      isToastOpen,
+      paginaActualComandos.value - 1,
+      comandosPorPagina.value
     );
-    paginaActualComandos.value = 1;
+
+    listaComandosActuador.value = response?.content ?? [];
+    totalPaginasComandos.value = Math.max(1, response?.totalPages ?? 1);
   } catch {
     listaComandosActuador.value = [];
+    totalPaginasComandos.value = 1;
   }
 };
 
@@ -830,10 +836,20 @@ const eliminarComandoActuadorVista = async (mac, keyword) => {
 // ===== ACCIONES + ORDENES SIMPLES =====
 const cargarAcciones = async () => {
   try {
-    const [accionesRaw, ordenesRaw] = await Promise.all([
-      obtenerAcciones(toastMessage, toastColor, isToastOpen),
+    const [accionesPage, ordenesRaw] = await Promise.all([
+      obtenerAcciones(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        paginaActualAcciones.value - 1,
+        accionesPorPagina.value
+      ),
       obtenerOrdenesSimples(toastMessage, toastColor, isToastOpen),
     ]);
+
+    const accionesRaw = accionesPage?.content ?? [];
+    totalPaginasAcciones.value = Math.max(1, accionesPage?.totalPages ?? 1);
+
     console.log("ACCIONES RAW:", accionesRaw);
     console.log("ORDENES RAW:", ordenesRaw);
 
@@ -846,65 +862,70 @@ const cargarAcciones = async () => {
       }
     }
 
-listaAcciones.value = (accionesRaw ?? []).map((accion) => {
-  const ordenId = accion?.ordenId ?? accion?.orden_id ?? accion?.idOrden ?? null;
-  const orden = ordenId != null ? mapaOrdenes.get(Number(ordenId)) : null;
+    listaAcciones.value = (accionesRaw ?? [])
+      .map((accion) => {
+        const ordenId = accion?.ordenId ?? accion?.orden_id ?? accion?.idOrden ?? null;
+        const orden = ordenId != null ? mapaOrdenes.get(Number(ordenId)) : null;
 
-  console.log("ACCION:", accion);
-  console.log("ORDEN ENCONTRADA:", orden);
+        console.log("ACCION:", accion);
+        console.log("ORDEN ENCONTRADA:", orden);
 
-  const usuario =
-    `${orden?.nombre ?? ""} ${orden?.apellidos ?? ""}`.trim() ||
-    orden?.email ||
-    orden?.usuario ||
-    orden?.nombreUsuario ||
-    "-";
+        const usuario =
+          `${orden?.nombre ?? ""} ${orden?.apellidos ?? ""}`.trim() ||
+          orden?.email ||
+          orden?.usuario ||
+          orden?.nombreUsuario ||
+          "-";
 
-  const dispositivo =
-    accion?.actuadorMac ??
-    accion?.mac ??
-    accion?.dispositivo ??
-    accion?.nombreDispositivo ??
-    "-";
+        const dispositivo =
+          accion?.actuadorMac ??
+          accion?.mac ??
+          accion?.dispositivo ??
+          accion?.nombreDispositivo ??
+          "-";
 
-  const fechaRaw =
-    orden?.fecha ||
-    orden?.fechaCreacion ||
-    orden?.createdAt ||
-    null;
+        const fechaRaw =
+          orden?.fecha ||
+          orden?.fechaCreacion ||
+          orden?.createdAt ||
+          accion?.fecha ||
+          accion?.createdAt ||
+          null;
 
-let fecha = "-";
-if (fechaRaw) {
-  try {
-    fecha = new Intl.DateTimeFormat("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(new Date(fechaRaw));
-  } catch {
-    fecha = String(fechaRaw);
-  }
-}
+        let fecha = "-";
+        if (fechaRaw) {
+          try {
+            fecha = new Intl.DateTimeFormat("es-ES", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            }).format(new Date(fechaRaw));
+          } catch {
+            fecha = String(fechaRaw);
+          }
+        }
 
-  const resultado =
-    accion?.resultado ||
-    accion?.textoRespuesta ||
-    accion?.estado ||
-    "-";
+        const resultado =
+          accion?.resultado ||
+          accion?.textoRespuesta ||
+          accion?.estado ||
+          "-";
 
-  return {
-    idAccion: accion?.idAccion ?? accion?.id ?? `${ordenId}_${dispositivo}_${resultado}`,
-    usuario,
-    dispositivo,
-    fecha,
-    resultado,
-  };
-});
+        return {
+          idAccion: accion?.idAccion ?? accion?.id ?? `${ordenId}_${dispositivo}_${resultado}`,
+          usuario,
+          dispositivo,
+          fecha,
+          resultado,
+          _timestamp: fechaRaw ? new Date(fechaRaw).getTime() : 0,
+        };
+      })
+      .sort((a, b) => b._timestamp - a._timestamp)
+      .map(({ _timestamp, ...resto }) => resto);
 
-    paginaActualAcciones.value = 1;
   } catch (error) {
     listaAcciones.value = [];
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
@@ -912,16 +933,19 @@ if (fechaRaw) {
 };
 
 // reset de página al cambiar de tipo de lista de dispositivos
-watch([esSensorLista, esNumericoLista], () => {
+watch([esSensorLista, esNumericoLista], async () => {
   paginaActualDispositivos.value = 1;
+
+  if (!esSensorLista.value) await obtenerActuadoresVista();
+  else if (!esNumericoLista.value) await obtenerSensorBooleanoVista();
+  else await obtenerSensorNumericoVista();
 });
 
 onMounted(async () => {
   await obtenerTiposVista();
   await obtenerUbicacionesVista();
   await obtenerActuadoresVista();
-  await obtenerSensorNumericoVista();
-  await obtenerSensorBooleanoVista();
+  await cargarActuadoresParaComandos();
   await cargarComandosActuador();
   await cargarAcciones();
 });
