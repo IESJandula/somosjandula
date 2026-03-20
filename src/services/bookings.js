@@ -399,17 +399,15 @@ export const modifyResourceLock = async (toastMessage, toastColor, isToastOpen, 
   }
 }
 
-export const getPaginatedLogs = async (toastMessage, toastColor, isToastOpen, pagina) =>
-{
-  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-
-  const response = await fetch(bookingsApiUrl + '/bookings/admin/logs',
-    {
+export const getPaginatedLogs = async (toastMessage, toastColor, isToastOpen, pagina, size = 20) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+  const url = new URL(bookingsApiUrl + '/bookings/admin/logs');
+  url.searchParams.append('page', pagina);
+  url.searchParams.append('size', size);
+  const response = await fetch(url.toString(), {
     method: 'GET',
-    headers:
-    {
+    headers: {
       'Authorization': `Bearer ${tokenPropio}`,
-      pagina: pagina
     }
   })
 

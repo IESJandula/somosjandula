@@ -567,62 +567,46 @@ const switchRecurso = async () => {
 
 const paginarLogs = async (pagina) => {
   try {
-    const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
-    if (data.length >= 0) {
+    const pageData = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina, 20);
+    
+    if (pageData && pageData.content && pageData.content.length > 0) {
       const formatearFecha = (fecha) => {
         const date = new Date(fecha);
         const pad = (n) => n.toString().padStart(2, '0');
-
         const dia = pad(date.getDate());
         const mes = pad(date.getMonth() + 1);
         const anio = date.getFullYear();
         const horas = pad(date.getHours());
         const minutos = pad(date.getMinutes());
-
         return `${dia}-${mes}-${anio} ${horas}:${minutos}`;
       };
 
-      logsPaginados.value = data.map((item) => ({
-        numRegistro: item.numRegistro,
-        fecha: formatearFecha(item.fecha),
+      logsPaginados.value = pageData.content.map((item) => ({
+        numRegistro: item.id,
+        fecha: formatearFecha(item.fechaReserva),
         usuario: item.usuario,
         accion: item.accion,
         tipo: item.tipo,
         recurso: item.recurso,
-        locReserva: item.locReserva,
-        superusuario: item.superusuario,
-        countMax: item.countMax,
+        locReserva: `${item.diaSemana} ${item.tramoHorario}`,
+        superusuario: item.superUsuario ?? '-',
       }));
 
-      if (logsPaginados.value[logsPaginados.value.length - 1]?.numRegistro == logsPaginados.value[logsPaginados.value.length - 1]?.countMax) {
-        disableLogsPaginated.value = false;
-      }
-      else {
-        disableLogsPaginated.value = true;
+      // Habilitar el botón "Siguiente" solo si no es la última página
+      disableLogsPaginated.value = !pageData.last;
+    } else {
+      logsPaginados.value = [];
+      disableLogsPaginated.value = false;
+      if (pagina > 0) {
+        crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay más logs');
       }
     }
-    else {
-      mensajeColor = "warning";
-      crearToast(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        mensajeColor,
-        "No hay logs disponibles para la página seleccionada"
-      );
-    }
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
+    logsPaginados.value = [];
+    disableLogsPaginated.value = false;
   }
-  catch (error) {
-    mensajeColor = "warning";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-}
+};
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
