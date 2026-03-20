@@ -1,4 +1,5 @@
 <template>
+  <!--
   <div class="main-container">
     <div class="center-container">
 
@@ -106,6 +107,7 @@
 
     </div>
   </div>
+<<<<<<< Updated upstream
 
   <ion-toast
     :is-open="isToastOpen"
@@ -119,6 +121,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
+=======
+    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+-->
+</template>
+
+<script setup lang="ts">
+/*
+import { ref, onMounted } from "vue";
+import { crearToast } from "@/utils/toast.js";
+>>>>>>> Stashed changes
 import { IonToast } from "@ionic/vue";
 import { crearHuelga, obtenerHuelgas, borrarHuelga } from "@/services/strikes.js";
 
@@ -321,7 +334,20 @@ function paginaSiguiente() {
   }
 }
 
+<<<<<<< Updated upstream
 onMounted(() => cargarHuelgas());
+=======
+function getColorName(colorValue: string): string {
+  const colorObj = coloresDisponibles.value.find(c => c.value === colorValue);
+  return colorObj ? colorObj.nombre : colorValue;
+}
+// Montaje inicial
+onMounted(async () => {
+  await cargarCategorias();
+  await cargarEventos();
+});
+*/
+>>>>>>> Stashed changes
 </script>
 
 <style scoped>
