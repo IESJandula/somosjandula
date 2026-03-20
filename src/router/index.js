@@ -52,15 +52,9 @@ import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
-import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
-import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
-
-import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
-
-import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
-
+import StrikesSchoolAdminPage from '@/views/strikes/StrikesSchoolAdminPage.vue';
 const routes = [
   {
     path: '/',
@@ -346,49 +340,17 @@ const routes = [
         meta: { role: 'ADMINISTRADOR' },
       },
       {
-        path: 'automations/admin',
-        component: AutomationsAdminPage,
-        name: 'AutomationsAdmin',
-        meta: {
-          role: 'ADMINISTRADOR'
-        },
-      },
-      {
-        path: 'automations/map',
-        component: AutomationsMapView,
-        name: 'AutomationsMapView',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'schoolBaseServer/admin',
-        component: SchoolBaseServerAdminPage,
-        name: 'SchoolBaseServerAdmin',
-        meta: {
-          role: 'ADMINISTRADOR'
-        },
-      },
-      {
-        path: '/statistics',
-        component: StatisticsView,
-        name: 'Statistics',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
         path: 'strikesSchool/admin',
         component: StrikesSchoolAdminPage,
         name: 'StrikesSchoolAdmin',
         meta: {role: 'ADMINISTRADOR'},
       },
-      {
+      /*{
         path: '/strikes/users',
         component: StrikesSchoolPage,
         name: 'StrikesSchoolPage',
         meta: {role: 'PROFESOR'},
-      }    
+      }*/    
     ],
   },
 ];
