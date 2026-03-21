@@ -567,23 +567,21 @@ const switchRecurso = async () => {
 
 const paginarLogs = async (pagina) => {
   try {
-    const data = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina);
+    const pageData = await getPaginatedLogs(toastMessage, toastColor, isToastOpen, pagina, 20);
     
-    if (data && data.length > 0) {
+    if (pageData && pageData.content && pageData.content.length > 0) {
       const formatearFecha = (fecha) => {
         const date = new Date(fecha);
         const pad = (n) => n.toString().padStart(2, '0');
-
         const dia = pad(date.getDate());
         const mes = pad(date.getMonth() + 1);
         const anio = date.getFullYear();
         const horas = pad(date.getHours());
         const minutos = pad(date.getMinutes());
-
         return `${dia}-${mes}-${anio} ${horas}:${minutos}`;
       };
 
-      logsPaginados.value = data.map((item) => ({
+      logsPaginados.value = pageData.content.map((item) => ({
         numRegistro: item.id,
         fecha: formatearFecha(item.fechaReserva),
         usuario: item.usuario,
@@ -591,45 +589,26 @@ const paginarLogs = async (pagina) => {
         tipo: item.tipo,
         recurso: item.recurso,
         locReserva: `${item.diaSemana} ${item.tramoHorario}`,
-        superusuario: item.superUsuario,
+        superusuario: item.superUsuario ?? '-',
       }));
 
-      // Si recibimos menos de 20 registros, no hay más páginas
-      const TAMANO_PAGINA = 20;
-      if (data.length < TAMANO_PAGINA) {
-        disableLogsPaginated.value = false;
-      } else {
-        disableLogsPaginated.value = true;
+      // Habilitar el botón "Siguiente" solo si no es la última página
+      disableLogsPaginated.value = !pageData.last;
+    } else {
+      logsPaginados.value = [];
+      disableLogsPaginated.value = false;
+      if (pagina > 0) {
+        crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay más logs');
       }
       
       log.info(`Logs cargados: ${data.length} registros en página ${pagina + 1}`);
     }
-    else {
-      mensajeColor = "warning";
-      crearToast(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        mensajeColor,
-        "No hay logs disponibles para la página seleccionada"
-      );
-      logsPaginados.value = [];
-      disableLogsPaginated.value = false;
-    }
-  }
-  catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
     logsPaginados.value = [];
     disableLogsPaginated.value = false;
   }
-}
+};
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
