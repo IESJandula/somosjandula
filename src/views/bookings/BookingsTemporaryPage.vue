@@ -62,19 +62,19 @@
 
                   <button
                     v-if="(rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION')) && reservas[tramo.id][dia.id].esfija[index]"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index])">
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], true, false)">
                     Borrar
                   </button>
 
                   <button
                     v-else-if="!reservas[tramo.id][dia.id].esfija[index] && reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
-                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], reservas[tramo.id][dia.id].esfija[index], semana)">
+                    @click.stop="openDeleteModal(tramo, dia, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], false, true)">
                     Borrar
                   </button>
 
                   <button
                     v-else-if="!reservas[tramo.id][dia.id].esfija[index] && !reservas[tramo.id][dia.id].esSemanal[index] && (rolesUsuario.includes('ADMINISTRADOR') || rolesUsuario.includes('DIRECCION') || (rolesUsuario.includes('PROFESOR') && reservas[tramo.id][dia.id].email[index] === emailUsuarioActual))"
-                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], !reservas[tramo.id][dia.id].esfija[index], !reservas[tramo.id][dia.id].esSemanal[index])">
+                    @click.stop="deleteReservas(tramo, dia, $event, recursoSeleccionado, reservas[tramo.id][dia.id].email[index], false, false)">
                     Borrar
                   </button>
 
@@ -787,7 +787,18 @@ const deleteReservas = async (tramo, dia, event, recurso, email, esFija, esSeman
     }
 
     mensajeColor = 'success';
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva cancelada correctamente');
+    if (esFija)
+    {
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva fija cancelada correctamente');
+    }
+    else if (esSemanal) {
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva temporal semanal cancelada correctamente');
+    }
+    else {
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Reserva temporal única cancelada correctamente');
+    }
+
+
   } catch (error) {
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);

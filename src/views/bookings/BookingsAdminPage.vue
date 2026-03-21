@@ -177,13 +177,9 @@
       <div class="title-container">
         <h1 class="title">Logs de Recursos</h1>
         <div class="pagina-container">
-          <button class="decrementar-button" v-if="paginaActual > 0" @click="paginarLogs(--paginaActual)">
-            Anterior
-          </button>
-          <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
-          <button class="incrementar-button" v-if="disableLogsPaginated" @click="paginarLogs(++paginaActual)">
-            Siguiente
-          </button>
+          <button class="decrementar-button" v-if="paginaActual > 0" @click="irPaginaAnterior">Anterior</button>
+          <span   class="numPagina"> Página: {{ paginaActual + 1 }} </span>
+          <button class="incrementar-button" v-if="disableLogsPaginated" @click="irPaginaSiguiente">Siguiente</button>
         </div>
         <table class="logs-table">
           <thead>
@@ -252,7 +248,7 @@ const esCompartibleGestion = ref(false);
 const recursosCantidadMaxima = ref('');
 const recursos = ref([]);
 const logsPaginados = ref([]);
-const paginaActual = 0;
+const paginaActual = ref(0);
 const disableLogsPaginated = ref(true);
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -600,8 +596,6 @@ const paginarLogs = async (pagina) => {
       if (pagina > 0) {
         crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay más logs');
       }
-      
-      log.info(`Logs cargados: ${data.length} registros en página ${pagina + 1}`);
     }
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
@@ -609,6 +603,21 @@ const paginarLogs = async (pagina) => {
     disableLogsPaginated.value = false;
   }
 };
+
+function irPaginaAnterior()
+{
+  if (paginaActual.value > 0)
+  {
+    paginaActual.value--;
+    paginarLogs(paginaActual.value);
+  }
+}
+
+function irPaginaSiguiente()
+{
+  paginaActual.value++;
+  paginarLogs(paginaActual.value);
+}
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
