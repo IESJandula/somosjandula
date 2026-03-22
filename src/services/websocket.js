@@ -1,26 +1,78 @@
-import { Client } from "@stomp/stompjs"
+import { Client } from "@stomp/stompjs";
+import { automationsApiUrl } from "@/environment/apiUrls";
+import { obtenerTokenJWTValido } from "@/services/firebaseService";
 
-let stompClient = null
+// Cliente STOMP global
+let stompClient = null;
 
-export function conectarWebSocket(callback) {
+/**
+ * Función para conectar el WebSocket
+ */
+export const conectarWebSocket = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  onMessage
+) => {
 
-  stompClient = new Client({brokerURL: "ws://localhost:8092/ws", reconnectDelay: 5000, debug: () => {}})
+  // Obtenemos el JWT válido desde Firebase
+  const token = await obtenerTokenJWTValido(
+    toastMessage,
+    toastColor,
+    isToastOpen
+  );
 
-  stompClient.onConnect = () => {
+  // Construimos la URL WS a partir de la API
+  const wsUrl = automationsApiUrl.replace("http", "ws") + "/ws";
 
-    console.log("WebSocket conectado")
+  // Creamos el cliente STOMP
+  stompClient = new Client({
+    brokerURL: wsUrl,
 
-    stompClient.subscribe("/topic/respuestas", (mensaje) => {
+    // Enviamos el JWT al backend
+    connectHeaders: {
+      Authorization: `Bearer ${token}`
+    },
 
-      const respuesta = mensaje.body
+    debug: () => {},
 
-      if (callback) {
-        callback(respuesta)
-      }
+    // Cuando conecta correctamente
+    onConnect: () => {
 
-    })
+      console.log("WebSocket conectado a Automations");
 
+      // Nos suscribimos al canal de respuestas
+      stompClient.subscribe("/topic/respuestas", (message) => {
+        const data = JSON.parse(message.body);
+        onMessage(data);
+      });
+    },
+
+    // Manejo de errores
+    onStompError: (frame) => {
+      console.error("Error WS:", frame);
+    }
+  });
+
+  // Activamos la conexión
+  stompClient.activate();
+};
+
+/**
+ * Enviar mensaje al backend
+ */
+export const enviarMensajeWebSocket = (mensaje) => {
+
+  // Solo enviamos si está conectado
+  if (stompClient && stompClient.connected) {
+
+    stompClient.publish({
+      destination: "/app/automations",
+      body: JSON.stringify(mensaje)
+    });
+
+  } else {
+    console.error("WebSocket no conectado");
   }
 
-  stompClient.activate()
-}
+};

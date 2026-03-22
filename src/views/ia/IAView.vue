@@ -86,8 +86,8 @@
 
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue'
-import { crearOrdenSimpleTexto, crearOrdenSimpleAudio } from '@/services/automations'
-import { conectarWebSocket } from "@/services/websocket"
+import { crearOrdenSimpleAudio } from '@/services/automations'
+import { conectarWebSocket, enviarMensajeWebSocket } from "@/services/websocket"
 
 /* VARIABLES */
 const texto = ref('')
@@ -112,7 +112,7 @@ onMounted(() => {
 
   // Llamamos a la función que conecta el WebSocket
   // Le pasamos un callback que se ejecutará cada vez que llegue un mensaje
-  conectarWebSocket(async (mensaje) => {
+  conectarWebSocket(toastMessage, toastColor, isToastOpen, async (mensaje) => {
 
     // Indicamos que ya no estamos esperando respuesta
     esperandoRespuesta.value = false
@@ -125,14 +125,14 @@ onMounted(() => {
 
     // Buscamos en el historial la pregunta que coincide con la recibida
     const index = historial.value.findIndex(
-      item => item.pregunta === data.pregunta
+      item => item.pregunta === data.pregunta && item.respuesta === "Pensando..."
     )
 
     // Si encontramos esa pregunta en el historial
     if (index !== -1) {
       // Actualizamos su respuesta con la que llega del backend
       historial.value[index].respuesta = data.respuesta
-    } 
+    }
 
     // Esperamos a que Vue actualice el DOM
     // (para que el scroll funcione correctamente)
@@ -439,18 +439,16 @@ async function enviarTextoManual() {
     texto.value = pregunta
 
     historial.value.push({
+      id: Date.now(),
       pregunta: pregunta,
       respuesta: "Pensando..."
     })
 
     esperandoRespuesta.value = true
 
-    await crearOrdenSimpleTexto(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      pregunta
-    )
+    enviarMensajeWebSocket({
+      pregunta: pregunta
+    })
 
     textoManual.value = ''
 

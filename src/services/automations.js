@@ -443,7 +443,7 @@ export const crearComandoActuador = async (
         mac: mac?.value ?? mac,
         keyword: keyword?.value ?? keyword,
         comandos: comandos?.value ?? comandos,
-        textoOk: textoOk?.value ?? textoOk, // ✅ NUEVO
+        textoOk: textoOk?.value ?? textoOk,
       }),
     }
   );
