@@ -165,11 +165,7 @@
             <ion-item button @click="navigateAndCloseMenu('/issues')">
               Gestiona tus incidencias
               <ion-icon slot="end" name="bandage"></ion-icon>
-            </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/issues/stats')">
-              Visualiza estadísticas
-              <ion-icon slot="end" name="bar-chart"></ion-icon>
-            </ion-item>
+            </ion-item>            
           </ion-list>
         </ion-list>
       </ion-content>

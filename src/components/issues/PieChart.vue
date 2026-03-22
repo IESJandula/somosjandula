@@ -23,22 +23,49 @@ const buildOption = (): echarts.EChartsOption => ({
   title: {
     text: props.title,
     left: "center",
-    top: 10,
+    top: -5,
     textStyle: {
-      fontSize: 14,
+      fontSize: 16,
+      fontWeight: "bold",
     },
   },
   tooltip: {
     trigger: "item",
     formatter: "{b}: {c} ({d}%)",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    textStyle: {
+      fontSize: 14,
+      color: "#fff",
+    },
+  },
+  legend: {
+    orient: "vertical",  // ← Leyenda vertical
+    left: "center",  // ← Centrada horizontalmente
+    bottom: -10,  
+    textStyle: {
+      fontSize: 12,
+      fontWeight: 500,
+    },
+    itemWidth: 15,
+    itemHeight: 15,
+    itemGap: 12,  // Espacio entre items de la leyenda
+    padding: [10, 10, 10, 10],  // Padding alrededor de la leyenda
   },
   series: [
     {
       name: props.title,
       type: "pie",
-      radius: "60%",
-      center: ["50%", "60%"],
+      radius: ["40%", "70%"],
+      center: ["50%", "40%"],  
       data: props.data,
+      avoidLabelOverlap: false,
+      label: {
+        show: false,
+        position: "outside",
+      },
+      labelLine: {
+        show: false,
+      },
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
@@ -46,23 +73,19 @@ const buildOption = (): echarts.EChartsOption => ({
           shadowColor: "rgba(0, 0, 0, 0.5)",
         },
       },
-      label: {
-        formatter: "{b}: {c} ({d}%)",
-      },
     },
   ],
 });
 
 const initChart = () => {
   if (!chartRef.value) return;
-
   chartInstance = echarts.init(chartRef.value);
   chartInstance.setOption(buildOption());
 };
 
 const updateChart = () => {
   if (!chartInstance) return;
-  chartInstance.setOption(buildOption(), true); // true = no merge, reemplaza
+  chartInstance.setOption(buildOption(), true);
 };
 
 const handleResize = () => {
@@ -84,7 +107,6 @@ onBeforeUnmount(() => {
   }
 });
 
-// si cambian datos o título, actualizamos el gráfico
 watch(
   () => [props.data, props.title],
   () => {
@@ -97,6 +119,6 @@ watch(
 <style scoped>
 .pie-chart {
   width: 100%;
-  height: 320px;
+  height: 500px;  
 }
 </style>
