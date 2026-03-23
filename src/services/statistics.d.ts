@@ -50,7 +50,7 @@ export declare function obtenerTramoHorarioMasReservado(
     toastMessage: Ref<string>,
     toastColor: Ref<string>,
     isToastOpen: Ref<boolean>
-): Promise<EstadisticaDiaTramo[]>;
+): Promise<EstadisticaTramo[]>;
 
 /**
  * Obtiene el día de la semana más reservado según las reservas reales (FIJAS + TEMPORALES).
@@ -63,7 +63,7 @@ export declare function obtenerDiaSemanaMasReservado(
     toastMessage: Ref<string>,
     toastColor: Ref<string>,
     isToastOpen: Ref<boolean>
-): Promise<EstadisticaRecurso[]>;
+): Promise<EstadisticaDia[]>;
 
 // ===== ESTADÍSTICAS COMBINADAS =====
 
