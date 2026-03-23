@@ -3,18 +3,14 @@
         <!-- Título principal -->
         <h1 class="stats-title">ESTADÍSTICAS DE RESERVAS</h1>
 
+        <!-- Estado de carga -->
         <div v-if="isLoading" class="stats-loading">
-            <ion-spinner name="crescent" color="primary"></ion-spinner>
-            <p>Cargando estadísticas...</p>
+            Cargando estadísticas...
         </div>
 
-        <div v-else-if="error" class="stats-error">
-            <ion-icon :icon="alertCircleOutline" color="danger"></ion-icon>
-            <p>{{ error }}</p>
-            <ion-button @click="cargarEstadisticas" color="primary" fill="outline">
-                <ion-icon :icon="refreshOutline" slot="start"></ion-icon>
-                Reintentar
-            </ion-button>
+        <!-- Sin datos -->
+        <div v-else-if="!hayDatos" class="stats-empty">
+            No hay datos registrados para mostrar estadísticas.
         </div>
 
         <!-- 3 GRÁFICAS EN 1 FILA HORIZONTAL -->
@@ -35,6 +31,7 @@
             </div>
         </div>
 
+        <!-- Toast -->
         <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
             @did-dismiss="() => (isToastOpen = false)" position="top" />
     </div>
@@ -51,20 +48,20 @@ import {
     obtenerDiaSemanaMasReservado
 } from "@/services/statistics";
 
+// ====== ESTADO GENERAL ======
 const isLoading = ref(false);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref<"success" | "danger" | "warning" | "primary" | string>("success");
-const error = ref<string | null>(null);
 
 // ====== DATOS DE ESTADÍSTICAS ======
 const recursos = ref<Array<{ recurso: string; totalReservas: number }>>([]);
 const tramos = ref<Array<{ tramoHorario: string; totalReservas: number }>>([]);
 const dias = ref<Array<{ diaSemana: string; totalReservas: number }>>([]);
 
-// ===== COMPUTED PARA GRÁFICAS =====
-const datosPorRecursoFijo = computed(() =>
-    recursosFijos.value.slice(0, 5).map(item => ({ name: item.recurso, value: item.totalReservas }))
+// ====== COMPUTED ======
+const datosPorRecurso = computed(() =>
+    recursos.value.map(item => ({ name: item.recurso, value: item.totalReservas }))
 );
 
 const datosPorTramo = computed(() =>
@@ -126,31 +123,15 @@ onMounted(() => {
     font-size: 2rem;    
     font-weight: 700;
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2.5rem;    
 }
 
-.stats-loading {
+.stats-loading,
+.stats-empty {
     text-align: center;
-    margin-top: 3rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-}
-
-.stats-loading ion-spinner {
-    width: 40px;
-    height: 40px;
-}
-
-.stats-error {
-    text-align: center;
-    margin: 3rem auto;
-    max-width: 500px;
-    padding: 2rem;
-    background: var(--ion-color-danger-contrast);
-    border-radius: 12px;
-    border: 2px solid var(--ion-color-danger);
+    margin-top: 2rem;
+    font-size: 1rem;
+    opacity: 0.8;
 }
 
 /* 3 GRÁFICAS EN 1 FILA HORIZONTAL */
