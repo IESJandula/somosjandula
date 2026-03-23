@@ -1,84 +1,71 @@
 import { bookingsApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
-// ===== RESERVAS FIJAS =====
-
 /**
- * Obtiene el recurso más reservado en RESERVAS FIJAS activas.
+ * Obtiene el recurso más reservado según las reservas reales (FIJAS + TEMPORALES).
  */
-export const obtenerRecursoMasReservadoFija = async (toastMessage, toastColor, isToastOpen) => {
+export const obtenerRecursoMasReservado = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(`${bookingsApiUrl}/bookings/estadisticas/recurso-mas-reservado-fija`, {
+
+    const response = await fetch(`${bookingsApiUrl}/bookings/estadisticas/recurso-mas-reservado`, {
         method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
     });
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const text = errorData.message || await response.text();
-        console.error("Error al obtener recurso más reservado (fijas):", response.status, text);
-        throw new Error(text || 'Error al obtener recurso más reservado (fijas)');
+        console.error("Error al obtener el recurso más reservado:", response.status, text);
+        throw new Error(text || 'Error al obtener el recurso más reservado');
     }
-    return await response.json();
-};
 
-// ===== RESERVAS TEMPORALES =====
-
-/**
- * Obtiene el recurso más reservado en RESERVAS TEMPORALES activas.
- */
-export const obtenerRecursoMasReservadoTemporal = async (toastMessage, toastColor, isToastOpen) => {
-    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(`${bookingsApiUrl}/bookings/estadisticas/recurso-mas-reservado-temporal`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` },
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const text = errorData.message || await response.text();
-        console.error("Error al obtener recurso más reservado (temporales):", response.status, text);
-        throw new Error(text || 'Error al obtener recurso más reservado (temporales)');
-    }
-    return await response.json();
-};
-
-// ===== ESTADÍSTICAS COMBINADAS (FIJAS + TEMPORALES) =====
-
-/**
- * Obtiene el DÍA de la semana más reservado (COMBINADO: fijas + temporales).
- */
-export const obtenerDiaMasReservado = async (toastMessage, toastColor, isToastOpen) => {
-    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(`${bookingsApiUrl}/bookings/estadisticas/dia-mas-reservado`, {
-        method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` },
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const text = errorData.message || await response.text();
-        console.error("Error al obtener día más reservado (combinado):", response.status, text);
-        throw new Error(text || 'Error al obtener día más reservado (combinado)');
-    }
     return await response.json();
 };
 
 /**
- * Obtiene el TRAMO HORARIO más reservado (COMBINADO: fijas + temporales).
+ * Obtiene el tramo horario más reservado según las reservas reales (FIJAS + TEMPORALES).
  */
-export const obtenerTramoMasReservado = async (toastMessage, toastColor, isToastOpen) => {
+export const obtenerTramoHorarioMasReservado = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-    const response = await fetch(`${bookingsApiUrl}/bookings/estadisticas/tramo-mas-reservado`, {
+
+    const response = await fetch(`${bookingsApiUrl}/bookings/estadisticas/tramo-horario-mas-reservado`, {
         method: 'GET',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
     });
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const text = errorData.message || await response.text();
-        console.error("Error al obtener tramo más reservado (combinado):", response.status, text);
-        throw new Error(text || 'Error al obtener tramo más reservado (combinado)');
+        console.error("Error al obtener el tramo horario más reservado:", response.status, text);
+        throw new Error(text || 'Error al obtener el tramo horario más reservado');
     }
+
+    return await response.json();
+};
+
+/**
+ * Obtiene el día de la semana más reservado según las reservas reales (FIJAS + TEMPORALES).
+ */
+export const obtenerDiaSemanaMasReservado = async (toastMessage, toastColor, isToastOpen) => {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${bookingsApiUrl}/bookings/estadisticas/dia-semana-mas-reservado`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const text = errorData.message || await response.text();
+        console.error("Error al obtener el día de la semana más reservado:", response.status, text);
+        throw new Error(text || 'Error al obtener el día de la semana más reservado');
+    }
+
     return await response.json();
 };
