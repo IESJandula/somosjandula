@@ -165,7 +165,7 @@ const validarCSV = (archivo) => {
       const lineas = contenido.split("\n");
       const encabezados = Array.of(lineas[0].split(",").map(h => h.trim())); // Obtener la primera fila
 
-      if (encabezados[0][0] !== "Alumno/a") {
+      if (encabezados[0][0] !== "Alumno/a" && encabezados[0][0] !== "\"Alumno/a\"") {
         reject("El Csv no tiene el formato correcto");
         const fileUploadComponent = fileUploadRef.value;
         fileUploadComponent.fileClear();
