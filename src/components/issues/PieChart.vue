@@ -1,5 +1,15 @@
 <template>
-  <div ref="chartRef" class="pie-chart"></div>
+  <div ref="chartRef" class="pie-chart">
+    <!-- Contenedor personalizado -->
+    <div v-if="data.length > 6" class="legend-scroll-container">
+      <div class="legend-scroll">
+        <div v-for="(item, index) in data" :key="index" class="legend-item">
+          <span class="legend-color" :style="{ backgroundColor: getColor(index) }"></span>
+          <span class="legend-text">{{ item.name }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -19,11 +29,21 @@ const props = defineProps<{
 const chartRef = ref<HTMLDivElement | null>(null);
 let chartInstance: echarts.ECharts | null = null;
 
+// Colores de ECharts por defecto
+const colors = [
+  '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
+  '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc'
+];
+
+const getColor = (index: number): string => {
+  return colors[index % colors.length];
+};
+
 const buildOption = (): echarts.EChartsOption => ({
   title: {
     text: props.title,
     left: "center",
-    top: -5,
+    top: 10,
     textStyle: {
       fontSize: 16,
       fontWeight: "bold",
@@ -39,24 +59,14 @@ const buildOption = (): echarts.EChartsOption => ({
     },
   },
   legend: {
-    orient: "vertical",  // ← Leyenda vertical
-    left: "center",  // ← Centrada horizontalmente
-    bottom: -10,  
-    textStyle: {
-      fontSize: 12,
-      fontWeight: 500,
-    },
-    itemWidth: 15,
-    itemHeight: 15,
-    itemGap: 12,  // Espacio entre items de la leyenda
-    padding: [10, 10, 10, 10],  // Padding alrededor de la leyenda
+    show: true,
   },
   series: [
     {
       name: props.title,
       type: "pie",
-      radius: ["40%", "70%"],
-      center: ["50%", "40%"],  
+      radius: ["40%", "75%"],
+      center: ["50%", "45%"],
       data: props.data,
       avoidLabelOverlap: false,
       label: {
@@ -119,6 +129,95 @@ watch(
 <style scoped>
 .pie-chart {
   width: 100%;
-  height: 500px;  
+  height: 550px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.legend-scroll-container {
+  width: 90%;
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.legend-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.legend-scroll-container::-webkit-scrollbar-track {
+  background: #e0e0e0;
+  border-radius: 3px;
+}
+
+.legend-scroll-container::-webkit-scrollbar-thumb {
+  background: #0078d7;
+  border-radius: 3px;
+}
+
+.legend-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #0056b3;
+}
+
+.legend-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.legend-item:hover {
+  background-color: rgba(0, 120, 215, 0.1);
+}
+
+/* Color del item */
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  font-size: 12px;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .legend-scroll-container {
+    background: #2c2c2c;
+    border: 1px solid #444444;
+  }
+
+  .legend-text {
+    color: #ffffff;
+  }
+
+  .legend-scroll-container::-webkit-scrollbar-track {
+    background: #444444;
+  }
+
+  .legend-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
 }
 </style>
