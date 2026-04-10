@@ -82,12 +82,17 @@
     </div>
 
   </div>
+
+  <button @click="probarDummy">
+    Probar Dummy
+  </button>
 </template>
 
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue'
 import { crearOrdenSimpleAudio } from '@/services/automations'
 import { conectarWebSocket, enviarMensajeWebSocket } from "@/services/websocket"
+import { enviarMensajeDummy } from "@/services/websocket";
 
 /* VARIABLES */
 const texto = ref('')
@@ -109,7 +114,6 @@ const esperandoRespuesta = ref(false)
 const enviando = ref(false)
 
 onMounted(() => {
-
   // Llamamos a la función que conecta el WebSocket
   // Le pasamos un callback que se ejecutará cada vez que llegue un mensaje
   conectarWebSocket(toastMessage, toastColor, isToastOpen, async (mensaje) => {
@@ -185,6 +189,10 @@ let recognition = null
 let silenceTimer = null
 let silenceStart = null
 let grabacionActiva = false
+
+function probarDummy() {
+  enviarMensajeDummy();
+}
 
 /* Detecta iPhone/iPad/iPod */
 function esIOS() {

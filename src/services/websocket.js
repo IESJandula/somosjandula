@@ -34,7 +34,7 @@ export const conectarWebSocket = async (
       Authorization: `Bearer ${token}`
     },
 
-    debug: () => {},
+    debug: () => { },
 
     // Cuando conecta correctamente
     onConnect: () => {
@@ -45,6 +45,11 @@ export const conectarWebSocket = async (
       stompClient.subscribe("/topic/respuestas", (message) => {
         const data = JSON.parse(message.body);
         onMessage(data);
+      });
+
+      // Canal DUMMY (prueba DOM_257)
+      stompClient.subscribe("/topic/dummy", (message) => {
+        console.log("Mensaje DUMMY: ", message.body);
       });
     },
 
@@ -75,4 +80,20 @@ export const enviarMensajeWebSocket = (mensaje) => {
     console.error("WebSocket no conectado");
   }
 
+};
+
+export const enviarMensajeDummy = () => {
+
+  if (stompClient && stompClient.connected) {
+
+    stompClient.publish({
+      destination: "/app/dummy",
+      body: JSON.stringify({
+        pregunta: "Mensaje de prueba DOM_257"
+      })
+    });
+
+  } else {
+    console.error("WebSocket no conectado");
+  }
 };
