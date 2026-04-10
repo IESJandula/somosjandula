@@ -1,6 +1,8 @@
 <template>
-  <!--
   <div class="main-container">
+    <div v-if="loading" class="loading-overlay">
+      <div class="spinner"></div>
+    </div>
     <div class="center-container">
 
       <!-- FORMULARIO -->
@@ -24,14 +26,12 @@
           </div>
 
           <div class="button-row">
-            <button class="btn-enviar" @click="crearHuelgaFn">
+            <button class="btn-enviar" @click="crearHuelgaFn" :disabled="loading">
               ENVIAR
             </button>
           </div>
-
         </div>
       </div>
-
       <!-- TABLA -->
       <div class="right-container">
         <div class="form-container-table">
@@ -72,34 +72,26 @@
                     </button>
                   </div>
                 </td>
+                <td>{{ h.alumnos }}</td>
                 <td>
                   <button class="btn-eliminar" @click="borrarHuelgaFn(h.titulo)">
                     X
                   </button>
                 </td>
               </tr>
+
               <tr v-if="huelgas.length === 0">
-                <td colspan="8" class="no-data">
+                <td colspan="7" class="no-data">
                   No hay huelgas registradas
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <!-- PAGINACIÓN -->
           <div class="paginacion">
-            <button @click="paginaAnterior" :disabled="currentPage === 0">
-              ←
-            </button>
-
+            <button @click="paginaAnterior" :disabled="currentPage === 0">←</button>
             <span>{{ currentPage + 1 }} / {{ totalPages }}</span>
-
-            <button
-              @click="paginaSiguiente"
-              :disabled="currentPage >= totalPages - 1"
-            >
-              →
-            </button>
+            <button @click="paginaSiguiente" :disabled="currentPage >= totalPages - 1">→</button>
           </div>
 
         </div>
@@ -107,31 +99,11 @@
 
     </div>
   </div>
-<<<<<<< Updated upstream
-
-  <ion-toast
-    :is-open="isToastOpen"
-    :message="toastMessage"
-    :color="toastColor"
-    duration="2000"
-    position="top"
-    @did-dismiss="isToastOpen = false"
-  />
 </template>
-
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-=======
-    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
--->
-</template>
 
-<script setup lang="ts">
-/*
 import { ref, onMounted } from "vue";
 import { crearToast } from "@/utils/toast.js";
->>>>>>> Stashed changes
 import { IonToast } from "@ionic/vue";
 import { crearHuelga, obtenerHuelgas, borrarHuelga } from "@/services/strikes.js";
 
@@ -143,9 +115,11 @@ interface Huelga {
   fechaFin: number;
   estado: string;
   urlEncuestado: string;
+  alumnos: number;
 }
 
 interface Page<T> {
+
   content: T[];
   totalPages: number;
   number: number;
@@ -156,8 +130,6 @@ interface HuelgaForm {
   fechaInicio: string;
   fechaFin: string;
 }
-
-/* ================= STATE ================= */
 
 const huelgas = ref<Huelga[]>([]);
 const totalPages = ref(0);
@@ -174,6 +146,7 @@ const ultimaUrlForm = ref<string | null>(null);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
+const loading = ref(false);
 
 /* ================= UTIL ================= */
 
@@ -213,15 +186,18 @@ function mostrarToast(
 /* ================= CREAR ================= */
 
 async function crearHuelgaFn() {
+  loading.value = true;
   try {
 
     if (!huelga.value.titulo) {
       mostrarToast("El título es obligatorio", "warning");
+      loading.value = false;
       return;
     }
 
     if (!huelga.value.fechaInicio) {
       mostrarToast("La fecha de inicio de inscripciones es obligatoria", "warning");
+      loading.value = false;
       return;
     }
 
@@ -235,6 +211,7 @@ async function crearHuelgaFn() {
 
     if (fin < inicio) {
       mostrarToast("La fecha fin no puede ser anterior al inicio", "warning");
+      loading.value = false;
       return;
     }
 
@@ -257,7 +234,9 @@ async function crearHuelgaFn() {
 
     await cargarHuelgas();
 
-  } catch (error: any) {
+  } 
+  catch (error: any) 
+  {
 
     if (error?.response) {
       if (error.response.status === 400) {
@@ -272,11 +251,16 @@ async function crearHuelgaFn() {
       mostrarToast("No se pudo conectar con el servidor", "danger");
     }
   }
+  finally
+  {
+    loading.value = false;
+  }
 }
 
 /* ================= BORRAR ================= */
 
 async function borrarHuelgaFn(titulo: string) {
+  loading.value = true;
   try {
 
     await borrarHuelga(
@@ -290,7 +274,9 @@ async function borrarHuelgaFn(titulo: string) {
 
     await cargarHuelgas(currentPage.value);
 
-  } catch (error: any) {
+  } 
+  catch (error: any) 
+  {
 
     if (error?.response) {
       if (error.response.status === 400) {
@@ -305,14 +291,22 @@ async function borrarHuelgaFn(titulo: string) {
       mostrarToast("No se pudo conectar con el servidor", "danger");
     }
   }
+  finally
+  {
+    loading.value = false;
+  }
 }
-async function copiarUrl(url: string) {
-  if (!url) {
+async function copiarUrl(url: string) 
+{
+  if (!url) 
+  {
     mostrarToast("No hay URL disponible", "warning");
+    loading.value = false;
     return;
   }
 
-  try {
+  try 
+  {
     await navigator.clipboard.writeText(url);
     mostrarToast("URL copiada al portapapeles", "success");
   } catch (error) {
@@ -322,32 +316,23 @@ async function copiarUrl(url: string) {
 
 /* ================= PAGINACIÓN ================= */
 
-function paginaAnterior() {
-  if (currentPage.value > 0) {
+function paginaAnterior() 
+{
+  if (currentPage.value > 0) 
+  {
     cargarHuelgas(currentPage.value - 1);
   }
 }
 
-function paginaSiguiente() {
+function paginaSiguiente() 
+{
   if (currentPage.value < totalPages.value - 1) {
     cargarHuelgas(currentPage.value + 1);
   }
 }
 
-<<<<<<< Updated upstream
 onMounted(() => cargarHuelgas());
-=======
-function getColorName(colorValue: string): string {
-  const colorObj = coloresDisponibles.value.find(c => c.value === colorValue);
-  return colorObj ? colorObj.nombre : colorValue;
-}
-// Montaje inicial
-onMounted(async () => {
-  await cargarCategorias();
-  await cargarEventos();
-});
-*/
->>>>>>> Stashed changes
+
 </script>
 
 <style scoped>
@@ -403,12 +388,23 @@ onMounted(async () => {
   justify-content: flex-end;
 }
 
+.btn-enviar:hover,
+.btn-copiar:hover,
+.btn-eliminar:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
 .btn-enviar {
   background: #007bff;
   color: white;
   padding: 10px 25px;
   border: none;
   border-radius: 4px;
+}
+
+.btn-enviar:hover {
+  background: #0056b3;
+  transform: scale(1.05);
 }
 
 .events-table {
@@ -460,5 +456,53 @@ onMounted(async () => {
 
 .btn-copiar:hover {
   background: #218838;
+  transform: scale(1.1);
+}
+
+.btn-eliminar {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-eliminar:hover {
+  background: #a71d2a;
+  transform: scale(1.1);
+}
+
+/* Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+/* Spinner */
+.spinner{
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  border-top: 6px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

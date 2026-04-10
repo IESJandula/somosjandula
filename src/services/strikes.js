@@ -9,7 +9,7 @@ export const crearHuelga = async (toastMessage, toastColor, isToastOpen, titulo,
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
     
     const response = await fetch(`${strikesApiUrl}/strikes/manager/`, 
-      {
+    {
       method: "POST",
       headers: 
       {
@@ -17,19 +17,17 @@ export const crearHuelga = async (toastMessage, toastColor, isToastOpen, titulo,
         "Content-Type": "application/json"
       },
       body: JSON.stringify(
-        {
+      {
         titulo,
         fechaInicio,
         fechaFin,
-        fechaLimite,
       })
-
     });
 
     if (!response.ok) 
     {
       const errorData = await response.json();
-      throw new Error(errorData.message);
+      throw new Error(errorData.description || "Error del servidor");
     }
 
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Huelga creada correctamente");
@@ -40,7 +38,6 @@ export const crearHuelga = async (toastMessage, toastColor, isToastOpen, titulo,
     crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al crear huelga");
     throw error;
   }
-
 };
 
 export const obtenerHuelgas = async (toastMessage,toastColor,isToastOpen,page = 0,size = 5) => 
@@ -53,19 +50,19 @@ export const obtenerHuelgas = async (toastMessage,toastColor,isToastOpen,page = 
       isToastOpen
     );
 
-    const response = await fetch(
-      `${strikesApiUrl}/strikes/manager/?page=${page}&size=${size}`,
+    const response = await fetch(`${strikesApiUrl}/strikes/manager/?page=${page}&size=${size}`,
       {
         method: "GET",
         headers: {
           Authorization: `Bearer ${tokenPropio}`,
+          'Accept': 'application/json',
         },
       }
     );
 
     if (!response.ok) 
       {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
       throw new Error(errorData.message);
     }
 
@@ -73,18 +70,9 @@ export const obtenerHuelgas = async (toastMessage,toastColor,isToastOpen,page = 
   } 
   catch (error) 
   {
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      "error",
-      error.message || "Error al obtener huelgas"
-    );
-    throw error;
+    crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al obtener huelgas");
   }
 };
-
-
 
 export const borrarHuelga = async (toastMessage, toastColor, isToastOpen, titulo) => 
 {
@@ -92,12 +80,13 @@ export const borrarHuelga = async (toastMessage, toastColor, isToastOpen, titulo
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${strikesApiUrl}/strikes/manager/${encodeURIComponent(titulo)}`, 
+    const response = await fetch(`${strikesApiUrl}/strikes/manager/`, 
     {
       method: 'DELETE',
       headers: 
       {
         'Authorization': `Bearer ${tokenPropio}`,
+        'titulo': titulo
       },
     });
 

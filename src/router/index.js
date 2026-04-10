@@ -345,12 +345,12 @@ const routes = [
         name: 'StrikesSchoolAdmin',
         meta: {role: 'ADMINISTRADOR'},
       },
-      /*{
+      {
         path: '/strikes/users',
         component: StrikesSchoolPage,
         name: 'StrikesSchoolPage',
         meta: {role: 'PROFESOR'},
-      }*/    
+      }    
     ],
   },
 ];
