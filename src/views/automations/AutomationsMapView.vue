@@ -716,7 +716,7 @@ onBeforeUnmount(() => {
   --border: #9a9a9a;
 
   --btn-bg: rgb(238, 243, 242);
-  --btn-hover: rgb(253, 255, 121);
+  --btn-hover: #e8ecef;
   --btn-text: #111111;
 
   --zone-bg: rgba(255, 255, 0, 0.26);

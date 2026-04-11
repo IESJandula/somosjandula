@@ -630,3 +630,222 @@ export const obtenerSensorNumericoPaginacion = async (toastMessage, toastColor, 
 
   return await response.json();
 };
+export const crearActuadorPuerta = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac,
+  estado,
+  nombreUbicacion,
+  tipo,
+  numeroReles
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/actuador/puerta',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        mac: mac?.value ?? mac,
+        estado: estado?.value ?? estado,
+        nombreUbicacion: nombreUbicacion?.value ?? nombreUbicacion,
+        tipo: tipo?.value ?? tipo,
+        numeroReles: numeroReles?.value ?? numeroReles,
+      })
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
+
+export const crearActuadorProyector = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac,
+  estado,
+  nombreUbicacion,
+  tipo,
+  comandoEstado
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/actuador/proyector',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        mac: mac?.value ?? mac,
+        estado: estado?.value ?? estado,
+        nombreUbicacion: nombreUbicacion?.value ?? nombreUbicacion,
+        tipo: tipo?.value ?? tipo,
+        comandoEstado: comandoEstado?.value ?? comandoEstado,
+      })
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
+
+export const eliminarActuadorPuerta = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/actuador/puerta',
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
+
+export const eliminarActuadorProyector = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/actuador/proyector',
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
+
+export const crearComandoActuadorPuerta = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac,
+  keyword,
+  indiceRele
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/comando/actuador/puerta',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mac: mac?.value ?? mac,
+        keyword: keyword?.value ?? keyword,
+        indiceRele: indiceRele?.value ?? indiceRele,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};
+
+export const obtenerComandosActuadorPuerta = async (
+  toastMessage,
+  toastColor,
+  isToastOpen
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/comando/actuador/puerta',
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return await response.json();
+};
+
+export const eliminarComandoActuadorPuerta = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac,
+  keyword,
+  indiceRele
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/comando/actuador/puerta',
+    {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
+        keyword: keyword?.value ?? keyword,
+        indiceRele: String(indiceRele?.value ?? indiceRele),
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message);
+  }
+
+  return true;
+};

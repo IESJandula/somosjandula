@@ -1,9 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="page-grid">
-    <!-- ================== COLUMNA IZQUIERDA ================== -->
     <div class="left-col">
-      <!-- ====== CUADRO 1: DISPOSITIVOS ====== -->
       <div class="form-container">
         <div class="title-container">
           <h1 class="title">Dispositivos</h1>
@@ -40,7 +38,6 @@
           </div>
         </div>
 
-        <!-- ===== TIPO DISPOSITIVO ===== -->
         <div class="section center">
           <div class="switch-container-gestion">
             <span>Actuador</span>
@@ -52,7 +49,6 @@
           </div>
         </div>
 
-        <!-- ===== TIPO SENSOR ===== -->
         <div class="section center" v-if="esSensorForm">
           <div class="switch-container-gestion">
             <span>Booleano</span>
@@ -64,7 +60,6 @@
           </div>
         </div>
 
-        <!-- ===== UMBRALES ===== -->
         <div class="section" v-if="esSensorForm">
           <div class="row">
             <label>Umbral Mínimo:</label>
@@ -77,10 +72,24 @@
           </div>
         </div>
 
-        <!-- ===== BOTONES ===== -->
+        <div class="section" v-if="!esSensorForm && esTipoPuerta">
+          <div class="row">
+            <label>Número de relés:</label>
+            <input type="number" min="1" v-model="numeroReles" />
+          </div>
+        </div>
+
         <div class="section">
           <button
-            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm"
+            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && !esTipoPuerta"
+            class="btn-primary"
+            @click="crearActuadorVista"
+          >
+            Crear / Modificar
+          </button>
+
+          <button
+            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && esTipoPuerta && numeroReles > 0"
             class="btn-primary"
             @click="crearActuadorVista"
           >
@@ -105,7 +114,6 @@
         </div>
       </div>
 
-      <!-- ====== CUADRO 2: CREAR COMANDO (AULA - TIPO) ====== -->
       <div class="form-container">
         <div class="title-container">
           <h1 class="title">Comandos y keywords</h1>
@@ -121,14 +129,27 @@
               </option>
             </select>
           </div>
+
           <div class="row">
             <label>Keyword:</label>
             <input type="text" v-model="keywordCmd" />
           </div>
+
+          <div class="row" v-if="esPuertaSeleccionada">
+            <label>Elige número de relé:</label>
+            <select v-model="indiceReleSeleccionado">
+              <option disabled value="">Selecciona relé</option>
+              <option v-for="r in relesDisponibles" :key="r" :value="r">
+                {{ r }}
+              </option>
+            </select>
+          </div>
+
           <div class="row">
             <label>Comando:</label>
             <input type="text" v-model="comandoTexto" />
           </div>
+
           <div class="row">
             <label>Texto OK:</label>
             <input type="text" v-model="textoOk" />
@@ -136,7 +157,7 @@
 
           <button
             class="btn-primary"
-            :disabled="!dispositivoSeleccionado || !keywordCmd || !textoOk"
+            :disabled="!puedeCrearComando"
             @click="crearComandoActuadorVista"
           >
             Crear / Modificar
@@ -145,9 +166,7 @@
       </div>
     </div>
 
-    <!-- ================== COLUMNA DERECHA ================== -->
     <div class="right-col">
-      <!-- ====== CUADRO 3: LISTA DISPOSITIVOS ====== -->
       <div class="form-container-table">
         <div class="title-container">
           <h1 class="title">Lista de dispositivos</h1>
@@ -183,6 +202,8 @@
               <th>Ubicación</th>
               <th>Tipo</th>
 
+              <th v-if="!esSensorLista">Número de relés</th>
+
               <th v-if="esSensorLista">Valor actual</th>
               <th v-if="esSensorLista">Umbral máximo</th>
               <th v-if="esSensorLista">Umbral mínimo</th>
@@ -192,21 +213,20 @@
             </tr>
           </thead>
 
-          <!-- ACTUADOR -->
           <tbody v-if="!esSensorLista">
             <tr v-for="d in actuadoresPaginados" :key="d.mac">
               <td>{{ d.mac }}</td>
               <td>{{ d.estado }}</td>
               <td>{{ d.nombreUbicacion }}</td>
               <td>{{ d.tipo }}</td>
-              <td><button @click="eliminarActuadorVista(d.mac)">X</button></td>
+              <td>{{ d.tipo?.toLowerCase() === 'puerta' ? (d.numeroReles ?? '-') : '' }}</td>
+              <td><button @click="eliminarActuadorVista(d)">X</button></td>
             </tr>
             <tr v-if="(actuadoresPaginados?.length ?? 0) === 0">
-              <td colspan="5">No hay actuadores</td>
+              <td colspan="6">No hay actuadores</td>
             </tr>
           </tbody>
 
-          <!-- SENSOR BOOLEANO -->
           <tbody v-if="esSensorLista && !esNumericoLista">
             <tr v-for="s in sensoresBooleanosPaginados" :key="s.mac">
               <td>{{ s.mac }}</td>
@@ -232,7 +252,6 @@
             </tr>
           </tbody>
 
-          <!-- SENSOR NUMÉRICO -->
           <tbody v-if="esSensorLista && esNumericoLista">
             <tr v-for="s in sensoresNumericosPaginados" :key="s.mac">
               <td>{{ s.mac }}</td>
@@ -282,7 +301,6 @@
         </div>
       </div>
 
-      <!-- ====== CUADRO 4: LISTA COMANDOS ====== -->
       <div class="form-container-table">
         <div class="title-container">
           <h1 class="title">Lista de comandos</h1>
@@ -293,6 +311,7 @@
             <tr>
               <th>MAC</th>
               <th>Keyword</th>
+              <th>Relé</th>
               <th>Comando</th>
               <th>Texto OK</th>
               <th>Acciones</th>
@@ -300,18 +319,19 @@
           </thead>
 
           <tbody>
-            <tr v-for="c in comandosActuadorPaginados" :key="c.mac + '_' + c.keyword">
+            <tr v-for="c in comandosActuadorPaginados" :key="c.mac + '_' + c.keyword + '_' + (c.indiceRele ?? 'sin_rele')">
               <td>{{ c.mac }}</td>
               <td>{{ c.keyword }}</td>
+              <td>{{ c.indiceRele ?? '' }}</td>
               <td>{{ c.comandos }}</td>
               <td>{{ c.textoOk }}</td>
               <td>
-                <button @click="eliminarComandoActuadorVista(c.mac, c.keyword)">X</button>
+                <button @click="eliminarComandoActuadorVista(c)">X</button>
               </td>
             </tr>
 
             <tr v-if="(comandosActuadorPaginados?.length ?? 0) === 0">
-              <td colspan="5">No hay comandos</td>
+              <td colspan="6">No hay comandos</td>
             </tr>
           </tbody>
         </table>
@@ -339,7 +359,6 @@
         </div>
       </div>
 
-      <!-- ====== CUADRO 5: HISTÓRICO DE ACCIONES ====== -->
       <div class="form-container-table">
         <div class="title-container">
           <h1 class="title">Histórico de acciones</h1>
@@ -402,6 +421,8 @@ import { crearToast } from "@/utils/toast.js";
 import {
   obtenerTipos,
   crearActuador,
+  crearActuadorPuerta,
+  crearActuadorProyector,
   crearSensorBooleano,
   crearSensorNumerico,
   obtenerActuadores,
@@ -409,16 +430,20 @@ import {
   obtenerSensorNumericoPaginacion,
   obtenerSensorBooleanoPaginacion,
   eliminarActuador,
+  eliminarActuadorPuerta,
+  eliminarActuadorProyector,
   eliminarSensorBooleano,
   eliminarSensorNumerico,
   crearComandoActuador,
+  crearComandoActuadorPuerta,
   obtenerComandosActuador,
+  obtenerComandosActuadorPuerta,
   eliminarComandoActuador,
+  eliminarComandoActuadorPuerta,
   obtenerAcciones,
   obtenerOrdenesSimples,
 } from "@/services/automations";
 
-// ===== SchoolBaseServer (ubicaciones) =====
 import {
   obtenerCursosAcademicos,
   obtenerEspaciosFijo,
@@ -431,29 +456,24 @@ const ubicacionElegida = ref("");
 const estado = ref("indefinido");
 const umbralMin = ref(0);
 const umbralMax = ref(0);
+const numeroReles = ref(1);
 
-// Listas
 const actuadores = ref([]);
 const sensoresNumericos = ref([]);
 const sensoresBooleanos = ref([]);
 const actuadoresParaComandos = ref([]);
 
-
-// Ubicaciones (vienen de SchoolBaseServer)
 const ubicaciones = ref([]);
 const cursoAcademicoElegido = ref("");
 
-// Tipo
 const tipoElegido = ref("");
 const tipos = ref([]);
 
-// switches
 const esSensorForm = ref(false);
 const esNumericoForm = ref(false);
 const esSensorLista = ref(false);
 const esNumericoLista = ref(false);
 
-// Toast
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
@@ -462,16 +482,70 @@ const dispositivoSeleccionado = ref("");
 const keywordCmd = ref("");
 const comandoTexto = ref("");
 const textoOk = ref("");
+const indiceReleSeleccionado = ref("");
 const listaComandosActuador = ref([]);
 
-// ===== PAGINACIÓN DISPOSITIVOS =====
 const paginaActualDispositivos = ref(1);
 const dispositivosPorPagina = ref(5);
 const totalPaginasDispositivos = ref(1);
 
+const paginaActualComandos = ref(1);
+const comandosPorPagina = ref(5);
+const totalPaginasComandos = ref(1);
+
+const listaAcciones = ref([]);
+const paginaActualAcciones = ref(1);
+const accionesPorPagina = ref(5);
+const totalPaginasAcciones = ref(1);
+
 const actuadoresPaginados = computed(() => actuadores.value ?? []);
 const sensoresBooleanosPaginados = computed(() => sensoresBooleanos.value ?? []);
 const sensoresNumericosPaginados = computed(() => sensoresNumericos.value ?? []);
+const comandosActuadorPaginados = computed(() => listaComandosActuador.value ?? []);
+const accionesPaginadas = computed(() => listaAcciones.value ?? []);
+
+const esTipoPuerta = computed(() => String(tipoElegido.value ?? "").toLowerCase() === "puerta");
+const esTipoProyector = computed(() => String(tipoElegido.value ?? "").toLowerCase() === "proyector");
+
+const dispositivosParaComandos = computed(() => {
+  return (actuadoresParaComandos.value ?? []).map((a) => ({
+    mac: a.mac,
+    aula: a.nombreUbicacion,
+    tipo: a.tipo ?? "Actuador",
+    numeroReles: a.numeroReles ?? null,
+  }));
+});
+
+const dispositivoComandoSeleccionadoObj = computed(() => {
+  return (dispositivosParaComandos.value ?? []).find((d) => d.mac === dispositivoSeleccionado.value) ?? null;
+});
+
+const esPuertaSeleccionada = computed(() => {
+  return String(dispositivoComandoSeleccionadoObj.value?.tipo ?? "").toLowerCase() === "puerta";
+});
+
+const relesDisponibles = computed(() => {
+  const total = Number(dispositivoComandoSeleccionadoObj.value?.numeroReles ?? 0);
+
+  if (!esPuertaSeleccionada.value || total <= 0) return [];
+
+  const macSeleccionada = dispositivoSeleccionado.value;
+
+  const relesUsados = new Set(
+    (listaComandosActuador.value ?? [])
+      .filter((c) => c.mac === macSeleccionada && c.indiceRele != null)
+      .map((c) => Number(c.indiceRele))
+  );
+
+  return Array.from({ length: total }, (_, i) => i + 1)
+    .filter((rele) => !relesUsados.has(rele));
+});
+
+const puedeCrearComando = computed(() => {
+  if (!dispositivoSeleccionado.value || !keywordCmd.value || !textoOk.value) return false;
+  if (esPuertaSeleccionada.value && !indiceReleSeleccionado.value) return false;
+  return true;
+});
 
 const paginaAnteriorDispositivos = async () => {
   if (paginaActualDispositivos.value > 1) {
@@ -493,13 +567,6 @@ const paginaSiguienteDispositivos = async () => {
   }
 };
 
-// ===== PAGINACIÓN COMANDOS =====
-const paginaActualComandos = ref(1);
-const comandosPorPagina = ref(5);
-const totalPaginasComandos = ref(1);
-
-const comandosActuadorPaginados = computed(() => listaComandosActuador.value ?? []);
-
 const paginaAnteriorComandos = async () => {
   if (paginaActualComandos.value > 1) {
     paginaActualComandos.value--;
@@ -513,14 +580,6 @@ const paginaSiguienteComandos = async () => {
     await cargarComandosActuador();
   }
 };
-
-// ===== PAGINACIÓN ACCIONES =====
-const listaAcciones = ref([]);
-const paginaActualAcciones = ref(1);
-const accionesPorPagina = ref(5);
-const totalPaginasAcciones = ref(1);
-
-const accionesPaginadas = computed(() => listaAcciones.value ?? []);
 
 const paginaAnteriorAcciones = async () => {
   if (paginaActualAcciones.value > 1) {
@@ -536,15 +595,6 @@ const paginaSiguienteAcciones = async () => {
   }
 };
 
-// Para el desplegable "Aula - Tipo (MAC)"
-const dispositivosParaComandos = computed(() => {
-  return (actuadoresParaComandos.value ?? []).map((a) => ({
-    mac: a.mac,
-    aula: a.nombreUbicacion,
-    tipo: a.tipo ?? "Actuador",
-  }));
-});
-
 const obtenerTiposVista = async () => {
   try {
     const raw = await obtenerTipos(toastMessage, toastColor, isToastOpen);
@@ -552,7 +602,6 @@ const obtenerTiposVista = async () => {
     tipos.value = (raw ?? [])
       .map((t) => {
         if (typeof t === "string") return { id: t, tipo: t };
-
         const tipo = t?.tipo ?? t?.nombreTipo ?? "";
         return { ...t, tipo };
       })
@@ -563,7 +612,6 @@ const obtenerTiposVista = async () => {
   }
 };
 
-// Ubicaciones desde SchoolBaseServer
 const obtenerUbicacionesVista = async () => {
   try {
     const cursos = await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen);
@@ -613,7 +661,6 @@ const obtenerUbicacionesVista = async () => {
   }
 };
 
-// ===== Dispositivos =====
 const cargarActuadoresParaComandos = async () => {
   try {
     actuadoresParaComandos.value = await obtenerActuadores(
@@ -625,6 +672,7 @@ const cargarActuadoresParaComandos = async () => {
     actuadoresParaComandos.value = [];
   }
 };
+
 const obtenerActuadoresVista = async () => {
   try {
     const response = await obtenerActuadoresPaginacion(
@@ -679,21 +727,55 @@ const obtenerSensorNumericoVista = async () => {
   }
 };
 
+const limpiarFormularioDispositivo = () => {
+  dispositivo.value = "";
+  ubicacionElegida.value = "";
+  tipoElegido.value = "";
+  numeroReles.value = 1;
+  umbralMin.value = 0;
+  umbralMax.value = 0;
+};
+
 const crearActuadorVista = async () => {
   try {
-    await crearActuador(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      dispositivo,
-      estado,
-      ubicacionElegida,
-      tipoElegido
-    );
+    if (esTipoPuerta.value) {
+      await crearActuadorPuerta(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        dispositivo,
+        estado,
+        ubicacionElegida,
+        tipoElegido,
+        numeroReles
+      );
+    } else if (esTipoProyector.value) {
+      await crearActuadorProyector(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        dispositivo,
+        estado,
+        ubicacionElegida,
+        tipoElegido,
+        ""
+      );
+    } else {
+      await crearActuador(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        dispositivo,
+        estado,
+        ubicacionElegida,
+        tipoElegido
+      );
+    }
 
     crearToast(toastMessage, toastColor, isToastOpen, "Actuador creado correctamente");
     await obtenerActuadoresVista();
     await cargarActuadoresParaComandos();
+    limpiarFormularioDispositivo();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -716,6 +798,7 @@ const crearSensorBooleanoVista = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, "Sensor booleano creado correctamente");
     await obtenerSensorBooleanoVista();
     await cargarActuadoresParaComandos();
+    limpiarFormularioDispositivo();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
@@ -738,14 +821,24 @@ const crearSensorNumericoVista = async () => {
     crearToast(toastMessage, toastColor, isToastOpen, "Sensor numérico creado correctamente");
     await obtenerSensorNumericoVista();
     await cargarActuadoresParaComandos();
+    limpiarFormularioDispositivo();
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
 };
 
-const eliminarActuadorVista = async (mac) => {
+const eliminarActuadorVista = async (actuador) => {
   try {
-    await eliminarActuador(toastMessage, toastColor, isToastOpen, mac);
+    const tipo = String(actuador?.tipo ?? "").toLowerCase();
+
+    if (tipo === "puerta") {
+      await eliminarActuadorPuerta(toastMessage, toastColor, isToastOpen, actuador.mac);
+    } else if (tipo === "proyector") {
+      await eliminarActuadorProyector(toastMessage, toastColor, isToastOpen, actuador.mac);
+    } else {
+      await eliminarActuador(toastMessage, toastColor, isToastOpen, actuador.mac);
+    }
+
     crearToast(toastMessage, toastColor, isToastOpen, "Actuador eliminado correctamente");
     await obtenerActuadoresVista();
     await cargarActuadoresParaComandos();
@@ -776,18 +869,37 @@ const eliminarSensorNumericoVista = async (mac) => {
   }
 };
 
-// ===== Comandos actuador =====
 const cargarComandosActuador = async () => {
   try {
-    const response = await obtenerComandosActuador(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      paginaActualComandos.value - 1,
-      comandosPorPagina.value
-    );
+    const [response, relacionesPuerta] = await Promise.all([
+      obtenerComandosActuador(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        paginaActualComandos.value - 1,
+        comandosPorPagina.value
+      ),
+      obtenerComandosActuadorPuerta(
+        toastMessage,
+        toastColor,
+        isToastOpen
+      ),
+    ]);
 
-    listaComandosActuador.value = response?.content ?? [];
+    const mapaReles = new Map();
+
+    for (const relacion of (relacionesPuerta ?? [])) {
+      const mac = relacion?.comandoActuadorMac ?? relacion?.mac ?? "";
+      const keyword = relacion?.comandoActuadorKeyword ?? relacion?.keyword ?? "";
+      const indiceRele = relacion?.indiceRele ?? null;
+      mapaReles.set(`${mac}__${keyword}`, indiceRele);
+    }
+
+    listaComandosActuador.value = (response?.content ?? []).map((c) => ({
+      ...c,
+      indiceRele: mapaReles.get(`${c.mac}__${c.keyword}`) ?? null,
+    }));
+
     totalPaginasComandos.value = Math.max(1, response?.totalPages ?? 1);
   } catch {
     listaComandosActuador.value = [];
@@ -797,6 +909,7 @@ const cargarComandosActuador = async () => {
 
 const onSeleccionDispositivoComandos = async () => {
   dispositivo.value = dispositivoSeleccionado.value;
+  indiceReleSeleccionado.value = "";
 };
 
 const crearComandoActuadorVista = async () => {
@@ -811,11 +924,23 @@ const crearComandoActuadorVista = async () => {
       textoOk
     );
 
+    if (esPuertaSeleccionada.value) {
+      await crearComandoActuadorPuerta(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        dispositivoSeleccionado.value,
+        keywordCmd,
+        Number(indiceReleSeleccionado.value)
+      );
+    }
+
     crearToast(toastMessage, toastColor, isToastOpen, "Comando creado correctamente");
 
     keywordCmd.value = "";
     comandoTexto.value = "";
     textoOk.value = "";
+    indiceReleSeleccionado.value = "";
 
     await cargarComandosActuador();
   } catch (error) {
@@ -823,9 +948,27 @@ const crearComandoActuadorVista = async () => {
   }
 };
 
-const eliminarComandoActuadorVista = async (mac, keyword) => {
+const eliminarComandoActuadorVista = async (comando) => {
   try {
-    await eliminarComandoActuador(toastMessage, toastColor, isToastOpen, mac, keyword);
+    if (comando?.indiceRele != null && comando?.indiceRele !== "") {
+      await eliminarComandoActuadorPuerta(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        comando.mac,
+        comando.keyword,
+        comando.indiceRele
+      );
+    }
+
+    await eliminarComandoActuador(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      comando.mac,
+      comando.keyword
+    );
+
     crearToast(toastMessage, toastColor, isToastOpen, "Comando eliminado correctamente");
     await cargarComandosActuador();
   } catch (error) {
@@ -833,7 +976,6 @@ const eliminarComandoActuadorVista = async (mac, keyword) => {
   }
 };
 
-// ===== ACCIONES + ORDENES SIMPLES =====
 const cargarAcciones = async () => {
   try {
     const [accionesPage, ordenesRaw] = await Promise.all([
@@ -850,9 +992,6 @@ const cargarAcciones = async () => {
     const accionesRaw = accionesPage?.content ?? [];
     totalPaginasAcciones.value = Math.max(1, accionesPage?.totalPages ?? 1);
 
-    console.log("ACCIONES RAW:", accionesRaw);
-    console.log("ORDENES RAW:", ordenesRaw);
-
     const mapaOrdenes = new Map();
 
     for (const orden of (ordenesRaw ?? [])) {
@@ -862,83 +1001,91 @@ const cargarAcciones = async () => {
       }
     }
 
-    listaAcciones.value = (accionesRaw ?? [])
-      .map((accion) => {
-        const ordenId = accion?.ordenId ?? accion?.orden_id ?? accion?.idOrden ?? null;
-        const orden = ordenId != null ? mapaOrdenes.get(Number(ordenId)) : null;
+    listaAcciones.value = (accionesRaw ?? []).map((accion) => {
+      const ordenId = accion?.ordenId ?? accion?.orden_id ?? accion?.idOrden ?? null;
+      const orden = ordenId != null ? mapaOrdenes.get(Number(ordenId)) : null;
 
-        console.log("ACCION:", accion);
-        console.log("ORDEN ENCONTRADA:", orden);
+      const usuario =
+        `${orden?.nombre ?? ""} ${orden?.apellidos ?? ""}`.trim() ||
+        orden?.email ||
+        orden?.usuario ||
+        orden?.nombreUsuario ||
+        "-";
 
-        const usuario =
-          `${orden?.nombre ?? ""} ${orden?.apellidos ?? ""}`.trim() ||
-          orden?.email ||
-          orden?.usuario ||
-          orden?.nombreUsuario ||
-          "-";
+      const dispositivo =
+        accion?.actuadorMac ??
+        accion?.mac ??
+        accion?.dispositivo ??
+        accion?.nombreDispositivo ??
+        "-";
 
-        const dispositivo =
-          accion?.actuadorMac ??
-          accion?.mac ??
-          accion?.dispositivo ??
-          accion?.nombreDispositivo ??
-          "-";
+      const fechaRaw =
+        accion?.fecha ||
+        accion?.createdAt ||
+        orden?.fecha ||
+        orden?.fechaCreacion ||
+        orden?.createdAt ||
+        null;
 
-        const fechaRaw =
-          orden?.fecha ||
-          orden?.fechaCreacion ||
-          orden?.createdAt ||
-          accion?.fecha ||
-          accion?.createdAt ||
-          null;
-
-        let fecha = "-";
-        if (fechaRaw) {
-          try {
-            fecha = new Intl.DateTimeFormat("es-ES", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }).format(new Date(fechaRaw));
-          } catch {
-            fecha = String(fechaRaw);
-          }
+      let fecha = "-";
+      if (fechaRaw) {
+        try {
+          fecha = new Intl.DateTimeFormat("es-ES", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }).format(new Date(fechaRaw));
+        } catch {
+          fecha = String(fechaRaw);
         }
+      }
 
-        const resultado =
-          accion?.resultado ||
-          accion?.textoRespuesta ||
-          accion?.estado ||
-          "-";
+      const resultado =
+        accion?.resultado ||
+        accion?.textoRespuesta ||
+        accion?.estado ||
+        "-";
 
-        return {
-          idAccion: accion?.idAccion ?? accion?.id ?? `${ordenId}_${dispositivo}_${resultado}`,
-          usuario,
-          dispositivo,
-          fecha,
-          resultado,
-          _timestamp: fechaRaw ? new Date(fechaRaw).getTime() : 0,
-        };
-      })
-      .sort((a, b) => b._timestamp - a._timestamp)
-      .map(({ _timestamp, ...resto }) => resto);
-
+      return {
+        idAccion: accion?.idAccion ?? accion?.id ?? `${ordenId}_${dispositivo}_${resultado}`,
+        usuario,
+        dispositivo,
+        fecha,
+        resultado,
+      };
+    });
   } catch (error) {
     listaAcciones.value = [];
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
 };
 
-// reset de página al cambiar de tipo de lista de dispositivos
 watch([esSensorLista, esNumericoLista], async () => {
   paginaActualDispositivos.value = 1;
 
   if (!esSensorLista.value) await obtenerActuadoresVista();
   else if (!esNumericoLista.value) await obtenerSensorBooleanoVista();
   else await obtenerSensorNumericoVista();
+});
+
+watch(tipoElegido, () => {
+  if (!esTipoPuerta.value) {
+    numeroReles.value = 1;
+  }
+});
+
+watch(dispositivoSeleccionado, () => {
+  if (!esPuertaSeleccionada.value) {
+    indiceReleSeleccionado.value = "";
+  }
+});
+watch(relesDisponibles, (nuevosReles) => {
+  if (!nuevosReles.includes(Number(indiceReleSeleccionado.value))) {
+    indiceReleSeleccionado.value = "";
+  }
 });
 
 onMounted(async () => {
@@ -954,23 +1101,18 @@ onMounted(async () => {
 <style scoped>
 :global(:root) {
   color-scheme: light dark;
-
-  /* Claro */
   --bg-page: #f4f6f9;
   --card-bg: #ffffff;
   --text: #1a1a1a;
   --muted: #5a5a5a;
   --border: #dcdcdc;
-
   --input-bg: #ffffff;
   --input-border: #cfcfcf;
-
   --table-bg: #ffffff;
   --table-head-bg: #007bff;
   --table-row: #ffffff;
   --table-row-alt: #f1f6ff;
   --table-hover: #e2efff;
-
   --primary: #2196f3;
   --primary-hover: #1976d2;
   --danger: #dc3545;
@@ -983,16 +1125,13 @@ onMounted(async () => {
     --text: #e8e9ee;
     --muted: #b8bcc8;
     --border: #2a2f3a;
-
     --input-bg: #0f1320;
     --input-border: #2e3442;
-
     --table-bg: #121624;
     --table-head-bg: #2c2f36;
     --table-row: #161a22;
     --table-row-alt: #121724;
     --table-hover: #1b2130;
-
     --primary: #3ea6ff;
     --primary-hover: #1e88e5;
     --danger: #ff4d4f;
