@@ -62,7 +62,8 @@
   import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
   import IAView from '@/views/ia/IAView.vue';
-
+  import StrikesSchoolAdminPage from '@/views/strikes/StrikesSchoolAdminPage.vue';
+  
   const routes = [
     {
       path: '/',
@@ -386,6 +387,22 @@
             role: 'PROFESOR'
           },  
         },
+	    {
+		  path: 'strikesSchool/admin',
+		  component: StrikesSchoolAdminPage,
+		  name: 'StrikesSchoolAdmin',
+		  meta: {
+			role: 'ADMINISTRADOR'
+		  },
+	    },
+	    {
+		  path: '/strikes/users',
+		  component: StrikesSchoolPage,
+		  name: 'StrikesSchoolPage',
+		  meta: {
+			 role: 'PROFESOR'
+		  },
+	    }   
       ],
     },
   ];

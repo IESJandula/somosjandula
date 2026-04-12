@@ -110,9 +110,6 @@
             <div class="day-modal-event-content">
               <strong>{{ event.titulo }}</strong><br />
               <small>{{ event.categoria }}</small><br />
-              <small class="event-dates">
-                {{ getEventDateLabel(event) }}
-              </small>
           </div>
         </div>
 
@@ -247,7 +244,6 @@ function getEventDateLabel(event: EventoCalendario): string {
   // Rango de fechas
   return ` ${inicio} – ${fin}`;
 }
-
 
 /* ===== MODAL ===== */
 const selectedDayEvents = ref<EventoCalendario[]>([]);

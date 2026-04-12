@@ -109,6 +109,9 @@
               Estadísticas
               <ion-icon slot="end" name="bar-chart"></ion-icon>
             </ion-item>
+			<ion-item button @click="navigateAndCloseMenu('/strikes/users')">
+			  Alumnos inscritos a la huelga activa
+			</ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->
