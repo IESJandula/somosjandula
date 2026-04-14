@@ -8,8 +8,8 @@
       Cargando estadísticas...
     </div>
 
-    <!-- Sin incidencias -->
-    <div v-else-if="!incidenciasNormalizadas.length" class="stats-empty">
+    <!-- Sin datos -->
+    <div v-else-if="!hayDatos" class="stats-empty">
       No hay incidencias registradas para mostrar estadísticas.
     </div>
 
@@ -51,104 +51,71 @@ import { IonToast } from "@ionic/vue";
 
 import PieChart from "@/components/issues/PieChart.vue";
 import { crearToast } from "@/utils/toast";
-import { listarIncidencias } from "@/services/issues";
+// Importamos los servicios de estadísticas
+import {
+  obtenerEstadisticasPorCategoria,
+  obtenerEstadisticasPorEstado,
+  obtenerEstadisticasPorUbicacion,
+  EstadisticasCategoriaDto,
+  EstadisticasEstadoDto,
+  EstadisticasUbicacionDto
+} from "@/services/issues";
 
-interface Incidencia {
-  ubicacion?: string;
-  email?: string;
-  fecha?: string;
-  problema?: string;
-  estado?: string;
-  solucion?: string;
-  categoria?: string;
-  emailResponsable?: string;
-}
-
-interface PieDatum {
-  name: string;
-  value: number;
-}
-
-const incidencias = ref<Incidencia[]>([]);
-const isLoading = ref<boolean>(false);
-
-// Toast
+// Estado de carga y toast
+const isLoading = ref(false);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
-const toastColor = ref<"success" | "danger" | "warning" | "primary" | string>(
-  "success"
+const toastColor = ref<"success" | "danger" | "warning" | "primary" | string>("success");
+
+// Datos recibidos del backend
+const statsCategoria = ref<EstadisticasCategoriaDto[]>([]);
+const statsEstado = ref<EstadisticasEstadoDto[]>([]);
+const statsUbicacion = ref<EstadisticasUbicacionDto[]>([]);
+
+// Mapeo a formato ECharts { name, value }
+const datosPorCategoria = computed(() =>
+  statsCategoria.value.map(item => ({ name: item.nombreCategoria, value: item.cantidad }))
 );
 
-// ---------- Helpers ----------
-
-function contarPor<T extends Record<string, any>>(
-  lista: T[],
-  campo: keyof T | ((item: T) => string | undefined | null)
-): PieDatum[] {
-  const mapa = new Map<string, number>();
-
-  lista.forEach((item) => {
-    let clave: string | undefined | null;
-
-    if (typeof campo === "function") {
-      clave = campo(item);
-    } else {
-      clave = item[campo] as string | undefined | null;
-    }
-
-    if (!clave || clave.toString().trim() === "") {
-      clave = "Sin datos";
-    }
-
-    const actual = mapa.get(clave) || 0;
-    mapa.set(clave, actual + 1);
-  });
-
-  return Array.from(mapa.entries()).map(([name, value]) => ({
-    name,
-    value,
-  }));
-}
-
-// Normalizar datos de incidencias
-const incidenciasNormalizadas = computed<Incidencia[]>(() =>
-  incidencias.value.map((i) => {
-    const nombreCategoria = i.categoria || "";
-    return {
-      ...i,
-      nombreCategoria,
-    };
-  })
+const datosPorEstado = computed(() =>
+  statsEstado.value.map(item => ({ name: item.estado, value: item.cantidad }))
 );
 
-// Datos para cada gráfico
-const datosPorCategoria = computed<PieDatum[]>(() =>
-  contarPor(incidenciasNormalizadas.value, (i) => i.categoria)
+const datosPorUbicacion = computed(() =>
+  statsUbicacion.value.map(item => ({ name: item.nombreUbicacion, value: item.cantidad }))
 );
 
-const datosPorEstado = computed<PieDatum[]>(() =>
-  contarPor(incidenciasNormalizadas.value, (i) => i.estado)
+// Verificar si hay datos para mostrar
+const hayDatos = computed(() =>
+  datosPorCategoria.value.length > 0 ||
+  datosPorEstado.value.length > 0 ||
+  datosPorUbicacion.value.length > 0
 );
 
-const datosPorUbicacion = computed<PieDatum[]>(() =>
-  contarPor(incidenciasNormalizadas.value, (i) => i.ubicacion)
-);
-
-// ---------- Carga de datos ----------
-
-async function cargarIncidencias() {
+// Carga de datos desde los endpoints
+async function cargarEstadisticas() {
   try {
     isLoading.value = true;
-    const lista = await listarIncidencias(toastMessage, toastColor, isToastOpen);
-    incidencias.value = lista as Incidencia[];
+    
+    // Llamadas paralelas a los 3 endpoints
+    const [cat, est, ubi] = await Promise.all([
+      obtenerEstadisticasPorCategoria(toastMessage, toastColor, isToastOpen),
+      obtenerEstadisticasPorEstado(toastMessage, toastColor, isToastOpen),
+      obtenerEstadisticasPorUbicacion(toastMessage, toastColor, isToastOpen)
+    ]);
+
+    statsCategoria.value = cat;
+    statsEstado.value = est;
+    statsUbicacion.value = ubi;
+    
   } catch (error: any) {
-    console.error("Error al cargar incidencias:", error);
+    console.error("Error al cargar estadísticas:", error);
     crearToast(
       toastMessage,
       toastColor,
       isToastOpen,
       "danger",
-      error?.message || "Error al cargar las incidencias"
+      error?.message || "Error al cargar las estadísticas"
     );
   } finally {
     isLoading.value = false;
@@ -156,11 +123,13 @@ async function cargarIncidencias() {
 }
 
 onMounted(() => {
-  cargarIncidencias();
+  cargarEstadisticas();
 });
 </script>
 
 <style scoped>
+
+/* CSS */
 .stats-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -169,27 +138,23 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
 }
-
 .stats-title {
   font-size: 1.8rem;
   font-weight: 700;
   text-align: center;
   margin-bottom: 1rem;
 }
-
 .stats-loading {
   margin-top: 2rem;
   font-size: 1rem;
   opacity: 0.8;
 }
-
 .stats-empty {
   margin-top: 2rem;
   text-align: center;
   font-size: 1rem;
   opacity: 0.8;
 }
-
 .stats-column {
   width: 100%;
   display: flex;
@@ -197,16 +162,8 @@ onMounted(() => {
   gap: 2rem;
   margin-top: 1rem;
 }
-
-/* Modo oscuro  */
 @media (prefers-color-scheme: dark) {
-  .stats-title {
-    color: #e5e7eb;
-  }
-
-  .stats-loading,
-  .stats-empty {
-    color: #9ca3af;
-  }
+  .stats-title { color: #e5e7eb; }
+  .stats-loading, .stats-empty { color: #9ca3af; }
 }
 </style>

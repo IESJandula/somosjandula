@@ -119,3 +119,65 @@ export declare function listarEstados(toastMessage: Ref<string>, toastColor: Ref
 
 /** Listar incidencias ordenadas */
 export declare function listarIncidencias(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Incidencia[]>;
+
+/*************************************************/
+/********** Estadísticas de Incidencias **********/
+/*************************************************/
+
+/**
+ * Representa una estadística agrupada por categoría
+ */
+export interface EstadisticasCategoriaDto {
+    nombreCategoria: string;
+    cantidad: number;
+}
+
+/**
+ * Representa una estadística agrupada por estado
+ */
+export interface EstadisticasEstadoDto {
+    estado: string;
+    cantidad: number;
+}
+
+/**
+ * Representa una estadística agrupada por ubicación
+ */
+export interface EstadisticasUbicacionDto {
+    nombreUbicacion: string;
+    cantidad: number;
+}
+
+/**
+ * Obtiene las estadísticas de incidencias agrupadas por categoría.
+ * Endpoint: GET /issues/estadisticas/por-categoria
+ * @param toastMessage - Ref para el mensaje del toast
+ * @param toastColor - Ref para el color del toast
+ * @param isToastOpen - Ref para controlar la visibilidad del toast
+ * @returns Promise con array de EstadisticasCategoriaDto
+ */
+export declare function obtenerEstadisticasPorCategoria(
+    toastMessage: Ref<string>,
+    toastColor: Ref<string>,
+    isToastOpen: Ref<boolean>
+): Promise<EstadisticasCategoriaDto[]>;
+
+/**
+ * Obtiene las estadísticas de incidencias agrupadas por estado.
+ * Endpoint: GET /issues/estadisticas/por-estado
+ */
+export declare function obtenerEstadisticasPorEstado(
+    toastMessage: Ref<string>,
+    toastColor: Ref<string>,
+    isToastOpen: Ref<boolean>
+): Promise<EstadisticasEstadoDto[]>;
+
+/**
+ * Obtiene las estadísticas de incidencias agrupadas por ubicación.
+ * Endpoint: GET /issues/estadisticas/por-ubicacion
+ */
+export declare function obtenerEstadisticasPorUbicacion(
+    toastMessage: Ref<string>,
+    toastColor: Ref<string>,
+    isToastOpen: Ref<boolean>
+): Promise<EstadisticasUbicacionDto[]>;
