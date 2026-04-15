@@ -547,3 +547,79 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
   
     return await response.json();
   };
+
+  /*************************************************/
+/********** Estadísticas de Incidencias **********/
+/*************************************************/
+
+/**
+ * Obtiene estadísticas de incidencias por categoría.
+ * @returns Promise<EstadisticasCategoriaDto[]>
+ */
+export const obtenerEstadisticasPorCategoria = async (toastMessage, toastColor, isToastOpen) => {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${issuesApiUrl}/issues/estadisticas/por-categoria`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const text = errorData.message || await response.text();
+        console.error("Error al obtener estadísticas por categoría:", response.status, text);
+        throw new Error(text || 'Error al obtener estadísticas por categoría');
+    }
+
+    return await response.json();
+};
+
+/**
+ * Obtiene estadísticas de incidencias por estado.
+ * @returns Promise<EstadisticasEstadoDto[]>
+ */
+export const obtenerEstadisticasPorEstado = async (toastMessage, toastColor, isToastOpen) => {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${issuesApiUrl}/issues/estadisticas/por-estado`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const text = errorData.message || await response.text();
+        console.error("Error al obtener estadísticas por estado:", response.status, text);
+        throw new Error(text || 'Error al obtener estadísticas por estado');
+    }
+
+    return await response.json();
+};
+
+/**
+ * Obtiene estadísticas de incidencias por ubicación.
+ * @returns Promise<EstadisticasUbicacionDto[]>
+ */
+export const obtenerEstadisticasPorUbicacion = async (toastMessage, toastColor, isToastOpen) => {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${issuesApiUrl}/issues/estadisticas/por-ubicacion`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const text = errorData.message || await response.text();
+        console.error("Error al obtener estadísticas por ubicación:", response.status, text);
+        throw new Error(text || 'Error al obtener estadísticas por ubicación');
+    }
+
+    return await response.json();
+};
