@@ -55,6 +55,8 @@ import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 import StrikesSchoolAdminPage from '@/views/strikes/StrikesSchoolAdminPage.vue';
+import StrikesSchoolPage from "@/views/strikes/StrikesSchoolPage.vue"; 
+
 const routes = [
   {
     path: '/',
@@ -346,7 +348,7 @@ const routes = [
         meta: {role: 'ADMINISTRADOR'},
       },
       {
-        path: '/strikes/users',
+        path: 'strikes/users',
         component: StrikesSchoolPage,
         name: 'StrikesSchoolPage',
         meta: {role: 'PROFESOR'},

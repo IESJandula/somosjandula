@@ -70,7 +70,7 @@
             <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/events/users')">Eventos próximos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/strikes/users')">Alumnos inscritos a la huelga activa</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/strikes/users')">Huelgas alumnado</ion-item>
 
 
           </ion-list>

@@ -98,6 +98,13 @@
       </div>
 
     </div>
+    <IonToast
+      :is-open="isToastOpen"
+      :message="toastMessage"
+      :color="toastColor"
+      duration="2000"
+      @didDismiss="isToastOpen = false"
+    />
   </div>
 </template>
 <script setup lang="ts">
@@ -277,17 +284,25 @@ async function borrarHuelgaFn(titulo: string) {
   } 
   catch (error: any) 
   {
+     if (error?.response) 
+    {
+      const mensaje =
+        error.response.data?.message ||
+        error.response.data?.error ||
+        error.response.data ||
+        "Error en la petición";
 
-    if (error?.response) {
-      if (error.response.status === 400) {
-        mostrarToast(
-          error.response.data || "Error en la petición",
-          "warning"
-        );
-      } else {
-        mostrarToast("Error interno del servidor", "danger");
+      if (error.response.status === 400) 
+      {
+        mostrarToast(mensaje, "warning");
+      } 
+      else 
+      {
+        mostrarToast(mensaje, "danger");
       }
-    } else {
+    } 
+    else 
+    {
       mostrarToast("No se pudo conectar con el servidor", "danger");
     }
   }

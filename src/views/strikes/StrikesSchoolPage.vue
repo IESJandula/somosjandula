@@ -1,110 +1,174 @@
 <template>
   <div class="main-container">
 
-    <!-- 🔥 OVERLAY LOADING -->
     <div v-if="loading" class="loading-overlay">
-      <div class="spinner-big"></div>
+      <div class="spinner"></div>
     </div>
-
-    <div class="center-container">
-
-      <div class="form-container-table">
-
-        <h2 class="window-title">CONSULTAR PARTICIPACIÓN EN HUELGA</h2>
-
-        <!-- FILTROS -->
-        <div class="form-row">
-          <label class="form-label">Huelga:</label>
-          <input type="text" v-model="filtro.huelga" class="form-input" />
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">Curso:</label>
-          <input type="text" v-model="filtro.curso" class="form-input" />
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">Etapa:</label>
-          <input type="text" v-model="filtro.etapa" class="form-input" />
-        </div>
-
-        <div class="form-row">
-          <label class="form-label">Grupo:</label>
-          <input type="text" v-model="filtro.grupo" class="form-input" />
-        </div>
-
-        <!-- BOTÓN -->
-        <div class="button-row">
-          <button class="btn-enviar" @click="consultarAlumnos" :disabled="loading">
-            CONSULTAR
-          </button>
-        </div>
-
-        <!-- TABLA -->
+    <div class="top-container">
+      <!-- HUELGAS -->
+      <div class="card">
+        <h2 class="window-title">HISTÓRICO DE HUELGAS</h2>
+        <div class="title-line"></div>
         <table class="events-table">
           <thead>
             <tr>
-              <th>Nombre</th>
-              <th>Apellidos</th>
-              <th>Participación</th>
+              <th>Título</th>
+              <th>Estado</th>
             </tr>
           </thead>
-
           <tbody>
-            <tr v-for="a in alumnos" :key="a.email">
-              <td>{{ a.nombre }}</td>
-              <td>{{ a.apellidos }}</td>
-              <td>
-                <span :class="estadoClass(a.estado)">
-                  {{ mostrarEstado(a.estado) }}
-                </span>
-              </td>
+            <tr
+              v-for="h in huelgas"
+              :key="h.titulo"
+              @click="seleccionarHuelga(h)"
+              :class="['fila-click', { seleccionada: huelgaSeleccionada?.titulo === h.titulo }]"
+            >
+              <td>{{ h.titulo }}</td>
+              <td>{{ h.estado }}</td>
             </tr>
-
-            <tr v-if="alumnos.length === 0">
-              <td colspan="3" class="no-data">
-                No hay resultados
-              </td>
+            <tr v-if="huelgas.length === 0">
+              <td colspan="2">No hay huelgas</td>
             </tr>
           </tbody>
         </table>
+      </div>
+      <!-- FILTROS -->
+      <div class="card">
+        <h2 class="window-title">CURSO</h2>
+        <div class="title-line"></div>
+        <div class="filters">
+          <div class="form-row">
+          <label>Curso:</label>
+          <select v-model="filtro.curso">
+            <option value="">Todos</option>
+            <option v-for="c in cursos" :key="c">{{ c }}</option>
+          </select>
+        </div>
 
+        <div class="form-row">
+          <label>Etapa:</label>
+          <select v-model="filtro.etapa">
+            <option value="">Todos</option>
+            <option v-for="e in etapas" :key="e">{{ e }}</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>Grupo:</label>
+          <select v-model="filtro.grupo">
+            <option value="">Todos</option>
+            <option v-for="g in grupos" :key="g">{{ g }}</option>
+          </select>
+        </div>
+          <div class="form-row">
+            <label>Filtro:</label>
+            <select v-model="tipoFiltro">
+              <option value="TODOS">Todos</option>
+              <option value="SI">Solo SI</option>
+              <option value="NO">Solo NO</option>
+              <option value="NS">?</option>
+            </select>
+          </div>
+          <button class="btn-admin" @click="consultarAlumnos">
+            CONSULTAR
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- ================= RESULTADOS ================= -->
+    <div class="card results-card">
+      <h2 class="window-title">RESULTADOS</h2>
+      <div class="title-line"></div>
+      <table class="events-table centered">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Apellidos</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="a in alumnos" :key="a.nombre + a.apellidos">
+            <td>{{ a.nombre }}</td>
+            <td>{{ a.apellidos }}</td>
+            <td>
+              <span :class="estadoClass(a.estado)">
+                {{ mostrarEstado(a.estado) }}
+              </span>
+            </td>
+          </tr>
+          <tr v-if="alumnos.length === 0">
+            <td colspan="3">No hay resultados</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 </template>
 
 <script setup lang="ts">
 
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { obtenerHuelgas, obtenerAlumnosHuelga } from "@/services/strikes.js";
 
-/* ================= TIPOS ================= */
+const loading = ref(false);
 
-interface Alumno {
-  nombre: string;
-  apellidos: string;
-  email: string;
-  estado: "SI" | "NO" | "NS";
-}
+const huelgas = ref<any[]>([]);
+const huelgaSeleccionada = ref<any>(null);
 
-/* ================= STATE ================= */
+const cursos = ref<string[]>([]);
+const etapas = ref<string[]>([]);
+const grupos = ref<string[]>([]);
 
 const filtro = ref({
-  huelga: "",
   curso: "",
   etapa: "",
   grupo: ""
 });
 
-const alumnos = ref<Alumno[]>([]);
-const loading = ref(false);
+const combinaciones = ref<any[]>([]);;
 
-/* ================= MÉTODO ================= */
+const tipoFiltro = ref("TODOS");
+
+const alumnos = ref<any[]>([]);
+
+/* TOAST */
+const toastMessage = ref("");
+const toastColor = ref("success");
+const isToastOpen = ref(false);
+
+onMounted(() => {
+  cargarHuelgas();
+});
+
+async function cargarHuelgas() {
+  loading.value = true;
+
+  try {
+    const data = await obtenerHuelgas(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      0,
+      20
+    );
+
+    huelgas.value = data?.content || [];
+
+  } finally {
+    loading.value = false;
+  }
+}
+
+function seleccionarHuelga(h: any) {
+  huelgaSeleccionada.value = h;
+  alumnos.value = [];
+}
 
 async function consultarAlumnos() {
 
-  if (!filtro.value.huelga) {
-    alert("Debes indicar la huelga");
+  if (!huelgaSeleccionada.value) {
+    alert("Selecciona una huelga");
     return;
   }
 
@@ -112,30 +176,38 @@ async function consultarAlumnos() {
 
   try {
 
-    // 🔥 AQUÍ irá tu endpoint real
-    // alumnos.value = await servicio(...)
+    alumnos.value = await obtenerAlumnosHuelga(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      huelgaSeleccionada.value.titulo,
+      filtro.value.curso,
+      filtro.value.etapa,
+      filtro.value.grupo,
+      tipoFiltro.value
+    );
 
-    // MOCK TEMPORAL
-    await new Promise(r => setTimeout(r, 1000));
-
-    alumnos.value = [
-      { nombre: "Juan", apellidos: "Pérez", email: "1", estado: "SI" },
-      { nombre: "Ana", apellidos: "López", email: "2", estado: "NO" },
-      { nombre: "Luis", apellidos: "García", email: "3", estado: "NS" }
-    ];
-
-  } catch (error) {
-    alert("Error al consultar alumnos");
   } finally {
     loading.value = false;
   }
 }
 
-/* ================= UTIL ================= */
+async function cargarCombos() {
+  // llamada a backend
+  const data = await obtenerCursoEtapaGrupo(); // 👈 la haces tú
+
+  combinaciones.value = data;
+
+  cursos.value = [...new Set(data.map((x:any) => x.curso))];
+  etapas.value = [...new Set(data.map((x:any) => x.etapa))];
+  grupos.value = [...new Set(data.map((x:any) => x.grupo))];
+}
+
+/* UTIL */
 
 function mostrarEstado(estado: string) {
-  if (estado === "SI") return "✔";
-  if (estado === "NO") return "✖";
+  if (estado === "SI") return "SI";
+  if (estado === "NO") return "NO";
   return "?";
 }
 
@@ -147,145 +219,154 @@ function estadoClass(estado: string) {
 
 </script>
 
-<style scoped>
+<style>
+  .main-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+  }
 
-/* ====== BASE (igual que tu app) ====== */
+  .top-container {
+    display: flex;
+    gap: 20px;
+  }
 
-.main-container {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f0f2f5;
-}
+  /* TARJETAS */
+  .card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 100%;
+  }
 
-.center-container {
-  display: flex;
-  gap: 20px;
-  max-width: 800px;
-  width: 100%;
-}
+  /* RESULTADOS MÁS CENTRADO */
+  .results-card {
+    width: 70%;
+    margin: 0 auto;
+  }
 
-.form-container-table {
-  background: #fff;
-  border: 1px solid #444;
-  border-radius: 10px;
-  padding: 25px;
-  width: 100%;
-}
+  /* TITULO */
+  .window-title {
+    margin: 0;
+  }
 
-.window-title {
-  border-bottom: 2px solid #007bff;
-  margin-bottom: 20px;
-}
+  .title-line {
+    height: 3px;
+    background: #1976d2;
+    margin: 8px 0 20px 0;
+  }
 
-.form-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-  align-items: center;
-}
+  /* FILTROS */
+  .filters {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
-.form-label {
-  min-width: 120px;
-}
+  .form-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: center;
+    gap: 10px;
+  }
 
-.form-input {
-  flex: 1;
-  padding: 8px;
-}
+  /* BOTÓN */
+  .btn-admin {
+    margin-top: 10px;
+    background: #1976d2;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+  }
 
-.button-row {
-  display: flex;
-  justify-content: flex-end;
-}
+  .btn-admin:hover {
+    background: #125ea2;
+  }
 
-.btn-enviar {
-  background: #007bff;
-  color: white;
-  padding: 10px 25px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+  /* TABLAS */
+  .events-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
 
-.btn-enviar:hover {
-  background: #0056b3;
-  transform: scale(1.05);
-}
+  .events-table th {
+    background: #1976d2;
+    color: white;
+    padding: 10px;
+    border: 1px solid #1976d2;
+  }
 
-.btn-enviar:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+  .events-table td {
+    padding: 10px;
+    border: 1px solid #ccc;
+  }
 
-.events-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
+  select {
+    width: 100%;
+    padding: 6px;
+  }
 
-.events-table th,
-.events-table td {
-  border: 1px solid #007bff;
-  padding: 8px;
-}
+  /* TABLA RESULTADOS */
+  .centered {
+    width: 80%;
+    margin: 0 auto;
+  }
 
-.events-table th {
-  background: #007bff;
-  color: white;
-}
+  /* FILAS */
+  .fila-click:hover {
+    background: #f1f1f1;
+    cursor: pointer;
+  }
 
-.no-data {
-  text-align: center;
-}
+  .seleccionada {
+    background: #d0e7ff;
+  }
 
-/* ====== ESTADOS ====== */
+  /* ESTADOS */
+  .estado-si {
+    color: green;
+    font-weight: bold;
+  }
 
-.estado-si {
-  color: green;
-  font-weight: bold;
-}
+  .estado-no {
+    color: red;
+    font-weight: bold;
+  }
 
-.estado-no {
-  color: red;
-  font-weight: bold;
-}
+  .estado-ns {
+    color: orange;
+    font-weight: bold;
+  }
 
-.estado-ns {
-  color: orange;
-  font-weight: bold;
-}
+  /* LOADING */
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-/* ====== LOADING OVERLAY ====== */
+  .spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(255,255,255,0.3);
+    border-top: 6px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
 
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.3);
-  backdrop-filter: blur(5px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-.spinner-big {
-  width: 60px;
-  height: 60px;
-  border: 6px solid #ccc;
-  border-top: 6px solid #007bff;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
 </style>

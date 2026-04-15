@@ -19,3 +19,14 @@ export declare function borrarHuelga( toastMessage: Ref<string>,
                                       isToastOpen: Ref<boolean>,
                                       titulo: string
                                     ): Promise<void>;
+
+export declare function obtenerAlumnosHuelga( toastMessage: Ref<string>,
+                                              toastColor: Ref<string>,
+                                              isToastOpen: Ref<boolean>,
+                                              titulo: string,
+                                              curso: string,
+                                              etapa: string,
+                                              grupo: string,
+                                              filtro: string
+                                            ): Promise<any>;
+  
