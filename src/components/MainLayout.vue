@@ -11,6 +11,7 @@
           </ion-item>
           <ion-list v-if="adminSubmenuVisible" class="submenu">
             <ion-item v-if="mostrarAdminFirebase" button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/printers/admin')">Impresión</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
@@ -18,7 +19,6 @@
             <ion-item button @click="navigateAndCloseMenu('/eventsSchool/admin')">Eventos</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
           </ion-list>
         </ion-list>
@@ -109,9 +109,9 @@
               Estadísticas
               <ion-icon slot="end" name="bar-chart"></ion-icon>
             </ion-item>
-			<ion-item button @click="navigateAndCloseMenu('/strikes/users')">
+			<!-- <ion-item button @click="navigateAndCloseMenu('/strikes/users')">
 			  Alumnos inscritos a la huelga activa
-			</ion-item>
+			</ion-item> -->
           </ion-list>
         </ion-list>
         <!-- Reservas -->

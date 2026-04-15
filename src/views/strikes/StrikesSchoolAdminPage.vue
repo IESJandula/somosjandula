@@ -1,101 +1,91 @@
 <template>
-  <!--
-  <div class="main-container">
-    <div v-if="loading" class="loading-overlay">
-      <div class="spinner"></div>
-    </div>
-    <div class="center-container">
+  <!-- FORMULARIO -->
+  <div class="left-container">
+    <div class="form-container">
+      <h2 class="window-title">CREAR HUELGA</h2>
 
-      <!-- FORMULARIO -->
-      <div class="left-container">
-        <div class="form-container">
-          <h2 class="window-title">CREAR HUELGA</h2>
-
-          <div class="form-row">
-            <label class="form-label">Título:</label>
-            <input type="text" v-model="huelga.titulo" class="form-input" />
-          </div>
-
-          <div class="form-row">
-            <label class="form-label">Inicio de inscripciones:</label>
-            <input type="date" v-model="huelga.fechaInicio" class="form-input" />
-          </div>
-
-          <div class="form-row">
-            <label class="form-label">Fin de inscripciones:</label>
-            <input type="date" v-model="huelga.fechaFin" class="form-input" />
-          </div>
-
-          <div class="button-row">
-            <button class="btn-enviar" @click="crearHuelgaFn" :disabled="loading">
-              ENVIAR
-            </button>
-          </div>
-        </div>
+      <div class="form-row">
+        <label class="form-label">Título:</label>
+        <input type="text" v-model="huelga.titulo" class="form-input" />
       </div>
-      <!-- TABLA -->
-      <div class="right-container">
-        <div class="form-container-table">
-          <h2 class="window-title">HISTÓRICO DE HUELGAS</h2>
 
-          <table class="events-table">
-            <thead>
-              <tr>
-                <th>Título</th>
-                <th>Inicio inscrip.</th>
-                <th>Fin inscrip.</th>
-                <th>Estado</th>
-                <th>Formulario</th>
-                <th>Nº Participantes</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+      <div class="form-row">
+        <label class="form-label">Inicio de inscripciones:</label>
+        <input type="date" v-model="huelga.fechaInicio" class="form-input" />
+      </div>
 
-            <tbody>
-              <tr v-for="h in huelgas" :key="h.titulo">
-                <td>{{ h.titulo }}</td>
-                <td>{{ formatFecha(h.fechaInicio) }}</td>
-                <td>{{ formatFecha(h.fechaFin) }}</td>
-                <td>{{ h.estado }}</td>
-                <td>
-                  <div class="url-container">
-                    <input
-                      type="text"
-                      :value="h.urlEncuestado"
-                      readonly
-                      class="url-input"
-                    />
-                    <button
-                      class="btn-copiar"
-                      @click="copiarUrl(h.urlEncuestado)"
-                    >
-                      📋
-                    </button>
-                  </div>
-                </td>
-                <td>{{ h.alumnos }}</td>
-                <td>
-                  <button class="btn-eliminar" @click="borrarHuelgaFn(h.titulo)">
-                    X
-                  </button>
-                </td>
-              </tr>
+      <div class="form-row">
+        <label class="form-label">Fin de inscripciones:</label>
+        <input type="date" v-model="huelga.fechaFin" class="form-input" />
+      </div>
 
-              <tr v-if="huelgas.length === 0">
-                <td colspan="7" class="no-data">
-                  No hay huelgas registradas
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div class="button-row">
+        <button class="btn-enviar" @click="crearHuelgaFn" :disabled="loading">
+          ENVIAR
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- TABLA -->
+  <div class="right-container">
+    <div class="form-container-table">
+      <h2 class="window-title">HISTÓRICO DE HUELGAS</h2>
 
-          <div class="paginacion">
-            <button @click="paginaAnterior" :disabled="currentPage === 0">←</button>
-            <span>{{ currentPage + 1 }} / {{ totalPages }}</span>
-            <button @click="paginaSiguiente" :disabled="currentPage >= totalPages - 1">→</button>
-          </div>
+      <table class="events-table">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Inicio inscrip.</th>
+            <th>Fin inscrip.</th>
+            <th>Estado</th>
+            <th>Formulario</th>
+            <th>Nº Participantes</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
 
-        </div>
+        <tbody>
+          <tr v-for="h in huelgas" :key="h.titulo">
+            <td>{{ h.titulo }}</td>
+            <td>{{ formatFecha(h.fechaInicio) }}</td>
+            <td>{{ formatFecha(h.fechaFin) }}</td>
+            <td>{{ h.estado }}</td>
+            <td>
+              <div class="url-container">
+                <input
+                  type="text"
+                  :value="h.urlEncuestado"
+                  readonly
+                  class="url-input"
+                />
+                <button
+                  class="btn-copiar"
+                  @click="copiarUrl(h.urlEncuestado)"
+                >
+                  📋
+                </button>
+              </div>
+            </td>
+            <td>{{ h.alumnos }}</td>
+            <td>
+              <button class="btn-eliminar" @click="borrarHuelgaFn(h.titulo)">
+                X
+              </button>
+            </td>
+          </tr>
+
+          <tr v-if="huelgas.length === 0">
+            <td colspan="7" class="no-data">
+              No hay huelgas registradas
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="paginacion">
+        <button @click="paginaAnterior" :disabled="currentPage === 0">←</button>
+        <span>{{ currentPage + 1 }} / {{ totalPages }}</span>
+        <button @click="paginaSiguiente" :disabled="currentPage >= totalPages - 1">→</button>
       </div>
 
     </div>

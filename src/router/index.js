@@ -387,22 +387,23 @@
             role: 'PROFESOR'
           },  
         },
-	    {
-		  path: 'strikesSchool/admin',
-		  component: StrikesSchoolAdminPage,
-		  name: 'StrikesSchoolAdmin',
-		  meta: {
-			role: 'ADMINISTRADOR'
-		  },
-	    },
-	    {
-		  path: '/strikes/users',
-		  component: StrikesSchoolPage,
-		  name: 'StrikesSchoolPage',
-		  meta: {
-			 role: 'PROFESOR'
-		  },
-	    }   
+        {
+          path: 'strikesSchool/admin',
+          component: StrikesSchoolAdminPage,
+          name: 'StrikesSchoolAdmin',
+          meta: {
+            role: 'ADMINISTRADOR'
+          },
+        },
+        /*
+        {
+          path: '/strikes/users',
+          component: StrikesSchoolPage,
+          name: 'StrikesSchoolPage',
+          meta: {
+            role: 'PROFESOR'
+          },
+        } */  
       ],
     },
   ];

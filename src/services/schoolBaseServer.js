@@ -66,7 +66,7 @@ export const obtenerCursosEtapasGrupos = async (toastMessage, toastColor, isToas
 {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
 
-  const response = await fetch(schoolBaseServerApiUrl + '/school_base_server/admin/cursos_etapas_grupos',
+  const response = await fetch(schoolBaseServerApiUrl + '/school_base_server/common/cursos_etapas_grupos',
   {
     method: 'GET',
     headers:
