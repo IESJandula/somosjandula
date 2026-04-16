@@ -26,6 +26,7 @@
               </option>
             </select>
           </div>
+        </div>
 
         <div class="section center">
           <div class="switch-container-gestion">
@@ -38,7 +39,17 @@
           </div>
         </div>
 
-        <div class="section center" v-if="esSensorForm">
+        <div class="row">
+          <label>Tipo:</label>
+          <select v-model="tipoElegido">
+            <option disabled value="">Selecciona tipo</option>
+            <option v-for="t in tipos" :key="t.id ?? t.tipo" :value="t.tipo">
+              {{ t.tipo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="section center" v-if="esSensorForm && tipoElegido">
           <div class="switch-container-gestion">
             <span>Booleano</span>
             <label class="switch">
@@ -46,17 +57,6 @@
               <span class="slider"></span>
             </label>
             <span>Numérico</span>
-          </div>
-        </div>
-        
-        <div class="row">
-          <label>Tipo:</label>
-            <select v-model="tipoElegido">
-              <option disabled value="">Selecciona tipo</option>
-              <option v-for="t in tipos" :key="t.id ?? t.tipo" :value="t.tipo">
-                {{ t.tipo }}
-              </option>
-            </select>
           </div>
         </div>
 
@@ -419,7 +419,8 @@ import { ref, onMounted, computed, watch } from "vue";
 import { crearToast } from "@/utils/toast.js";
 
 import {
-  obtenerTipos,
+  obtenerTiposActuador,
+  obtenerTiposSensores,
   crearActuador,
   crearActuadorPuerta,
   crearActuadorProyector,
@@ -608,7 +609,9 @@ const paginaSiguienteAcciones = async () => {
 
 const obtenerTiposVista = async () => {
   try {
-    const raw = await obtenerTipos(toastMessage, toastColor, isToastOpen);
+    const raw = esSensorForm.value
+      ? await obtenerTiposSensores(toastMessage, toastColor, isToastOpen)
+      : await obtenerTiposActuador(toastMessage, toastColor, isToastOpen);
 
     tipos.value = (raw ?? [])
       .map((t) => {
@@ -1082,9 +1085,19 @@ watch([esSensorLista, esNumericoLista], async () => {
   else await obtenerSensorNumericoVista();
 });
 
+watch(esSensorForm, async () => {
+  tipoElegido.value = "";
+  esNumericoForm.value = false;
+  await obtenerTiposVista();
+});
+
 watch(tipoElegido, () => {
   if (!esTipoPuerta.value) {
     numeroReles.value = 1;
+  }
+
+  if (!esSensorForm.value) {
+    esNumericoForm.value = false;
   }
 });
 
