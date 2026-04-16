@@ -480,44 +480,52 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
   };
   
   /**
-   * Listar todas las incidencias.
-   * @param toastMessage - El mensaje de toast.
-   * @param toastColor - El color de toast.
-   * @param isToastOpen - Indica si el toast está abierto.
-   * @returns La respuesta de la API con las incidencias listadas.
-   */
-  export const listarIncidencias = async (toastMessage, toastColor, isToastOpen) =>
-  {
-    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-  
-    const params = new URLSearchParams({
-      page: '0',
-      size: '50',
-      sort: 'fecha,desc',
-    });
-  
-    const response = await fetch(
-      `${issuesApiUrl}/issues/incidencias/?${params.toString()}`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      }
-    );
-  
-    if (!response.ok)
+ * Listar todas las incidencias con paginación.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param page - Número de página.
+ * @param size - Tamaño de página.
+ * @param sort - Ordenación (por fecha descendente).
+ * @returns La respuesta de la API con las incidencias paginadas.
+ */
+export const listarIncidencias = async (
+  toastMessage, 
+  toastColor, 
+  isToastOpen,
+  page = 0,
+  size = 20,
+  sort = 'fecha,desc'
+) => {
+  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  // Construimos la URL con query params dinámicos con los valores por defecto.
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+    sort: sort,
+  });
+
+  const response = await fetch(
+    `${issuesApiUrl}/issues/incidencias/?${params.toString()}`,
     {
-      const errorData = await response.json().catch(() => ({}));
-      const text = errorData.message || await response.text();
-      console.error("Error al listar incidencias:", response.status, text);
-      throw new Error(text || 'Error al obtener las incidencias');
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     }
-  
-    const page = await response.json();
-  
-    return page.content || [];
-  };
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const text = errorData.message || await response.text();
+    console.error("Error al listar incidencias:", response.status, text);
+    throw new Error(text || 'Error al obtener las incidencias');
+  }
+
+  // Devolvemos el objeto Page completo
+  return await response.json();
+};
   
   /**
    * Listar estados posibles de incidencias.

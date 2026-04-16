@@ -44,6 +44,18 @@ export interface Incidencia {
   categoria: string;
 }
 
+export interface PageResponse<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  numberOfElements: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
 /*************************************************/
 /**************** Ubicaciones ********************/
 /*************************************************/
@@ -118,7 +130,7 @@ export declare function borrarIncidencia(toastMessage: Ref<string>, toastColor: 
 export declare function listarEstados(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<string[]>;
 
 /** Listar incidencias ordenadas */
-export declare function listarIncidencias(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Incidencia[]>;
+export declare function listarIncidencias(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, page?: number, size?: number, sort?: string): Promise<PageResponse<Incidencia>>;
 
 /*************************************************/
 /********** Estadísticas de Incidencias **********/
@@ -128,24 +140,24 @@ export declare function listarIncidencias(toastMessage: Ref<string>, toastColor:
  * Representa una estadística agrupada por categoría
  */
 export interface EstadisticasCategoriaDto {
-    nombreCategoria: string;
-    cantidad: number;
+  nombreCategoria: string;
+  cantidad: number;
 }
 
 /**
  * Representa una estadística agrupada por estado
  */
 export interface EstadisticasEstadoDto {
-    estado: string;
-    cantidad: number;
+  estado: string;
+  cantidad: number;
 }
 
 /**
  * Representa una estadística agrupada por ubicación
  */
 export interface EstadisticasUbicacionDto {
-    nombreUbicacion: string;
-    cantidad: number;
+  nombreUbicacion: string;
+  cantidad: number;
 }
 
 /**
@@ -157,9 +169,9 @@ export interface EstadisticasUbicacionDto {
  * @returns Promise con array de EstadisticasCategoriaDto
  */
 export declare function obtenerEstadisticasPorCategoria(
-    toastMessage: Ref<string>,
-    toastColor: Ref<string>,
-    isToastOpen: Ref<boolean>
+  toastMessage: Ref<string>,
+  toastColor: Ref<string>,
+  isToastOpen: Ref<boolean>
 ): Promise<EstadisticasCategoriaDto[]>;
 
 /**
@@ -167,9 +179,9 @@ export declare function obtenerEstadisticasPorCategoria(
  * Endpoint: GET /issues/estadisticas/por-estado
  */
 export declare function obtenerEstadisticasPorEstado(
-    toastMessage: Ref<string>,
-    toastColor: Ref<string>,
-    isToastOpen: Ref<boolean>
+  toastMessage: Ref<string>,
+  toastColor: Ref<string>,
+  isToastOpen: Ref<boolean>
 ): Promise<EstadisticasEstadoDto[]>;
 
 /**
@@ -177,7 +189,7 @@ export declare function obtenerEstadisticasPorEstado(
  * Endpoint: GET /issues/estadisticas/por-ubicacion
  */
 export declare function obtenerEstadisticasPorUbicacion(
-    toastMessage: Ref<string>,
-    toastColor: Ref<string>,
-    isToastOpen: Ref<boolean>
+  toastMessage: Ref<string>,
+  toastColor: Ref<string>,
+  isToastOpen: Ref<boolean>
 ): Promise<EstadisticasUbicacionDto[]>;
