@@ -2,9 +2,7 @@
   <h1 class="t-1">Gestión de Incidencias</h1>
 
   <div class="top-container">
-    <!-- Siempre con layout tipo admin: formulario arriba y tabla debajo -->
     <div class="top-section admin-layout">
-
       <!-- Tarjeta para crear incidencia -->
       <div class="card-upload-csv">
         <div class="container">
@@ -23,7 +21,7 @@
             <select v-model="nuevaIncidenciaCategoria" class="input">
               <option value="" disabled>Selecciona una categoría</option>
               <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
-                {{ categoria.nombre }}
+                {{categoria.nombre }}
               </option>
             </select>
 
@@ -41,7 +39,7 @@
         </div>
       </div>
 
-      <!-- Tarjeta de incidencias existentes CON PAGINACIÓN SERVER-SIDE -->
+      <!-- Tarjeta de incidencias existentes con paginación -->
       <div class="card-upload-table card-upload-csv">
         <div class="lista-header">
           <div class="t-2">Listado de incidencias</div>
@@ -90,14 +88,14 @@
                 </span>
               </td>
 
-              <!-- Columna Problema -->
+              <!-- Problema -->
               <td class="th th-problema" :title="incidencia.problema">
                 <div class="problema-cell">
                   {{ incidencia.problema || 'Sin descripción' }}
                 </div>
               </td>
 
-              <!-- ESTADO (celda más grande) -->
+              <!-- Estado -->
               <td class="th th-estado">
                 <select v-model="incidencia.estado" class="input"
                   v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)"
@@ -112,7 +110,7 @@
                 </span>
               </td>
 
-              <!-- RESPONSABLE -->
+              <!-- Responsable -->
               <td class="th">
                 <select v-model="incidencia.emailResponsable" class="input"
                   v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)"
@@ -128,12 +126,12 @@
                 </span>
               </td>
 
-              <!-- COMENTARIO / SOLUCIÓN -->
+              <!-- Comentario / Solución -->
               <td class="th">
                 <textarea v-model="incidencia.solucion" class="input" placeholder="Describe la solución..."
                   v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)">
-    {{ incidencia.solucion || '—' }}
-  </textarea>
+                {{ incidencia.solucion || '—' }}
+                </textarea>
                 <span v-else>
                   {{ incidencia.solucion || '—' }}
                 </span>
@@ -164,19 +162,18 @@
           </tbody>
         </table>
 
-        <!-- Paginación server-side -->
+        <!-- Paginación -->
         <div class="paginacion" v-if="totalPages > 1">
           <button class="pag-btn" :disabled="currentPage === 0" @click="irPagina(currentPage - 1)">
             ‹ Anterior
           </button>
 
           <span class="paginacion-info">
-            Página {{ currentPage + 1 }} de {{ totalPages }} - Mostrando {{ (currentPage * pageSize) + 1 }}–{{
-              Math.min((currentPage + 1) * pageSize, totalElements) }} de {{ totalElements }}
+            Página {{ currentPage + 1 }} de {{ totalPages }} - Mostrando {{ (currentPage * pageSize) + 1
+            }}–{{ Math.min((currentPage + 1) * pageSize, totalElements) }} de {{ totalElements }}
           </span>
 
-          <button class="pag-btn" :disabled="currentPage >= totalPages - 1" @click="irPagina(currentPage + 1)">Siguiente
-            ›</button>
+          <button class="pag-btn" :disabled="currentPage >= totalPages - 1" @click="irPagina(currentPage + 1)">Siguiente›</button>
         </div>
       </div>
 
@@ -220,12 +217,12 @@ const categorias = ref<Categoria[]>([]);
 // Ubicaciones e incidencias
 const ubicaciones = ref<string[]>([]);
 
-// PAGINACIÓN SERVER-SIDE
-const incidenciasPaginadas = ref<Incidencia[]>([]);  // Incidencias de la página actual
-const currentPage = ref<number>(0);                   // 0-based (como Spring)
-const pageSize = ref<number>(20);                     // Default 20, editable 1-100
-const totalPages = ref<number>(1);                    // Total de páginas desde backend
-const totalElements = ref<number>(0);                 // Total de incidencias en BD
+// Paginación
+const incidenciasPaginadas = ref<Incidencia[]>([]);  
+const currentPage = ref<number>(0);                  
+const pageSize = ref<number>(20);                    
+const totalPages = ref<number>(1);                   
+const totalElements = ref<number>(0);                
 
 const isLoading = ref(false);
 
@@ -276,7 +273,7 @@ onMounted(async () => {
   // Cargamos los usuarios de categoría
   await cargarUsuariosCategoria();
 
-  // Cargamos las incidencias (con paginación)
+  // Cargamos las incidencias con paginación
   await cargarIncidencias();
 });
 
@@ -304,7 +301,7 @@ async function cargarDatosUsuario() {
 }
 
 /**
- * Cargar las incidencias con paginación server-side.
+ * Cargar las incidencias con paginación.
  */
 async function cargarIncidencias() {
   try {
@@ -315,15 +312,22 @@ async function cargarIncidencias() {
       toastMessage,
       toastColor,
       isToastOpen,
-      currentPage.value,  // page (0-based)
-      pageSize.value,     // size
-      'fecha,desc'        // sort
+      currentPage.value,  
+      pageSize.value,     
+      'fecha,desc'        
     );
 
-    // Extraer datos del objeto Page<T> de Spring
+    // Extraer datos del objeto Page
     incidenciasPaginadas.value = pageResponse.content || [];
     totalPages.value = pageResponse.totalPages || 1;
     totalElements.value = pageResponse.totalElements || 0;
+    
+    // Para que si el usuario borra la última incidencia de una página no se quede vacía
+    if (currentPage.value > 0 && incidenciasPaginadas.value.length === 0) {
+      currentPage.value = Math.max(0, totalPages.value - 1);
+      await cargarIncidencias();
+      return;
+    }    
 
   }
   catch (e: any) {
@@ -348,7 +352,7 @@ function recargarConPaginacion() {
 
 /**
  * Navegar a una página específica.
- * @param pagina Número de página (0-based)
+ * @param pagina Número de página
  */
 function irPagina(pagina: number) {
   if (pagina >= 0 && pagina < totalPages.value) {
@@ -470,7 +474,7 @@ function puedeEditarIncidencia(emailResponsable: string, categoria: string): boo
 /*************************************************/
 
 /**
- * Filtrar las incidencias de la página actual (client-side).
+ * Filtrar las incidencias de la página actual.
  * @return Las incidencias filtradas.
  */
 const incidenciasFiltradas = computed(() => {
