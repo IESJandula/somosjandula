@@ -895,3 +895,30 @@ export const obtenerAccionesPendientesActuador = async (
 
   return await response.json();
 };
+
+export const obtenerComandoEstadoProyector = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/actualizacion/actuador/proyector/comando-estado',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message ?? `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+};
