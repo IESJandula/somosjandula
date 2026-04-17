@@ -88,6 +88,7 @@
 import { ref, watch, nextTick, onMounted } from 'vue'
 import { crearOrdenSimpleAudio } from '@/services/automations'
 import { conectarWebSocket, enviarMensajeWebSocket } from "@/services/websocket"
+import { useRoute } from 'vue-router'
 
 /* VARIABLES */
 const texto = ref('')
@@ -107,6 +108,7 @@ const isToastOpen = ref(false)
 const textoManual = ref('')
 const esperandoRespuesta = ref(false)
 const enviando = ref(false)
+const route = useRoute()
 
 onMounted(() => {
 
@@ -146,6 +148,12 @@ onMounted(() => {
 
   })
 
+  const queryParam = route.query.query
+
+  if (queryParam) {
+    textoManual.value = decodeURIComponent(queryParam).replace(/\+/g, ' ')
+    puedeEnviar.value = true
+  }
 })
 
 /* AUTO SCROLL SUAVE */
@@ -164,6 +172,14 @@ watch(historial, (nuevoHistorial) => {
     JSON.stringify(nuevoHistorial)
   )
 }, { deep: true })
+
+// Leer query param "query" de la URL
+watch(() => route.query.query, (newQuery) => {
+  if (newQuery) {
+    textoManual.value = decodeURIComponent(newQuery).replace(/\+/g, ' ')
+    puedeEnviar.value = true
+  }
+})
 
 /* CONTROL ENVÍO */
 const puedeEnviar = ref(false)
@@ -800,7 +816,7 @@ function limpiarHistorial() {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   scrollbar-width: none;
-  -ms-overflow-style: none; 
+  -ms-overflow-style: none;
 }
 
 .history-container::-webkit-scrollbar {

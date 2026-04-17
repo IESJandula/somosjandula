@@ -51,7 +51,7 @@ import {
   eye,
   calendarOutline,
   infinite,
-  gitCommit,  
+  gitCommit,
   bagAddOutline,
   bandage,
   barChart,
@@ -108,34 +108,20 @@ const app = createApp(App).use(IonicVue).use(router);
 let isLoggingIn = false; // Variable para detectar el estado de login
 
 const auth = getAuth();
-onAuthStateChanged(auth, (user) =>
-{
-
-  if (user && !isLoggingIn)
-  {
+onAuthStateChanged(auth, (user) => {
+  if (user && !isLoggingIn) {
     (async () => {
-      
-      try
-      {
+      try {
         const isToastOpen = ref(false);
         const toastMessage = ref('');
         const toastColor = ref('success');
 
-        // Solo ejecuta si no está en proceso de login
-        const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+        // Validar usuario
+        await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
 
-        // Verifica si hay una redirección pendiente
-        const redirectPath = router.currentRoute.value.query.redirect || '/printers/print'; // '/dashboard' es la ruta por defecto
-        if (router.currentRoute.value.name === 'Login') {
-          router.push({ path: redirectPath });
-        }
-      }
-      catch (error)
-      {
-        // Cerramos la sesión si algo falla
+      } catch (error) {
         signOut(auth);
-    
-        console.error("Error obteniendo el token JWT o validando usuario:", error) ;
+        console.error("Error obteniendo el token JWT o validando usuario:", error);
       }
     })();
   }
@@ -150,18 +136,16 @@ router.isReady().then(() => {
 
   const cachedVersion = localStorage.getItem('app_version');
 
-  if (cachedVersion && cachedVersion !== APP_VERSION)
-  {
+  if (cachedVersion && cachedVersion !== APP_VERSION) {
     localStorage.setItem('app_version', APP_VERSION);
 
     // Eliminamos el token de la sesión previa
-    localStorage.removeItem(SESSION_JWT_TOKEN) ;
+    localStorage.removeItem(SESSION_JWT_TOKEN);
 
-    console.log('[App] Nueva versión detectada, recargando...') ;
-    location.reload() ; // fuerza recarga completa
+    console.log('[App] Nueva versión detectada, recargando...');
+    location.reload(); // fuerza recarga completa
   }
-  else if (!cachedVersion)
-  {
+  else if (!cachedVersion) {
     localStorage.setItem('app_version', APP_VERSION);
   }
 

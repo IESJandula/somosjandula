@@ -72,31 +72,32 @@ const loginWithGoogle = async () =>
 {
   try
   {
-    // Indicamos que el usuario está iniciando sesión
     setLoggingInStatus(true);
 
-    // Login a través de Google
-    const result    = await signInWithPopup(auth, googleProvider);
+    // Login con Google
+    const result = await signInWithPopup(auth, googleProvider);
 
-    // Obtenemos el token JWT
-    const user      = result.user ;
+    // Validar usuario
+    await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
 
-    // Validamos el usuario en el sistema
-    const userRoles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen) ;
+    // CLAVE: usar localStorage en vez de query params
+    const redirectUrl = localStorage.getItem("redirectAfterLogin");
 
-    // Verificamos si hay una redirección pendiente (guardada en el router)
-    const redirectPath = router.currentRoute.value.query.redirect || '/printers/print'; // 'Dashboard' es la ruta por defecto
-    router.push({ path: redirectPath });
+    if (redirectUrl) {
+      localStorage.removeItem("redirectAfterLogin");
+      router.replace(redirectUrl);
+    } else {
+      router.replace('/'); // fallback
+    }
+
   }
   catch (error)
   {
-    // Crear toast
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message) ;
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
   }
   finally
   {
-    // Restablecemos el estado después del login
-    setLoggingInStatus(false); 
+    setLoggingInStatus(false);
   }
 };
 
