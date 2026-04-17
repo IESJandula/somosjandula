@@ -149,12 +149,16 @@ export declare function eliminarActuadorProyector(toastMessage: Ref<string>,
                                                   toastColor: Ref<string>,
                                                   isToastOpen: Ref<boolean>,
                                                   mac: Ref<string> | string): Promise<boolean>;
-                                    
+
 export declare function obtenerUbicaciones(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
 
-export declare function obtenerTipos(toastMessage: Ref<string>,
+export declare function obtenerTiposActuador(toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>): Promise<string[]>;
+
+export declare function obtenerTiposSensores(toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>): Promise<string[]>;
 
@@ -223,7 +227,7 @@ export declare function obtenerAcciones(toastMessage: Ref<string>,
 export declare function obtenerOrdenesSimples(toastMessage: Ref<string>,
                                               toastColor: Ref<string>,
                                               isToastOpen: Ref<boolean>): Promise<OrdenSimpleResponseDto[]>
-                                              
+
 export declare function obtenerActuadoresPaginacion(toastMessage: Ref<string>,
                                                     toastColor: Ref<string>,
                                                     isToastOpen: Ref<boolean>,

@@ -136,6 +136,12 @@
               class="door-dot"
               :class="[doorDotState(id), doorDotCornerClass(id)]"
             ></span>
+
+            <span
+              v-if="projectorDotState(id)"
+              class="projector-dot"
+              :class="[projectorDotState(id), projectorDotCornerClass(id)]"
+            ></span>
           </div>
         </div>
 
@@ -158,6 +164,12 @@
               class="door-dot"
               :class="[doorDotState(id), doorDotCornerClass(id)]"
             ></span>
+
+            <span
+              v-if="projectorDotState(id)"
+              class="projector-dot"
+              :class="[projectorDotState(id), projectorDotCornerClass(id)]"
+            ></span>
           </div>
         </div>
 
@@ -179,6 +191,12 @@
               v-if="doorDotState(id)"
               class="door-dot"
               :class="[doorDotState(id), doorDotCornerClass(id)]"
+            ></span>
+
+            <span
+              v-if="projectorDotState(id)"
+              class="projector-dot"
+              :class="[projectorDotState(id), projectorDotCornerClass(id)]"
             ></span>
           </div>
         </div>
@@ -321,6 +339,7 @@ const getTipo = (d: { tipo?: string | null; aplicabilidad?: string | null }) =>
   (d?.tipo ?? d?.aplicabilidad ?? '').toString()
 
 type DoorStateClass = 'door-on' | 'door-off' | 'door-undef' | null
+type ProjectorStateClass = 'projector-on' | 'projector-off' | 'projector-undef' | null
 
 const doorDotState = (zoneId: string): DoorStateClass =>
 {
@@ -342,6 +361,28 @@ const doorDotState = (zoneId: string): DoorStateClass =>
   if (estado === 'on') return 'door-on'
   if (estado === 'off') return 'door-off'
   return 'door-undef'
+}
+
+const projectorDotState = (zoneId: string): ProjectorStateClass =>
+{
+  if (!dispositivos.value) return null
+
+  const ubicacionBack = zoneIdToNombreUbicacionBack(zoneId)
+  const acts = dispositivos.value.mapaActuadores?.[ubicacionBack] ?? []
+
+  const proyectores = acts.filter(a =>
+  {
+    const tp = getTipo(a).toLowerCase().trim()
+    return tp === 'proyector' || tp === 'proyector-carrito'
+  })
+
+  if (proyectores.length === 0) return null
+
+  const estado = (proyectores[0].estado ?? '').toLowerCase().trim()
+
+  if (estado === 'on') return 'projector-on'
+  if (estado === 'off') return 'projector-off'
+  return 'projector-undef'
 }
 
 const DOOR_DOT_BOTTOM_RIGHT = new Set<string>([
@@ -367,6 +408,11 @@ const DOOR_DOT_BOTTOM_RIGHT = new Set<string>([
 const doorDotCornerClass = (zoneId: string): string =>
 {
   return DOOR_DOT_BOTTOM_RIGHT.has(zoneId) ? 'door-dot-br' : ''
+}
+
+const projectorDotCornerClass = (_zoneId: string): string =>
+{
+  return 'projector-dot-bl'
 }
 
 // ------------------------------
@@ -876,7 +922,6 @@ button {
   padding: 6px 10px;
 }
 
-
 .boton-active {
   color: #fff;
   background-color: rgb(31, 155, 203);
@@ -964,13 +1009,9 @@ button {
   height: 18px;
   pointer-events: none;
   box-sizing: border-box;
-
-  /* forma de puerta */
   border: 2px solid rgba(0, 0, 0, 0.75);
   border-bottom-width: 3px;
   border-radius: 3px 3px 1px 1px;
-
-  /* pequeño efecto visual */
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
 }
 
@@ -1032,6 +1073,90 @@ button {
 .door-undef { background-color: orange; }
 .door-on { background-color: green; }
 .door-off { background-color: red; }
+
+.projector-dot {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  width: 20px;
+  height: 12px;
+  pointer-events: none;
+  box-sizing: border-box;
+  border: 2px solid rgba(0, 0, 0, 0.75);
+  border-radius: 4px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
+}
+
+/* lente del proyector */
+.projector-dot::before {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 3px;
+  width: 5px;
+  height: 5px;
+  border: 2px solid rgba(0, 0, 0, 0.75);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  box-sizing: border-box;
+}
+
+/* soporte inferior */
+.projector-dot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 8px;
+  height: 6px;
+  border-left: 2px solid rgba(0, 0, 0, 0.75);
+  border-right: 2px solid rgba(0, 0, 0, 0.75);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.75);
+  border-radius: 0 0 4px 4px;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+
+.projector-dot-bl {
+  bottom: 6px;
+  left: 6px;
+}
+
+.projector-undef { background-color: orange; }
+.projector-on { background-color: green; }
+.projector-off { background-color: red; }
+
+:global(.dark) .projector-dot {
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+:global(.dark) .projector-dot::before {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+:global(.dark) .projector-dot::after {
+  border-left-color: rgba(255, 255, 255, 0.8);
+  border-right-color: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+}
+
+@media (prefers-color-scheme: dark) {
+  .projector-dot {
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+
+  .projector-dot::before {
+    border-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .projector-dot::after {
+    border-left-color: rgba(255, 255, 255, 0.8);
+    border-right-color: rgba(255, 255, 255, 0.8);
+    border-bottom-color: rgba(255, 255, 255, 0.8);
+  }
+}
 
 /* ROTACIÓN */
 #contenedor-rotacion .rot-times {
