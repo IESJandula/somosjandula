@@ -446,9 +446,9 @@ async function enviarTextoManual() {
 
     esperandoRespuesta.value = true
 
-    enviarMensajeWebSocket({
+    enviarMensajeWebSocket("automations", {
       pregunta: pregunta
-    })
+    });
 
     textoManual.value = ''
 
@@ -798,10 +798,13 @@ function limpiarHistorial() {
   gap: 18px;
 
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  scrollbar-width: none;
+  -ms-overflow-style: none; 
 }
 
 .history-container::-webkit-scrollbar {
-  width: 6px;
+  display: none;
 }
 
 .history-container::-webkit-scrollbar-thumb {

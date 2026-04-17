@@ -42,7 +42,7 @@ export const conectarWebSocket = async (
       console.log("WebSocket conectado a Automations");
 
       // Nos suscribimos al canal de respuestas
-      stompClient.subscribe("/topic/respuestas", (message) => {
+      stompClient.subscribe("/topic/automations/respuestas", (message) => {
         const data = JSON.parse(message.body);
         onMessage(data);
       });
@@ -61,18 +61,16 @@ export const conectarWebSocket = async (
 /**
  * Enviar mensaje al backend
  */
-export const enviarMensajeWebSocket = (mensaje) => {
+export const enviarMensajeWebSocket = (servicio, mensaje) => {
 
-  // Solo enviamos si está conectado
   if (stompClient && stompClient.connected) {
 
     stompClient.publish({
-      destination: "/app/automations",
+      destination: `/app/${servicio}`,
       body: JSON.stringify(mensaje)
     });
 
   } else {
     console.error("WebSocket no conectado");
   }
-
 };
