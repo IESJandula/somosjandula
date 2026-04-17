@@ -643,7 +643,7 @@ export const crearActuadorPuerta = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + '/automations/admin/actuador/puerta',
+    automationsApiUrl + '/automations/admin/actuador/puerta/',
     {
       method: 'POST',
       headers: {
@@ -681,7 +681,7 @@ export const crearActuadorProyector = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + '/automations/admin/actuador/proyector',
+    automationsApiUrl + '/automations/admin/actuador/proyector/',
     {
       method: 'POST',
       headers: {
@@ -715,7 +715,7 @@ export const eliminarActuadorPuerta = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + '/automations/admin/actuador/puerta',
+    automationsApiUrl + '/automations/admin/actuador/puerta/',
     {
       method: 'DELETE',
       headers: {
@@ -742,7 +742,7 @@ export const eliminarActuadorProyector = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + '/automations/admin/actuador/proyector',
+    automationsApiUrl + '/automations/admin/actuador/proyector/',
     {
       method: 'DELETE',
       headers: {
@@ -771,7 +771,7 @@ export const crearComandoActuadorPuerta = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + '/automations/admin/comando/actuador/puerta',
+    automationsApiUrl + '/automations/admin/actuador/puerta/comando',
     {
       method: 'POST',
       headers: {
@@ -802,7 +802,7 @@ export const obtenerComandosActuadorPuerta = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + '/automations/admin/comando/actuador/puerta',
+    automationsApiUrl + '/automations/admin/actuador/puerta/comando',
     {
       method: 'GET',
       headers: {
@@ -830,7 +830,7 @@ export const eliminarComandoActuadorPuerta = async (
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(
-    automationsApiUrl + '/automations/admin/comando/actuador/puerta',
+    automationsApiUrl + '/automations/admin/actuador/puerta/comando',
     {
       method: 'DELETE',
       headers: {

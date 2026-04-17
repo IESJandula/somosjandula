@@ -27,17 +27,6 @@
             </select>
           </div>
 
-          <div class="row">
-            <label>Tipo:</label>
-            <select v-model="tipoElegido">
-              <option disabled value="">Selecciona tipo</option>
-              <option v-for="t in tipos" :key="t.id ?? t.tipo" :value="t.tipo">
-                {{ t.tipo }}
-              </option>
-            </select>
-          </div>
-        </div>
-
         <div class="section center">
           <div class="switch-container-gestion">
             <span>Actuador</span>
@@ -57,6 +46,17 @@
               <span class="slider"></span>
             </label>
             <span>Numérico</span>
+          </div>
+        </div>
+        
+        <div class="row">
+          <label>Tipo:</label>
+            <select v-model="tipoElegido">
+              <option disabled value="">Selecciona tipo</option>
+              <option v-for="t in tipos" :key="t.id ?? t.tipo" :value="t.tipo">
+                {{ t.tipo }}
+              </option>
+            </select>
           </div>
         </div>
 
@@ -537,13 +537,24 @@ const relesDisponibles = computed(() => {
       .map((c) => Number(c.indiceRele))
   );
 
-  return Array.from({ length: total }, (_, i) => i + 1)
+  return Array.from({ length: total }, (_, i) => i)
     .filter((rele) => !relesUsados.has(rele));
 });
 
 const puedeCrearComando = computed(() => {
   if (!dispositivoSeleccionado.value || !keywordCmd.value || !textoOk.value) return false;
-  if (esPuertaSeleccionada.value && !indiceReleSeleccionado.value) return false;
+
+  if (
+    esPuertaSeleccionada.value &&
+    (
+      indiceReleSeleccionado.value === "" ||
+      indiceReleSeleccionado.value === null ||
+      indiceReleSeleccionado.value === undefined
+    )
+  ) {
+    return false;
+  }
+
   return true;
 });
 

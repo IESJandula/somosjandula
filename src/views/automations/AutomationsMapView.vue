@@ -876,9 +876,6 @@ button {
   padding: 6px 10px;
 }
 
-button:hover {
-  background-color: var(--btn-hover);
-}
 
 .boton-active {
   color: #fff;
