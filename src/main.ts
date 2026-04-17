@@ -108,22 +108,35 @@ const app = createApp(App).use(IonicVue).use(router);
 let isLoggingIn = false; // Variable para detectar el estado de login
 
 const auth = getAuth();
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user && !isLoggingIn) {
-    (async () => {
-      try {
-        const isToastOpen = ref(false);
-        const toastMessage = ref('');
-        const toastColor = ref('success');
 
-        // Validar usuario
-        await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+    const redirectUrl = localStorage.getItem("redirectAfterLogin");
 
-      } catch (error) {
-        signOut(auth);
-        console.error("Error obteniendo el token JWT o validando usuario:", error);
-      }
-    })();
+    if (redirectUrl) {
+      localStorage.removeItem("redirectAfterLogin");
+      router.replace(redirectUrl);
+      return;
+    }
+
+    // 🔥 COMPORTAMIENTO ANTIGUO (IMPORTANTE)
+    if (router.currentRoute.value.name === 'Login') {
+      router.replace('/printers/print');
+      return;
+    }
+
+    // (opcional) cargar roles
+    try {
+      const isToastOpen = ref(false);
+      const toastMessage = ref('');
+      const toastColor = ref('success');
+
+      await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+
+    } catch (error) {
+      signOut(auth);
+      console.error("Error obteniendo roles:", error);
+    }
   }
 });
 

@@ -399,10 +399,6 @@ router.beforeEach(async (to, from, next) => {
   const auth = getAuth();
   let user = auth.currentUser;
 
-  if (!user) {
-    user = await waitForAuthReady(auth); // Espera a que Firebase termine de inicializar el estado de autenticación
-  }
-
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!user) {
       // GUARDAR URL ORIGINAL (ESTA ES LA CLAVE)
