@@ -119,13 +119,13 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    // 🔥 COMPORTAMIENTO ANTIGUO (IMPORTANTE)
+    // COMPORTAMIENTO ANTIGUO (IMPORTANTE)
     if (router.currentRoute.value.name === 'Login') {
       router.replace('/printers/print');
       return;
     }
 
-    // (opcional) cargar roles
+    // cargar roles
     try {
       const isToastOpen = ref(false);
       const toastMessage = ref('');

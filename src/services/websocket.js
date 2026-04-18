@@ -34,7 +34,7 @@ export const conectarWebSocket = async (
       Authorization: `Bearer ${token}`
     },
 
-    debug: () => {},
+    debug: () => { },
 
     // Cuando conecta correctamente
     onConnect: () => {
@@ -42,9 +42,13 @@ export const conectarWebSocket = async (
       console.log("WebSocket conectado a Automations");
 
       // Nos suscribimos al canal de respuestas
-      stompClient.subscribe("/topic/automations/respuestas", (message) => {
-        const data = JSON.parse(message.body);
-        onMessage(data);
+      stompClient.subscribe("/user/queue/automations/respuestas", (msg) => {
+        const data = JSON.parse(msg.body);
+        console.log(data);
+
+        if (onMessage) {
+          onMessage(data);
+        }
       });
     },
 

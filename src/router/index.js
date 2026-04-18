@@ -401,7 +401,7 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!user) {
-      // GUARDAR URL ORIGINAL (ESTA ES LA CLAVE)
+      // GUARDAR URL ORIGINAL
       localStorage.setItem("redirectAfterLogin", to.fullPath)
       return next({ name: 'Login' });
     }
