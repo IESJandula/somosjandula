@@ -210,7 +210,7 @@
 
               <th v-if="!esSensorLista" class="col-reles">Número de relés</th>
               <th v-if="!esSensorLista">Comando estado</th>
-
+              <th v-if="!esSensorLista">Estado proyector</th>
               <th v-if="esSensorLista">Valor actual</th>
               <th v-if="esSensorLista">Umbral máximo</th>
               <th v-if="esSensorLista">Umbral mínimo</th>
@@ -232,10 +232,11 @@
               <td>
                 {{ d.tipo?.toLowerCase() === 'proyector' ? (d.comandoEstado ?? '-') : '' }}
               </td>
+              <td>{{ d.tipo?.toLowerCase() === 'proyector' ? (d.estadoProyector ?? '-') : '' }}</td>
               <td><button @click="eliminarActuadorVista(d)">X</button></td>
             </tr>
             <tr v-if="(actuadoresPaginados?.length ?? 0) === 0">
-              <td colspan="7">No hay actuadores</td>
+              <td colspan="8">No hay actuadores</td>
             </tr>
           </tbody>
 
@@ -457,6 +458,7 @@ import {
   obtenerOrdenesSimples,
   obtenerAccionesPendientesActuador,
   obtenerComandoEstadoProyector,
+  actualizarEstadoProyectorYObtenerAccion,
 } from "@/services/automations";
 
 import {
@@ -519,6 +521,10 @@ const accionesPendientesActuador = ref([]);
 const respuestaActuadorEstado = ref([]);
 const macPruebaProyector = ref("");
 
+const macPruebaEstadoProyector = ref("");
+const estadoPruebaProyector = ref("");
+const accionPendienteProyector = ref({});
+
 const actuadoresPaginados = computed(() => actuadores.value ?? []);
 const sensoresBooleanosPaginados = computed(() => sensoresBooleanos.value ?? []);
 const sensoresNumericosPaginados = computed(() => sensoresNumericos.value ?? []);
@@ -566,6 +572,31 @@ const probarAccionesPendientesActuador = async () => {
   } catch (error) {
     accionesPendientesActuador.value = [];
     respuestaActuadorEstado.value = [];
+    crearToast(toastMessage, toastColor, isToastOpen, error.message);
+  }
+};
+//Prueba
+const probarEstadoProyector = async () => {
+  try {
+    const response = await actualizarEstadoProyectorYObtenerAccion(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      macPruebaEstadoProyector.value,
+      estadoPruebaProyector.value
+    );
+
+    accionPendienteProyector.value = response ?? {};
+
+    console.log("JSON devuelto por /actuador/proyector/estado:");
+    console.log(JSON.stringify(response, null, 2));
+
+    await obtenerActuadoresVista();
+    await cargarActuadoresParaComandos();
+
+    crearToast(toastMessage, toastColor, isToastOpen, "Estado del proyector enviado correctamente");
+  } catch (error) {
+    accionPendienteProyector.value = {};
     crearToast(toastMessage, toastColor, isToastOpen, error.message);
   }
 };

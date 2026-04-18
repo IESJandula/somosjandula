@@ -62,6 +62,7 @@ export type ActuadorResponseDto =
   tipo: string
   numeroReles?: number | null
   comandoEstado?: string | null
+  estadoProyector?: string | null
 }
 export type ActuadorAccionPendienteResponseDto =
 {
@@ -268,3 +269,9 @@ export declare function obtenerComandoEstadoProyector(toastMessage: Ref<string>,
                                                       toastColor: Ref<string>,
                                                       isToastOpen: Ref<boolean>,
                                                       mac: Ref<string> | string): Promise<ComandoEstadoProyectorResponseDto>
+
+export declare function actualizarEstadoProyectorYObtenerAccion(toastMessage: Ref<string>,
+                                                                toastColor: Ref<string>,
+                                                                isToastOpen: Ref<boolean>,
+                                                                mac: Ref<string> | string,
+                                                                estadoProyector: Ref<string> | string): Promise<ActuadorAccionPendienteResponseDto>                                                      
