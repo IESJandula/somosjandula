@@ -86,7 +86,7 @@
 
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue'
-import { crearOrdenSimpleAudio } from '@/services/automations'
+import { crearOrdenSimpleAudio, crearOrdenSimpleTexto } from '@/services/automations'
 import { conectarWebSocket, enviarMensajeWebSocket } from "@/services/websocket"
 import { useRoute } from 'vue-router'
 
@@ -461,6 +461,13 @@ async function enviarTextoManual() {
     })
 
     esperandoRespuesta.value = true
+
+    await crearOrdenSimpleTexto(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      pregunta
+    )
 
     enviarMensajeWebSocket("automations", {
       pregunta: pregunta
