@@ -78,10 +78,16 @@
             <input type="number" min="1" v-model="numeroReles" />
           </div>
         </div>
+        <div class="section" v-if="!esSensorForm && esTipoProyector">
+          <div class="row">
+            <label>Comando estado:</label>
+            <input type="text" v-model="comandoEstadoProyector" />
+          </div>
+        </div>
 
         <div class="section">
           <button
-            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && !esTipoPuerta"
+            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && !esTipoPuerta && !esTipoProyector"
             class="btn-primary"
             @click="crearActuadorVista"
           >
@@ -89,7 +95,7 @@
           </button>
 
           <button
-            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && esTipoPuerta && numeroReles > 0"
+            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && esTipoProyector && comandoEstadoProyector && comandoEstadoProyector.trim() !== ''"
             class="btn-primary"
             @click="crearActuadorVista"
           >
@@ -196,14 +202,15 @@
 
         <table>
           <thead>
-            <tr>
+           <tr>
               <th>MAC</th>
               <th>Estado</th>
               <th>Ubicación</th>
               <th>Tipo</th>
 
-              <th v-if="!esSensorLista">Número de relés</th>
-
+              <th v-if="!esSensorLista" class="col-reles">Número de relés</th>
+              <th v-if="!esSensorLista">Comando estado</th>
+              <th v-if="!esSensorLista">Estado proyector</th>
               <th v-if="esSensorLista">Valor actual</th>
               <th v-if="esSensorLista">Umbral máximo</th>
               <th v-if="esSensorLista">Umbral mínimo</th>
@@ -219,11 +226,17 @@
               <td>{{ d.estado }}</td>
               <td>{{ d.nombreUbicacion }}</td>
               <td>{{ d.tipo }}</td>
-              <td>{{ d.tipo?.toLowerCase() === 'puerta' ? (d.numeroReles ?? '-') : '' }}</td>
+              <td class="col-reles">
+                {{ d.tipo?.toLowerCase() === 'puerta' ? (d.numeroReles ?? '-') : '' }}
+              </td>
+              <td>
+                {{ d.tipo?.toLowerCase() === 'proyector' ? (d.comandoEstado ?? '-') : '' }}
+              </td>
+              <td>{{ d.tipo?.toLowerCase() === 'proyector' ? (d.estadoProyector ?? '-') : '' }}</td>
               <td><button @click="eliminarActuadorVista(d)">X</button></td>
             </tr>
             <tr v-if="(actuadoresPaginados?.length ?? 0) === 0">
-              <td colspan="6">No hay actuadores</td>
+              <td colspan="8">No hay actuadores</td>
             </tr>
           </tbody>
 
@@ -458,6 +471,7 @@ const estado = ref("indefinido");
 const umbralMin = ref(0);
 const umbralMax = ref(0);
 const numeroReles = ref(1);
+const comandoEstadoProyector = ref("");
 
 const actuadores = ref([]);
 const sensoresNumericos = ref([]);
@@ -746,6 +760,7 @@ const limpiarFormularioDispositivo = () => {
   ubicacionElegida.value = "";
   tipoElegido.value = "";
   numeroReles.value = 1;
+  comandoEstadoProyector.value = "";
   umbralMin.value = 0;
   umbralMax.value = 0;
 };
@@ -772,7 +787,7 @@ const crearActuadorVista = async () => {
         estado,
         ubicacionElegida,
         tipoElegido,
-        ""
+        comandoEstadoProyector
       );
     } else {
       await crearActuador(
@@ -1088,12 +1103,18 @@ watch([esSensorLista, esNumericoLista], async () => {
 watch(esSensorForm, async () => {
   tipoElegido.value = "";
   esNumericoForm.value = false;
+  numeroReles.value = 1;
+  comandoEstadoProyector.value = "";
   await obtenerTiposVista();
 });
 
 watch(tipoElegido, () => {
   if (!esTipoPuerta.value) {
     numeroReles.value = 1;
+  }
+
+  if (!esTipoProyector.value) {
+    comandoEstadoProyector.value = "";
   }
 
   if (!esSensorForm.value) {

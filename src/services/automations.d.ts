@@ -61,6 +61,8 @@ export type ActuadorResponseDto =
   nombreUbicacion: string
   tipo: string
   numeroReles?: number | null
+  comandoEstado?: string | null
+  estadoProyector?: string | null
 }
 
 export declare function obtenerDispositivos(toastMessage: Ref<string>,
