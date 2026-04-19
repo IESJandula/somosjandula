@@ -62,13 +62,6 @@ export type ActuadorResponseDto =
   tipo: string
   numeroReles?: number | null
 }
-export type ActuadorAccionPendienteResponseDto =
-{
-  accionId: number
-  orden: string
-  keyword?: string
-  indiceRele?: number | null
-}
 
 export declare function obtenerDispositivos(toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
@@ -252,8 +245,3 @@ export declare function obtenerSensorNumericoPaginacion(toastMessage: Ref<string
                                                         isToastOpen: Ref<boolean>,
                                                         page?: number,
                                                         size?: number): Promise<PageResponseDto<any>>;
-                                                        
-export declare function obtenerAccionesPendientesActuador(toastMessage: Ref<string>,
-                                                          toastColor: Ref<string>,
-                                                          isToastOpen: Ref<boolean>,
-                                                          mac: Ref<string> | string): Promise<ActuadorAccionPendienteResponseDto[]>
