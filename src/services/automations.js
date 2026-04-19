@@ -869,3 +869,29 @@ export const eliminarActuadorProyector = async (
 
   return true;
 };
+export const obtenerAccionesPendientesActuador = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  mac
+) => {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(
+    automationsApiUrl + '/automations/admin/actualizacion/actuador/estado',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${tokenPropio}`,
+        mac: mac?.value ?? mac,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message ?? `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+};

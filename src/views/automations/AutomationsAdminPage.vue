@@ -443,6 +443,7 @@ import {
   eliminarComandoActuadorPuerta,
   obtenerAcciones,
   obtenerOrdenesSimples,
+  obtenerAccionesPendientesActuador,
 } from "@/services/automations";
 
 import {
@@ -499,6 +500,10 @@ const paginaActualAcciones = ref(1);
 const accionesPorPagina = ref(5);
 const totalPaginasAcciones = ref(1);
 
+const macPruebaActuador = ref("");
+const accionesPendientesActuador = ref([]);
+const respuestaActuadorEstado = ref([]);
+
 const actuadoresPaginados = computed(() => actuadores.value ?? []);
 const sensoresBooleanosPaginados = computed(() => sensoresBooleanos.value ?? []);
 const sensoresNumericosPaginados = computed(() => sensoresNumericos.value ?? []);
@@ -507,6 +512,30 @@ const accionesPaginadas = computed(() => listaAcciones.value ?? []);
 
 const esTipoPuerta = computed(() => String(tipoElegido.value ?? "").toLowerCase() === "puerta");
 const esTipoProyector = computed(() => String(tipoElegido.value ?? "").toLowerCase() === "proyector");
+
+
+const probarAccionesPendientesActuador = async () => {
+  try {
+    const response = await obtenerAccionesPendientesActuador(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      macPruebaActuador.value
+    );
+
+    accionesPendientesActuador.value = response ?? [];
+    respuestaActuadorEstado.value = response ?? [];
+
+    console.log("JSON devuelto por /actuador/estado:");
+    console.log(JSON.stringify(response, null, 2));
+
+    crearToast(toastMessage, toastColor, isToastOpen, "Consulta realizada correctamente");
+  } catch (error) {
+    accionesPendientesActuador.value = [];
+    respuestaActuadorEstado.value = [];
+    crearToast(toastMessage, toastColor, isToastOpen, error.message);
+  }
+};
 
 const dispositivosParaComandos = computed(() => {
   return (actuadoresParaComandos.value ?? []).map((a) => ({
