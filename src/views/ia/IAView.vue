@@ -68,8 +68,8 @@
         </button>
 
         <!-- BOTÓN ENVIAR -->
-        <button class="send-button" :disabled="!puedeEnviar || escuchando"
-          :class="{ disabled: !puedeEnviar || escuchando }" @click="enviarTextoManual">
+        <button class="send-button" :disabled="!puedeEnviar || escuchando || enviando"
+          :class="{ disabled: !puedeEnviar || escuchando || enviando }" @click="enviarTextoManual">
           <span v-if="contador > 0">
             {{ contador }}s
           </span>
@@ -85,8 +85,10 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
-import { crearOrdenSimpleTexto, crearOrdenSimpleAudio } from '@/services/automations'
+import { ref, watch, nextTick, onMounted } from 'vue'
+import { crearOrdenSimpleAudio, crearOrdenSimpleTexto } from '@/services/automations'
+import { conectarWebSocket, enviarMensajeWebSocket } from "@/services/websocket"
+import { useRoute } from 'vue-router'
 
 /* VARIABLES */
 const texto = ref('')
@@ -100,12 +102,59 @@ if (historialGuardado) {
 }
 
 const historyContainer = ref(null)
-
 const toastMessage = ref('')
 const toastColor = ref('')
 const isToastOpen = ref(false)
-
 const textoManual = ref('')
+const esperandoRespuesta = ref(false)
+const enviando = ref(false)
+const route = useRoute()
+
+onMounted(() => {
+
+  // Llamamos a la función que conecta el WebSocket
+  // Le pasamos un callback que se ejecutará cada vez que llegue un mensaje
+  conectarWebSocket(toastMessage, toastColor, isToastOpen, async (mensaje) => {
+
+    // Indicamos que ya no estamos esperando respuesta
+    esperandoRespuesta.value = false
+    // Indicamos que ya no se está enviando nada
+    enviando.value = false
+
+    // Si el mensaje viene como string → lo convertimos a objeto JSON
+    // Si ya es objeto → lo usamos directamente
+    const data = typeof mensaje === "string" ? JSON.parse(mensaje) : mensaje
+
+    // Buscamos en el historial la pregunta que coincide con la recibida
+    const index = historial.value.findIndex(
+      item => item.pregunta === data.pregunta && item.respuesta === "Pensando..."
+    )
+
+    // Si encontramos esa pregunta en el historial
+    if (index !== -1) {
+      // Actualizamos su respuesta con la que llega del backend
+      historial.value[index].respuesta = data.respuesta
+    }
+
+    // Esperamos a que Vue actualice el DOM
+    // (para que el scroll funcione correctamente)
+    await nextTick()
+
+    // Hacemos scroll automático hacia abajo del contenedor
+    historyContainer.value.scrollTo({
+      top: historyContainer.value.scrollHeight,
+      behavior: "smooth"
+    })
+
+  })
+
+  const queryParam = route.query.query
+
+  if (queryParam) {
+    textoManual.value = decodeURIComponent(queryParam).replace(/\+/g, ' ')
+    puedeEnviar.value = true
+  }
+})
 
 /* AUTO SCROLL SUAVE */
 watch(historial, async () => {
@@ -123,6 +172,14 @@ watch(historial, (nuevoHistorial) => {
     JSON.stringify(nuevoHistorial)
   )
 }, { deep: true })
+
+// Leer query param "query" de la URL
+watch(() => route.query.query, (newQuery) => {
+  if (newQuery) {
+    textoManual.value = decodeURIComponent(newQuery).replace(/\+/g, ' ')
+    puedeEnviar.value = true
+  }
+})
 
 /* CONTROL ENVÍO */
 const puedeEnviar = ref(false)
@@ -388,32 +445,37 @@ async function enviarTextoManual() {
     return
   }
 
-  if (!puedeEnviar.value) return
+  if (!puedeEnviar.value || enviando.value) return
 
   try {
 
-    texto.value = textoManual.value
-    const pregunta = textoManual.value
+    enviando.value = true
 
-    const data = await crearOrdenSimpleTexto(
+    const pregunta = textoManual.value
+    texto.value = pregunta
+
+    historial.value.push({
+      id: Date.now(),
+      pregunta: pregunta,
+      respuesta: "Pensando..."
+    })
+
+    esperandoRespuesta.value = true
+
+    await crearOrdenSimpleTexto(
       toastMessage,
       toastColor,
       isToastOpen,
       pregunta
     )
 
-    historial.value.push({
-      pregunta: pregunta,
-      respuesta: data.textoRespuesta || "No se ha entendido la orden"
-    })
+    enviarMensajeWebSocket("automations", {
+      pregunta: pregunta
+    });
 
-    await nextTick()
+    textoManual.value = ''
 
-    if (historyContainer.value) {
-      historyContainer.value.scrollTop =
-        historyContainer.value.scrollHeight
-    }
-
+    // activamos contador de bloqueo
     puedeEnviar.value = false
     contador.value = 5
 
@@ -433,14 +495,12 @@ async function enviarTextoManual() {
 
     }, 1000)
 
-    textoManual.value = ''
-
   } catch {
+    enviando.value = false
+    esperandoRespuesta.value = false
 
     error.value = 'Error enviando el comando escrito'
-
   }
-
 }
 
 /* WAV */
@@ -761,10 +821,13 @@ function limpiarHistorial() {
   gap: 18px;
 
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .history-container::-webkit-scrollbar {
-  width: 6px;
+  display: none;
 }
 
 .history-container::-webkit-scrollbar-thumb {
