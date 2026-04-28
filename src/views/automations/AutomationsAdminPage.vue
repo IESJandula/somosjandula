@@ -95,6 +95,14 @@
           </button>
 
           <button
+            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && esTipoPuerta && Number(numeroReles) >= 1"
+            class="btn-primary"
+            @click="crearActuadorVista"
+          >
+            Crear / Modificar
+          </button>
+
+          <button
             v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && !esSensorForm && esTipoProyector && comandoEstadoProyector && comandoEstadoProyector.trim() !== ''"
             class="btn-primary"
             @click="crearActuadorVista"
@@ -111,7 +119,7 @@
           </button>
 
           <button
-            v-if="dispositivo && ubicacionElegida && tipoElegido && esSensorForm && esNumericoForm && umbralMin < umbralMax"
+            v-if="dispositivo && dispositivo.trim() !== '' && ubicacionElegida && tipoElegido && esSensorForm && esNumericoForm && umbralMin < umbralMax"
             class="btn-primary"
             @click="crearSensorNumericoVista"
           >
@@ -202,19 +210,20 @@
 
         <table>
           <thead>
-           <tr>
+            <tr>
               <th>MAC</th>
-              <th>Estado</th>
-              <th>Ubicación</th>
               <th>Tipo</th>
+              <th>Ubicación</th>
+              <th v-if="esSensorLista">Última actualización</th>
+              <th>Estado</th>
 
               <th v-if="!esSensorLista" class="col-reles">Número de relés</th>
               <th v-if="!esSensorLista">Comando estado</th>
               <th v-if="!esSensorLista">Estado proyector</th>
+
               <th v-if="esSensorLista">Valor actual</th>
-              <th v-if="esSensorLista">Umbral máximo</th>
               <th v-if="esSensorLista">Umbral mínimo</th>
-              <th v-if="esSensorLista">Última actualización</th>
+              <th v-if="esSensorLista">Umbral máximo</th>
 
               <th>Acciones</th>
             </tr>
@@ -223,16 +232,18 @@
           <tbody v-if="!esSensorLista">
             <tr v-for="d in actuadoresPaginados" :key="d.mac">
               <td>{{ d.mac }}</td>
-              <td>{{ d.estado }}</td>
-              <td>{{ d.nombreUbicacion }}</td>
               <td>{{ d.tipo }}</td>
+              <td>{{ d.nombreUbicacion }}</td>
+              <td>{{ d.estado }}</td>
               <td class="col-reles">
                 {{ d.tipo?.toLowerCase() === 'puerta' ? (d.numeroReles ?? '-') : '' }}
               </td>
               <td>
                 {{ d.tipo?.toLowerCase() === 'proyector' ? (d.comandoEstado ?? '-') : '' }}
               </td>
-              <td>{{ d.tipo?.toLowerCase() === 'proyector' ? (d.estadoProyector ?? '-') : '' }}</td>
+              <td>
+                {{ d.tipo?.toLowerCase() === 'proyector' ? (d.estadoProyector ?? '-') : '' }}
+              </td>
               <td><button @click="eliminarActuadorVista(d)">X</button></td>
             </tr>
             <tr v-if="(actuadoresPaginados?.length ?? 0) === 0">
@@ -243,50 +254,46 @@
           <tbody v-if="esSensorLista && !esNumericoLista">
             <tr v-for="s in sensoresBooleanosPaginados" :key="s.mac">
               <td>{{ s.mac }}</td>
-              <td>{{ s.estado }}</td>
-              <td>{{ s.nombreUbicacion }}</td>
               <td>{{ s.tipo }}</td>
-
-              <td>
-                <span v-if="s.valorActual !== null">{{ s.valorActual }}</span>
-                <span v-else>-</span>
-              </td>
-              <td>{{ s.umbralMaximo }}</td>
-              <td>{{ s.umbralMinimo }}</td>
+              <td>{{ s.nombreUbicacion }}</td>
               <td>
                 <span v-if="s.ultimaActualizacion !== null">{{ s.ultimaActualizacion }}</span>
                 <span v-else>-</span>
               </td>
-
+              <td>{{ s.estado }}</td>
+              <td>
+                <span v-if="s.valorActual !== null">{{ s.valorActual }}</span>
+                <span v-else>-</span>
+              </td>
+              <td>{{ s.umbralMinimo }}</td>
+              <td>{{ s.umbralMaximo }}</td>
               <td><button @click="eliminarSensorBooleanoVista(s.mac)">X</button></td>
             </tr>
             <tr v-if="(sensoresBooleanosPaginados?.length ?? 0) === 0">
-              <td colspan="8">No hay sensores booleanos</td>
+              <td colspan="9">No hay sensores booleanos</td>
             </tr>
           </tbody>
 
           <tbody v-if="esSensorLista && esNumericoLista">
             <tr v-for="s in sensoresNumericosPaginados" :key="s.mac">
               <td>{{ s.mac }}</td>
-              <td>{{ s.estado }}</td>
-              <td>{{ s.nombreUbicacion }}</td>
               <td>{{ s.tipo }}</td>
-
-              <td>
-                <span v-if="s.valorActual !== null">{{ s.valorActual }}</span>
-                <span v-else>-</span>
-              </td>
-              <td>{{ s.umbralMaximo }}</td>
-              <td>{{ s.umbralMinimo }}</td>
+              <td>{{ s.nombreUbicacion }}</td>
               <td>
                 <span v-if="s.ultimaActualizacion !== null">{{ s.ultimaActualizacion }}</span>
                 <span v-else>-</span>
               </td>
-
+              <td>{{ s.estado }}</td>
+              <td>
+                <span v-if="s.valorActual !== null">{{ s.valorActual }}</span>
+                <span v-else>-</span>
+              </td>
+              <td>{{ s.umbralMinimo }}</td>
+              <td>{{ s.umbralMaximo }}</td>
               <td><button @click="eliminarSensorNumericoVista(s.mac)">X</button></td>
             </tr>
             <tr v-if="(sensoresNumericosPaginados?.length ?? 0) === 0">
-              <td colspan="8">No hay sensores numéricos</td>
+              <td colspan="9">No hay sensores numéricos</td>
             </tr>
           </tbody>
         </table>
