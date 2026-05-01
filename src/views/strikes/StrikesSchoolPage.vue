@@ -104,12 +104,13 @@
         </tbody>
       </table>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
 
 import { ref, onMounted } from "vue";
-import { obtenerHuelgas, obtenerAlumnosHuelga } from "@/services/strikes.js";
+import { obtenerHuelgas, obtenerAlumnosHuelga} from "@/services/strikes.js";
 
 const loading = ref(false);
 
@@ -175,7 +176,6 @@ async function consultarAlumnos() {
   loading.value = true;
 
   try {
-
     alumnos.value = await obtenerAlumnosHuelga(
       toastMessage,
       toastColor,
@@ -185,22 +185,11 @@ async function consultarAlumnos() {
       filtro.value.etapa,
       filtro.value.grupo,
       tipoFiltro.value
-    );
+    )
 
   } finally {
     loading.value = false;
   }
-}
-
-async function cargarCombos() {
-  // llamada a backend
-  const data = await obtenerCursoEtapaGrupo(); // 👈 la haces tú
-
-  combinaciones.value = data;
-
-  cursos.value = [...new Set(data.map((x:any) => x.curso))];
-  etapas.value = [...new Set(data.map((x:any) => x.etapa))];
-  grupos.value = [...new Set(data.map((x:any) => x.grupo))];
 }
 
 /* UTIL */

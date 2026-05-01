@@ -176,9 +176,9 @@ async function cargarHuelgas(page = 0) {
     5
   );
 
-  huelgas.value = data.content;
-  totalPages.value = data.totalPages;
-  currentPage.value = data.number;
+  huelgas.value = data.content ?? [];
+  totalPages.value = data.totalPages ?? 0;
+  currentPage.value = data.number ?? 0;
 }
 
 function mostrarToast(
@@ -231,7 +231,7 @@ async function crearHuelgaFn() {
       fin
     );
 
-    mostrarToast("Huelga creada correctamente", "success");
+    mostrarToast("Huelga creada/modificada correctamente", "success");
 
     huelga.value = {
       titulo: "",
@@ -246,12 +246,12 @@ async function crearHuelgaFn() {
   {
 
     if (error?.response) {
-      if (error.response.status === 400) {
-        mostrarToast(
-          error.response.data || "Error de validación en servidor",
-          "warning"
-        );
-      } else {
+      if (error.response.status === 400) 
+      {
+        mostrarToast(error.response.data || "Error de validación en servidor","warning");
+      } 
+      else 
+      {
         mostrarToast("Error interno del servidor", "danger");
       }
     } else {

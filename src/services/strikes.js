@@ -24,12 +24,13 @@ export const crearHuelga = async (toastMessage, toastColor, isToastOpen, titulo,
       })
     });
 
-    if (!response.ok) 
+      if (!response.ok)
     {
-      const errorData = await response.json();
-      throw new Error(errorData.description || "Error del servidor");
+      const errorData = await response.json().catch(() => ({}));
+      const text = errorData.message || await response.text();
+      console.error("Error al crear huelga:", response.status, text);
+      throw new Error(text || 'Error al crear huelga');
     }
-
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Huelga creada correctamente");
 
   } 
@@ -44,11 +45,7 @@ export const obtenerHuelgas = async (toastMessage,toastColor,isToastOpen,page = 
 {
   try 
   {
-    const tokenPropio = await obtenerTokenJWTValido(
-      toastMessage,
-      toastColor,
-      isToastOpen
-    );
+    const tokenPropio = await obtenerTokenJWTValido( toastMessage, toastColor, isToastOpen);
 
     const response = await fetch(`${strikesApiUrl}/strikes/manager/?page=${page}&size=${size}`,
       {
@@ -61,7 +58,7 @@ export const obtenerHuelgas = async (toastMessage,toastColor,isToastOpen,page = 
     );
 
     if (!response.ok) 
-      {
+    {
       const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
       throw new Error(errorData.message);
     }
@@ -71,6 +68,7 @@ export const obtenerHuelgas = async (toastMessage,toastColor,isToastOpen,page = 
   catch (error) 
   {
     crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al obtener huelgas");
+    throw error;
   }
 };
 
@@ -108,40 +106,31 @@ export const borrarHuelga = async (toastMessage, toastColor, isToastOpen, titulo
   }
 };
 
-export const obtenerAlumnosHuelga = async (toastMessage,toastColor,isToastOpen,titulo,curso,etapa,grupo,filtro) => 
-{
-  try 
+export const obtenerAlumnosHuelga = async (toastMessage, toastColor, isToastOpen, titulo, curso, etapa, grupo, filtro) => 
   {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage,toastColor,isToastOpen
-    );
+  try {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${strikesApiUrl}/strikes/alumnos/consulta`, 
-    {
+    const response = await fetch(`${strikesApiUrl}/strikes/inscripciones/consulta`, {
       method: "GET",
-      headers: 
-      {
+      headers: {
         Authorization: `Bearer ${tokenPropio}`,
         "Content-Type": "application/json",
         titulo,
-        curso,
-        etapa,
-        grupo,
-        filtro
+        curso: filtro.curso || null,
+        etapa: filtro.etapa || null,
+        grupo: filtro.grupo || null,
+        filtro: tipoFiltro.value
       }
     });
 
-    if (!response.ok) 
-    {
-      const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
-      throw new Error(errorData.message);
+    if (!response.ok) {
+      throw new Error("Error al consultar alumnos");
     }
 
     return await response.json();
-
-  } 
-  catch (error) 
-  {
-    crearToast(toastMessage,toastColor,isToastOpen,"error",error.message || "Error al obtener alumnos");
-    throw error;
+  } catch (error) {
+    crearToast(toastMessage, toastColor, isToastOpen, "error", "Error al obtener alumnos");
+    return [];
   }
 };

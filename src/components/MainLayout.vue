@@ -65,14 +65,30 @@
             <ion-icon slot="end" :icon="utilitiesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="utilitiesSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/printers/print')">Imprime documentos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">Lee la guía del profesorado</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">Formación PDIs</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/events/users')">Eventos próximos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/strikes/users')">Huelgas alumnado</ion-item>
-
-
+            <ion-item button @click="navigateAndCloseMenu('/printers/print')">
+              Imprime documentos
+              <ion-icon slot="end" name="print"></ion-icon>
+            </ion-item>
+            <!--<ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item> -->
+            <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">
+              Guía del profesorado
+              <ion-icon slot="end" name="book"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">
+              Formación PDIs
+              <ion-icon slot="end" name="browsers"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/automations/map')">
+              Vista de pájaro
+              <ion-icon slot="end" name="eye"></ion-icon>
+            </ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/statistics')">
+              Estadísticas
+              <ion-icon slot="end" name="bar-chart"></ion-icon>
+            </ion-item>
+			      <ion-item button @click="navigateAndCloseMenu('/strikes/users')">
+			        Huelgas alumnado
+			      </ion-item>
           </ion-list>
         </ion-list>
         <!-- Reservas -->

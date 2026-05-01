@@ -53,309 +53,355 @@ import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
 
-import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
-import StrikesSchoolAdminPage from '@/views/strikes/StrikesSchoolAdminPage.vue';
-import StrikesSchoolPage from "@/views/strikes/StrikesSchoolPage.vue"; 
+  import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
-const routes = [
-  {
-    path: '/',
-    redirect: '/login',
-  },
-  {
-    path: '/login',
-    component: LoginPage,
-    name: 'Login',
-    meta: {
-      requiresAuth: false
+  //import IAView from '@/views/ia/IAView.vue';
+  import StrikesSchoolAdminPage from '@/views/strikes/StrikesSchoolAdminPage.vue';
+  import StrikesSchoolPage from '@/views/strikes/StrikesSchoolPage.vue';
+  
+  const routes = [
+    {
+      path: '/',
+      redirect: '/login',
     },
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    component: AccessDeniedPage,
-    name: 'AccessDenied',
-  },
-  {
-    path: '/',
-    component: MainLayout,
-    meta: {
-      requiresAuth: true
+    {
+      path: '/login',
+      component: LoginPage,
+      name: 'Login',
+      meta: {
+        requiresAuth: false
+      },
     },
-    children: [
-      {
-        path: 'admin/firebase',
-        component: AdminFirebasePage,
-        name: 'AdminFirebase',
-        meta: {
-          role: 'ADMINISTRADOR'
+    {
+      path: '/:pathMatch(.*)*',
+      component: AccessDeniedPage,
+      name: 'AccessDenied',
+    },
+    {
+      path: '/',
+      component: MainLayout,
+      meta: {
+        requiresAuth: true
+      },
+      children: [
+        {
+          path: 'admin/firebase',
+          component: AdminFirebasePage,
+          name: 'AdminFirebase',
+          meta: {
+            role: 'ADMINISTRADOR'
+          },
         },
-      },
-      {
-        path: 'printers/admin',
-        component: PrintersAdminPage,
-        name: 'PrintersAdmin',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'printers/admin',
+          component: PrintersAdminPage,
+          name: 'PrintersAdmin',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'printers/print',
-        component: PrintersPrintPage,
-        name: 'PrintersPrint',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'printers/print',
+          component: PrintersPrintPage,
+          name: 'PrintersPrint',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'bookings/admin',
-        component: BookingsAdminPage,
-        name: 'BookingsAdmin',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'bookings/admin',
+          component: BookingsAdminPage,
+          name: 'BookingsAdmin',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'bookings/fixed',
-        component: BookingsFixedPage,
-        name: 'BookingsFixed',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'bookings/fixed',
+          component: BookingsFixedPage,
+          name: 'BookingsFixed',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'bookings/temporary',
-        component: BookingsTemporaryPage,
-        name: 'BookingsTemporary',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'bookings/temporary',
+          component: BookingsTemporaryPage,
+          name: 'BookingsTemporary',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'absences/review',
-        component: AbsencesReviewPage,
-        name: 'AbsencesReview',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'absences/review',
+          component: AbsencesReviewPage,
+          name: 'AbsencesReview',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'absences/tasks',
-        component: AbsencesTasksPage,
-        name: 'AbsencesTasks',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'absences/tasks',
+          component: AbsencesTasksPage,
+          name: 'AbsencesTasks',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'documents/teacherGuide',
-        component: TeacherGuidePage,
-        name: 'DocumentsTeacherGuidePage',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'documents/teacherGuide',
+          component: TeacherGuidePage,
+          name: 'DocumentsTeacherGuidePage',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'documents/pdisTraining',
-        component: PDIsTrainingPage,
-        name: 'DocumentsPDIsTrainingPage',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'documents/pdisTraining',
+          component: PDIsTrainingPage,
+          name: 'DocumentsPDIsTrainingPage',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'school_manager/cargaMatriculas',
-        component: A_CargaMatriculas,
-        name: 'A_CargaMatriculas',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'school_manager/cargaMatriculas',
+          component: A_CargaMatriculas,
+          name: 'A_CargaMatriculas',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'notifications/latestNews',
-        component: LatestNewsPage,
-        name: 'LatestNews',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'notifications/latestNews',
+          component: LatestNewsPage,
+          name: 'LatestNews',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'notifications/manager',
-        component: ManageNotificationsPage,
-        name: 'ManageNotificationsPage',
-        meta: {
-          role: 'PROFESOR',
+        {
+          path: 'notifications/manager',
+          component: ManageNotificationsPage,
+          name: 'ManageNotificationsPage',
+          meta: {
+            role: 'PROFESOR',
+          },
         },
-      },
-      {
-        path: 'notifications/admin',
-        component: NotificationsAdminPage,
-        name: 'NotificationsAdminPage',
-        meta: {
-          role: 'ADMINISTRADOR',
+        {
+          path: 'notifications/admin',
+          component: NotificationsAdminPage,
+          name: 'NotificationsAdminPage',
+          meta: {
+            role: 'ADMINISTRADOR',
+          },
         },
-      },
-      {
-        path: 'school_manager/asignaturaYBloque',
-        component: B_AsignaturaYBloque,
-        name: 'B_AsignaturaYBloque',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'school_manager/asignaturaYBloque',
+          component: B_AsignaturaYBloque,
+          name: 'B_AsignaturaYBloque',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'school_manager/crearGrupos',
-        component: C_CrearGrupos,
-        name: 'C_CrearGrupos',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'school_manager/crearGrupos',
+          component: C_CrearGrupos,
+          name: 'C_CrearGrupos',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'school_manager/tablaResumen',
-        component: D_TablaResumen,
-        name: 'D_TablaResumen',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'school_manager/tablaResumen',
+          component: D_TablaResumen,
+          name: 'D_TablaResumen',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'school_manager/departamentos',
-        component: E_DepartamentosYHoras,
-        name: 'E_DepartamentosYHoras',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'school_manager/departamentos',
+          component: E_DepartamentosYHoras,
+          name: 'E_DepartamentosYHoras',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'school_manager/reducciones',
-        component: F_ReduccionesProfesores,
-        name: 'F_ReduccionesProfesores',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'school_manager/reducciones',
+          component: F_ReduccionesProfesores,
+          name: 'F_ReduccionesProfesores',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'projectors/ControlPanel',
-        component: ControlPanel,
-        name: 'ControlPanel',
-        meta: {
-          role: 'ADMINISTRADOR'
+        {
+          path: 'projectors/ControlPanel',
+          component: ControlPanel,
+          name: 'ControlPanel',
+          meta: {
+            role: 'ADMINISTRADOR'
+          },
         },
-      },
-      {
-        path: 'projectors/RemoteControl',
-        component: RemoteControl,
-        name: 'RemoteControl',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'projectors/RemoteControl',
+          component: RemoteControl,
+          name: 'RemoteControl',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'projectors/EventsTable',
-        component: EventsTable,
-        name: 'EventsTable',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'projectors/EventsTable',
+          component: EventsTable,
+          name: 'EventsTable',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'timetable_admin/admin',
-        component: A_Administracion,
-        name: 'A_Administracion',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'timetable_admin/admin',
+          component: A_Administracion,
+          name: 'A_Administracion',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'timetable_admin/validation',
-        component: B_ValidadorDatos,
-        name: 'B_ValidadorDatos',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'timetable_admin/validation',
+          component: B_ValidadorDatos,
+          name: 'B_ValidadorDatos',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'timetable_admin/generator',
-        component: C_GeneradorHorarios,
-        name: 'C_GeneradorHorarios',
-        meta: {
-          role: 'DIRECCION'
+        {
+          path: 'timetable_admin/generator',
+          component: C_GeneradorHorarios,
+          name: 'C_GeneradorHorarios',
+          meta: {
+            role: 'DIRECCION'
+          },
         },
-      },
-      {
-        path: 'timetable_teachers/choice',
-        component: A_EleccionDeHorarios,
-        name: 'A_EleccionDeHorarios',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'timetable_teachers/choice',
+          component: A_EleccionDeHorarios,
+          name: 'A_EleccionDeHorarios',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'timetable_teachers/personal',
-        component: B_HorarioPersonal,
-        name: 'B_HorarioPersonal',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'timetable_teachers/personal',
+          component: B_HorarioPersonal,
+          name: 'B_HorarioPersonal',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'timetable_teachers/groups',
-        component: C_HorarioGrupos,
-        name: 'C_HorarioGrupos',
-        meta: {
-          role: 'PROFESOR'
+        {
+          path: 'timetable_teachers/groups',
+          component: C_HorarioGrupos,
+          name: 'C_HorarioGrupos',
+          meta: {
+            role: 'PROFESOR'
+          },
         },
-      },
-      {
-        path: 'eventsSchool/admin',
-        component: EventsSchoolAdminPage,
-        name: 'EventsSchoolAdmin',
-        meta: {
-          role: 'ADMINISTRADOR'
+        {
+          path: 'eventsSchool/admin',
+          component: EventsSchoolAdminPage,
+          name: 'EventsSchoolAdmin',
+          meta: {
+            role: 'ADMINISTRADOR'
+          },
         },
-      },
-      {
-        path: '/events/users',
-        component: EventsSchoolPage,
-        name: 'EventsSchoolPage',
-        meta: { role: 'PROFESOR' },
-      },
-
-      {
-        path: '/issues',
-        component: IncidenciasTicPage,
-        name: 'Issues',
-        meta: { 
-          role: 'PROFESOR' 
+        {
+          path: 'events/users',
+          component: EventsSchoolPage,
+          name: 'EventsSchoolPage',
+          meta: { role: 'PROFESOR' },
         },
-      },
-      {
-        path: '/issues/stats',
-        name: 'IssuesStatsPage',
-        component: EstadisticasIncidenciasTicPage,
-        meta: { role: 'PROFESOR' },
-      },
-      {
-        path: '/issues/admin',
-        name: 'IssuesTicAdminPage',
-        component: IncidenciasTicAdminPage,
-        meta: { role: 'ADMINISTRADOR' },
-      },
-      {
-        path: 'strikesSchool/admin',
-        component: StrikesSchoolAdminPage,
-        name: 'StrikesSchoolAdmin',
-        meta: {role: 'ADMINISTRADOR'},
-      },
-      {
-        path: 'strikes/users',
-        component: StrikesSchoolPage,
-        name: 'StrikesSchoolPage',
-        meta: {role: 'PROFESOR'},
-      }    
-    ],
-  },
-];
+        {
+          path: 'issues',
+          component: IncidenciasTicPage,
+          name: 'Issues',
+          meta: { 
+            role: 'PROFESOR' 
+          },
+        },
+        {
+          path: 'issues/stats',
+          name: 'IssuesStatsPage',
+          component: EstadisticasIncidenciasTicPage,
+          meta: { role: 'PROFESOR' },
+        },
+        {
+          path: 'issues/admin',
+          name: 'IssuesTicAdminPage',
+          component: IncidenciasTicAdminPage,
+          meta: { role: 'ADMINISTRADOR' },
+        },
+        /*{
+          path: 'automations/admin',
+          component: AutomationsAdminPage,
+          name: 'AutomationsAdmin',
+          meta: {
+            role: 'ADMINISTRADOR'
+          },
+        },
+        {
+          path: 'automations/map',
+          component: AutomationsMapView,
+          name: 'AutomationsMapView',
+          meta: {
+            role: 'PROFESOR'
+          },
+        },
+        {
+          path: 'schoolBaseServer/admin',
+          component: SchoolBaseServerAdminPage,
+          name: 'SchoolBaseServerAdmin',
+          meta: {
+            role: 'ADMINISTRADOR'
+          },
+        },
+        {
+          path: 'statistics',
+          component: StatisticsView,
+          name: 'Statistics',
+          meta: {
+            role: 'PROFESOR'
+          },
+        },
+        {
+          path: 'ia',
+          component: IAView,
+          name: 'IAView',
+          meta: {
+            role: 'PROFESOR'
+          },  
+        },*/
+        {
+          path: 'strikesSchool/admin',
+          component: StrikesSchoolAdminPage,
+          name: 'StrikesSchoolAdmin',
+          meta: {
+            role: 'ADMINISTRADOR'
+          },
+        },
+        
+        {
+          path: '/strikes/users',
+          component: StrikesSchoolPage,
+          name: 'StrikesSchoolPage',
+          meta: {
+            role: 'PROFESOR'
+          },
+        } 
+      ],
+    },
+  ];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.VITE_BASE_URL),

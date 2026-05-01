@@ -28,5 +28,4 @@ export declare function obtenerAlumnosHuelga( toastMessage: Ref<string>,
                                               etapa: string,
                                               grupo: string,
                                               filtro: string
-                                            ): Promise<any>;
-  
+                                            ): Promise<any[]>;
