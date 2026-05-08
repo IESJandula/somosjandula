@@ -386,63 +386,56 @@ const routes = [
         meta: {
           role: 'PROFESOR'
         },
-        {
-          path: 'automations/admin',
-          component: AutomationsAdminPage,
-          name: 'AutomationsAdmin',
-          meta: {
-            role: 'ADMINISTRADOR'
-          },
+      },
+      {
+        path: 'automations/admin',
+        component: AutomationsAdminPage,
+        name: 'AutomationsAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
         },
-        {
-          path: 'automations/map',
-          component: AutomationsMapView,
-          name: 'AutomationsMapView',
-          meta: {
-            role: 'PROFESOR'
-          },
+      },
+      {
+        path: 'schoolBaseServer/admin',
+        component: SchoolBaseServerAdminPage,
+        name: 'SchoolBaseServerAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
         },
-        {
-          path: 'schoolBaseServer/admin',
-          component: SchoolBaseServerAdminPage,
-          name: 'SchoolBaseServerAdmin',
-          meta: {
-            role: 'ADMINISTRADOR'
-          },
+      },
+      {
+        path: 'statistics',
+        component: StatisticsView,
+        name: 'Statistics',
+        meta: {
+          role: 'PROFESOR'
         },
-        {
-          path: 'statistics',
-          component: StatisticsView,
-          name: 'Statistics',
-          meta: {
-            role: 'PROFESOR'
-          },
+      },
+      {
+        path: 'ia',
+        component: IAView,
+        name: 'IAView',
+        meta: {
+          role: 'PROFESOR'
+        },  
+      },
+      {
+        path: 'strikesSchool/admin',
+        component: StrikesSchoolAdminPage,
+        name: 'StrikesSchoolAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
         },
-        {
-          path: 'ia',
-          component: IAView,
-          name: 'IAView',
-          meta: {
-            role: 'PROFESOR'
-          },  
+      },
+      /*
+      {
+        path: '/strikes/users',
+        component: StrikesSchoolPage,
+        name: 'StrikesSchoolPage',
+        meta: {
+          role: 'PROFESOR'
         },
-        {
-          path: 'strikesSchool/admin',
-          component: StrikesSchoolAdminPage,
-          name: 'StrikesSchoolAdmin',
-          meta: {
-            role: 'ADMINISTRADOR'
-          },
-        },
-        /*
-        {
-          path: '/strikes/users',
-          component: StrikesSchoolPage,
-          name: 'StrikesSchoolPage',
-          meta: {
-            role: 'PROFESOR'
-          },
-        } */  
+	  } */
       ],
     },
   ];
