@@ -27,12 +27,13 @@ import ControlPanel from '@/views/projectors/ControlPanel.vue';
 import RemoteControl from '@/views/projectors/RemoteControl.vue';
 import EventsTable from '@/views/projectors/EventsTable.vue';
 
-import A_CargaMatriculas from '@/views/school_manager/A_CargaMatriculas.vue';
-import B_AsignaturaYBloque from '@/views/school_manager/B_AsignaturaYBloque.vue';
-import C_CrearGrupos from '@/views/school_manager/C_CrearGrupos.vue';
-import D_TablaResumen from '@/views/school_manager/D_TablaResumen.vue';
-import E_DepartamentosYHoras from '@/views/school_manager/E_DepartamentosYHoras.vue';
-import F_ReduccionesProfesores from '@/views/school_manager/F_ReduccionesProfesores.vue';
+import A_CursosEspacios from '@/views/school_manager/A_CursosEspacios.vue';
+import B_CargaMatriculas from '@/views/school_manager/B_CargaMatriculas.vue';
+import C_AsignaturaYBloque from '@/views/school_manager/C_AsignaturaYBloque.vue';
+import D_CrearGrupos from '@/views/school_manager/D_CrearGrupos.vue';
+import E_TablaResumen from '@/views/school_manager/E_TablaResumen.vue';
+import F_DepartamentosYHoras from '@/views/school_manager/F_DepartamentosYHoras.vue';
+import G_ReduccionesProfesores from '@/views/school_manager/G_ReduccionesProfesores.vue';
 
 import A_Administracion from '@/views/timetable_admin/A_Administracion.vue';
 import B_ValidadorDatos from '@/views/timetable_admin/B_ValidadorDatos.vue';
@@ -170,9 +171,17 @@ const routes = [
         },
       },
       {
+        path: 'school_manager/cursosEspacios',
+        component: A_CursosEspacios,
+        name: 'A_CursosEspacios',
+        meta: {
+          role: 'DIRECCION'
+        },
+      },
+      {
         path: 'school_manager/cargaMatriculas',
-        component: A_CargaMatriculas,
-        name: 'A_CargaMatriculas',
+        component: B_CargaMatriculas,
+        name: 'B_CargaMatriculas',
         meta: {
           role: 'DIRECCION'
         },
@@ -203,40 +212,40 @@ const routes = [
       },
       {
         path: 'school_manager/asignaturaYBloque',
-        component: B_AsignaturaYBloque,
-        name: 'B_AsignaturaYBloque',
+        component: C_AsignaturaYBloque,
+        name: 'C_AsignaturaYBloque',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
         path: 'school_manager/crearGrupos',
-        component: C_CrearGrupos,
-        name: 'C_CrearGrupos',
+        component: D_CrearGrupos,
+        name: 'D_CrearGrupos',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
         path: 'school_manager/tablaResumen',
-        component: D_TablaResumen,
-        name: 'D_TablaResumen',
+        component: E_TablaResumen,
+        name: 'E_TablaResumen',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
         path: 'school_manager/departamentos',
-        component: E_DepartamentosYHoras,
-        name: 'E_DepartamentosYHoras',
+        component: F_DepartamentosYHoras,
+        name: 'F_DepartamentosYHoras',
         meta: {
           role: 'DIRECCION'
         },
       },
       {
         path: 'school_manager/reducciones',
-        component: F_ReduccionesProfesores,
-        name: 'F_ReduccionesProfesores',
+        component: G_ReduccionesProfesores,
+        name: 'G_ReduccionesProfesores',
         meta: {
           role: 'DIRECCION'
         },

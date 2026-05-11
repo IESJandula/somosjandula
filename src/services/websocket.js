@@ -22,8 +22,12 @@ export const conectarWebSocket = async (
     isToastOpen
   );
 
+  // Ponemos el prefijo de automations
+  automationsApiUrl = automationsApiUrl + "/automations";
+
   // Construimos la URL WS a partir de la API
-  const wsUrl = automationsApiUrl.replace("http", "ws") + "/ws";
+  const wsUrl = automationsApiUrl.startsWith("https") ? automationsApiUrl.replace("https", "wss") + "ws" 
+                                                      : automationsApiUrl.replace("http", "ws") + "ws";
 
   // Creamos el cliente STOMP
   stompClient = new Client({

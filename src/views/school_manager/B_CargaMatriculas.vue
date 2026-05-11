@@ -64,10 +64,16 @@
                <th class="columna">Eliminar</th>
                <th class="columna">Nombre</th>
                <th class="columna">Apellidos</th>
-               <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                 {{ asignatura }}
-               </th>
-               <th class="columna">Acción</th>
+              <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                {{ asignatura }} <span title="Matriculados">({{ matriculadosPorAsignatura[asignatura] }})</span>
+              </th>
+              <th class="columna">
+                <div class="nueva-asignatura-header">
+                  <input type="text" v-model="nuevaAsignatura" class="input-nueva-asignatura" placeholder="Nombre asignatura">
+                  <button type="button" class="btn-guardar-registrar" @click="crearAsignatura">Crear</button>
+                </div>
+              </th>
+              <th class="columna">Acción</th>
              </tr>
            </thead>
            <tbody>
@@ -77,12 +83,22 @@
                </td>
                <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
                <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
-               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                 <input 
-                   type="text" 
-                   v-model="estudiante.matriculas[asignatura]"
-                   class="editable-cell">
-               </td>
+              <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                <select
+                  v-model="estudiante.matriculas[asignatura]"
+                  class="editable-cell"
+                  :title="obtenerTooltipEstado(estudiante.matriculas[asignatura])">
+                  <option value="" disabled>Selecciona estado</option>
+                  <option
+                    v-for="estado in estadosMatricula"
+                    :key="estado.value"
+                    :value="estado.value"
+                    :title="estado.label">
+                    {{ estado.value }}
+                  </option>
+                </select>
+              </td>
+               <td class="columna"></td>
                <td class="columna">
                  <button class="btn-guardar-registrar" @click="matricularAsignaturasCsv(index)">Guardar</button>
                </td>
@@ -95,9 +111,22 @@
                <td class="columna">
                  <input type="text" v-model="nuevoAlumno.apellidos">
                </td>
-               <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                 <input type="text" v-model="nuevoAlumno.matriculas[asignatura]">
-               </td>
+              <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
+                <select
+                  v-model="nuevoAlumno.matriculas[asignatura]"
+                  class="editable-cell"
+                  :title="obtenerTooltipEstado(nuevoAlumno.matriculas[asignatura])">
+                  <option value="" disabled>Selecciona estado</option>
+                  <option
+                    v-for="estado in estadosMatricula"
+                    :key="estado.value"
+                    :value="estado.value"
+                    :title="estado.label">
+                    {{ estado.value }}
+                  </option>
+                </select>
+              </td>
+               <td class="columna"></td>
                <td class="columna">
                  <button class="btn-guardar-registrar" @click="matricularAlumnosCsv">Registrar</button>
                </td>
@@ -112,7 +141,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
 import { subirFicheros, cargarMatriculas, borrarMatriculas, obtenerDatosMatriculas, matricularAsignaturas, matricularAlumnos, desmatricularAlumnos } from '@/services/schoolManager.js'
@@ -134,7 +163,63 @@ const nuevoAlumno = ref({
   apellidos: "",
   matriculas: {}
 });
+const nuevaAsignatura = ref('');
 const estadosValidos = ["MATR", "NO_MATR", "SUPCA", "CONV", "APRO", "PEND"];
+const estadosMatricula = [
+  { value: "NO_MATR", label: "No matriculado" },
+  { value: "MATR", label: "Matriculado" },
+  { value: "APRO", label: "Aprobado" },
+  { value: "CONV", label: "Convalidado" },
+  { value: "PEND", label: "Pendiente" },
+  { value: "SUPCA", label: "Superada en cursos anteriores" }
+];
+
+const obtenerTooltipEstado = (valor) => {
+  const estado = estadosMatricula.find(e => e.value === valor);
+  return estado ? estado.label : '';
+};
+
+const crearAsignatura = () => {
+  const nombre = nuevaAsignatura.value.trim();
+
+  if (!nombre) {
+    mensajeActualizacion = "Debes indicar el nombre de la asignatura";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
+  if (asignaturas.value.includes(nombre)) {
+    mensajeActualizacion = "Esa asignatura ya existe";
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    return;
+  }
+
+  asignaturas.value.push(nombre);
+
+  for (const estudiante of datosMatriculas.value) {
+    if (!(nombre in estudiante.matriculas)) {
+      estudiante.matriculas[nombre] = "";
+    }
+  }
+
+  if (!(nombre in nuevoAlumno.value.matriculas)) {
+    nuevoAlumno.value.matriculas[nombre] = "";
+  }
+
+  nuevaAsignatura.value = "";
+};
+
+const matriculadosPorAsignatura = computed(() => {
+  const conteo = {};
+  for (const asignatura of asignaturas.value) {
+    conteo[asignatura] = datosMatriculas.value.filter(
+      (estudiante) => estudiante.matriculas[asignatura] === "MATR"
+    ).length;
+  }
+  return conteo;
+});
 // Nueva variable reactiva para el estado de carga
 const isLoading = ref(false);
 // Variable para el toast
@@ -775,6 +860,64 @@ input {
     width: 100%;
     padding: 0;
     outline: none;
+}
+
+.nueva-asignatura-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-nueva-asignatura {
+    background: var(--form-bg-light, #fff);
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+    width: 100%;
+    min-width: 160px;
+    padding: 4px 6px;
+    outline: none;
+    font-size: 1rem;
+    color: inherit;
+}
+
+.input-nueva-asignatura::placeholder {
+    font-size: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .input-nueva-asignatura {
+    background: var(--form-bg-dark, #2a2a2a);
+    border-color: #555;
+    color: #fff;
+  }
+}
+
+.columna select.editable-cell {
+    background: transparent;
+    border: none;
+    text-align: center;
+    width: 100%;
+    min-width: calc(8ch + 2em);
+    padding: 2px;
+    outline: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    appearance: auto;
+}
+
+.columna select.editable-cell option {
+    background-color: var(--form-bg-light);
+    color: initial;
+}
+
+@media (prefers-color-scheme: dark) {
+  .columna select.editable-cell option {
+    background-color: var(--form-bg-dark);
+    color: #ffffff;
+  }
 }
 
 .btn-guardar-todo {
