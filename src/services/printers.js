@@ -101,6 +101,26 @@ export const filtrarDatos = async (toastMessage, toastColor, isToastOpen, payloa
     });
 };
 
+export const filtrarDatosPaginado = async (toastMessage, toastColor, isToastOpen, payload, pagina, size = 20) =>
+{
+    let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    const url = new URL(printersApiUrl + '/printers/web/filter/paginated');
+    url.searchParams.append('page', pagina);
+    url.searchParams.append('size', size);
+
+    return await fetch(url.toString(), 
+    {
+        method: 'POST',
+        headers:
+        {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${tokenPropio}`
+        },
+        body: JSON.stringify(payload)
+    });
+};
+
 export const imprimir = async (toastMessage, toastColor, isToastOpen, payload) =>
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
@@ -129,4 +149,3 @@ export const cancelarImpresion = async (toastMessage, toastColor, isToastOpen, i
         },
     });
 };
-

@@ -5,7 +5,7 @@
       <!-- Tarjeta de Filtrado -->
       <div class="form-container">
         <h1 class="title">Consultar impresión</h1>
-        <form @submit.prevent="submitForm">
+        <form @submit.prevent="submitForm()">
           <div class="form-section">
             <ion-grid>
               <!-- Primera Fila: Usuario, Impresora y Estado -->
@@ -69,9 +69,14 @@
 
       <!-- Tabla de resultados -->
       <div class="table-container">
+        <div class="pagina-container">
+          <button class="decrementar-button" v-if="paginaActual > 0" @click="irPaginaAnterior">Anterior</button>
+          <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
+          <button class="incrementar-button" v-if="disablePaginated" @click="irPaginaSiguiente">Siguiente</button>
+        </div>
         <div class="table-content">
           <div class="table-scroll-inner">
-            <PrintInfoTable :info="filteredInfo" :adminRole="true" @actualizar-tabla="submitForm" />
+            <PrintInfoTable :info="filteredInfo" :adminRole="true" @actualizar-tabla="() => submitForm(paginaActual)" />
           </div>
         </div>
       </div>
@@ -162,7 +167,7 @@ import { ref, onMounted } from 'vue';
 import { obtenerInfoUsuarios } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
-import { obtenerImpresoras, obtenerEstados, filtrarDatos } from '@/services/printers';
+import { obtenerImpresoras, obtenerEstados, filtrarDatos, filtrarDatosPaginado } from '@/services/printers';
 import { obtenerConstantes, actualizarConstantes } from '@/services/constantes';
 import { printersApiUrl } from "@/environment/apiUrls.ts";
 
@@ -178,6 +183,8 @@ const users = ref([]);
 const printers = ref([]);
 const states = ref([]);
 const filteredInfo = ref([]);
+const paginaActual = ref(0);
+const disablePaginated = ref(true);
 
 // Variables para el toast
 const isToastOpen = ref(false);
@@ -251,7 +258,7 @@ function formatDate(timestamp) {
   });
 }
 
-const submitForm = async () => {
+const submitForm = async (pagina = 0) => {
   try {
     const formatDate = (date) => {
       if (!date) return null;
@@ -270,7 +277,7 @@ const submitForm = async () => {
       endDate: formatDate(filtroBusqueda.value.endDate),
     };
 
-    const response = await filtrarDatos(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest);
+    const response = await filtrarDatosPaginado(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest, pagina, 20);
 
     if (!response.ok) {
       let errorString = 'Error al obtener los datos filtrados';
@@ -278,13 +285,37 @@ const submitForm = async () => {
       throw new Error(errorString);
     }
 
-    filteredInfo.value = await response.json();
-    crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Datos filtrados con éxito');
+    const pageData = await response.json();
+
+    if (pageData && pageData.content && pageData.content.length > 0) {
+      filteredInfo.value = pageData.content;
+      paginaActual.value = pageData.number;
+      disablePaginated.value = !pageData.last;
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Datos filtrados con éxito');
+    } else {
+      filteredInfo.value = [];
+      disablePaginated.value = false;
+      if (pagina > 0) {
+        crearToast(toastMessage, toastColor, isToastOpen, 'warning', 'No hay más impresiones');
+      }
+    }
   } catch (error) {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
+    filteredInfo.value = [];
+    disablePaginated.value = false;
     throw new Error(error.message);
   }
 };
+
+function irPaginaAnterior() {
+  if (paginaActual.value > 0) {
+    submitForm(paginaActual.value - 1);
+  }
+}
+
+function irPaginaSiguiente() {
+  submitForm(paginaActual.value + 1);
+}
 
 const resetForm = () => {
   filtroBusqueda.value = {
@@ -366,7 +397,7 @@ onMounted(() => {
   overflow-x: auto;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  max-height: 360px;
+  max-height: 320px;
 }
 
 .table-scroll-inner {
@@ -455,6 +486,38 @@ onMounted(() => {
   align-items: center;
 }
 
+.pagina-container {
+  display: flex;
+  padding-bottom: 10px;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.decrementar-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.incrementar-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.numPagina {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+}
+
 /* Media queries para hacer que la tarjeta sea más responsive */
 @media (max-width: 768px) {
   .bottom-section {
@@ -500,4 +563,3 @@ onMounted(() => {
   }
 }
 </style>
-

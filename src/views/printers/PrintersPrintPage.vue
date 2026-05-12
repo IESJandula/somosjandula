@@ -161,15 +161,20 @@
 
        <div v-else class="table-container">
          <h2 class="title">Mis impresiones</h2>
+         <div class="pagina-container">
+           <button class="decrementar-button" v-if="paginaActual > 0" @click="irPaginaAnterior">Anterior</button>
+           <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
+           <button class="incrementar-button" v-if="disablePaginated" @click="irPaginaSiguiente">Siguiente</button>
+         </div>
          <div class="table-content">
            <div class="table-scroll-inner">
-             <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="actualizarTablaHistorialImpresiones" />
+             <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="() => actualizarTablaHistorialImpresiones(paginaActual)" />
            </div>
          </div>
          <!-- Botón de Actualizar centrado -->
          <ion-row class="ion-justify-content-center">
            <ion-col size="auto">
-             <ion-button color="primary" expand="block" @click="actualizarTablaHistorialImpresiones">Actualizar</ion-button>
+             <ion-button color="primary" expand="block" @click="actualizarTablaHistorialImpresiones(0)">Actualizar</ion-button>
            </ion-col>
          </ion-row>
        </div>
@@ -179,15 +184,20 @@
      <div v-if="urlVistaPreviaPdf" class="bottom-section">
        <div class="table-container full-width">
          <h2 class="title">Mis impresiones</h2>
+         <div class="pagina-container">
+           <button class="decrementar-button" v-if="paginaActual > 0" @click="irPaginaAnterior">Anterior</button>
+           <span class="numPagina"> Página: {{ paginaActual + 1 }} </span>
+           <button class="incrementar-button" v-if="disablePaginated" @click="irPaginaSiguiente">Siguiente</button>
+         </div>
          <div class="table-content">
            <div class="table-scroll-inner">
-             <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="actualizarTablaHistorialImpresiones" />
+             <PrintInfoTable :info="historialImpresiones" :adminRole="false" @actualizar-tabla="() => actualizarTablaHistorialImpresiones(paginaActual)" />
            </div>
          </div>
          <!-- Botón de Actualizar centrado -->
          <ion-row class="ion-justify-content-center">
            <ion-col size="auto">
-             <ion-button color="primary" expand="block" @click="actualizarTablaHistorialImpresiones">Actualizar</ion-button>
+             <ion-button color="primary" expand="block" @click="actualizarTablaHistorialImpresiones(0)">Actualizar</ion-button>
            </ion-col>
          </ion-row>
        </div>
@@ -197,7 +207,7 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, prevalidacionesImpresion, imprimir } from '@/services/printers';
+import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, filtrarDatosPaginado, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue';
 import { obtenerConstantes } from '@/services/constantes';
@@ -282,6 +292,8 @@ const toastColor   = ref('success');
 /*****************************/
 const maximoHojasImpresion = ref(null); 
 const historialImpresiones = ref([]);
+const paginaActual = ref(0);
+const disablePaginated = ref(true);
 
 /*****************************/
 /*** Routing - incidencias ***/
@@ -491,8 +503,6 @@ const calcularPaginasEspecificas = () =>
   try
   {
     // Separamos las páginas específicas por comas
-    // unimos casos como "1", "1-3", "1,3,5-7", "1,3,5-7,10" en un array de páginas
-    // para tener algo como este array: [1, 2, 3, 5, 6, 7, 10]
     const paginas = pdfPaginasEspecificas.value.split(',').flatMap(valor =>
     {
       // Eliminamos los espacios en blanco
@@ -606,7 +616,7 @@ const enviarPDFAImprimir = async () =>
       mensajeImpresion.value = 'Enviado correctamente';
 
       // Actualizamos la tabla de impresiones
-      await actualizarTablaHistorialImpresiones();
+      await actualizarTablaHistorialImpresiones(0);
 
       // Iniciamos la cuenta atrás para bloquear el botón de impresión
       comenzarCuentaAtrasBloqueoBotonImpresion();
@@ -631,7 +641,7 @@ const comenzarCuentaAtrasBloqueoBotonImpresion = () =>
   {
     if (cuentaAtrasSegundos > 0)
     {
-      botonImpresionTexto.value = `Habilitando en ${cuentaAtrasSegundos} segundos`; // Actualiza el texto del botón con el temporizador
+      botonImpresionTexto.value = `Habilitando en ${cuentaAtrasSegundos} segundos`;
       cuentaAtrasSegundos--;
     }
     else
@@ -688,7 +698,7 @@ onMounted(async () =>
   await obtenerDatosDelFormulario();
 
   // Actualizamos el historial de impresiones
-  await actualizarTablaHistorialImpresiones();
+  await actualizarTablaHistorialImpresiones(0);
 
   // Prevalidamos el sistema de forma global y obtenemos las impresoras
   await prevalidacionGlobalObteniendoImpresoras();
@@ -714,14 +724,11 @@ onMounted(async () =>
   // Observa cambios de tamaño del formulario para ajustar el preview en caliente
   if (window.ResizeObserver && contenedorFormularioRef?.value)
   {
-    // Creamos un observador de cambio de tamaño del formulario para ajustar la vista previa del PDF en caliente
     observadorCambioTamanioFormulario = new ResizeObserver(() =>
     {
-      // Ajustamos la altura de la vista previa del PDF en caliente
       sincronizarAlturaVistaPreviaPdf();
     });
    
-    // Observamos el cambio de tamaño del formulario para ajustar la vista previa del PDF en caliente
     observadorCambioTamanioFormulario.observe(contenedorFormularioRef.value);
   }
 });
@@ -744,20 +751,36 @@ const obtenerDatosDelFormulario = async () =>
 };
 
 /**
- * Actualiza el historial de impresiones
+ * Actualiza el historial de impresiones de forma paginada
  */
-const actualizarTablaHistorialImpresiones = async () =>
+const actualizarTablaHistorialImpresiones = async (pagina = 0) =>
 {
   try
   {
     const userInfo              = await obtenerNombreYApellidosUsuario();
     const usuario               = userInfo.nombre + " " + userInfo.apellidos ;
     const filtroBusquedaRequest = { user:  usuario };
-    const response              = await filtrarDatos(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest);
+    const response              = await filtrarDatosPaginado(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest, pagina, 20);
 
     if (response.ok)
     {
-      historialImpresiones.value = await response.json();
+      const pageData = await response.json();
+
+      if (pageData && pageData.content && pageData.content.length > 0)
+      {
+        historialImpresiones.value = pageData.content;
+        paginaActual.value = pageData.number;
+        disablePaginated.value = !pageData.last;
+      }
+      else
+      {
+        historialImpresiones.value = [];
+        disablePaginated.value = false;
+        if (pagina > 0)
+        {
+          manejarError('No hay más impresiones');
+        }
+      }
     }
     else
     {
@@ -769,6 +792,19 @@ const actualizarTablaHistorialImpresiones = async () =>
     manejarError('Error al obtener datos del historial de impresiones');
   }
 };
+
+function irPaginaAnterior()
+{
+  if (paginaActual.value > 0)
+  {
+    actualizarTablaHistorialImpresiones(paginaActual.value - 1);
+  }
+}
+
+function irPaginaSiguiente()
+{
+  actualizarTablaHistorialImpresiones(paginaActual.value + 1);
+}
 
 /**
  * Prevalidación global y obtenemos los estados de las impresoras
@@ -821,23 +857,16 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
   {
     if (impresoraSeleccionada.statusId !== 0)
     {
-      // Obtenemos el estado de la impresora
       errorImpresora.value = impresoraSeleccionada.status;
-
-      // Manejamos el error si la impresora tiene problemas
       manejarError(errorImpresora.value);
     }
     else if (impresoraSeleccionada.printingQueue > 3)
     {
-      // Indicamos el error si la impresora está ocupada imprimiendo otros documentos
       errorImpresora.value = "La impresora está ocupada imprimiendo otros documentos";
-
-      // Manejamos el error si la impresora está ocupada imprimiendo otros documentos
       manejarError(errorImpresora.value);
     }
     else
     {
-      // Limpiamos cualquier error si la impresora está en buen estado
       limpiarError();
     }
   }
@@ -852,7 +881,6 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
   {
     const constantes = await obtenerConstantes(printersApiUrl + '/printers/web/constantes', toastMessage, toastColor, isToastOpen) ;
 
-    // Busca la constante con clave 'Maximo hojas impresion'
     const maxHojasImpresionConstante = constantes.find(constante => constante.clave === 'Maximo hojas impresion') ;
     
     if (!maxHojasImpresionConstante)
@@ -875,7 +903,6 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
  */
 const validarRangoDePaginas = () =>
 {
-  // Llamada interna a la validación de rango de páginas con guión medio	
   validarRangoDePaginasInterna(pdfPaginasRangoInicio.value, pdfPaginasRangoFin.value);
 };
 
@@ -884,29 +911,19 @@ const validarRangoDePaginas = () =>
  */
 const validarPaginasEspecificas = () =>
 {
-  // Separamos las páginas específicas por comas
-  // unimos casos como "1", "1-3", "1,3,5-7", "1,3,5-7,10" en un array de páginas
-  // para tener algo como este array: [1, 2, 3, 5, 6, 7, 10]
   pdfPaginasEspecificas.value.split(',').flatMap(valor =>
   {
-    // Eliminamos los espacios en blanco
     valor = valor.trim();
 
-    // Si la página es un rango, la procesamos
     if (valor.includes('-'))
     {
-      // Separamos el rango por el guión medio
       const [comienzo, fin] = valor.split('-').map(Number);
-
-      // Llamada interna a la validación de rango de páginas con guión medio
       validarRangoDePaginasInterna(comienzo, fin);
     }
     else
     {
-      // Si la página es una sola, la convertimos a número y la validamos
       const pagina = parseInt(valor, 10);
 
-      // Validamos la página
       if (!Number.isInteger(pagina))
       {
         manejarError("Página con carácter no permitido: " + valor);
@@ -960,19 +977,14 @@ const validarRangoDePaginasInterna = (rangoInicio, rangoFin) =>
 {
   try
   {
-    // Si el contenedor del formulario existe, obtenemos el rectángulo del contenedor del formulario
     if (contenedorFormularioRef?.value)
     {
-      // Obtenemos el rectángulo del contenedor del formulario
       const rect = contenedorFormularioRef.value.getBoundingClientRect();
-
-      // Restar padding si es necesario (20px arriba y abajo -> 40)
       alturaMaximaVistaPreviaPdf.value = Math.max(0, rect.height);
     }
   }
   catch (e)
   {
-    // No realizamos ninguna acción
     console.error('Error al sincronizar la altura de la vista previa del PDF:', e);
   }
 };
@@ -993,8 +1005,6 @@ watch(
     () => pdfPaginasEspecificas.value
   ],
   () => {
-
-    // Valida la impresión
     const validacionCorrecta = validarImpresion();
     if (validacionCorrecta)
     {
@@ -1005,8 +1015,6 @@ watch(
 
 /**
  * Watcher para monitorear cambios en pdfPreviewUrl
- * @param {string} newValue - El nuevo valor de la URL de la vista previa del PDF
- * @param {string} oldValue - El valor anterior de la URL de la vista previa del PDF
  */
 watch(urlVistaPreviaPdf, (newValue, oldValue) =>
 {
@@ -1116,7 +1124,7 @@ ion-input {
  
 .table-scroll-inner {
   width: 100%;
-  min-width: 1600px; /* fuerza scroll si el contenedor es más estrecho */
+  min-width: 1600px;
 }
 
 .title {
@@ -1125,6 +1133,38 @@ ion-input {
   font-size: 24px;
   font-weight: bold;
   color: var(--text-color-light);
+}
+
+.pagina-container {
+  display: flex;
+  padding-bottom: 10px;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.decrementar-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.incrementar-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.numPagina {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
 }
 
 .pdf-selector-container {
@@ -1295,7 +1335,7 @@ ion-input {
   margin-bottom: 4px;
 }
 
-/* Reducir tamaño de texto de las opciones del segmento (TODAS PÁGS., RANGO, PERSONALIZA) */
+/* Reducir tamaño de texto de las opciones del segmento */
 .selection-mode ion-label {
   font-size: 13px;
   text-transform: none;
