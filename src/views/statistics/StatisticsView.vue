@@ -48,6 +48,9 @@
         <div class="chart-container">
           <PieChart :title="'Hojas impresas por tipo de color'" :data="datosHojasPorColor" />
         </div>
+        <div class="chart-container">
+          <PieChart :title="'Impresiones por estado'" :data="datosImpresionesPorEstado" />
+        </div>
       </div>
     </div>
 
@@ -77,7 +80,8 @@ import {
 } from "@/services/statistics";
 
 import {
-  obtenerHojasPorColor
+  obtenerHojasPorColor,
+  obtenerImpresionesPorEstado
 } from "@/services/printersStatistics";
 
 // ====== ESTADO GENERAL ======
@@ -98,6 +102,7 @@ const dias = ref<Array<{ diaSemana: string; totalReservas: number }>>([]);
 
 // ====== DATOS DE IMPRESIONES ======
 const hojasPorColor = ref<Array<{ color: string; totalHojas: number }>>([]);
+const impresionesPorEstado = ref<Array<{ estado: string; totalImpresiones: number }>>([]);
 
 // ====== COMPUTED: Mapeo a formato ECharts ======
 // Incidencias
@@ -126,6 +131,9 @@ const datosPorDia = computed(() =>
 const datosHojasPorColor = computed(() =>
   hojasPorColor.value.map(item => ({ name: item.color, value: item.totalHojas }))
 );
+const datosImpresionesPorEstado = computed(() =>
+  impresionesPorEstado.value.map(item => ({ name: item.estado, value: item.totalImpresiones }))
+);
 
 // Verificar si hay algún dato para mostrar
 const hayDatosGlobales = computed(() =>
@@ -135,23 +143,25 @@ const hayDatosGlobales = computed(() =>
   datosPorRecurso.value.length > 0 ||
   datosPorTramo.value.length > 0 ||
   datosPorDia.value.length > 0 ||
-  datosHojasPorColor.value.length > 0
+  datosHojasPorColor.value.length > 0 ||
+  datosImpresionesPorEstado.value.length > 0
 );
 
-// ====== CARGA DE DATOS (7 llamadas en paralelo) ======
+// ====== CARGA DE DATOS (8 llamadas en paralelo) ======
 async function cargarTodo() {
   try {
     isLoading.value = true;
 
     // Cargamos estadísticas de incidencias, reservas e impresiones en paralelo
-    const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol] = await Promise.all([
+    const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol, pEst] = await Promise.all([
       obtenerEstadisticasPorCategoria(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorEstado(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorUbicacion(toastMessage, toastColor, isToastOpen),
       obtenerRecursoMasReservado(toastMessage, toastColor, isToastOpen),
       obtenerTramoHorarioMasReservado(toastMessage, toastColor, isToastOpen),
       obtenerDiaSemanaMasReservado(toastMessage, toastColor, isToastOpen),
-      obtenerHojasPorColor(toastMessage, toastColor, isToastOpen)
+      obtenerHojasPorColor(toastMessage, toastColor, isToastOpen),
+      obtenerImpresionesPorEstado(toastMessage, toastColor, isToastOpen)
     ]);
 
     // Asignar datos de incidencias
@@ -166,6 +176,7 @@ async function cargarTodo() {
 
     // Asignar datos de impresiones
     hojasPorColor.value = pCol;
+    impresionesPorEstado.value = pEst;
 
   } catch (error: any) {
     console.error("Error al cargar estadísticas:", error);
