@@ -30,7 +30,7 @@
 
       <!-- Estadísticas de RESERVAS -->
       <h2 class="section-title">Reservas de Recursos</h2>
-      <div class="stats-row">
+      <div class="stats-row mb-20">
         <div class="chart-container">
           <PieChart :title="'Recurso más reservado'" :data="datosPorRecurso" />
         </div>
@@ -39,6 +39,14 @@
         </div>
         <div class="chart-container">
           <PieChart :title="'Día de la semana más reservado'" :data="datosPorDia" />
+        </div>
+      </div>
+
+      <!-- Estadísticas de IMPRESIONES -->
+      <h2 class="section-title">Impresiones</h2>
+      <div class="stats-row">
+        <div class="chart-container">
+          <PieChart :title="'Hojas impresas por tipo de color'" :data="datosHojasPorColor" />
         </div>
       </div>
     </div>
@@ -68,6 +76,10 @@ import {
   obtenerDiaSemanaMasReservado
 } from "@/services/statistics";
 
+import {
+  obtenerHojasPorColor
+} from "@/services/printersStatistics";
+
 // ====== ESTADO GENERAL ======
 const isLoading = ref(false);
 const isToastOpen = ref(false);
@@ -83,6 +95,9 @@ const incidUbi = ref<Array<{ nombreUbicacion: string; cantidad: number }>>([]);
 const recursos = ref<Array<{ recurso: string; totalReservas: number }>>([]);
 const tramos = ref<Array<{ tramoHorario: string; totalReservas: number }>>([]);
 const dias = ref<Array<{ diaSemana: string; totalReservas: number }>>([]);
+
+// ====== DATOS DE IMPRESIONES ======
+const hojasPorColor = ref<Array<{ color: string; totalHojas: number }>>([]);
 
 // ====== COMPUTED: Mapeo a formato ECharts ======
 // Incidencias
@@ -107,6 +122,11 @@ const datosPorDia = computed(() =>
   dias.value.map(item => ({ name: item.diaSemana, value: item.totalReservas }))
 );
 
+// Impresiones
+const datosHojasPorColor = computed(() =>
+  hojasPorColor.value.map(item => ({ name: item.color, value: item.totalHojas }))
+);
+
 // Verificar si hay algún dato para mostrar
 const hayDatosGlobales = computed(() =>
   datosIncidCategoria.value.length > 0 ||
@@ -114,22 +134,24 @@ const hayDatosGlobales = computed(() =>
   datosIncidUbicacion.value.length > 0 ||
   datosPorRecurso.value.length > 0 ||
   datosPorTramo.value.length > 0 ||
-  datosPorDia.value.length > 0
+  datosPorDia.value.length > 0 ||
+  datosHojasPorColor.value.length > 0
 );
 
-// ====== CARGA DE DATOS (6 llamadas en paralelo) ======
+// ====== CARGA DE DATOS (7 llamadas en paralelo) ======
 async function cargarTodo() {
   try {
     isLoading.value = true;
 
-    // Cargamos estadísticas de incidencias y reservas en paralelo
-    const [iCat, iEst, iUbi, rRec, rTra, rDia] = await Promise.all([
+    // Cargamos estadísticas de incidencias, reservas e impresiones en paralelo
+    const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol] = await Promise.all([
       obtenerEstadisticasPorCategoria(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorEstado(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorUbicacion(toastMessage, toastColor, isToastOpen),
       obtenerRecursoMasReservado(toastMessage, toastColor, isToastOpen),
       obtenerTramoHorarioMasReservado(toastMessage, toastColor, isToastOpen),
-      obtenerDiaSemanaMasReservado(toastMessage, toastColor, isToastOpen)
+      obtenerDiaSemanaMasReservado(toastMessage, toastColor, isToastOpen),
+      obtenerHojasPorColor(toastMessage, toastColor, isToastOpen)
     ]);
 
     // Asignar datos de incidencias
@@ -141,6 +163,9 @@ async function cargarTodo() {
     recursos.value = rRec;
     tramos.value = rTra;
     dias.value = rDia;
+
+    // Asignar datos de impresiones
+    hojasPorColor.value = pCol;
 
   } catch (error: any) {
     console.error("Error al cargar estadísticas:", error);
