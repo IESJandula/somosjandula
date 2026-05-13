@@ -27,6 +27,13 @@ export declare function filtrarDatos(toastMessage: Ref<string>,
                                      isToastOpen: Ref<boolean>,
                                      payload: string): Promise<[]>;
 
+export declare function filtrarDatosPaginado(toastMessage: Ref<string>,
+                                             toastColor: Ref<string>,
+                                             isToastOpen: Ref<boolean>,
+                                             payload: string,
+                                             pagina: number,
+                                             size?: number): Promise<Response>;
+
 export declare function imprimir(toastMessage: Ref<string>,
                                  toastColor: Ref<string>,
                                  isToastOpen: Ref<boolean>,
