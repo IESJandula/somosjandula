@@ -44,12 +44,26 @@
 
       <!-- Estadísticas de IMPRESIONES -->
       <h2 class="section-title">Impresiones</h2>
-      <div class="stats-row">
+      <div class="stats-row mb-20">
         <div class="chart-container">
           <PieChart :title="'Hojas impresas por tipo de color'" :data="datosHojasPorColor" />
         </div>
         <div class="chart-container">
           <PieChart :title="'Impresiones por estado'" :data="datosImpresionesPorEstado" />
+        </div>
+      </div>
+
+      <!-- Estadísticas de AUDITORÍA -->
+      <h2 class="section-title">Auditoría</h2>
+      <div class="stats-row">
+        <div class="chart-container">
+          <PieChart :title="'Peticiones por día de la semana'" :data="datosPeticionesPorDiaSemana" />
+        </div>
+        <div class="chart-container">
+          <PieChart :title="'Peticiones por tramo horario'" :data="datosPeticionesPorTramoHorario" />
+        </div>
+        <div class="chart-container">
+          <PieChart :title="'Microservicio más usado'" :data="datosPeticionesPorMicroservicio" />
         </div>
       </div>
     </div>
@@ -84,6 +98,12 @@ import {
   obtenerImpresionesPorEstado
 } from "@/services/printersStatistics";
 
+import {
+  obtenerPeticionesPorDiaSemana,
+  obtenerPeticionesPorTramoHorario,
+  obtenerPeticionesPorMicroservicio
+} from "@/services/auditStatistics";
+
 // ====== ESTADO GENERAL ======
 const isLoading = ref(false);
 const isToastOpen = ref(false);
@@ -103,6 +123,11 @@ const dias = ref<Array<{ diaSemana: string; totalReservas: number }>>([]);
 // ====== DATOS DE IMPRESIONES ======
 const hojasPorColor = ref<Array<{ color: string; totalHojas: number }>>([]);
 const impresionesPorEstado = ref<Array<{ estado: string; totalImpresiones: number }>>([]);
+
+// ====== DATOS DE AUDITORÍA ======
+const peticionesPorDiaSemana = ref<Array<{ diaSemana: string; totalPeticiones: number }>>([]);
+const peticionesPorTramoHorario = ref<Array<{ tramoHorario: string; totalPeticiones: number }>>([]);
+const peticionesPorMicroservicio = ref<Array<{ microservicio: string; totalPeticiones: number }>>([]);
 
 // ====== COMPUTED: Mapeo a formato ECharts ======
 // Incidencias
@@ -135,6 +160,17 @@ const datosImpresionesPorEstado = computed(() =>
   impresionesPorEstado.value.map(item => ({ name: item.estado, value: item.totalImpresiones }))
 );
 
+// Auditoría
+const datosPeticionesPorDiaSemana = computed(() =>
+  peticionesPorDiaSemana.value.map(item => ({ name: item.diaSemana, value: item.totalPeticiones }))
+);
+const datosPeticionesPorTramoHorario = computed(() =>
+  peticionesPorTramoHorario.value.map(item => ({ name: item.tramoHorario, value: item.totalPeticiones }))
+);
+const datosPeticionesPorMicroservicio = computed(() =>
+  peticionesPorMicroservicio.value.map(item => ({ name: item.microservicio, value: item.totalPeticiones }))
+);
+
 // Verificar si hay algún dato para mostrar
 const hayDatosGlobales = computed(() =>
   datosIncidCategoria.value.length > 0 ||
@@ -144,16 +180,19 @@ const hayDatosGlobales = computed(() =>
   datosPorTramo.value.length > 0 ||
   datosPorDia.value.length > 0 ||
   datosHojasPorColor.value.length > 0 ||
-  datosImpresionesPorEstado.value.length > 0
+  datosImpresionesPorEstado.value.length > 0 ||
+  datosPeticionesPorDiaSemana.value.length > 0 ||
+  datosPeticionesPorTramoHorario.value.length > 0 ||
+  datosPeticionesPorMicroservicio.value.length > 0
 );
 
-// ====== CARGA DE DATOS (8 llamadas en paralelo) ======
+// ====== CARGA DE DATOS ======
 async function cargarTodo() {
   try {
     isLoading.value = true;
 
-    // Cargamos estadísticas de incidencias, reservas e impresiones en paralelo
-    const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol, pEst] = await Promise.all([
+    // Cargamos estadísticas de incidencias, reservas, impresiones y auditoría en paralelo
+    const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol, pEst, aDia, aTra, aMic] = await Promise.all([
       obtenerEstadisticasPorCategoria(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorEstado(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorUbicacion(toastMessage, toastColor, isToastOpen),
@@ -161,7 +200,10 @@ async function cargarTodo() {
       obtenerTramoHorarioMasReservado(toastMessage, toastColor, isToastOpen),
       obtenerDiaSemanaMasReservado(toastMessage, toastColor, isToastOpen),
       obtenerHojasPorColor(toastMessage, toastColor, isToastOpen),
-      obtenerImpresionesPorEstado(toastMessage, toastColor, isToastOpen)
+      obtenerImpresionesPorEstado(toastMessage, toastColor, isToastOpen),
+      obtenerPeticionesPorDiaSemana(toastMessage, toastColor, isToastOpen),
+      obtenerPeticionesPorTramoHorario(toastMessage, toastColor, isToastOpen),
+      obtenerPeticionesPorMicroservicio(toastMessage, toastColor, isToastOpen)
     ]);
 
     // Asignar datos de incidencias
@@ -177,6 +219,11 @@ async function cargarTodo() {
     // Asignar datos de impresiones
     hojasPorColor.value = pCol;
     impresionesPorEstado.value = pEst;
+
+    // Asignar datos de auditoría
+    peticionesPorDiaSemana.value = aDia;
+    peticionesPorTramoHorario.value = aTra;
+    peticionesPorMicroservicio.value = aMic;
 
   } catch (error: any) {
     console.error("Error al cargar estadísticas:", error);
