@@ -23,11 +23,11 @@ export const conectarWebSocket = async (
   );
 
   // Ponemos el prefijo de automations
-  automationsApiUrl = automationsApiUrl + "/automations";
+  let wsUrl = automationsApiUrl + "/automations";
 
   // Construimos la URL WS a partir de la API
-  const wsUrl = automationsApiUrl.startsWith("https") ? automationsApiUrl.replace("https", "wss") + "ws" 
-                                                      : automationsApiUrl.replace("http", "ws") + "ws";
+  wsUrl = wsUrl.startsWith("https") ? wsUrl.replace("https", "wss") + "/ws" 
+                                    : wsUrl.replace("http", "ws") + "/ws";
 
   // Creamos el cliente STOMP
   stompClient = new Client({

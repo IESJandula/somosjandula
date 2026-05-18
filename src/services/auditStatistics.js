@@ -7,7 +7,7 @@ import { obtenerTokenJWTValido } from "@/services/firebaseService";
 export const obtenerPeticionesPorDiaSemana = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${auditApiUrl}/audit/estadisticas/por-dia-semana`, {
+    const response = await fetch(`${auditApiUrl}/audit/estadisticas/dia`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -30,7 +30,7 @@ export const obtenerPeticionesPorDiaSemana = async (toastMessage, toastColor, is
 export const obtenerPeticionesPorTramoHorario = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${auditApiUrl}/audit/estadisticas/por-tramo-horario`, {
+    const response = await fetch(`${auditApiUrl}/audit/estadisticas/tramo`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -53,7 +53,7 @@ export const obtenerPeticionesPorTramoHorario = async (toastMessage, toastColor,
 export const obtenerPeticionesPorMicroservicio = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${auditApiUrl}/audit/estadisticas/por-microservicio`, {
+    const response = await fetch(`${auditApiUrl}/audit/estadisticas/microservicio`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
