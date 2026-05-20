@@ -14,10 +14,35 @@
         <input type="date" v-model="huelga.fechaInicio" class="form-input" />
       </div>
 
-      <div class="form-row">
-        <label class="form-label">Fin de inscripciones:</label>
-        <input type="date" v-model="huelga.fechaFin" class="form-input" />
-      </div>
+            <tbody>
+              <tr v-for="h in huelgas" :key="h.titulo">
+                <td>{{ h.titulo }}</td>
+                <td>{{ formatFecha(h.fechaInicio) }}</td>
+                <td>{{ formatFecha(h.fechaFin) }}</td>
+                <td>{{ h.estado }}</td>
+                <td>
+                  <div class="url-container">
+                    <input
+                      type="text"
+                      :value="h.urlEncuestado"
+                      readonly
+                      class="url-input"
+                    />
+                    <button
+                      class="btn-copiar"
+                      @click="copiarUrl(h.urlEncuestado)"
+                    >
+                      📋
+                    </button>
+                  </div>
+                </td>
+                <td>{{ h.numeroParticipantes }}</td>
+                <td>
+                  <button class="btn-eliminar" @click="borrarHuelgaFn(h.titulo)">
+                    X
+                  </button>
+                </td>
+              </tr>
 
       <div class="button-row">
         <button class="btn-enviar" @click="crearHuelgaFn" :disabled="loading">
@@ -89,6 +114,13 @@
       </div>
 
     </div>
+    <IonToast
+      :is-open="isToastOpen"
+      :message="toastMessage"
+      :color="toastColor"
+      duration="2000"
+      @didDismiss="isToastOpen = false"
+    />
   </div>
 </template>
 <script setup lang="ts">
@@ -106,7 +138,7 @@ interface Huelga {
   fechaFin: number;
   estado: string;
   urlEncuestado: string;
-  alumnos: number;
+  numeroParticipantes: number;
 }
 
 interface Page<T> {
@@ -160,9 +192,9 @@ async function cargarHuelgas(page = 0) {
     5
   );
 
-  huelgas.value = data.content;
-  totalPages.value = data.totalPages;
-  currentPage.value = data.number;
+  huelgas.value = data.content ?? [];
+  totalPages.value = data.totalPages ?? 0;
+  currentPage.value = data.number ?? 0;
 }
 
 function mostrarToast(
@@ -215,7 +247,7 @@ async function crearHuelgaFn() {
       fin
     );
 
-    mostrarToast("Huelga creada correctamente", "success");
+    mostrarToast("Huelga creada/modificada correctamente", "success");
 
     huelga.value = {
       titulo: "",
@@ -230,12 +262,12 @@ async function crearHuelgaFn() {
   {
 
     if (error?.response) {
-      if (error.response.status === 400) {
-        mostrarToast(
-          error.response.data || "Error de validación en servidor",
-          "warning"
-        );
-      } else {
+      if (error.response.status === 400) 
+      {
+        mostrarToast(error.response.data || "Error de validación en servidor","warning");
+      } 
+      else 
+      {
         mostrarToast("Error interno del servidor", "danger");
       }
     } else {
@@ -268,17 +300,25 @@ async function borrarHuelgaFn(titulo: string) {
   } 
   catch (error: any) 
   {
+     if (error?.response) 
+    {
+      const mensaje =
+        error.response.data?.message ||
+        error.response.data?.error ||
+        error.response.data ||
+        "Error en la petición";
 
-    if (error?.response) {
-      if (error.response.status === 400) {
-        mostrarToast(
-          error.response.data || "Error en la petición",
-          "warning"
-        );
-      } else {
-        mostrarToast("Error interno del servidor", "danger");
+      if (error.response.status === 400) 
+      {
+        mostrarToast(mensaje, "warning");
+      } 
+      else 
+      {
+        mostrarToast(mensaje, "danger");
       }
-    } else {
+    } 
+    else 
+    {
       mostrarToast("No se pudo conectar con el servidor", "danger");
     }
   }

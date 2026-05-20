@@ -63,7 +63,9 @@ import StatisticsView from '@/views/statistics/StatisticsView.vue';
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
 import IAView from '@/views/ia/IAView.vue';
+
 import StrikesSchoolAdminPage from '@/views/strikes/StrikesSchoolAdminPage.vue';
+import StrikesSchoolPage from '@/views/strikes/StrikesSchoolPage.vue';
 
 const routes = [
   {
@@ -436,15 +438,14 @@ const routes = [
           role: 'ADMINISTRADOR'
         },
       },
-      /*
-      {
-        path: '/strikes/users',
-        component: StrikesSchoolPage,
-        name: 'StrikesSchoolPage',
-        meta: {
-          role: 'PROFESOR'
-        },
-	  } */
+	  {
+		path: '/strikes/users',
+		component: StrikesSchoolPage,
+		name: 'StrikesSchoolPage',
+		meta: {
+			role: 'PROFESOR'
+		},
+	  } 
       ],
     },
   ];
