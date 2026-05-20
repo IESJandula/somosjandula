@@ -24,8 +24,13 @@ export declare function obtenerAlumnosHuelga( toastMessage: Ref<string>,
                                               toastColor: Ref<string>,
                                               isToastOpen: Ref<boolean>,
                                               titulo: string,
-                                              curso: string,
-                                              etapa: string,
-                                              grupo: string,
+                                              curso: string | null,
+                                              etapa: string | null,
+                                              grupo: string | null,
                                               filtro: string
                                             ): Promise<any[]>;
+
+export declare function obtenerCursos( toastMessage: Ref<string>,
+                                       toastColor: Ref<string>,
+                                       isToastOpen: Ref<boolean>
+                                      ): Promise<any[]>;

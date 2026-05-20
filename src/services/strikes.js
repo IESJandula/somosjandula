@@ -107,8 +107,9 @@ export const borrarHuelga = async (toastMessage, toastColor, isToastOpen, titulo
 };
 
 export const obtenerAlumnosHuelga = async (toastMessage, toastColor, isToastOpen, titulo, curso, etapa, grupo, filtro) => 
+{
+  try 
   {
-  try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     const response = await fetch(`${strikesApiUrl}/strikes/inscripciones/consulta`, {
@@ -116,21 +117,56 @@ export const obtenerAlumnosHuelga = async (toastMessage, toastColor, isToastOpen
       headers: {
         Authorization: `Bearer ${tokenPropio}`,
         "Content-Type": "application/json",
-        titulo,
-        curso: filtro.curso || null,
-        etapa: filtro.etapa || null,
-        grupo: filtro.grupo || null,
-        filtro: tipoFiltro.value
+        titulo: titulo,
+        curso: curso ?? "",
+        etapa: etapa ?? "",
+        grupo: grupo ?? "",
+        filtro: filtro
       }
     });
 
-    if (!response.ok) {
+    if (!response.ok) 
+    {
+      const errorData = await response.json().catch(() => ({}));
       throw new Error("Error al consultar alumnos");
     }
 
     return await response.json();
-  } catch (error) {
+
+  } catch (error) 
+  {
     crearToast(toastMessage, toastColor, isToastOpen, "error", "Error al obtener alumnos");
+    return [];
+  }
+};
+
+export const obtenerCursos = async (toastMessage, toastColor, isToastOpen ) =>
+{
+  try
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(
+      `${strikesApiUrl}/strikes/inscripciones/cursos`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${tokenPropio}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    if (!response.ok)
+    {
+      throw new Error("Error al obtener cursos");
+    }
+
+    return await response.json();
+  }
+  catch (error)
+  {
+    crearToast(toastMessage, toastColor, isToastOpen, "error", "Error al obtener cursos");
     return [];
   }
 };

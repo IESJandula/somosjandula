@@ -40,7 +40,7 @@
           <div class="form-row">
           <label>Curso:</label>
           <select v-model="filtro.curso">
-            <option value="">Todos</option>
+            <option value="Todos">Todos</option>
             <option v-for="c in cursos" :key="c">{{ c }}</option>
           </select>
         </div>
@@ -48,7 +48,7 @@
         <div class="form-row">
           <label>Etapa:</label>
           <select v-model="filtro.etapa">
-            <option value="">Todos</option>
+            <option value="Todos">Todos</option>
             <option v-for="e in etapas" :key="e">{{ e }}</option>
           </select>
         </div>
@@ -56,7 +56,7 @@
         <div class="form-row">
           <label>Grupo:</label>
           <select v-model="filtro.grupo">
-            <option value="">Todos</option>
+            <option value="Todos">Todos</option>
             <option v-for="g in grupos" :key="g">{{ g }}</option>
           </select>
         </div>
@@ -110,7 +110,7 @@
 <script setup lang="ts">
 
 import { ref, onMounted } from "vue";
-import { obtenerHuelgas, obtenerAlumnosHuelga} from "@/services/strikes.js";
+import { obtenerHuelgas, obtenerAlumnosHuelga, obtenerCursos} from "@/services/strikes.js";
 
 const loading = ref(false);
 
@@ -122,12 +122,10 @@ const etapas = ref<string[]>([]);
 const grupos = ref<string[]>([]);
 
 const filtro = ref({
-  curso: "",
-  etapa: "",
-  grupo: ""
+  curso: "Todos",
+  etapa: "Todos",
+  grupo: "Todos"
 });
-
-const combinaciones = ref<any[]>([]);;
 
 const tipoFiltro = ref("TODOS");
 
@@ -140,6 +138,7 @@ const isToastOpen = ref(false);
 
 onMounted(() => {
   cargarHuelgas();
+  cargarFiltros();
 });
 
 async function cargarHuelgas() {
@@ -172,24 +171,60 @@ async function consultarAlumnos() {
     alert("Selecciona una huelga");
     return;
   }
-
   loading.value = true;
-
   try {
+    const cursoEnviar =
+      filtro.value.curso === "Todos"
+        ? ""
+        : filtro.value.curso;
+
+    const etapaEnviar =
+      filtro.value.etapa === "Todos"
+        ? ""
+        : filtro.value.etapa;
+
+    const grupoEnviar =
+      filtro.value.grupo === "Todos"
+        ? ""
+        : filtro.value.grupo;
+
     alumnos.value = await obtenerAlumnosHuelga(
       toastMessage,
       toastColor,
       isToastOpen,
       huelgaSeleccionada.value.titulo,
-      filtro.value.curso,
-      filtro.value.etapa,
-      filtro.value.grupo,
+      cursoEnviar,
+      etapaEnviar,
+      grupoEnviar,
       tipoFiltro.value
     )
 
   } finally {
     loading.value = false;
   }
+}
+
+async function cargarFiltros()
+{
+  const datos: any[] = await obtenerCursos(toastMessage, toastColor, isToastOpen);
+  cursos.value = [
+    "Todos",
+    ...new Set(datos.map(d => d.curso))
+  ];
+
+  etapas.value = [
+    "Todos",
+    ...new Set(datos.map(d => d.etapa))
+  ];
+
+  grupos.value = [
+    "Todos",
+    ...new Set(datos.map(d => d.grupo))
+  ];
+
+  console.log("CURSOS:", cursos.value);
+  console.log("ETAPAS:", etapas.value);
+  console.log("GRUPOS:", grupos.value);
 }
 
 /* UTIL */

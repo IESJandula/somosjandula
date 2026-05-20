@@ -72,7 +72,7 @@
                     </button>
                   </div>
                 </td>
-                <td>{{ h.alumnos }}</td>
+                <td>{{ h.numeroParticipantes }}</td>
                 <td>
                   <button class="btn-eliminar" @click="borrarHuelgaFn(h.titulo)">
                     X
@@ -122,7 +122,7 @@ interface Huelga {
   fechaFin: number;
   estado: string;
   urlEncuestado: string;
-  alumnos: number;
+  numeroParticipantes: number;
 }
 
 interface Page<T> {
