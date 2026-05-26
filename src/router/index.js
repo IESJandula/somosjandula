@@ -57,6 +57,7 @@ import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
 import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
 
 import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
+import ClonezillaImagesAdminPage from '@/views/clonezilla/ClonezillaImagesAdminPage.vue'
 
 import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
@@ -383,6 +384,14 @@ const routes = [
         },
       },
       {
+        path: 'clonezilla/admin',
+        component: ClonezillaImagesAdminPage,
+        name: 'ClonezillaImagesAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
+        },
+      },
+      {
         path: 'statistics',
         component: StatisticsView,
         name: 'Statistics',
@@ -402,14 +411,6 @@ const routes = [
         path: 'automations/admin',
         component: AutomationsAdminPage,
         name: 'AutomationsAdmin',
-        meta: {
-          role: 'ADMINISTRADOR'
-        },
-      },
-      {
-        path: 'schoolBaseServer/admin',
-        component: SchoolBaseServerAdminPage,
-        name: 'SchoolBaseServerAdmin',
         meta: {
           role: 'ADMINISTRADOR'
         },

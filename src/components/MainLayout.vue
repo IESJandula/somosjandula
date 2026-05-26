@@ -12,6 +12,7 @@
           <ion-list v-if="adminSubmenuVisible" class="submenu">
             <ion-item v-if="mostrarAdminFirebase" button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/clonezilla/admin')">Imágenes Clonezilla</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/printers/admin')">Impresión</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
             <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
