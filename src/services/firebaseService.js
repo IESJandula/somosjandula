@@ -97,6 +97,7 @@ export async function validarRolesMenu(toastMessage, toastColor, isToastOpen) {
     mostrarAdmin: userRoles.includes('ADMINISTRADOR'),
     mostrarDireccion: userRoles.includes('DIRECCION'),
     mostrarFriendsAndFamily: userRoles.includes('FRIENDS_AND_FAMILY'),
+    mostrarDepartamentoInformatica: userRoles.includes('DEPARTAMENTO_INFORMATICA'),
   };
 }
 
