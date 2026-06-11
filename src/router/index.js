@@ -388,7 +388,7 @@ const routes = [
         component: ClonezillaImagesAdminPage,
         name: 'ClonezillaImagesAdmin',
         meta: {
-          role: 'ADMINISTRADOR'
+          role: 'DEPARTAMENTO_INFORMATICA'
         },
       },
       {

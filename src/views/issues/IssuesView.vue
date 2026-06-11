@@ -26,8 +26,12 @@
             </select>
 
             <label class="t-3">Problema</label>
-            <textarea v-model="nuevaIncidenciaProblema" class="input" placeholder="Describe el problema..."></textarea>
-
+            <textarea
+              v-model="nuevaIncidenciaProblema"
+              class="input textarea-problema"
+              placeholder="Describe el problema..."
+              rows="4"
+            ></textarea>
             <button @click="crearIncidenciaFunc" class="btn" :disabled="isLoading">
               Crear incidencia
             </button>
@@ -128,10 +132,13 @@
 
               <!-- Comentario / Solución -->
               <td class="th">
-                <textarea v-model="incidencia.solucion" class="input" placeholder="Describe la solución..."
-                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)">
-                {{ incidencia.solucion || '—' }}
-                </textarea>
+                <textarea
+                  v-model="incidencia.solucion"
+                  class="input textarea-solucion"
+                  placeholder="Describe la solución..."
+                  rows="3"
+                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)"
+                ></textarea>
                 <span v-else>
                   {{ incidencia.solucion || '—' }}
                 </span>
@@ -850,6 +857,27 @@ watch([categorias, ubicaciones, usuariosCategoria], () => {
   border-radius: 6px;
   padding: 0.5rem;
   width: 100%;
+  box-sizing: border-box;
+}
+
+textarea.input {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  resize: vertical;
+}
+
+.textarea-problema {
+  resize: none;
+  min-height: 80px;
+  overflow: auto;
+}
+
+.textarea-solucion {
+  resize: none;
+  min-height: 60px;
+  max-width: 220px;
+  overflow: auto;
 }
 
 .btn {
@@ -890,14 +918,15 @@ watch([categorias, ubicaciones, usuariosCategoria], () => {
 
 .th-problema {
   max-width: 250px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 250px;
   text-align: left;
   vertical-align: top;
 }
 
 .problema-cell {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
   cursor: help;
 }
 
@@ -920,6 +949,7 @@ watch([categorias, ubicaciones, usuariosCategoria], () => {
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .th {
