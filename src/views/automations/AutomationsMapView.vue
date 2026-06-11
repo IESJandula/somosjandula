@@ -213,7 +213,7 @@ import {
   obtenerEspaciosFijo,
   obtenerEspaciosDesdoble,
   obtenerEspaciosSinDocencia
-} from '@/services/schoolBaseServer'
+} from '@/services/schoolManager'
 
 // TOAST
 const isToastOpen = ref(false)

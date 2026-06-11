@@ -8,6 +8,5 @@ export const eventsApiUrl = import.meta.env.VITE_EVENTS_API_BASE_URL as string
 export const strikesApiUrl = import.meta.env.VITE_STRIKES_API_BASE_URL as string
 export const issuesApiUrl = import.meta.env.VITE_ISSUES_API_BASE_URL as string
 export const automationsApiUrl = import.meta.env.VITE_AUTOMATIONS_API_BASE_URL as string
-export const schoolBaseServerApiUrl = import.meta.env.VITE_SCHOOL_BASE_SERVER_API_BASE_URL as string
 export const imagesClonerApiUrl = import.meta.env.VITE_IMAGES_CLONER_API_BASE_URL as string
 export const auditApiUrl = import.meta.env.VITE_AUDIT_API_BASE_URL as string

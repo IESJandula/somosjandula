@@ -470,7 +470,7 @@ import {
   obtenerEspaciosFijo,
   obtenerEspaciosDesdoble,
   obtenerEspaciosSinDocencia,
-} from "@/services/schoolBaseServer";
+} from "@/services/schoolManager";
 
 const dispositivo = ref("");
 const ubicacionElegida = ref("");

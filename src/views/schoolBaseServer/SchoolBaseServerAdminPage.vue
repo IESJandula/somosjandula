@@ -235,7 +235,7 @@ import { IonToast } from "@ionic/vue";
 import {
   obtenerCursosAcademicos,
   seleccionarCursoAcademico,
-  obtenerCursosEtapasGrupos,
+  obtenerCursosEtapasGruposPorCursoAcademico,
   crearCursoEtapaGrupo,
   borrarCursoEtapaGrupo,
   crearEspacioSinDocencia,
@@ -247,7 +247,7 @@ import {
   borrarEspacioSinDocencia,
   borrarEspacioDesdoble,
   borrarEspacioFijo
-} from "@/services/schoolBaseServer";
+} from "@/services/schoolManager";
 
 // ====================
 // VARIABLES
@@ -340,7 +340,7 @@ watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
 // ====================
 const cargarGrupos = async () => {
   try {
-    const data = await obtenerCursosEtapasGrupos(
+    const data = await obtenerCursosEtapasGruposPorCursoAcademico(
       toastMessage,
       toastColor,
       isToastOpen,

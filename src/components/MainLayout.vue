@@ -64,12 +64,13 @@
             <ion-icon slot="end" :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
           </ion-item>
           <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">1. Carga de matrículas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">2. Asignaturas y bloques</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">3. Creación de grupos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">4. Resumen por asignatura</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">5. Asignaturas y departamentos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">6. Reducciones</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/cursosEspacios')">1. Cursos y espacios</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">2. Carga de matrículas</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">3. Asignaturas y bloques</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">4. Creación de grupos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">5. Resumen por asignatura</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">6. Asignaturas y departamentos</ion-item>
+            <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">7. Reducciones</ion-item>
           </ion-list>
         </ion-list>
         <!-- Últimas noticias -->
