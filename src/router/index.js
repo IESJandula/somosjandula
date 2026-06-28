@@ -6,6 +6,8 @@ import { obtenerRolesUsuario } from '@/services/firebaseService';
 import LoginPage from '@/views/LoginPage.vue';
 import MainLayout from '@/components/MainLayout.vue';
 
+import HomeView from '@/views/home/HomeView.vue';
+
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 
 import AdminFirebasePage from '@/views/admin/AdminFirebasePage.vue';
@@ -17,17 +19,9 @@ import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
 import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
 import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
 
-import AbsencesReviewPage from '@/views/absences/AbsencesReviewPage.vue';
-import AbsencesTasksPage from '@/views/absences/AbsencesTasksPage.vue';
-
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
-import PDIsTrainingPage from '@/views/documents/PDIsTrainingPage.vue';
 
-import ControlPanel from '@/views/projectors/ControlPanel.vue';
-import RemoteControl from '@/views/projectors/RemoteControl.vue';
-import EventsTable from '@/views/projectors/EventsTable.vue';
-
-import A_CursosEspacios from '@/views/school_manager/A_CursosEspacios.vue';
+import A_CursosEtapasEspacios from '@/views/school_manager/A_CursosEtapasEspacios.vue';
 import B_CargaMatriculas from '@/views/school_manager/B_CargaMatriculas.vue';
 import C_AsignaturaYBloque from '@/views/school_manager/C_AsignaturaYBloque.vue';
 import D_CrearGrupos from '@/views/school_manager/D_CrearGrupos.vue';
@@ -51,12 +45,10 @@ import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
 
 import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
-import EstadisticasIncidenciasTicPage from '@/views/issues/IssuesStats.vue';
 
 import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
 import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
 
-import SchoolBaseServerAdminPage from '@/views/schoolBaseServer/SchoolBaseServerAdminPage.vue'
 import ClonezillaImagesAdminPage from '@/views/clonezilla/ClonezillaImagesAdminPage.vue'
 
 import StatisticsView from '@/views/statistics/StatisticsView.vue';
@@ -71,7 +63,7 @@ import StrikesSchoolPage from '@/views/strikes/StrikesSchoolPage.vue';
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/home'
   },
   {
     path: '/login',
@@ -93,6 +85,14 @@ const routes = [
       requiresAuth: true
     },
     children: [
+      {
+        path: 'home',
+        component: HomeView,
+        name: 'Home',
+        meta: {
+          role: 'PROFESOR'
+        },
+      },
       {
         path: 'admin/firebase',
         component: AdminFirebasePage,
@@ -142,22 +142,6 @@ const routes = [
         },
       },
       {
-        path: 'absences/review',
-        component: AbsencesReviewPage,
-        name: 'AbsencesReview',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'absences/tasks',
-        component: AbsencesTasksPage,
-        name: 'AbsencesTasks',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
         path: 'documents/teacherGuide',
         component: TeacherGuidePage,
         name: 'DocumentsTeacherGuidePage',
@@ -166,17 +150,9 @@ const routes = [
         },
       },
       {
-        path: 'documents/pdisTraining',
-        component: PDIsTrainingPage,
-        name: 'DocumentsPDIsTrainingPage',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'school_manager/cursosEspacios',
-        component: A_CursosEspacios,
-        name: 'A_CursosEspacios',
+        path: 'school_manager/cursosEtapasEspacios',
+        component: A_CursosEtapasEspacios,
+        name: 'A_CursosEtapasEspacios',
         meta: {
           role: 'DIRECCION'
         },
@@ -254,30 +230,6 @@ const routes = [
         },
       },
       {
-        path: 'projectors/ControlPanel',
-        component: ControlPanel,
-        name: 'ControlPanel',
-        meta: {
-          role: 'ADMINISTRADOR'
-        },
-      },
-      {
-        path: 'projectors/RemoteControl',
-        component: RemoteControl,
-        name: 'RemoteControl',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'projectors/EventsTable',
-        component: EventsTable,
-        name: 'EventsTable',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
         path: 'timetable_admin/admin',
         component: A_Administracion,
         name: 'A_Administracion',
@@ -348,12 +300,6 @@ const routes = [
         },
       },
       {
-        path: 'issues/stats',
-        name: 'IssuesStatsPage',
-        component: EstadisticasIncidenciasTicPage,
-        meta: { role: 'PROFESOR' },
-      },
-      {
         path: 'issues/admin',
         name: 'IssuesTicAdminPage',
         component: IncidenciasTicAdminPage,
@@ -373,14 +319,6 @@ const routes = [
         name: 'AutomationsMapView',
         meta: {
           role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'schoolBaseServer/admin',
-        component: SchoolBaseServerAdminPage,
-        name: 'SchoolBaseServerAdmin',
-        meta: {
-          role: 'ADMINISTRADOR'
         },
       },
       {

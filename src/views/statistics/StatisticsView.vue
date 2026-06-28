@@ -96,7 +96,7 @@ import {
 import {
   obtenerHojasPorColor,
   obtenerImpresionesPorEstado
-} from "@/services/printersStatistics";
+} from "@/services/printers";
 
 import {
   obtenerPeticionesPorDiaSemana,

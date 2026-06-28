@@ -1,198 +1,13 @@
 <template>
   <ion-app>
-    <!-- Menú lateral -->
-    <ion-menu content-id="main-content" side="start" id="main-menu">
-      <ion-content>
-        <!-- Menú Administración -->
-        <ion-list>
-          <ion-item v-if="mostrarAdmin" button @click="toggleSubMenuAdmin">
-            Administración general
-            <ion-icon slot="end" :icon="adminSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="adminSubmenuVisible" class="submenu">
-            <ion-item v-if="mostrarAdminFirebase" button @click="navigateAndCloseMenu('/admin/firebase')">Firebase</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/schoolBaseServer/admin')">Configuración Base</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/printers/admin')">Impresión</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/bookings/admin')">Reservas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/notifications/admin')">Notificaciones</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/projectors/ControlPanel')">Proyectores</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/eventsSchool/admin')">Eventos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/issues/admin')">Incidencias</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/automations/admin')">Domótica</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/strikesSchool/admin')">Huelgas</ion-item>
-          </ion-list>
-        </ion-list>
-        <!-- Menú de Departamento Informática -->
-        <ion-list>
-          <ion-item v-if="mostrarDepartamentoInformatica" button @click="toggleSubMenuDepartamentoInformatica">
-            Departamento Informática
-            <ion-icon slot="end" :icon="departamentoInformaticaSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="departamentoInformaticaSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/clonezilla/admin')">Imágenes Clonezilla</ion-item>
-          </ion-list>
-        </ion-list>
-        <!-- Friends and Family -->
-        <ion-list>
-          <ion-item v-if="mostrarFriendsAndFamily" button @click="toggleSubMenuFriendsAndFamily">
-            Friends and Family
-            <ion-icon slot="end" name="people-outline"></ion-icon>
-            <ion-icon slot="end" :icon="friendsAndFamilySubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="friendsAndFamilySubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/ia')">
-              Jandu-GPT
-              <ion-icon slot="end" name="logo-electron"></ion-icon>
-            </ion-item>
-          </ion-list>
-        </ion-list>
-        <!-- Menú de Cola de impresión -->
-        <ion-list>
-          <ion-item v-if="mostrarTimetableAdmin" button @click="toggleSubMenuTimetableAdmin">
-            Administración de horarios
-            <ion-icon slot="end" :icon="timetableAdminSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="timetableAdminSubmenuVisible" class="submenu">
-            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/admin')">1. Administrar</ion-item>
-            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/validation')">2. Validación de datos</ion-item>
-            <ion-item v-if="mostrarTimetableAdmin" button @click="navigateAndCloseMenu('/timetable_admin/generator')">3. Generador de horarios</ion-item>
-          </ion-list>
-        </ion-list>
-        <ion-list>
-          <ion-item v-if="mostrarSchoolManager" button @click="toggleSubMenuSchoolManager">
-            Gestión de matriculas
-            <ion-icon slot="end" :icon="schoolManagerSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="schoolManagerSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/cursosEspacios')">1. Cursos y espacios</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/cargaMatriculas')">2. Carga de matrículas</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/asignaturaYBloque')">3. Asignaturas y bloques</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/crearGrupos')">4. Creación de grupos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/tablaResumen')">5. Resumen por asignatura</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/departamentos')">6. Asignaturas y departamentos</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/school_manager/reducciones')">7. Reducciones</ion-item>
-          </ion-list>
-        </ion-list>
-        <!-- Últimas noticias -->
-        <ion-list>
-          <ion-item button @click="toggleSubMenuNotifications">
-            Eventos y noticias
-            <ion-icon slot="end" name="newspaper-outline"></ion-icon>
-            <ion-icon slot="end" :icon="notificationsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="notificationsSubmenuVisible" class="submenu">
-            <!--  <ion-item button @click="navigateAndCloseMenu('/notifications/latestNews')">¡Últimas noticias!</ion-item> -->
-            <ion-item button @click="navigateAndCloseMenu('/events/users')">
-              Eventos próximos
-              <ion-icon slot="end" name="calendar-number"></ion-icon>
-            </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/notifications/manager')">
-              Avisa de algo importante
-              <ion-icon slot="end" name="megaphone"></ion-icon>
-            </ion-item>
-          </ion-list>
-        </ion-list>
-        <ion-list>
-          <ion-item button @click="toggleSubMenuUtilities">
-            Mis utilidades
-            <ion-icon slot="end" name="heart-outline"></ion-icon>
-            <ion-icon slot="end" :icon="utilitiesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="utilitiesSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/printers/print')">
-              Imprime documentos
-              <ion-icon slot="end" name="print"></ion-icon>
-            </ion-item>
-            <!--<ion-item button @click="navigateAndCloseMenu('/projectors/RemoteControl')">Controla proyectores en remoto</ion-item> -->
-            <ion-item button @click="navigateAndCloseMenu('/documents/teacherGuide')">
-              Guía del profesorado
-              <ion-icon slot="end" name="book"></ion-icon>
-            </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/documents/pdisTraining')">
-              Formación PDIs
-              <ion-icon slot="end" name="browsers"></ion-icon>
-            </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/automations/map')">
-              Vista de pájaro
-              <ion-icon slot="end" name="eye"></ion-icon>
-            </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/statistics')">
-              Estadísticas
-              <ion-icon slot="end" name="bar-chart"></ion-icon>
-            </ion-item>
-			<ion-item button @click="navigateAndCloseMenu('/strikes/users')">
-			  Alumnado en huelga
-			</ion-item>
-          </ion-list>
-        </ion-list>
-        <!-- Reservas -->
-        <ion-list>
-          <ion-item button @click="toggleSubMenuBookings">
-            Reservas
-            <ion-icon slot="end" name="calendar-outline"></ion-icon>
-            <ion-icon slot="end" :icon="bookingsSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="bookingsSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/bookings/fixed')">
-              Reservas fijas
-              <ion-icon slot="end" name="infinite"></ion-icon>
-            </ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/bookings/temporary')">
-              Reservas temporales
-              <ion-icon slot="end" name="git-commit"></ion-icon>
-            </ion-item>
-          </ion-list>
-        </ion-list>
-        <!-- Guardias -->
-        <!--
-        <ion-list>
-          <ion-item button @click="toggleSubMenuAbsences">
-            Guardias
-            <ion-icon slot="end" :icon="absencesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="absencesSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/absences/review')">Comprueba tus guardias</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/absences/tasks')">Revisa las tareas de guardia</ion-item>
-          </ion-list>
-        </ion-list>
-        -->
-        <ion-list>
-          <ion-item v-if="mostrarTimetableTeachers" button @click="toggleSubMenuTimetableTeachers">
-            Horarios
-            <ion-icon slot="end" :icon="timetableTeachersSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-          <ion-list v-if="timetableTeachersSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/choice')">1. Elección de
-              horarios</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/personal')">2. Horario
-              personal</ion-item>
-            <ion-item button @click="navigateAndCloseMenu('/timetable_teachers/groups')">3. Horario de grupos</ion-item>
-          </ion-list>
-        </ion-list>
-        <!--Incidencias-->
-        <ion-list>
-          <ion-item button @click="toggleSubMenuIssues">
-            <ion-label>Incidencias</ion-label>
-            <ion-icon slot="end" name="bag-add-outline"></ion-icon>
-            <ion-icon slot="end" :icon="issuesSubmenuVisible ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-          </ion-item>
-
-          <ion-list v-if="issuesSubmenuVisible" class="submenu">
-            <ion-item button @click="navigateAndCloseMenu('/issues')">
-              Gestiona tus incidencias
-              <ion-icon slot="end" name="bandage"></ion-icon>
-            </ion-item>            
-          </ion-list>
-        </ion-list>
-      </ion-content>
-    </ion-menu>
-
     <!-- Contenido principal de la página -->
     <ion-page id="main-content">
       <ion-header>
         <ion-toolbar>
           <ion-buttons slot="start">
-            <ion-menu-button autoHide="false"></ion-menu-button>
+            <ion-button class="home-button" fill="solid" @click="irAInicio" aria-label="Ir al inicio">
+              <ion-icon :icon="homeOutline" aria-hidden="true"></ion-icon>
+            </ion-button>
           </ion-buttons>
 
           <div class="notificacionesSoloTexto-carousel">
@@ -218,12 +33,17 @@
 
           <div class="end-section" slot="end">
             <div class="top-bar">
-              <div class="button-container" @mouseenter="showTooltip = true" @mouseleave="showTooltip = false">
-                <ion-button @click="desconectar">Desconectar</ion-button>
-                <div v-if="showTooltip && userName" class="tooltip">
+              <div class="button-container" @mouseenter="handleLogoutEnter($event)" @mouseleave="showTooltip = false">
+                <ion-button class="logout-button" fill="solid" @click="desconectar"
+                  :aria-label="userName ? `Desconectar (${userName})` : 'Desconectar'">
+                  <ion-icon :icon="powerOutline" aria-hidden="true"></ion-icon>
+                </ion-button>
+              </div>
+              <teleport to="body">
+                <div v-if="showTooltip && userName" class="logout-tooltip" :style="logoutTooltipPosition">
                   {{ userName }}
                 </div>
-              </div>
+              </teleport>
             </div>
           </div>
         </ion-toolbar>
@@ -238,7 +58,6 @@
 
 <script>
 import {
-  IonMenu,
   IonContent,
   IonList,
   IonItem,
@@ -247,16 +66,16 @@ import {
   IonHeader,
   IonToolbar,
   IonButtons,
-  IonMenuButton,
   IonButton,
   IonIcon,
   IonApp,
 } from "@ionic/vue";
 import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
+import { homeOutline, powerOutline } from "ionicons/icons";
 import { useRouter } from "vue-router";
 import { menuController } from "@ionic/vue";
 import { getAuth, signOut } from "firebase/auth";
-import { validarRolesMenu, obtenerNombreYApellidosUsuario } from "@/services/firebaseService";
+import { obtenerNombreYApellidosUsuario } from "@/services/firebaseService";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
 import { obtenerNotificacionesVigentesPorTipo } from "@/services/notifications";
 import { crearToast } from "@/utils/toast.js";
@@ -264,7 +83,6 @@ import { crearToast } from "@/utils/toast.js";
 export default defineComponent({
   name: "MainLayout",
   components: {
-    IonMenu,
     IonContent,
     IonList,
     IonItem,
@@ -273,7 +91,6 @@ export default defineComponent({
     IonHeader,
     IonToolbar,
     IonButtons,
-    IonMenuButton,
     IonButton,
     IonIcon,
     IonApp,
@@ -282,26 +99,6 @@ export default defineComponent({
     const router = useRouter();
     const userName = ref("");
     const showTooltip = ref(false);
-    const mostrarAdmin = ref(false);
-    const mostrarDepartamentoInformatica = ref(false);
-    const mostrarFriendsAndFamily = ref(false);
-    const mostrarAdminFirebase = ref(false);
-    const mostrarTimetableAdmin = ref(false);
-    const mostrarTimetableTeachers = ref(false);
-    const mostrarSchoolManager = ref(false);
-
-    const adminSubmenuVisible = ref(false);
-    const departamentoInformaticaSubmenuVisible = ref(false);
-    const friendsAndFamilySubmenuVisible = ref(false);
-    const timetableAdminSubmenuVisible = ref(false);
-    const schoolManagerSubmenuVisible = ref(false);
-    const timetableTeachersSubmenuVisible = ref(false);
-    const notificationsSubmenuVisible = ref(false);
-    const utilitiesSubmenuVisible = ref(false);
-    const bookingsSubmenuVisible = ref(false);
-    const absencesSubmenuVisible = ref(false);
-
-    const issuesSubmenuVisible = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -332,6 +129,19 @@ export default defineComponent({
       };
     };
 
+    const logoutTooltipPosition = ref(null);
+
+    const handleLogoutEnter = (event) => {
+      showTooltip.value = true;
+      const rect = event.currentTarget.getBoundingClientRect();
+      // Anclado a la derecha del botón: crece hacia la izquierda y no se sale por el borde derecho
+      logoutTooltipPosition.value = {
+        top: `${rect.bottom + 6}px`,
+        right: `${Math.max(window.innerWidth - rect.right, 8)}px`,
+        left: 'auto'
+      };
+    };
+
     const actualizarNotificacionesSoloTexto = async () => {
       try {
         const notificacionesPorTipoSoloTexto = await obtenerNotificacionesVigentesPorTipo(toastMessage, toastColor, isToastOpen, "Solo texto");
@@ -346,23 +156,18 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      // Obtener notificaciones solo texto.
       actualizarNotificacionesSoloTexto();
-      notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000);
+
+      // Actualizar notificaciones cada 5 minutos.
+      notificacionesSoloTextoInterval = setInterval(actualizarNotificacionesSoloTexto, 60000 * 5);
+
+      // Pasar a la siguiente notificación cada 5 segundos.
       setInterval(nextNotificacionesSoloTexto, 5000);
 
       obtenerNombreYApellidosUsuario().then((userInfo) => {
-        userName.value = userInfo.nombre;
+        userName.value = `${userInfo.nombre ?? ""} ${userInfo.apellidos ?? ""}`.trim();
       });
-
-      validarRolesMenu()
-        .then((rolesMenu) => {
-          mostrarAdmin.value = rolesMenu.mostrarAdmin;
-          mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
-          mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
-        })
-        .catch((error) => {
-          console.error(error);
-        });
     });
 
     onBeforeUnmount(() => {
@@ -373,7 +178,14 @@ export default defineComponent({
       try {
         const auth = getAuth();
         await signOut(auth);
+
+        // El JWT de sesión se persiste en sessionStorage (ver firebaseService)
+        sessionStorage.removeItem(SESSION_JWT_TOKEN);
+        // Limpieza defensiva por si quedara en localStorage
         localStorage.removeItem(SESSION_JWT_TOKEN);
+        // Evitar redirección automática a una ruta previa tras el próximo login
+        localStorage.removeItem("redirectAfterLogin");
+
         router.replace({ name: "Login" });
         window.location.reload();
       } catch (error) {
@@ -386,171 +198,14 @@ export default defineComponent({
       await menuController.close("main-menu");
     };
 
-    // Toggle submenus
-    const toggleSubMenuAdmin = () => {
-      adminSubmenuVisible.value = !adminSubmenuVisible.value;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuTimetableAdmin = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = !timetableAdminSubmenuVisible.value;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuTimetableTeachers = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = !timetableTeachersSubmenuVisible.value;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
-    };
-    const toggleSubMenuSchoolManager = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = !schoolManagerSubmenuVisible.value;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuNotifications = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = !notificationsSubmenuVisible.value;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuUtilities = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = !utilitiesSubmenuVisible.value;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuBookings = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = !bookingsSubmenuVisible.value;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuAbsences = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = !absencesSubmenuVisible.value;
-      issuesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuIssues = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = !issuesSubmenuVisible.value;
-    };
-
-    const toggleSubMenuFriendsAndFamily = () => {
-      adminSubmenuVisible.value = false;
-      departamentoInformaticaSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = !friendsAndFamilySubmenuVisible.value;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
-    };
-
-    const toggleSubMenuDepartamentoInformatica = () => {
-      departamentoInformaticaSubmenuVisible.value = !departamentoInformaticaSubmenuVisible.value;
-      adminSubmenuVisible.value = false;
-      friendsAndFamilySubmenuVisible.value = false;
-      timetableAdminSubmenuVisible.value = false;
-      timetableTeachersSubmenuVisible.value = false;
-      schoolManagerSubmenuVisible.value = false;
-      notificationsSubmenuVisible.value = false;
-      utilitiesSubmenuVisible.value = false;
-      bookingsSubmenuVisible.value = false;
-      absencesSubmenuVisible.value = false;
-      issuesSubmenuVisible.value = false;
+    const irAInicio = () => {
+      router.push("/home");
     };
 
     onMounted(async () => {
       try {
         const userInfo = await obtenerNombreYApellidosUsuario(toastMessage, toastColor, isToastOpen);
-        userName.value = userInfo.nombre;
-
-        const rolesMenu = await validarRolesMenu(isToastOpen, toastMessage, toastColor);
-
-        mostrarAdmin.value = rolesMenu.mostrarDireccion;
-        mostrarDepartamentoInformatica.value = rolesMenu.mostrarDepartamentoInformatica;
-        mostrarAdminFirebase.value = rolesMenu.mostrarAdmin;
-        mostrarTimetableAdmin.value = rolesMenu.mostrarDireccion;
-        mostrarTimetableTeachers.value = rolesMenu.mostrarDireccion;
-        mostrarSchoolManager.value = rolesMenu.mostrarDireccion;
-        mostrarFriendsAndFamily.value = rolesMenu.mostrarFriendsAndFamily;
+        userName.value = `${userInfo.nombre ?? ""} ${userInfo.apellidos ?? ""}`.trim();
       }
       catch (error) {
         crearToast(
@@ -564,45 +219,21 @@ export default defineComponent({
     });
 
     return {
+      homeOutline,
+      powerOutline,
+      logoutTooltipPosition,
+      handleLogoutEnter,
       userName,
       showTooltip,
       desconectar,
       navigateAndCloseMenu,
-      mostrarAdmin,
-      mostrarFriendsAndFamily,
-      mostrarAdminFirebase,
-      mostrarSchoolManager,
-      mostrarTimetableAdmin,
-      mostrarTimetableTeachers,
-      mostrarDepartamentoInformatica,
-      adminSubmenuVisible,
-      departamentoInformaticaSubmenuVisible,
-      schoolManagerSubmenuVisible,
-      timetableAdminSubmenuVisible,
-      timetableTeachersSubmenuVisible,
-      notificationsSubmenuVisible,
-      utilitiesSubmenuVisible,
-      bookingsSubmenuVisible,
-      absencesSubmenuVisible,
-      issuesSubmenuVisible,
-      friendsAndFamilySubmenuVisible,
-      toggleSubMenuAdmin,
-      toggleSubMenuTimetableAdmin,
-      toggleSubMenuTimetableTeachers,
-      toggleSubMenuSchoolManager,
-      toggleSubMenuNotifications,
-      toggleSubMenuUtilities,
-      toggleSubMenuBookings,
-      toggleSubMenuAbsences,
-      toggleSubMenuFriendsAndFamily,
-      toggleSubMenuDepartamentoInformatica,
+      irAInicio,
       notificacionesSoloTexto,
       notificacionesSoloTextoIndex,
       showNotificationTooltip,
       tooltipPosition,
       notificationRefs,
       handleMouseEnter,
-      toggleSubMenuIssues
     };
   },
 });
@@ -611,6 +242,49 @@ export default defineComponent({
 <style scoped>
 .submenu {
   padding-left: 20px;
+}
+
+.home-button {
+  --background: #3880ff;
+  --color: #ffffff;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0 !important;
+  border-radius: 50%;
+}
+
+.home-button ion-icon {
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 26px !important;
+  color: #ffffff !important;
+}
+
+.logout-button {
+  --background: #3880ff;
+  --color: #ffffff;
+  color: #ffffff;
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0 !important;
+  border-radius: 50%;
+}
+
+.logout-button ion-icon {
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 26px !important;
+  color: #ffffff !important;
 }
 
 ion-button {
@@ -715,15 +389,17 @@ ion-toolbar {
 
 .tooltip {
   position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(100% + 6px);
+  right: 0;
+  left: auto;
+  transform: none;
   background: #333;
   color: #fff;
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 14px;
   white-space: nowrap;
+  max-width: 90vw;
   pointer-events: none;
   z-index: 10000;
   opacity: 0.95;
@@ -761,6 +437,18 @@ ion-toolbar {
     --color: white;
   }
 
+  .home-button,
+  .logout-button {
+    --background: #4c8dff;
+    --color: #ffffff;
+    color: #ffffff;
+  }
+
+  .home-button ion-icon,
+  .logout-button ion-icon {
+    color: #ffffff !important;
+  }
+
   .tooltip {
     background: #1a1a1a;
     color: #fff;
@@ -793,6 +481,21 @@ ion-toolbar {
   border-bottom-color: #333;
 }
 
+.logout-tooltip {
+  position: fixed;
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  max-width: 90vw;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0.95;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 @media (prefers-color-scheme: dark) {
   .notification-tooltip {
     background: #1a1a1a;
@@ -801,6 +504,11 @@ ion-toolbar {
 
   .notification-tooltip::before {
     border-bottom-color: #1a1a1a;
+  }
+
+  .logout-tooltip {
+    background: #1a1a1a;
+    color: #fff;
   }
 }
 </style>

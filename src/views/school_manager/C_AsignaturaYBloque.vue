@@ -1,765 +1,2484 @@
 <template>
-  <div class="table-container">
-    <h1 class="t-1">Asignaturas y bloques</h1>
-    <FilterCursoEtapa 
-      v-model="filtroSeleccionadoString"
-      @actualizar-select="actualizarSelect" 
-      selectClass="select-sm"
-      class="texto-dropdown"/>
 
-    <!-- Tarjeta que contiene la tabla de asignaturas -->
-    <ion-card class="card-table">
-      <ion-card-header>
-        <ion-card-title class="t-2">Tabla de Asignaturas</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div v-if="loading" class="cargar">Cargando datos...</div>
-        <div v-if="bloquesConUnaAsignatura.length > 0" class="mensajeBloqueUnico">
-          {{ bloquesConUnaAsignatura.length === 1
-            ? `El bloque ${bloquesConUnaAsignatura[0]} tiene una asignatura, elimínalo, ya un bloque debe tener al menos dos asignaturas.`
-            : `Los bloques ${bloquesConUnaAsignatura.join(", ")} tienen una asignatura, elimínalos, ya que un bloque debe tener al menos dos asignaturas.` }}
-        </div>
+  <div class="page-asignaturas-bloques">
 
-        <!-- Tabla de asignaturas -->
-        <div v-if="asignaturas.length > 0 && !loading">
-          <table class="table-asignaturas">
-            <thead>
-            <tr>
-              <th class="th-seleccion">Selecciona para crear un bloque</th>
-              <th class="th-nombre">Nombre</th>
-              <th class="th-bloque">Bloque</th>
-              <th class="th-sin-docencia">Asignaturas sin docencia</th>
-              <th class="th-desdoble">Desdoble</th>
-              <th class="th-horas">Horas</th>
-              <th class="th-accion">Acciones</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="asignatura in asignaturas" :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`">
-              <td class="t-3 th">
-                <input 
-                  type="checkbox" 
-                  class="checkbox"
-                  :disabled="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null"
-                  v-model="asignaturasSeleccionadas" :value="asignatura" />
-              </td>
-              <td class="th">{{ asignatura.nombre }}</td>
-              <td class="th">
-                <div v-if="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null" class="t-3">
-                  Bloque {{ asignatura.bloqueId }}
-                  <button @click="eliminarBloque(asignatura)" class="btn-x">X</button>
-                </div>
-                <div v-else class="t-3">Sin bloque</div>
-              </td>
-              <td class="th t-3">
-                <input 
-                  type="checkbox" 
-                  class="checkbox"
-                  v-model="asignatura.sinDocencia" 
-                  @click="asignaturaSinDocencia(asignatura)"/>
-              </td>
-              <td class="th t-3">
-                <input 
-                  type="checkbox" 
-                  class="checkbox"
-                  v-model="asignatura.desdoble" 
-                  @click="asignaturasDesdoble(asignatura)"/>
-              </td>
-              <td class="t-3 th">
-              <ion-input 
-                type="number" 
-                v-model.number="horasPorAsignatura[asignatura.nombre]"
-                min="1" 
-                step="1" 
-                class="form-input-numer">
-              </ion-input>
-            </td>
-            <td class="t-3 th">
-              <button class="btn-horas" @click="guardarHoras(asignatura.nombre)">Actualizar hora</button>
-            </td>
-            </tr>
-            </tbody>
-          </table>
-          <div class="container-botones">
-            <button class="btn-bloque" @click="crearBloque" :disabled="asignaturasSeleccionadas.length < 2 || loading">
-            {{ loading ? "Procesando..." : "CREAR BLOQUE" }}
-            </button>
-            <button class="btn-actualizar-todas-horas" @click="guardarTodasHoras">ACTUALIZAR HORAS</button>
+    <header class="page-header">
+
+      <h1 class="t-1">
+
+        Asignaturas y bloques<span v-if="cursoAcademico"> ({{ cursoAcademico }})</span>
+
+      </h1>
+
+      <SchoolManagerNav>
+
+        <p class="page-subtitle">
+
+          Gestiona bloques, horas lectivas y opciones de docencia por curso y etapa. Puedes cargar las horas desde un CSV de Séneca.
+
+        </p>
+
+      </SchoolManagerNav>
+
+    </header>
+
+
+
+    <div class="main-panel">
+
+      <section class="panel-section">
+
+        <div class="listado-header">
+
+          <div class="listado-header-left">
+
+            <h2 class="section-title section-title-inline">Asignaturas</h2>
+
+            <p v-if="filtroSeleccionado.curso && filtroSeleccionado.etapa" class="listado-context">
+
+              Curso y etapa: <strong>{{ filtroSeleccionado.curso }}-{{ filtroSeleccionado.etapa }}</strong>
+
+            </p>
+
           </div>
+
+          <div class="datos-controls">
+
+            <FilterCursoEtapa
+
+              v-model="filtroSeleccionadoString"
+
+              @actualizar-select="actualizarSelect"
+
+              selectClass="select-sm"
+
+              class="texto-dropdown"
+
+            />
+
+          </div>
+
         </div>
 
-        <div v-else-if="!loading" class="t-3">
-          <p>No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
+
+
+        <div v-if="mensajeAsignaturasSinHoras" class="alerta alerta-peligro">
+
+          {{ mensajeAsignaturasSinHoras }}
+
         </div>
-      </ion-card-content>
-    </ion-card>
+
+
+
+        <div v-if="loading" class="empty-state">Cargando datos...</div>
+
+
+
+        <div v-if="bloquesConUnaAsignatura.length > 0" class="alerta alerta-peligro">
+
+          {{ bloquesConUnaAsignatura.length === 1
+
+            ? `El bloque ${bloquesConUnaAsignatura[0]} tiene una asignatura, elimínalo, ya un bloque debe tener al menos dos asignaturas.`
+
+            : `Los bloques ${bloquesConUnaAsignatura.join(", ")} tienen una asignatura, elimínalos, ya que un bloque debe tener al menos dos asignaturas.` }}
+
+        </div>
+
+
+
+        <div
+
+          v-if="filtroSeleccionado.curso && filtroSeleccionado.etapa && !loading"
+
+          class="content-layout"
+
+        >
+
+          <div class="table-section">
+
+            <div v-if="asignaturas.length > 0" class="table-scroll">
+
+              <table class="tabla-asignaturas">
+
+                <thead>
+
+                  <tr>
+
+                    <th>Selecciona para crear un bloque</th>
+
+                    <th>Nombre</th>
+
+                    <th>Bloque</th>
+
+                    <th>Sin docencia</th>
+
+                    <th>Desdoble</th>
+
+                    <th>
+
+                      Horas
+
+                      <span class="th-horas-total">({{ totalHoras }})</span>
+
+                    </th>
+
+                    <th>Acciones</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  <tr
+
+                    v-for="asignatura in asignaturas"
+
+                    :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`"
+
+                  >
+
+                    <td>
+
+                      <input
+
+                        type="checkbox"
+
+                        class="checkbox"
+
+                        :disabled="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null"
+
+                        v-model="asignaturasSeleccionadas"
+
+                        :value="asignatura"
+
+                      />
+
+                    </td>
+
+                    <td>{{ asignatura.nombre }}</td>
+
+                    <td>
+
+                      <div v-if="asignatura.bloqueId !== undefined && asignatura.bloqueId !== null">
+
+                        Bloque {{ asignatura.bloqueId }}
+
+                        <button type="button" class="btn-delete btn-mini-inline" @click="eliminarBloque(asignatura)">X</button>
+
+                      </div>
+
+                      <span v-else>Sin bloque</span>
+
+                    </td>
+
+                    <td>
+
+                      <input
+
+                        type="checkbox"
+
+                        class="checkbox"
+
+                        v-model="asignatura.sinDocencia"
+
+                        :disabled="tieneBloque(asignatura)"
+
+                        @click="asignaturaSinDocencia(asignatura)"
+
+                      />
+
+                    </td>
+
+                    <td>
+
+                      <input
+
+                        type="checkbox"
+
+                        class="checkbox"
+
+                        v-model="asignatura.desdoble"
+
+                        @click="asignaturasDesdoble(asignatura)"
+
+                      />
+
+                    </td>
+
+                    <td>
+
+                      <input
+
+                        type="number"
+
+                        v-model.number="horasPorAsignatura[asignatura.nombre]"
+
+                        min="1"
+
+                        step="1"
+
+                        class="cell-input cell-input-num"
+
+                      />
+
+                    </td>
+
+                    <td>
+
+                      <button type="button" class="btn-primary btn-mini" @click="guardarHoras(asignatura.nombre)">
+
+                        Actualizar hora
+
+                      </button>
+
+                    </td>
+
+                  </tr>
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+            <p v-else class="empty-state">
+
+              No hay asignaturas disponibles para el curso y etapa seleccionados.
+
+            </p>
+
+
+
+            <div v-if="asignaturas.length > 0" class="seccion-footer">
+
+              <button
+
+                type="button"
+
+                class="btn-primary btn-mini"
+
+                @click="crearBloque"
+
+                :disabled="asignaturasSeleccionadas.length < 2 || seleccionIncluyeSinDocencia || loading"
+
+              >
+
+                {{ loading ? "Procesando..." : "Crear bloque" }}
+
+              </button>
+
+              <button type="button" class="btn-primary btn-mini" @click="guardarTodasHoras">
+
+                Actualizar horas
+
+              </button>
+
+            </div>
+
+          </div>
+
+
+
+          <article class="action-card upload-section">
+
+            <h3 class="card-title">Subir horas (CSV)</h3>
+
+            <div class="card-body">
+
+              <div class="field">
+
+                <label for="csvHorasInput">Adjunta el CSV de Séneca con las horas por asignatura</label>
+
+                <FileUpload ref="fileUploadRef" accept=".csv" @file-selected="monitorizarSiHayArchivo" />
+
+                <p class="upload-hint">El fichero se sube automáticamente al adjuntarlo.</p>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+
+
+        <p
+
+          v-else-if="!loading && (!filtroSeleccionado.curso || !filtroSeleccionado.etapa)"
+
+          class="empty-state"
+
+        >
+
+          Selecciona un curso y etapa para ver las asignaturas.
+
+        </p>
+
+      </section>
+
+    </div>
+
+
+
+    <div v-if="isUploadingCsv" class="fondo-gris">
+
+      <div class="circulo"></div>
+
+    </div>
+
+
 
     <ion-toast
-        :is-open="isToastOpen"
-        :message="toastMessage"
-        :color="toastColor"
-        duration="2000"
-        @did-dismiss="() => (isToastOpen = false)"
-        position="top">
-    </ion-toast>
+
+      :is-open="isToastOpen"
+
+      :message="toastMessage"
+
+      :color="toastColor"
+
+      duration="2000"
+
+      @did-dismiss="() => (isToastOpen = false)"
+
+      position="top"
+
+    />
+
   </div>
+
 </template>
 
+
+
 <script setup>
-import { ref, watch} from 'vue';
+
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
+
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
+
+import SchoolManagerNav from '@/components/school_manager/SchoolManagerNav.vue';
+
+import FileUpload from '@/components/printers/FileUpload.vue';
+
 import { crearToast } from '@/utils/toast.js';
-import { cargarAsignaturas, crearBloques, eliminarBloques, asignaturasSinDocencia, asignaturasDesdobles, mostrarHoras, asignarHoras } from '@/services/schoolManager.js'
-import { IonToast, IonCard, IonInput, IonCardContent, IonCardHeader, IonCardTitle } from "@ionic/vue";
+
+import {
+
+  cargarAsignaturas,
+
+  crearBloques,
+
+  eliminarBloques,
+
+  asignaturasSinDocencia,
+
+  asignaturasDesdobles,
+
+  mostrarHoras,
+
+  asignarHoras,
+
+  subirHorasAsignaturasCsv,
+
+  obtenerCursoAcademicoSeleccionado
+
+} from '@/services/schoolManager.js';
+
+import { IonToast } from '@ionic/vue';
+
+
+
+const cursoAcademico = ref('');
 
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
+
 const asignaturas = ref([]);
+
 const columnasGrupos = ref([]);
+
 const asignaturasSeleccionadas = ref([]);
+
 const loading = ref(false);
+
 const asignaturasConHoras = ref([]);
+
 const horasPorAsignatura = ref({});
-const isProcessing = ref(false); // Estado de carga para "Guardar Todo"
+
+const isProcessing = ref(false);
+
 const bloquesConUnaAsignatura = ref([]);
+
 const filtroSeleccionadoString = ref('');
-// Variable para el toast
+
+const archivoSeleccionado = ref(false);
+
+const file = ref(null);
+
+const fileUploadRef = ref(null);
+
+const buttonTextCsv = ref('Rellenar campos para enviar');
+
+const isUploadingCsv = ref(false);
+
 const isToastOpen = ref(false);
+
 const toastMessage = ref('');
+
 const toastColor = ref('success');
-// Nueva variable reactiva para el mensaje de actualización
-let mensajeActualizacion = "";
-let mensajeColor = "";
+
+let mensajeActualizacion = '';
+
+let mensajeColor = '';
+
+
+
+const puedeEnviarCsv = computed(() =>
+
+  archivoSeleccionado.value &&
+
+  filtroSeleccionado.value.curso &&
+
+  filtroSeleccionado.value.etapa
+
+);
+
+
+
+const totalHoras = computed(() => {
+
+  const bloquesContados = new Set();
+
+  let total = 0;
+
+
+
+  for (const asignatura of asignaturas.value) {
+
+    if (asignatura.sinDocencia) continue;
+
+
+
+    const horas = Number(horasPorAsignatura.value[asignatura.nombre]);
+
+    if (!horas || Number.isNaN(horas)) continue;
+
+
+
+    const tieneBloque = asignatura.bloqueId !== undefined && asignatura.bloqueId !== null;
+
+    if (tieneBloque) {
+
+      if (bloquesContados.has(asignatura.bloqueId)) continue;
+
+      bloquesContados.add(asignatura.bloqueId);
+
+    }
+
+
+
+    total += horas;
+
+  }
+
+
+
+  return total;
+
+});
+
+
+
+const asignaturaSinHorasAsignadas = (nombre) => {
+
+  const horas = horasPorAsignatura.value[nombre];
+
+  if (horas === null || horas === undefined || horas === '') return true;
+
+  const num = Number(horas);
+
+  return Number.isNaN(num) || num <= 0;
+
+};
+
+
+
+const asignaturasSinHoras = computed(() =>
+
+  asignaturas.value
+
+    .filter((asignatura) => asignaturaSinHorasAsignadas(asignatura.nombre))
+
+    .map((asignatura) => asignatura.nombre)
+
+);
+
+
+
+const mensajeAsignaturasSinHoras = computed(() => {
+
+  if (
+
+    loading.value ||
+
+    !filtroSeleccionado.value.curso ||
+
+    !filtroSeleccionado.value.etapa ||
+
+    asignaturas.value.length === 0
+
+  ) {
+
+    return '';
+
+  }
+
+
+
+  const sinHoras = asignaturasSinHoras.value;
+
+  if (sinHoras.length === 0) return '';
+
+
+
+  if (sinHoras.length === 1) {
+
+    return `La asignatura «${sinHoras[0]}» no tiene horas asignadas.`;
+
+  }
+
+
+
+  return `Hay ${sinHoras.length} asignaturas sin horas asignadas: ${sinHoras.join(', ')}.`;
+
+});
+
+
+
+const sincronizarCursoAcademico = async () => {
+
+  try {
+
+    const curso = (await obtenerCursoAcademicoSeleccionado(isToastOpen, toastMessage, toastColor))?.trim();
+
+    if (curso) {
+
+      cursoAcademico.value = curso;
+
+      localStorage.setItem('cursoAcademicoSeleccionado', curso);
+
+      return;
+
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+  cursoAcademico.value = localStorage.getItem('cursoAcademicoSeleccionado') || '';
+
+};
+
+
+
+const reiniciarSeleccionVista = () => {
+
+  filtroSeleccionado.value = { curso: null, etapa: '' };
+
+  filtroSeleccionadoString.value = '';
+
+  asignaturas.value = [];
+
+  columnasGrupos.value = [];
+
+  asignaturasConHoras.value = [];
+
+  horasPorAsignatura.value = {};
+
+  asignaturasSeleccionadas.value = [];
+
+  bloquesConUnaAsignatura.value = [];
+
+  comprobarBotonCsv();
+
+};
+
+const onCursoAcademicoCambiado = (event) => {
+
+  cursoAcademico.value = event.detail?.cursoAcademico || '';
+
+  if (cursoAcademico.value) {
+
+    localStorage.setItem('cursoAcademicoSeleccionado', cursoAcademico.value);
+
+  }
+
+  // Al cambiar el curso académico, la selección curso/etapa anterior puede no existir
+
+  // en el nuevo curso académico: limpiamos selección y tablas para forzar recarga
+
+  // con el nuevo contexto (el FilterCursoEtapa recarga sus opciones por su cuenta).
+
+  reiniciarSeleccionVista();
+
+};
+
 
 
 const actualizarSelect = (seleccionado) => {
-    filtroSeleccionado.value = seleccionado;
-    filtroSeleccionadoString.value = `${seleccionado.curso}-${seleccionado.etapa}`;
-    console.log("Filtro actualizado:", seleccionado);
+
+  filtroSeleccionado.value = seleccionado;
+
+  filtroSeleccionadoString.value = `${seleccionado.curso}-${seleccionado.etapa}`;
+
+  comprobarBotonCsv();
+
 };
+
+
+
+const comprobarBotonCsv = () => {
+
+  buttonTextCsv.value = puedeEnviarCsv.value ? 'Enviar' : 'Rellenar campos para enviar';
+
+};
+
+
+
+const validarCsvHoras = (archivo) => {
+
+  if (!archivo.name.toLowerCase().endsWith('.csv')) {
+
+    return Promise.reject('Solo se permiten archivos .csv');
+
+  }
+
+
+
+  return new Promise((resolve, reject) => {
+
+    const reader = new FileReader();
+
+
+
+    reader.onload = (event) => {
+
+      const contenido = event.target.result;
+
+      const lineas = contenido.split('\n');
+
+      const encabezados = lineas[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+
+
+
+      if (!encabezados.includes('Materia')) {
+
+        reject('El CSV no tiene el formato correcto (falta columna Materia)');
+
+        return;
+
+      }
+
+      resolve();
+
+    };
+
+
+
+    reader.onerror = () => reject('Error al leer el archivo');
+
+    reader.readAsText(archivo);
+
+  });
+
+};
+
+
+
+const monitorizarSiHayArchivo = async (archivo) => {
+
+  archivoSeleccionado.value = !!archivo;
+
+
+
+  if (!archivo) {
+
+    file.value = null;
+
+    comprobarBotonCsv();
+
+    return;
+
+  }
+
+
+
+  try {
+
+    await validarCsvHoras(archivo);
+
+    const formData = new FormData();
+
+    formData.append('csv', archivo);
+
+    file.value = formData;
+
+    comprobarBotonCsv();
+
+    // Subida automática: en cuanto se adjunta un CSV válido se envía sin pulsar ningún botón,
+
+    // siempre que haya curso y etapa seleccionados.
+
+    if (puedeEnviarCsv.value) {
+
+      await subirCsvHoras();
+
+    } else {
+
+      mensajeColor = 'warning';
+
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, 'Selecciona un curso y una etapa antes de subir el CSV.');
+
+    }
+
+  } catch (error) {
+
+    mensajeColor = 'danger';
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message || error);
+
+    const fileUploadComponent = fileUploadRef.value;
+
+    if (fileUploadComponent) {
+
+      fileUploadComponent.fileClear();
+
+    }
+
+    archivoSeleccionado.value = false;
+
+    file.value = null;
+
+    comprobarBotonCsv();
+
+  }
+
+};
+
+
+
+const subirCsvHoras = async () => {
+
+  if (!file.value) return;
+
+
+
+  isUploadingCsv.value = true;
+
+
+
+  try {
+
+    const response = await subirHorasAsignaturasCsv(
+
+      file.value,
+
+      filtroSeleccionado.value.curso,
+
+      filtroSeleccionado.value.etapa,
+
+      toastMessage,
+
+      toastColor,
+
+      isToastOpen
+
+    );
+
+
+
+    if (response.ok) {
+
+      mensajeActualizacion = 'CSV de horas cargado con éxito';
+
+      mensajeColor = 'success';
+
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+
+
+      const fileUploadComponent = fileUploadRef.value;
+
+      if (fileUploadComponent) {
+
+        fileUploadComponent.fileClear();
+
+      }
+
+      file.value = null;
+
+      archivoSeleccionado.value = false;
+
+      comprobarBotonCsv();
+
+
+
+      await cargarAsignatura();
+
+      await mostrarHora();
+
+    } else {
+
+      const errorData = await response.json();
+
+      mensajeColor = 'danger';
+
+      crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+
+    }
+
+  } catch (error) {
+
+    mensajeActualizacion = 'Error al subir el fichero';
+
+    mensajeColor = 'danger';
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+    console.error(error);
+
+  } finally {
+
+    isUploadingCsv.value = false;
+
+  }
+
+};
+
+
 
 const actualizarBloquesConUnaAsignatura = () => {
+
   const bloques = asignaturas.value.reduce((acc, asignatura) => {
+
     if (asignatura.bloqueId) {
+
       if (!acc[asignatura.bloqueId]) {
+
         acc[asignatura.bloqueId] = [];
+
       }
+
       acc[asignatura.bloqueId].push(asignatura);
+
     }
+
     return acc;
+
   }, {});
 
-  // Filtrar los bloques que solo tienen una asignatura
+
+
   bloquesConUnaAsignatura.value = Object.entries(bloques)
+
     .filter(([, asignaturasBloque]) => asignaturasBloque.length === 1)
+
     .map(([bloqueId]) => bloqueId);
+
 };
 
-const cargarAsignatura = async () => {
-  if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
-    asignaturas.value = [];
-    columnasGrupos.value = [];
-    return;
+
+
+const tieneBloque = (asignatura) =>
+
+  asignatura.bloqueId !== undefined && asignatura.bloqueId !== null;
+
+
+
+const seleccionIncluyeSinDocencia = computed(() =>
+
+  asignaturasSeleccionadas.value.some((a) => a.sinDocencia)
+
+);
+
+
+
+const validarSinDocenciaParaBloque = (seleccionadas) => {
+
+  const conSinDocencia = seleccionadas.filter((a) => a.sinDocencia);
+
+  if (conSinDocencia.length === 0) return null;
+
+
+
+  const nombres = conSinDocencia.map((a) => `«${a.nombre}»`).join(', ');
+
+  if (conSinDocencia.length === 1) {
+
+    return `No se puede crear el bloque: la asignatura ${nombres} está marcada como sin docencia.`;
+
   }
+
+  return `No se puede crear el bloque: las asignaturas ${nombres} están marcadas como sin docencia.`;
+
+};
+
+
+
+const validarHorasParaBloque = (seleccionadas) => {
+
+  const conDocencia = seleccionadas.filter((a) => !a.sinDocencia);
+
+  if (conDocencia.length < 2) return null;
+
+
+
+  let horasReferencia = null;
+
+  let nombreReferencia = null;
+
+
+
+  for (const asignatura of conDocencia) {
+
+    const horas = Number(horasPorAsignatura.value[asignatura.nombre]);
+
+    if (!horas || Number.isNaN(horas)) {
+
+      return `La asignatura «${asignatura.nombre}» no tiene horas asignadas. No se puede crear el bloque.`;
+
+    }
+
+    if (horasReferencia === null) {
+
+      horasReferencia = horas;
+
+      nombreReferencia = asignatura.nombre;
+
+    } else if (horas !== horasReferencia) {
+
+      return `No se puede crear el bloque: las asignaturas con docencia deben tener las mismas horas. «${nombreReferencia}» tiene ${horasReferencia} h y «${asignatura.nombre}» tiene ${horas} h.`;
+
+    }
+
+  }
+
+  return null;
+
+};
+
+
+
+const cargarAsignatura = async () => {
+
+  if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
+
+    asignaturas.value = [];
+
+    columnasGrupos.value = [];
+
+    return;
+
+  }
+
+
 
   loading.value = true;
 
+
+
   try {
-    const response = await cargarAsignaturas(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
-    
-    asignaturas.value = response;
+
+    const response = await cargarAsignaturas(
+
+      filtroSeleccionado.value.curso,
+
+      filtroSeleccionado.value.etapa,
+
+      toastMessage,
+
+      toastColor,
+
+      isToastOpen
+
+    );
+
+
 
     asignaturas.value = Array.isArray(response) ? response : [];
-    console.log(asignaturas.value.length);
-  
-    actualizarBloquesConUnaAsignatura(); // Actualiza los bloques con una asignatura
+
+    actualizarBloquesConUnaAsignatura();
+
+
 
     const gruposSet = new Set();
+
     asignaturas.value.forEach((asignatura) => {
+
       const grupos = typeof asignatura.numeroAlumnosEnGrupo === 'object' ? asignatura.numeroAlumnosEnGrupo : {};
+
       Object.keys(grupos).forEach((grupo) => {
+
         gruposSet.add(grupo);
+
       });
+
     });
+
     columnasGrupos.value = Array.from(gruposSet);
 
   } catch (error) {
-    mensajeColor = "danger";
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+
     console.error(error);
+
     asignaturas.value = [];
+
   } finally {
+
     loading.value = false;
+
   }
+
 };
+
 
 
 const crearBloque = async () => {
+
   if (asignaturasSeleccionadas.value.length < 2) {
-    mensajeActualizacion = "Debe seleccionar al menos dos asignaturas.";
-    mensajeColor = "danger";
+
+    mensajeActualizacion = 'Debe seleccionar al menos dos asignaturas.';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
     return;
+
   }
-  // esta propiedad hace que se vuelva a cargar el template
+
+
+
+  const errorSinDocencia = validarSinDocenciaParaBloque(asignaturasSeleccionadas.value);
+
+  if (errorSinDocencia) {
+
+    mensajeActualizacion = errorSinDocencia;
+
+    mensajeColor = 'danger';
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+    return;
+
+  }
+
+
+
+  const errorHoras = validarHorasParaBloque(asignaturasSeleccionadas.value);
+
+  if (errorHoras) {
+
+    mensajeActualizacion = errorHoras;
+
+    mensajeColor = 'danger';
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+    return;
+
+  }
+
+
+
   loading.value = true;
 
-  try {
-    const nombresSeleccionados = asignaturasSeleccionadas.value.map(a => a.nombre);
-    const response = await crearBloques(
-      filtroSeleccionado.value.curso, 
-      filtroSeleccionado.value.etapa, 
-      nombresSeleccionados, 
-      toastMessage, 
-      toastColor, 
-      isToastOpen);
 
-    if(response.ok) {
-      mensajeActualizacion = "Bloque creado correctamente.";
-      mensajeColor = "success";
+
+  try {
+
+    const nombresSeleccionados = asignaturasSeleccionadas.value.map(a => a.nombre);
+
+    const response = await crearBloques(
+
+      filtroSeleccionado.value.curso,
+
+      filtroSeleccionado.value.etapa,
+
+      nombresSeleccionados,
+
+      toastMessage,
+
+      toastColor,
+
+      isToastOpen
+
+    );
+
+
+
+    if (response.ok) {
+
+      mensajeActualizacion = 'Bloque creado correctamente.';
+
+      mensajeColor = 'success';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
+
     } else {
+
       const errorData = await response.json();
+
       mensajeColor = 'danger';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+
     }
-    
+
+
+
     asignaturasSeleccionadas.value = [];
-    //Esta tambien pero quizas es necesario que lo haga para que cambie la casilla de bloque
+
     await cargarAsignatura();
-    
+
   } catch (error) {
-    mensajeActualizacion = "Error al crear el bloque.";
-    mensajeColor = "danger";
+
+    mensajeActualizacion = 'Error al crear el bloque.';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
     console.error(error);
+
   } finally {
+
     loading.value = false;
+
   }
+
 };
+
+
 
 const eliminarBloque = async (asignatura) => {
+
   loading.value = true;
+
   try {
-    const response =  await eliminarBloques(
-      filtroSeleccionado.value.curso, 
-      filtroSeleccionado.value.etapa, 
-      asignatura.nombre, 
-      toastMessage, 
-      toastColor, 
-      isToastOpen);
 
-    if(response.ok) {
-      mensajeActualizacion = `Bloque ${asignatura.bloqueId} eliminado correctamente correctamente.`;
-      mensajeColor = "success";
+    const response = await eliminarBloques(
+
+      filtroSeleccionado.value.curso,
+
+      filtroSeleccionado.value.etapa,
+
+      asignatura.nombre,
+
+      toastMessage,
+
+      toastColor,
+
+      isToastOpen
+
+    );
+
+
+
+    if (response.ok) {
+
+      mensajeActualizacion = `Bloque ${asignatura.bloqueId} eliminado correctamente.`;
+
+      mensajeColor = 'success';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
+
     } else {
+
       const errorData = await response.json();
+
       mensajeColor = 'danger';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+
     }
-      
+
+
+
     asignatura.bloqueId = null;
-    cargarAsignatura();
 
-    actualizarBloquesConUnaAsignatura(); // Actualiza los bloques con una asignatura
+    await cargarAsignatura();
 
-    } catch (error) {
-    mensajeActualizacion = "Error al eliminar el bloque.";
-    mensajeColor = "danger";
+    actualizarBloquesConUnaAsignatura();
+
+  } catch (error) {
+
+    mensajeActualizacion = 'Error al eliminar el bloque.';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
     console.error(error);
+
   } finally {
+
     loading.value = false;
+
   }
+
 };
+
+
 
 const asignaturaSinDocencia = async (asignatura) => {
+
+  if (tieneBloque(asignatura)) {
+
+    mensajeActualizacion = `La asignatura «${asignatura.nombre}» pertenece a un bloque y no puede marcarse como sin docencia.`;
+
+    mensajeColor = 'danger';
+
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
+    return;
+
+  }
+
+
+
   try {
 
-    // Invertimos el valor actual de sinDocencia
     const nuevoValor = !asignatura.sinDocencia;
-    
+
+
+
     const response = await asignaturasSinDocencia(
-      filtroSeleccionado.value.curso, 
-      filtroSeleccionado.value.etapa, 
+
+      filtroSeleccionado.value.curso,
+
+      filtroSeleccionado.value.etapa,
+
       asignatura.nombre,
+
       nuevoValor,
-      toastMessage, 
-      toastColor, 
+
+      toastMessage,
+
+      toastColor,
+
       isToastOpen
+
     );
 
-    if(response.ok) {
+
+
+    if (response.ok) {
+
       mensajeActualizacion = `Asignatura ${asignatura.nombre} ${nuevoValor ? 'marcada' : 'desmarcada'} como sin docencia`;
-      mensajeColor = "success";
+
+      mensajeColor = 'success';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
+
+      asignatura.sinDocencia = nuevoValor;
+
     } else {
+
       const errorData = await response.json();
+
       mensajeColor = 'danger';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+
+      asignatura.sinDocencia = !nuevoValor;
+
     }
 
-    // Actualizamos el valor en la asignatura
-    asignatura.sinDocencia = nuevoValor;
-
   } catch (error) {
-    mensajeActualizacion = "Error al actualizar el estado de sin docencia";
-    mensajeColor = "danger";
+
+    mensajeActualizacion = 'Error al actualizar el estado de sin docencia';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-    // Revertimos el cambio en caso de error
-    asignatura.sinDocencia = !nuevoValor;
+
+    asignatura.sinDocencia = !asignatura.sinDocencia;
+
   }
+
 };
+
+
 
 const asignaturasDesdoble = async (asignatura) => {
+
   try {
-    // Invertimos el valor actual de desdoble
+
     const nuevoValor = !asignatura.desdoble;
 
+
+
     const response = await asignaturasDesdobles(
-      filtroSeleccionado.value.curso, 
-      filtroSeleccionado.value.etapa, 
+
+      filtroSeleccionado.value.curso,
+
+      filtroSeleccionado.value.etapa,
+
       asignatura.nombre,
+
       nuevoValor,
-      toastMessage, 
-      toastColor, 
+
+      toastMessage,
+
+      toastColor,
+
       isToastOpen
+
     );
 
-    if(response.ok) {
+
+
+    if (response.ok) {
+
       mensajeActualizacion = `Asignatura ${asignatura.nombre} ${nuevoValor ? 'marcada' : 'desmarcada'} como desdoble`;
-      mensajeColor = "success";
+
+      mensajeColor = 'success';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
+
     } else {
+
       const errorData = await response.json();
+
       mensajeColor = 'danger';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+
     }
 
   } catch (error) {
-    mensajeActualizacion = "Error al desdoblar la asignatura.";
-    mensajeColor = "danger";
+
+    mensajeActualizacion = 'Error al desdoblar la asignatura.';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
     console.error(error);
+
   }
+
 };
+
+
 
 const mostrarHora = async () => {
 
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
+
     asignaturasConHoras.value = [];
+
     return;
+
   }
+
+
 
   loading.value = true;
 
+
+
   try {
-    // Llamada al servicio que obtiene las horas
-    const response = await mostrarHoras(filtroSeleccionado.value.curso, filtroSeleccionado.value.etapa, toastMessage, toastColor, isToastOpen);
-    console.log(response);
 
-    asignaturasConHoras.value =Array.isArray(response) ? response : []; // Guarda los resultados
+    const response = await mostrarHoras(
 
-    console.log(asignaturasConHoras.value)
-    // Inicializa el objeto de horasPorAsignatura
+      filtroSeleccionado.value.curso,
+
+      filtroSeleccionado.value.etapa,
+
+      toastMessage,
+
+      toastColor,
+
+      isToastOpen
+
+    );
+
+
+
+    asignaturasConHoras.value = Array.isArray(response) ? response : [];
+
     horasPorAsignatura.value = asignaturasConHoras.value.reduce((acc, item) => {
+
       acc[item.nombre] = item.horas;
+
       return acc;
+
     }, {});
 
   } catch (error) {
-    mensajeColor = "danger";
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+
     console.error(error);
+
   } finally {
+
     loading.value = false;
+
   }
+
 };
 
+
+
 const guardarHoras = async (nombreAsignatura) => {
+
   if (horasPorAsignatura.value[nombreAsignatura] < 0) {
-    mensajeActualizacion = "Asignatura con horas negativas";
-    mensajeColor = "danger";
+
+    mensajeActualizacion = 'Asignatura con horas negativas';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
     return;
+
   }
 
+
+
   try {
+
     const response = await asignarHoras(
+
       filtroSeleccionado.value.curso,
+
       filtroSeleccionado.value.etapa,
+
       nombreAsignatura,
+
       horasPorAsignatura.value[nombreAsignatura],
-      toastMessage, 
-      toastColor, 
+
+      toastMessage,
+
+      toastColor,
+
       isToastOpen
+
     );
 
-    if(response.ok) {
+
+
+    if (response.ok) {
+
       mensajeActualizacion = `Has actualizado las horas de ${nombreAsignatura}.`;
-      mensajeColor = "success";
+
+      mensajeColor = 'success';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
+
     } else {
+
       const errorData = await response.json();
+
       mensajeColor = 'danger';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+
     }
 
   } catch (error) {
-    mensajeActualizacion = "Error al actualizar las horas.";
-    mensajeColor = "danger";
+
+    mensajeActualizacion = 'Error al actualizar las horas.';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
     console.error(error);
-  } 
-};
 
-const guardarTodasHoras = async () => {
-  const asignaturasAActualizar = Object.entries(horasPorAsignatura.value).filter(
-    ([, horas]) => horas > 0
-  );
-
-  if (asignaturasAActualizar.length === 0) {
-    toastMessage.value = "No hay cambios para guardar.";
-    toastColor.value = "warning";
-    isToastOpen.value = true;
-    return;
   }
 
+};
+
+
+
+const guardarTodasHoras = async () => {
+
+  const asignaturasAActualizar = Object.entries(horasPorAsignatura.value).filter(
+
+    ([, horas]) => horas > 0
+
+  );
+
+
+
+  if (asignaturasAActualizar.length === 0) {
+
+    toastMessage.value = 'No hay cambios para guardar.';
+
+    toastColor.value = 'warning';
+
+    isToastOpen.value = true;
+
+    return;
+
+  }
+
+
+
   isProcessing.value = true;
+
+
 
   try {
 
     let response = null;
 
+
+
     for (const [nombre, horas] of asignaturasAActualizar) {
+
       response = await asignarHoras(
-      filtroSeleccionado.value.curso,
-      filtroSeleccionado.value.etapa,
-      nombre,
-      horas,
-      toastMessage, 
-      toastColor, 
-      isToastOpen)
+
+        filtroSeleccionado.value.curso,
+
+        filtroSeleccionado.value.etapa,
+
+        nombre,
+
+        horas,
+
+        toastMessage,
+
+        toastColor,
+
+        isToastOpen
+
+      );
+
     }
 
-    if(response.ok) {
-      mensajeActualizacion = "Todas las asignaturas se actualizaron correctamente.";
-      mensajeColor = "success";
+
+
+    if (response.ok) {
+
+      mensajeActualizacion = 'Todas las asignaturas se actualizaron correctamente.';
+
+      mensajeColor = 'success';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
-      
+
     } else {
+
       const errorData = await response.json();
+
       mensajeColor = 'danger';
+
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
+
     }
 
   } catch (error) {
-    mensajeActualizacion = "Error al actualizar las horas.";
-    mensajeColor = "danger";
+
+    mensajeActualizacion = 'Error al actualizar las horas.';
+
+    mensajeColor = 'danger';
+
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+
     console.error(error);
+
   } finally {
+
     isProcessing.value = false;
+
     isToastOpen.value = true;
+
   }
+
 };
 
-watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etapa], 
-async () =>{
-  cargarAsignatura();
-  mostrarHora();
-},
- { immediate: true });
+
+
+watch(
+
+  [() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etapa],
+
+  async () => {
+
+    cargarAsignatura();
+
+    mostrarHora();
+
+  },
+
+  { immediate: true }
+
+);
+
+
+
+onMounted(async () => {
+
+  await sincronizarCursoAcademico();
+
+  window.addEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
+
+});
+
+
+
+onUnmounted(() => {
+
+  window.removeEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
+
+});
+
 </script>
 
+
+
 <style scoped>
-.table-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-grow: 1;
+
+.page-asignaturas-bloques {
+
+  max-width: 1200px;
+
+  margin: 0 auto;
+
+  padding: 1.5rem 1rem 2.5rem;
+
+  font-family: "Roboto", sans-serif;
+
 }
+
+
+
+.page-header {
+
+  margin-bottom: 1.75rem;
+
+  width: 100%;
+
+}
+
+
 
 .t-1 {
+
   font-size: 2.2rem;
+
   font-weight: 700;
-  margin-bottom: 1.5rem;
+
+  margin: 0 0 0.75rem;
+
+  text-align: center;
+
 }
+
+
+
+.page-subtitle {
+
+  margin: 0;
+
+}
+
+
+
+.main-panel {
+
+  background-color: var(--form-bg-light);
+
+  border: 1px solid #444;
+
+  border-radius: 12px;
+
+  box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
+
+  padding: 1.5rem;
+
+}
+
+
+
+.panel-section {
+
+  width: 100%;
+
+}
+
+
+
+.section-title {
+
+  margin: 0 0 1.25rem;
+
+  font-size: 1.3rem;
+
+  font-weight: 600;
+
+  text-align: center;
+
+  color: var(--text-color-light);
+
+}
+
+
+
+.section-title-inline {
+
+  text-align: left;
+
+  margin-bottom: 0.35rem;
+
+}
+
+
+
+.listado-header {
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  flex-wrap: wrap;
+
+  margin-bottom: 1rem;
+
+}
+
+
+
+.listado-header-left {
+
+  flex: 1;
+
+  min-width: 200px;
+
+}
+
+
+
+.listado-context {
+
+  margin: 0.35rem 0 0;
+
+  font-size: 0.95rem;
+
+  color: #555;
+
+}
+
+
+
+.datos-controls {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.75rem;
+
+  flex-wrap: wrap;
+
+}
+
+
 
 .texto-dropdown {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  text-align: center;
+
+  font-size: 1rem;
+
 }
 
-.card-table {
-  margin-top: 1.5rem;
-  width: 100%;
-  max-width: 56rem;
-  overflow: auto;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+
+
+.alerta {
+
+  margin: 0 0 1rem;
+
+  padding: 0.85rem 1rem;
+
+  border-radius: 8px;
+
+  font-size: 0.95rem;
+
+  font-weight: 600;
+
+  text-align: center;
+
+}
+
+
+
+.alerta-peligro {
+
+  color: #b91c1c;
+
+  background-color: #fef2f2;
+
+  border: 1px solid #fecaca;
+
+}
+
+
+
+.content-layout {
+
+  display: flex;
+
+  gap: 1.25rem;
+
+  align-items: flex-start;
+
+}
+
+
+
+.table-section {
+
+  flex: 1;
+
+  min-width: 0;
+
+}
+
+
+
+.upload-section {
+
+  width: 280px;
+
+  flex-shrink: 0;
+
+}
+
+
+
+.action-card {
+
+  display: flex;
+
+  flex-direction: column;
+
+  min-height: 100%;
+
+  background-color: #f8f9fa;
+
+  border: 1px solid #cfd8e3;
+
   border-radius: 10px;
+
+  padding: 1.25rem 1rem 1rem;
+
+  box-sizing: border-box;
+
 }
 
-.t-2 {
-  font-size: 1.3rem;
+
+
+.card-title {
+
+  margin: 0 0 1rem;
+
+  font-size: 1.05rem;
+
+  font-weight: 600;
+
   text-align: center;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+
+  line-height: 1.35;
+
+  color: #1a1a1a;
+
 }
 
-.cargar {
-  text-align: center;
-  color: #6b7280;
+
+
+.card-body {
+
+  display: flex;
+
+  flex-direction: column;
+
+  flex: 1;
+
+  gap: 0.75rem;
+
 }
 
-.mensajeBloqueUnico {
-  color: #f56565;
-  margin-bottom: 1rem;
+
+
+.field {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 0.45rem;
+
 }
 
-.table-asignaturas {
-  color: black;
-  table-layout: auto;
-  border-collapse: collapse;
-  border: 1px solid currentColor;
+
+
+.field label {
+
+  font-size: 0.9rem;
+
+  font-weight: 600;
+
+  color: #333;
+
+}
+
+
+
+.upload-hint {
+
+  margin: 0;
+
+  font-size: 0.8rem;
+
+  font-style: italic;
+
+  color: #555;
+
+}
+
+
+
+.btn-primary {
+
   width: 100%;
+
+  margin-top: auto;
+
+  padding: 12px;
+
+  font-size: 14px;
+
+  font-weight: bold;
+
+  background-color: #2196f3;
+
+  border-radius: 6px;
+
+  text-transform: uppercase;
+
+  border: none;
+
+  color: white;
+
+  cursor: pointer;
+
 }
 
-.th-seleccion {
-  width: 15%;
-  border: 1px solid currentColor; 
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+
+
+.btn-primary:hover {
+
+  background-color: #1565c0;
+
+}
+
+
+
+.btn-primary:disabled {
+
+  background-color: #7fa9f4;
+
+  cursor: not-allowed;
+
+}
+
+
+
+.btn-mini {
+
+  width: auto;
+
+  margin-top: 0;
+
+  padding: 6px 12px;
+
+  white-space: nowrap;
+
+}
+
+
+
+.btn-mini-inline {
+
+  margin-left: 0.35rem;
+
+  padding: 4px 8px;
+
+  font-size: 12px;
+
+}
+
+
+
+.btn-delete {
+
+  padding: 5px 10px;
+
+  border: none;
+
+  background-color: #dc3545;
+
+  color: white;
+
+  border-radius: 5px;
+
+  cursor: pointer;
+
+}
+
+
+
+.btn-delete:disabled {
+
+  background-color: #999;
+
+  cursor: not-allowed;
+
+  opacity: 0.6;
+
+}
+
+
+
+.seccion-footer {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  flex-wrap: wrap;
+
+  margin-top: 1rem;
+
+}
+
+
+
+.empty-state {
+
+  margin: 0;
+
+  padding: 1.25rem;
+
   text-align: center;
+
+  color: #666;
+
+  background-color: #f8f9fa;
+
+  border: 1px dashed #cfd8e3;
+
+  border-radius: 8px;
+
 }
 
-.th-nombre {
-  border: 1px solid currentColor; 
+
+
+table {
+
+  border-collapse: collapse;
+
+  width: 100%;
+
   text-align: center;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+
+  background-color: #f8f9fa;
+
+  color: #1a1a1a;
+
+  border: 2px solid #007bff;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+
 }
 
-.th-asignatura {
-  width: 15%;
-  border: 1px solid black; 
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+
+
+th,
+
+td {
+
+  border: 2px solid #007bff;
+
+  padding: 8px 6px;
+
 }
 
-.th-bloque {
-  border: 1px solid currentColor;
-  width: 11.5%;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  text-align: center;
+
+
+th {
+
+  background-color: #007bff;
+
+  color: white;
+
+  font-weight: bold;
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 2;
+
+  box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
+
 }
 
-.th-sin-docencia {
-  border: 1px solid currentColor;
-  width: 12.5%;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  text-align: center;
+
+
+td {
+
+  background-color: #e9f5ff;
+
+  height: 38px;
+
 }
 
-.th-desdoble {
-  border: 1px solid currentColor;
-  width: 10%;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  text-align: center;
+
+
+tr:hover td {
+
+  background-color: #d0eaff;
+
 }
 
-.th-horas {
-  border: 1px solid currentColor;
-  width: 8%;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  text-align: center;
+
+
+.th-horas-total {
+
+  display: block;
+
+  font-size: 0.85em;
+
+  font-weight: 500;
+
+  margin-top: 0.15rem;
+
+  opacity: 0.9;
+
 }
 
-.th-accion {
-  width: 14%;
-  border: 1px solid currentColor; 
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  text-align: center;
+
+
+.table-scroll {
+
+  width: 100%;
+
+  max-height: 360px;
+
+  overflow: auto;
+
 }
 
-.th {
-  border: 1px solid currentColor; 
-  padding-left: 1rem; 
-  padding-right: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
+
 
 .checkbox {
+
   width: 16px;
+
   height: 16px;
+
+  accent-color: #2196f3;
+
   cursor: pointer;
+
 }
+
+
 
 .checkbox:disabled {
+
   cursor: not-allowed;
+
 }
 
-.bloque {
-  text-align: center;
-}
 
-.btn-x {
-  margin-left: 0.5rem;
-  color: #f56565;
-  font-size: 15px;
-  background-color: transparent;
-  border-radius: 0.25rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
 
-.btn-x:hover {
-  text-decoration: underline;
-}
+.cell-input {
 
-.t-3 {
-  text-align: center;
-  color: black;
-}
-
-.form-input-numer {
-  max-width: 60px;
-  text-align: center;
-  background: transparent;
-}
-
-.btn-horas {
-  background-color: #0054e9;
-  color: #ffffff;
-  border-radius: 0.25rem;
-  padding: 0.5rem;
-  height: 45px;
-}
-
-.btn-horas:hover {
-  background-color: #1461eb;
-}
-
-.container-botones {
-  display: flex;
-  justify-content: space-between;
   width: 100%;
-  padding-top: 1rem;
+
+  box-sizing: border-box;
+
+  background: #fff;
+
+  border: 1px solid #ccc;
+
+  border-radius: 4px;
+
+  text-align: center;
+
+  padding: 4px 6px;
+
+  outline: none;
+
+  color: #000;
+
 }
 
-.btn-bloque {
-  width: 145px;
-  height: 45px;
-  border-radius: 0.375rem; 
-  background-color: #0054e9;
-  color: #FFFFFF;
-  font-size: 1.02rem;
-  font-weight: 600;
+
+
+.cell-input-num {
+
+  max-width: 72px;
+
+  margin: 0 auto;
+
 }
 
-.btn-bloque:hover {
-  background-color: #1461eb;
+
+
+.fondo-gris {
+
+  position: fixed;
+
+  top: 0;
+
+  left: 0;
+
+  width: 100%;
+
+  height: 100%;
+
+  background-color: rgba(0, 0, 0, 0.5);
+
+  z-index: 9998;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
 }
 
-.btn-actualizar-todas-horas {
-  width: 180px;
-  height: 45px;
-  margin-left: auto;
-  background-color: #0054e9;
-  color: #ffffff;
-  border-radius: 0.375rem;
-  font-size: 1.02rem;
-  font-weight: 550;
+
+
+.circulo {
+
+  border: 4px solid #f3f3f3;
+
+  border-top: 4px solid #2196f3;
+
+  border-radius: 50%;
+
+  width: 40px;
+
+  height: 40px;
+
+  animation: spin 1s linear infinite;
+
+  z-index: 9999;
+
 }
 
-.btn-actualizar-todas-horas:hover {
-  background-color: #1461eb;
+
+
+@keyframes spin {
+
+  0% { transform: rotate(0deg); }
+
+  100% { transform: rotate(360deg); }
+
 }
 
-button:disabled {
-  opacity: 0.5;
-}
+
 
 @media (prefers-color-scheme: dark) {
-  .btn-horas,
-  .btn-bloque,
-  .btn-actualizar-todas-horas {
-    color: #000000;
-    background-color: #4782eb
+
+  .main-panel {
+
+    background-color: var(--form-bg-dark);
+
+    box-shadow: rgba(255, 255, 255, 0.08) 0 8px 24px;
+
+    border-color: #444;
+
   }
 
-  .table-asignaturas {
-    color: #c4c6ca;
+
+
+  .section-title,
+
+  .card-title,
+
+  .field label {
+
+    color: var(--text-color-dark);
+
   }
 
-  .t-3 {
-    color: #c4c6ca;
+
+
+  .page-subtitle,
+
+  .listado-context,
+
+  .empty-state {
+
+    color: #c8c8c8;
+
   }
 
-  .btn-bloque:hover {
-  background-color: #3476eb;
+
+
+  .action-card {
+
+    background-color: #2a302b;
+
+    border-color: #555;
+
   }
 
-  .btn-horas:hover {
-    background-color: #3476eb;
+
+
+  .empty-state {
+
+    background-color: #2a302b;
+
+    border-color: #555;
+
   }
 
-  .btn-actualizar-todas-horas:hover {
-    background-color: #3476eb;
+
+
+  .alerta-peligro {
+
+    color: #fca5a5;
+
+    background-color: #3f1d1d;
+
+    border-color: #7f1d1d;
+
   }
+
 }
+
+
+
+@media (max-width: 1024px) {
+
+  .content-layout {
+
+    flex-direction: column;
+
+  }
+
+
+
+  .upload-section {
+
+    width: 100%;
+
+  }
+
+}
+
+
 
 @media (max-width: 768px) {
-  .card-table {
+
+  .page-asignaturas-bloques {
+
+    padding-inline: 0.75rem;
+
+  }
+
+
+
+  .main-panel {
+
+    padding: 1rem;
+
+  }
+
+
+
+  .t-1 {
+
+    font-size: 1.75rem;
+
+  }
+
+
+
+  .listado-header {
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+  }
+
+
+
+  .datos-controls {
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+  }
+
+
+
+  .seccion-footer {
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+  }
+
+
+
+  .seccion-footer .btn-primary {
+
     width: 100%;
-    max-width: 100%;
+
   }
 
-  .table-asignaturas {
-    font-size: 0.9rem;
+
+
+  table {
+
+    font-size: 14px;
+
   }
 
-  .th-seleccion, 
-  .th-nombre, 
-  .th-bloque, 
-  .th-sin-docencia, 
-  .th-desdoble, 
-  .th-horas, 
-  .th-accion {
-    padding: 0.3rem;
-  }
-
-  .btn-bloque {
-    width: 100%;
-    margin-bottom: 1rem;
-    
-  }
-
-  .container-botones {
-    width: 630px;
-   flex-direction: row;  /* Apila los botones en móvil */
-  }
-
-  .btn-actualizar-todas-horas {
-    margin-left: 11rem;
-    width: 500px;
-  }
 }
 
-
 </style>
+

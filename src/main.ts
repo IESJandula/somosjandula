@@ -57,6 +57,7 @@ import {
   barChart,
   calendarNumber,
   logoElectron,
+  homeOutline,
 } from "ionicons/icons";
 
 import { initializeApp } from "firebase/app";
@@ -96,6 +97,7 @@ addIcons({
   "bandage": bandage,
   "bar-chart": barChart,
   "logo-electron": logoElectron,
+  "home-outline": homeOutline,
 });
 
 // Variables para el toast

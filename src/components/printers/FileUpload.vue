@@ -3,12 +3,19 @@
     @drop.prevent="handleDrop" @click="triggerFileInput" :class="{ 'dragging': isDragging }">
     <p v-if="!file">Arrastra un archivo o haz clic aquí</p>
     <p v-else>Archivo seleccionado: {{ file.name }}</p>
-    <input ref="fileInput" type="file" class="hidden" @change="handleFileChange" />
+    <input ref="fileInput" type="file" class="hidden" :accept="accept" @change="handleFileChange" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
+
+defineProps({
+  accept: {
+    type: String,
+    default: ''
+  }
+});
 
 const emits = defineEmits(['file-selected']); // Define el evento emitido
 

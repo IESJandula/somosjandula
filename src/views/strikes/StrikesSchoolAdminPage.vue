@@ -13,37 +13,6 @@
         <label class="form-label">Inicio de inscripciones:</label>
         <input type="date" v-model="huelga.fechaInicio" class="form-input" />
       </div>
-
-            <tbody>
-              <tr v-for="h in huelgas" :key="h.titulo">
-                <td>{{ h.titulo }}</td>
-                <td>{{ formatFecha(h.fechaInicio) }}</td>
-                <td>{{ formatFecha(h.fechaFin) }}</td>
-                <td>{{ h.estado }}</td>
-                <td>
-                  <div class="url-container">
-                    <input
-                      type="text"
-                      :value="h.urlEncuestado"
-                      readonly
-                      class="url-input"
-                    />
-                    <button
-                      class="btn-copiar"
-                      @click="copiarUrl(h.urlEncuestado)"
-                    >
-                      📋
-                    </button>
-                  </div>
-                </td>
-                <td>{{ h.numeroParticipantes }}</td>
-                <td>
-                  <button class="btn-eliminar" @click="borrarHuelgaFn(h.titulo)">
-                    X
-                  </button>
-                </td>
-              </tr>
-
       <div class="button-row">
         <button class="btn-enviar" @click="crearHuelgaFn" :disabled="loading">
           ENVIAR
@@ -91,7 +60,7 @@
                 </button>
               </div>
             </td>
-            <td>{{ h.alumnos }}</td>
+            <td>{{ h.numeroParticipantes }}</td>
             <td>
               <button class="btn-eliminar" @click="borrarHuelgaFn(h.titulo)">
                 X

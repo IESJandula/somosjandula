@@ -39,7 +39,18 @@ const getColor = (index: number): string => {
   return colors[index % colors.length];
 };
 
-const buildOption = (): echarts.EChartsOption => ({
+// El título y la leyenda del gráfico se dibujan sobre canvas (ECharts), por lo que el CSS
+// de `@media (prefers-color-scheme: dark)` no les afecta. Determinamos el color del texto
+// según el esquema del navegador: en modo oscuro va en blanco (igual que las labels
+// `.legend-text`), y en modo claro se mantiene el gris oscuro habitual.
+const prefersDark = (): boolean =>
+  typeof window !== "undefined" &&
+  !!window.matchMedia &&
+  window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+const buildOption = (): echarts.EChartsOption => {
+  const textColor = prefersDark() ? "#ffffff" : "#333333";
+  return {
   title: {
     text: props.title,
     left: "center",
@@ -47,6 +58,7 @@ const buildOption = (): echarts.EChartsOption => ({
     textStyle: {
       fontSize: 16,
       fontWeight: "bold",
+      color: textColor,
     },
   },
   tooltip: {
@@ -60,6 +72,9 @@ const buildOption = (): echarts.EChartsOption => ({
   },
   legend: {
     show: true,
+    textStyle: {
+      color: textColor,
+    },
   },
   series: [
     {
@@ -85,7 +100,8 @@ const buildOption = (): echarts.EChartsOption => ({
       },
     },
   ],
-});
+  };
+};
 
 const initChart = () => {
   if (!chartRef.value) return;
@@ -104,13 +120,24 @@ const handleResize = () => {
   }
 };
 
+// Si el usuario cambia el esquema claro/oscuro del sistema, repintamos para recolorear el texto.
+const darkModeMql =
+  typeof window !== "undefined" && window.matchMedia
+    ? window.matchMedia("(prefers-color-scheme: dark)")
+    : null;
+const handleSchemeChange = () => {
+  updateChart();
+};
+
 onMounted(() => {
   initChart();
   window.addEventListener("resize", handleResize);
+  darkModeMql?.addEventListener("change", handleSchemeChange);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", handleResize);
+  darkModeMql?.removeEventListener("change", handleSchemeChange);
   if (chartInstance) {
     chartInstance.dispose();
     chartInstance = null;

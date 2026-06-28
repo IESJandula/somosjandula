@@ -1,54 +1,62 @@
 <template>
-  <div class="table-container">
-    <h1 class="t-1">Resumen por asignaturas</h1>
-    <!-- Desplegable para elegir curso y etapa -->
-    <FilterCursoEtapa 
-      v-model="filtroSeleccionadoString"
-      @actualizar-select="actualizarSelect" 
-      selectClass="select-sm"
-      class="texto-dropdown"/>
-    <!-- Tarjeta que contiene la tabla -->
-    <ion-card class="card-table">
-      <ion-card-header>
-        <ion-card-title class="t-2">
-          Tabla de grupos por asignatura
-        </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
+  <div class="school-manager-page">
+    <header class="page-header">
+      <h1 class="t-1">Resumen por asignaturas<span v-if="cursoAcademico"> ({{ cursoAcademico }})</span></h1>
+      <SchoolManagerNav>
+        <p class="page-subtitle">
+          Consulta el reparto de alumnos por grupo y asignatura para el curso y etapa seleccionados.
+        </p>
+      </SchoolManagerNav>
+    </header>
+
+    <div class="main-panel">
+      <section class="panel-section">
+        <div class="listado-header">
+          <div class="listado-header-left">
+            <h2 class="section-title section-title-inline">Tabla de grupos por asignatura</h2>
+          </div>
+          <div class="datos-controls">
+            <FilterCursoEtapa
+              v-model="filtroSeleccionadoString"
+              @actualizar-select="actualizarSelect"
+              selectClass="select-sm"
+              class="texto-dropdown"/>
+          </div>
+        </div>
+
         <div v-if="mensajeActualizacion" class="mensajeError">{{ mensajeActualizacion }}</div>
         <div v-if="loading" class="cargar">Cargando datos...</div>
-        <div v-if="asignaturas.length > 0 && !loading">
+
+        <div class="table-scroll" v-if="asignaturas.length > 0 && !loading">
           <table class="table-asignaturas">
             <thead>
             <tr>
-              <th class="th th-center">Asignatura</th>
-              <th class="th th-center white-space">Nº Horas</th>
-              <!-- Se calcula el total sumando los valores de cada grupo -->
-              <th class="th th-center white-space">Tot. Alumnos</th>
-              <!-- Cabeceras dinámicas para cada grupo -->
-              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th th-center white-space">
-                Grupo {{ infoGrupo.grupo }}
+              <th class="th-center">Asignatura</th>
+              <th class="th-center white-space">Nº Horas</th>
+              <th class="th-center white-space">Tot. Alumnos</th>
+              <th v-for="(infoGrupo, index) in infoGrupos" :key="index" class="th-center white-space">
+                Grupo {{ infoGrupo.grupo }}<template v-if="aulaReferenciaDeGrupo(infoGrupo.grupo)"> ({{ aulaReferenciaDeGrupo(infoGrupo.grupo) }})</template>
               </th>
             </tr>
             </thead>
             <tbody>
             <tr v-for="(asignatura) in asignaturas" :key="`${asignatura.curso}-${asignatura.etapa}-${asignatura.nombre}`">
-              <td class="th">{{ asignatura.nombre }}</td>
-              <td class="th th-center">{{ asignatura.horas }}</td>
-              <!-- Se calcula el total al sumar los valores obtenidos en cada grupo -->
-              <td class="th th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
-              <td v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" class="th th-center">
+              <td>{{ asignatura.nombre }}<template v-if="aulaDesdobleDeAsignatura(asignatura.nombre)"> ({{ aulaDesdobleDeAsignatura(asignatura.nombre) }})</template></td>
+              <td class="th-center">{{ asignatura.horas }}</td>
+              <td class="th-center">{{ calcularTotal(asignatura.numeroAlumnosEnGrupo) }}</td>
+              <td v-for="infoGrupo in infoGrupos" :key="infoGrupo.grupo" class="th-center">
                 {{ asignatura.numeroAlumnosEnGrupo[infoGrupo.grupo] || "-" }}
               </td>
             </tr>
             </tbody>
           </table>
         </div>
-        <div v-else-if="!loading" class="t-3">
-          <p>No hay asignaturas disponibles para el curso y etapa seleccionados.</p>
-        </div>
-      </ion-card-content>
-    </ion-card>
+        <p v-else-if="!loading" class="empty-state">
+          No hay asignaturas disponibles para el curso y etapa seleccionados.
+        </p>
+      </section>
+    </div>
+
     <ion-toast
         :is-open="isToastOpen"
         :message="toastMessage"
@@ -61,18 +69,26 @@
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
+import {computed, onMounted, onUnmounted, ref} from 'vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { cargarAsignaturasUnicas, obtenerCantidadAlumnosEnGrupoPorAsignatura, obtenerTodosGrupos } from '@/services/schoolManager.js';
-import { IonToast, IonCard, IonCardContent, IonCardHeader, IonCardTitle } from '@ionic/vue';
+import SchoolManagerNav from '@/components/school_manager/SchoolManagerNav.vue';
+import { cargarAsignaturasUnicas, obtenerCantidadAlumnosEnGrupoPorAsignatura, obtenerTodosGrupos, obtenerCursoAcademicoSeleccionado, obtenerEspaciosFijoAsignados, obtenerEspaciosDesdobleAsignados, obtenerBloquesConAsignaturas } from '@/services/schoolManager.js';
+import { IonToast } from '@ionic/vue';
 import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas
+const cursoAcademico = ref('');
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const filtroSeleccionadoString = ref('');
 const asignaturas = ref([]);
 const infoGrupos = ref([]);
 const loading = ref(false);
+// Aulas de referencia (espacios fijos asignados a cada curso/etapa/grupo) y aulas de desdoble
+// (espacios asignados por bloque/asignatura). Se reutilizan los endpoints existentes de la ventana
+// de creación de grupos; no hace falta tocar el backend.
+const espaciosFijoAsignados = ref([]);
+const desdoblesAsignados = ref([]);
+const bloquesCursoEtapa = ref([]);
 // Variable para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
@@ -95,6 +111,69 @@ const calcularTotal = (alumnosPorGrupo) => {
 };
 
 /**
+ * Aula de referencia (espacio fijo) asignada a un grupo del curso/etapa seleccionado.
+ * Devuelve el nombre del aula o null si ese grupo no tiene aula de referencia asignada.
+ */
+const aulaReferenciaDeGrupo = (grupo) => {
+  const { curso, etapa } = filtroSeleccionado.value;
+  if (!curso || !etapa || !grupo) {
+    return null;
+  }
+  const espacio = espaciosFijoAsignados.value.find(
+    (e) => String(e.curso) === String(curso) && e.etapa === etapa && e.grupo === grupo
+  );
+  return espacio?.nombre ?? null;
+};
+
+/**
+ * Mapa nombreAsignatura -> aula de desdoble, restringido a los bloques del curso/etapa seleccionado
+ * (cada optativa de un bloque puede tener asignada un aula de desdoble).
+ */
+const aulasDesdoblePorAsignatura = computed(() => {
+  const idsBloques = new Set(bloquesCursoEtapa.value.map((b) => String(b.bloqueId)));
+  const mapa = {};
+  for (const desdoble of desdoblesAsignados.value) {
+    if (desdoble && desdoble.asignatura && idsBloques.has(String(desdoble.bloqueId))) {
+      mapa[desdoble.asignatura] = desdoble.nombre;
+    }
+  }
+  return mapa;
+});
+
+// Aula de desdoble asignada a una optativa concreta (o null si no tiene).
+const aulaDesdobleDeAsignatura = (nombreAsignatura) =>
+  aulasDesdoblePorAsignatura.value[nombreAsignatura] ?? null;
+
+/**
+ * Carga las aulas de referencia (espacios fijos) y de desdoble del curso/etapa seleccionado,
+ * reutilizando los endpoints existentes. El curso académico activo lo resuelve el backend.
+ */
+const cargarEspaciosYAulas = async () => {
+  const { curso, etapa } = filtroSeleccionado.value;
+  if (!curso || !etapa) {
+    espaciosFijoAsignados.value = [];
+    desdoblesAsignados.value = [];
+    bloquesCursoEtapa.value = [];
+    return;
+  }
+  try {
+    const [fijos, desdobles, bloques] = await Promise.all([
+      obtenerEspaciosFijoAsignados(toastMessage, toastColor, isToastOpen),
+      obtenerEspaciosDesdobleAsignados(toastMessage, toastColor, isToastOpen),
+      obtenerBloquesConAsignaturas(curso, etapa, toastMessage, toastColor, isToastOpen),
+    ]);
+    espaciosFijoAsignados.value = Array.isArray(fijos) ? fijos : [];
+    desdoblesAsignados.value = Array.isArray(desdobles) ? desdobles : [];
+    bloquesCursoEtapa.value = Array.isArray(bloques) ? bloques : [];
+  } catch (error) {
+    console.error(error);
+    espaciosFijoAsignados.value = [];
+    desdoblesAsignados.value = [];
+    bloquesCursoEtapa.value = [];
+  }
+};
+
+/**
  * Actualiza el filtro de curso y etapa y dispara la carga de asignaturas.
  */
 const actualizarSelect = (seleccionado) => {
@@ -111,6 +190,9 @@ const cargarAsignatura = async () => {
   if (!filtroSeleccionado.value.curso || !filtroSeleccionado.value.etapa) {
     asignaturas.value = [];
     infoGrupos.value = [];
+    espaciosFijoAsignados.value = [];
+    desdoblesAsignados.value = [];
+    bloquesCursoEtapa.value = [];
     return;
   }
   loading.value = true;
@@ -128,6 +210,9 @@ const cargarAsignatura = async () => {
 
     // Carga los grupos para el curso y etapa seleccionados.
     await obtenerGrupo();
+
+    // Carga las aulas de referencia y de desdoble del curso/etapa seleccionado.
+    await cargarEspaciosYAulas();
 
     // Para cada asignatura, se saca el número de alumnos para cada grupo.
     await cargarNumeroAlumnosPorGrupo();
@@ -188,99 +273,201 @@ const obtenerGrupo = async () => {
   }
 };
 
-onMounted(() => {
+const sincronizarCursoAcademico = async () => {
+  try {
+    const curso = (await obtenerCursoAcademicoSeleccionado(isToastOpen, toastMessage, toastColor))?.trim();
+    if (curso) {
+      cursoAcademico.value = curso;
+      localStorage.setItem('cursoAcademicoSeleccionado', curso);
+      return;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  cursoAcademico.value = localStorage.getItem('cursoAcademicoSeleccionado') || '';
+};
+
+const onCursoAcademicoCambiado = (event) => {
+  cursoAcademico.value = event.detail?.cursoAcademico || '';
+  if (cursoAcademico.value) {
+    localStorage.setItem('cursoAcademicoSeleccionado', cursoAcademico.value);
+  }
+};
+
+onMounted(async () => {
+  await sincronizarCursoAcademico();
+  window.addEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
   cargarAsignatura();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
 });
 </script>
 
 <style scoped>
-.table-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-grow: 1;
-  align-items: center;
+.school-manager-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  font-family: "Roboto", sans-serif;
+}
+
+.page-header {
+  margin-bottom: 1.75rem;
   width: 100%;
 }
 
 .t-1 {
   font-size: 2.2rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin: 0 0 0.75rem;
+  text-align: center;
+}
+
+.page-subtitle {
+  margin: 0;
+}
+
+.main-panel {
+  background-color: var(--form-bg-light);
+  border: 1px solid #444;
+  border-radius: 12px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
+  padding: 1.5rem;
+}
+
+.panel-section {
+  width: 100%;
+}
+
+.section-title {
+  margin: 0 0 1.25rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-color-light);
+}
+
+.section-title-inline {
+  text-align: left;
+  margin-bottom: 0.35rem;
+}
+
+.listado-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.listado-header-left {
+  flex: 1;
+  min-width: 200px;
+}
+
+.datos-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .texto-dropdown {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-}
-
-.card-table {
-  margin: 1.5rem;
-  width: 100%;
-  max-width: 56rem;
-  overflow: auto;
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px;
-}
-
-.t-2 {
-  font-size: 1.3rem;
-  text-align: center;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 1rem;
 }
 
 .cargar {
   text-align: center;
   color: #6b7280;
-}
-
-.mensajeError {
-  color: red;
   margin-bottom: 1rem;
 }
 
-.table-asignaturas {
-  color: black;
-  table-layout: auto;
-  border-collapse: collapse;
-  border: 1px solid currentColor;
-  width: 100%;
+.mensajeError {
+  color: #dc3545;
+  margin-bottom: 1rem;
 }
 
-.th {
-  border: 1px solid currentColor;
-  padding-left: 0.5rem; 
-  padding-right: 0.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+.table-scroll {
+  width: 100%;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.table-asignaturas {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: center;
+  background-color: #f8f9fa;
+  color: #1a1a1a;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.table-asignaturas th,
+.table-asignaturas td {
+  border: 2px solid #007bff;
+  padding: 8px 10px;
+}
+
+.table-asignaturas th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
+}
+
+.table-asignaturas td {
+  background-color: #e9f5ff;
+  height: 38px;
+}
+
+.table-asignaturas tr:hover td {
+  background-color: #d0eaff;
 }
 
 .th-center {
   text-align: center;
 }
 
-.t-3 {
-  text-align: center;
-  color: black;
+.white-space {
+  white-space: nowrap;
 }
 
-.white-space {
-  white-space: nowrap; 
+.empty-state {
+  margin: 0;
+  padding: 1.25rem;
+  text-align: center;
+  color: #666;
+  background-color: #f8f9fa;
+  border: 1px dashed #cfd8e3;
+  border-radius: 8px;
 }
 
 @media (prefers-color-scheme: dark) {
-  .table-asignaturas {
-    color: #c4c6ca;
+  .main-panel {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.08) 0 8px 24px;
+    border-color: #444;
   }
-  .t-3{
-    color: #c4c6ca;
-  }
+
+  .section-title { color: var(--text-color-dark); }
+  .page-subtitle, .empty-state { color: #c8c8c8; }
+  .empty-state { background-color: #2a302b; border-color: #555; }
 }
 
 @media (max-width: 768px) {
-  .table-asignaturas {
-    min-width: 200px;
-  }
+  .school-manager-page { padding-inline: 0.75rem; }
+  .main-panel { padding: 1rem; }
+  .t-1 { font-size: 1.75rem; }
+  .listado-header { flex-direction: column; align-items: stretch; }
+  .datos-controls { flex-direction: column; align-items: stretch; }
+  .table-asignaturas { font-size: 14px; min-width: 480px; }
 }
 </style>

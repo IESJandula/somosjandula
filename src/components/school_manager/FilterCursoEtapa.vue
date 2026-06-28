@@ -30,13 +30,14 @@
 
 <script setup>
 // Importa las funciones necesarias de Vue y Axios
-import { onMounted, ref, computed } from 'vue';
-import { cargarCursosEtapas } from '@/services/schoolManager.js'
+import { onMounted, onUnmounted, ref, computed } from 'vue';
+import { cargarCursosEtapas, obtenerCursoAcademicoSeleccionado } from '@/services/schoolManager.js'
 import { crearToast } from '@/utils/toast.js';
 import { IonToast } from "@ionic/vue";
 
 // Declara una variable reactiva para almacenar los cursos y etapas obtenidos del servidor
 const cursosEtapas = ref([]);
+const cursoAcademicoActivo = ref(localStorage.getItem('cursoAcademicoSeleccionado') || '');
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
@@ -65,10 +66,26 @@ const seleccionado = computed({
   }
 });
 
+const sincronizarCursoAcademico = async () => {
+  try {
+    const curso = (await obtenerCursoAcademicoSeleccionado(isToastOpen, toastMessage, toastColor))?.trim();
+    if (curso) {
+      cursoAcademicoActivo.value = curso;
+      localStorage.setItem('cursoAcademicoSeleccionado', curso);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 // Función asíncrona para cargar los datos de cursos y etapas desde el servidor
 const cargarCursosEtapa = async () => {
   try {
-    const response = await cargarCursosEtapas(isToastOpen, toastMessage, toastColor)
+    const response = await cargarCursosEtapas(
+      isToastOpen,
+      toastMessage,
+      toastColor
+    );
     cursosEtapas.value = response;
 
   } catch (error) {
@@ -78,10 +95,29 @@ const cargarCursosEtapa = async () => {
   }
 };
 
+const limpiarSeleccion = () => {
+  emit('update:modelValue', '');
+  emit('actualizar-select', { curso: null, etapa: '' });
+};
+
+const onCursoAcademicoCambiado = async (event) => {
+  cursoAcademicoActivo.value = event.detail?.cursoAcademico || '';
+  if (cursoAcademicoActivo.value) {
+    localStorage.setItem('cursoAcademicoSeleccionado', cursoAcademicoActivo.value);
+  }
+  limpiarSeleccion();
+  await cargarCursosEtapa();
+};
+
 // Usa el ciclo de vida onMounted para ejecutar código cuando el componente se monta
 onMounted(async() => {
-    // Llama a la función para cargar los cursos y etapas
+    await sincronizarCursoAcademico();
     await cargarCursosEtapa();
+    window.addEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
 });
 
 // Función para emitir un evento con el curso y etapa seleccionados

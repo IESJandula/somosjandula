@@ -1,153 +1,196 @@
 <template>
-  <h1 class="t-1">Carga de Matrículas</h1>
-  <div class="top-container">
-    <div class="top-section">
-      <div class="card-upload-csv">
-        <div class="container">
-          <!-- Selector de curso y etapa -->
-           <div class="t-2">Filtrar por curso y etapa</div>
-          <FilterCursoEtapa 
-           v-model="filtroSeleccionadoString" 
-           @actualizar-select="actualizarSelect" 
-           selectClass="select-sm" 
-           class="texto-dropdown"/>
-  
-          <!-- Subida de ficheros -->
-          <div class="section">
-            <label class="t-3" for="fileInput">Adjunta el csv de las matriculas de Seneca</label>
-            <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
-            <button @click="subirFichero(); $event.target.blur()"  ref="boton" class="btn" id = "enviar">{{ buttonText }}</button>
-            <!-- Spinner de carga -->
-            <div v-if="isLoading" class="fondo-gris">
-              <div class="circulo"></div>
+  <div class="page-carga-matriculas">
+    <header class="page-header">
+      <h1 class="t-1">Carga de Matrículas<span v-if="cursoAcademico"> ({{ cursoAcademico }})</span></h1>
+      <SchoolManagerNav>
+        <p class="page-subtitle">
+          Sube las matrículas de Séneca en formato CSV y gestiona los datos cargados por curso y etapa.
+        </p>
+      </SchoolManagerNav>
+    </header>
+
+    <div class="main-panel">
+      <section class="panel-section">
+        <h2 class="section-title">Acciones</h2>
+
+        <div class="actions-grid">
+          <!-- Subir CSV -->
+          <article class="action-card">
+            <h3 class="card-title">Subir matrículas (CSV)</h3>
+            <div class="card-body">
+              <div class="field">
+                <label>Filtrar por curso y etapa</label>
+                <FilterCursoEtapa
+                  v-model="filtroSeleccionadoString"
+                  @actualizar-select="actualizarSelect"
+                  selectClass="select-sm"
+                  class="texto-dropdown"/>
+              </div>
+
+              <div class="field">
+                <label for="fileInput">Adjunta el csv de las matrículas de Séneca</label>
+                <FileUpload ref="fileUploadRef" @file-selected="monitorizarSiHayArchivo" />
+              </div>
+
+              <button @click="subirFichero(); $event.target.blur()" ref="boton" class="btn-primary" id="enviar">{{ buttonText }}</button>
+
+              <!-- Spinner de carga -->
+              <div v-if="isLoading" class="fondo-gris">
+                <div class="circulo"></div>
+              </div>
             </div>
+          </article>
+
+          <!-- Cursos y etapas cargados -->
+          <article class="action-card">
+            <h3 class="card-title">Cursos y etapas cargados</h3>
+            <div class="card-body">
+              <div class="table-scroll" v-if="cursosMapeados.length">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Curso y etapa</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
+                      <td>{{ cursoE }}</td>
+                      <td>
+                        <button type="button" class="btn-delete" @click="borrarMatricula(cursoE)">X</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p v-else class="empty-state">No hay cursos y etapas cargados.</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <div class="panel-divider" aria-hidden="true"></div>
+
+      <section class="panel-section listado-section">
+        <div class="listado-header">
+          <div class="listado-header-left">
+            <h2 class="section-title section-title-inline">Datos del CSV cargado</h2>
           </div>
-          <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-          @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+          <div class="datos-controls">
+            <FilterCursoEtapa
+              v-model="cursoSeleccionado"
+              @actualizar-select="actualizarSelectDatos"
+              selectClass="select-sm"
+              class="texto-dropdown"/>
+          </div>
         </div>
-      </div>
-  
-      <!-- Tabla con cursos y etapas que tienen datos -->
-      <div class="card-upload-table card-upload-csv">
-        <div class="t-2">Curso y Etapas cargados</div>
-        <table>
-        <tbody class="t-3">
-          <tr v-for="(cursoE, index) in cursosMapeados" :key="index">
-            <td class="th">{{ cursoE }}</td>
-            <td class="th">
-              <button @click="borrarMatricula(cursoE)" class="eliminar">&times;</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      </div>
-    </div>  
-    <!-- Tarjeta con los datos cargados del CSV -->
-    <div class="card-upload-data">
-      <div class="centro">
-        <div class="t-2">Datos del CSV cargado</div>
-        <!-- Selector de curso y etapa -->
-        <div class="dropdown-datos">
-          <FilterCursoEtapa 
-          v-model="cursoSeleccionado"
-          @actualizar-select="actualizarSelectDatos"
-          selectClass="select-sm" 
-          class="texto-dropdown"/>
-          <button @click="cargarDatosMatriculas" class="btn-csv">Cargar CSV</button>
+
+        <div class="table-scroll" v-if="datosMatriculas.length">
+          <table class="tabla-matriculas">
+            <thead>
+              <tr>
+                <th>Eliminar</th>
+                <th>Nombre</th>
+                <th>Apellidos</th>
+                <th v-for="asignatura in asignaturas" :key="asignatura">
+                  {{ asignatura }} <span title="Matriculados">({{ matriculadosPorAsignatura[asignatura] }})</span>
+                  <button
+                    v-if="esAsignaturaAdHoc(asignatura)"
+                    type="button"
+                    class="eliminar-asignatura"
+                    title="Borrar asignatura ad-hoc"
+                    @click="eliminarAsignaturaAdHoc(asignatura)">&times;</button>
+                </th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
+                <td>
+                  <button class="btn-delete" @click="desmatricularAlumnosCsv(index)">X</button>
+                </td>
+                <td>{{ estudiante.nombre }}</td>
+                <td>{{ estudiante.apellidos }}</td>
+                <td v-for="asignatura in asignaturas" :key="asignatura">
+                  <select
+                    v-model="estudiante.matriculas[asignatura]"
+                    class="editable-cell"
+                    :title="obtenerTooltipEstado(estudiante.matriculas[asignatura])">
+                    <option value="" disabled>Selecciona estado</option>
+                    <option
+                      v-for="estado in estadosMatricula"
+                      :key="estado.value"
+                      :value="estado.value"
+                      :title="estado.label">
+                      {{ estado.value }}
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  <button class="btn-primary btn-mini" @click="matricularAsignaturasCsv(index)">Guardar</button>
+                </td>
+              </tr>
+              <tr>
+                <td></td>
+                <td>
+                  <input type="text" v-model="nuevoAlumno.nombre" class="cell-input">
+                </td>
+                <td>
+                  <input type="text" v-model="nuevoAlumno.apellidos" class="cell-input">
+                </td>
+                <td v-for="asignatura in asignaturas" :key="asignatura">
+                  <select
+                    v-model="nuevoAlumno.matriculas[asignatura]"
+                    class="editable-cell"
+                    :title="obtenerTooltipEstado(nuevoAlumno.matriculas[asignatura])">
+                    <option value="" disabled>Selecciona estado</option>
+                    <option
+                      v-for="estado in estadosMatricula"
+                      :key="estado.value"
+                      :value="estado.value"
+                      :title="estado.label">
+                      {{ estado.value }}
+                    </option>
+                  </select>
+                </td>
+                <td>
+                  <button class="btn-primary btn-mini" @click="matricularAlumnosCsv">Registrar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
-      <!-- Tabla con los datos cargados del CSV -->
-       <div>
-         <table v-if="datosMatriculas.length">
-           <thead>
-             <tr>
-               <th class="columna">Eliminar</th>
-               <th class="columna">Nombre</th>
-               <th class="columna">Apellidos</th>
-              <th class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                {{ asignatura }} <span title="Matriculados">({{ matriculadosPorAsignatura[asignatura] }})</span>
-              </th>
-              <th class="columna">
-                <div class="nueva-asignatura-header">
-                  <input type="text" v-model="nuevaAsignatura" class="input-nueva-asignatura" placeholder="Nombre asignatura">
-                  <button type="button" class="btn-guardar-registrar" @click="crearAsignatura">Crear</button>
-                </div>
-              </th>
-              <th class="columna">Acción</th>
-             </tr>
-           </thead>
-           <tbody>
-             <tr v-for="(estudiante, index) in datosMatriculas" :key="index">
-               <td class="columna">
-                 <button @click="desmatricularAlumnosCsv(index)" class="eliminar">&times;</button>
-               </td>
-               <td class="columna">{{ estudiante.nombre }}</td> <!-- Nombre -->
-               <td class="columna">{{ estudiante.apellidos }}</td> <!-- Apellidos -->
-              <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                <select
-                  v-model="estudiante.matriculas[asignatura]"
-                  class="editable-cell"
-                  :title="obtenerTooltipEstado(estudiante.matriculas[asignatura])">
-                  <option value="" disabled>Selecciona estado</option>
-                  <option
-                    v-for="estado in estadosMatricula"
-                    :key="estado.value"
-                    :value="estado.value"
-                    :title="estado.label">
-                    {{ estado.value }}
-                  </option>
-                </select>
-              </td>
-               <td class="columna"></td>
-               <td class="columna">
-                 <button class="btn-guardar-registrar" @click="matricularAsignaturasCsv(index)">Guardar</button>
-               </td>
-             </tr>
-             <tr>
-               <td class="columna"></td>
-               <td class="columna">
-                 <input type="text" v-model="nuevoAlumno.nombre">
-               </td>
-               <td class="columna">
-                 <input type="text" v-model="nuevoAlumno.apellidos">
-               </td>
-              <td class="columna" v-for="asignatura in asignaturas" :key="asignatura">
-                <select
-                  v-model="nuevoAlumno.matriculas[asignatura]"
-                  class="editable-cell"
-                  :title="obtenerTooltipEstado(nuevoAlumno.matriculas[asignatura])">
-                  <option value="" disabled>Selecciona estado</option>
-                  <option
-                    v-for="estado in estadosMatricula"
-                    :key="estado.value"
-                    :value="estado.value"
-                    :title="estado.label">
-                    {{ estado.value }}
-                  </option>
-                </select>
-              </td>
-               <td class="columna"></td>
-               <td class="columna">
-                 <button class="btn-guardar-registrar" @click="matricularAlumnosCsv">Registrar</button>
-               </td>
-             </tr>
-           </tbody>
-         </table>
-         <p v-else class="t-3">No hay datos cargados del CSV.</p>
-       </div>
-       <button v-if="datosMatriculas.length > 0" class="btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
+        <p v-else class="empty-state">No hay datos cargados del CSV.</p>
+
+        <div v-if="datosMatriculas.length > 0" class="seccion-footer">
+          <div class="footer-left">
+            <input
+              type="text"
+              v-model="nuevaAsignatura"
+              class="input-nueva-asignatura"
+              placeholder="Nueva asignatura">
+            <button type="button" class="btn-primary btn-mini" @click="crearAsignaturaAdHocHandler">Crear</button>
+          </div>
+          <button class="btn-primary btn-guardar-todo" @click="guardarTodo">Guardar todo</button>
+        </div>
+      </section>
     </div>
   </div>
+
+  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import FileUpload from '@/components/printers/FileUpload.vue';
 import FilterCursoEtapa from '@/components/school_manager/FilterCursoEtapa.vue';
-import { subirFicheros, cargarMatriculas, borrarMatriculas, obtenerDatosMatriculas, matricularAsignaturas, matricularAlumnos, desmatricularAlumnos } from '@/services/schoolManager.js'
+import SchoolManagerNav from '@/components/school_manager/SchoolManagerNav.vue';
+import { subirFicheros, cargarMatriculas, borrarMatriculas, obtenerDatosMatriculas, matricularAsignaturas, matricularAlumnos, desmatricularAlumnos, crearAsignaturaAdHoc, borrarAsignaturaAdHoc, obtenerCursoAcademicoSeleccionado } from '@/services/schoolManager.js'
 import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 
+const cursoAcademico = ref('');
 const filtroSeleccionado = ref({ curso: null, etapa: '' });
 const filtroSeleccionadoString = ref('');
 const cursoSeleccionado = ref('');
@@ -158,6 +201,13 @@ const fileUploadRef = ref(null);
 const buttonText = ref('Enviar');
 const datosMatriculas = ref([]);
 const asignaturas = ref([]);
+// Conjunto de nombres de asignaturas marcadas como ad-hoc por el backend.
+// SUPUESTO: cada registro de matrícula que devuelve obtenerDatosMatriculas incluye
+// un booleano `esAdHoc` (con fallback a `adHoc`) por asignatura. Si el backend usa
+// otro nombre de campo, ajustar `cargarDatosMatriculas`.
+const asignaturasAdHoc = ref(new Set());
+
+const esAsignaturaAdHoc = (asignatura) => asignaturasAdHoc.value.has(asignatura);
 const nuevoAlumno = ref({
   nombre: "",
   apellidos: "",
@@ -179,36 +229,82 @@ const obtenerTooltipEstado = (valor) => {
   return estado ? estado.label : '';
 };
 
-const crearAsignatura = () => {
+// Devuelve el curso/etapa actualmente seleccionados en el desplegable (cursoSeleccionado
+// tiene formato "curso-etapa"). Devuelve null si la selección no es válida.
+const obtenerCursoEtapaSeleccionado = () => {
+  const [curso, etapa] = (cursoSeleccionado.value || '').split('-');
+  if (!curso || !etapa) return null;
+  return { curso: parseInt(curso, 10), etapa };
+};
+
+// Crea una asignatura ad-hoc en el backend para el curso/etapa y curso académico
+// activos y recarga la tabla para reflejar la nueva columna (alumnos NO matriculados
+// por defecto, según devuelva el backend).
+const crearAsignaturaAdHocHandler = async () => {
   const nombre = nuevaAsignatura.value.trim();
 
   if (!nombre) {
-    mensajeActualizacion = "Debes indicar el nombre de la asignatura";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Debes indicar el nombre de la asignatura");
     return;
   }
 
   if (asignaturas.value.includes(nombre)) {
-    mensajeActualizacion = "Esa asignatura ya existe";
     mensajeColor = "danger";
-    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Esa asignatura ya existe");
     return;
   }
 
-  asignaturas.value.push(nombre);
-
-  for (const estudiante of datosMatriculas.value) {
-    if (!(nombre in estudiante.matriculas)) {
-      estudiante.matriculas[nombre] = "";
-    }
+  const seleccion = obtenerCursoEtapaSeleccionado();
+  if (!seleccion) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Selecciona un curso y etapa antes de crear la asignatura");
+    return;
   }
 
-  if (!(nombre in nuevoAlumno.value.matriculas)) {
-    nuevoAlumno.value.matriculas[nombre] = "";
+  try {
+    await crearAsignaturaAdHoc(toastMessage, toastColor, isToastOpen, {
+      nombre,
+      curso: seleccion.curso,
+      etapa: seleccion.etapa
+    });
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Asignatura creada con éxito");
+    nuevaAsignatura.value = "";
+    await cargarDatosMatriculas();
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
+};
+
+// Borra una asignatura ad-hoc (sólo disponible para asignaturas marcadas como ad-hoc)
+// y recarga la tabla.
+const eliminarAsignaturaAdHoc = async (asignatura) => {
+  const seleccion = obtenerCursoEtapaSeleccionado();
+  if (!seleccion) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Selecciona un curso y etapa");
+    return;
   }
 
-  nuevaAsignatura.value = "";
+  if (!window.confirm(`¿Borrar la asignatura "${asignatura}"? Esta acción no se puede deshacer.`)) return;
+
+  try {
+    await borrarAsignaturaAdHoc(toastMessage, toastColor, isToastOpen, {
+      nombre: asignatura,
+      curso: seleccion.curso,
+      etapa: seleccion.etapa
+    });
+    mensajeColor = "success";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, "Asignatura borrada con éxito");
+    await cargarDatosMatriculas();
+  } catch (error) {
+    mensajeColor = "danger";
+    crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, error.message);
+    console.error(error);
+  }
 };
 
 const matriculadosPorAsignatura = computed(() => {
@@ -348,6 +444,38 @@ const actualizarSelectDatos = (seleccionado) => {
   cursoSeleccionado.value = `${seleccionado.curso}-${seleccionado.etapa}`;
 };
 
+const sincronizarCursoAcademico = async () => {
+  try {
+    const curso = (await obtenerCursoAcademicoSeleccionado(isToastOpen, toastMessage, toastColor))?.trim();
+    if (curso) {
+      cursoAcademico.value = curso;
+      localStorage.setItem('cursoAcademicoSeleccionado', curso);
+      return;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  cursoAcademico.value = localStorage.getItem('cursoAcademicoSeleccionado') || '';
+};
+
+const reiniciarSeleccionVista = () => {
+  cursoSeleccionado.value = '';
+  filtroSeleccionadoString.value = '';
+  filtroSeleccionado.value = { curso: null, etapa: '' };
+  datosMatriculas.value = [];
+  asignaturas.value = [];
+  asignaturasAdHoc.value = new Set();
+};
+
+const onCursoAcademicoCambiado = async (event) => {
+  cursoAcademico.value = event.detail?.cursoAcademico || '';
+  if (cursoAcademico.value) {
+    localStorage.setItem('cursoAcademicoSeleccionado', cursoAcademico.value);
+  }
+  reiniciarSeleccionVista();
+  await cargarMatricula();
+};
+
 const cargarMatricula = async () => {
   try {
     const data = await cargarMatriculas(isToastOpen, toastMessage, toastColor) || [];
@@ -409,6 +537,16 @@ const cargarDatosMatriculas = async () => {
     
     // Obtener todas las asignaturas únicas
     asignaturas.value = [...new Set(response.map(m => m.asignatura))];
+
+    // Detectar qué asignaturas son ad-hoc según el flag del backend (esAdHoc / adHoc)
+    const adHocSet = new Set();
+    response.forEach((registro) => {
+      const flag = registro.esAdHoc ?? registro.adHoc ?? false;
+      if (flag) {
+        adHocSet.add(registro.asignatura);
+      }
+    });
+    asignaturasAdHoc.value = adHocSet;
 
     // Agrupar datos por estudiante
     const estudiantesMap = new Map();
@@ -623,118 +761,402 @@ watch([() => filtroSeleccionado.value.curso, () => filtroSeleccionado.value.etap
   { immediate: true }
 );
 
+// Carga automática de los datos del curso/etapa elegido en el desplegable.
+// Sustituye al antiguo botón "Cargar CSV": al seleccionar curso+etapa se consulta
+// el backend directamente. Sólo dispara con una selección válida (curso-etapa) y
+// distinta; al limpiar la selección (p.ej. tras borrar) cursoSeleccionado queda
+// vacío y no se relanza la carga.
+watch(cursoSeleccionado, async (nuevoCursoEtapa) => {
+  const [curso, etapa] = (nuevoCursoEtapa || '').split('-');
+  if (!curso || !etapa) return;
+  await cargarDatosMatriculas();
+});
+
 onMounted(async () => {
+  await sincronizarCursoAcademico();
+  window.addEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
   await cargarMatricula();
   comprobarBoton();
-  
+});
+
+onUnmounted(() => {
+  window.removeEventListener('curso-academico-cambiado', onCursoAcademicoCambiado);
 });
 </script>
 
 <style scoped>
-/* Centrar el título */
-.t-1 {
-  font-size: 2.2rem;
-  font-weight: 700px; 
-  margin-bottom: 1.5rem; 
-  text-align: center;
-}
-
-.top-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
+.page-carga-matriculas {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  font-family: "Roboto", sans-serif;
+}
+
+.page-header {
+  margin-bottom: 1.75rem;
   width: 100%;
-  padding: 0 20px;
 }
 
-/* Secciones */
-.top-section {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 20px;
+.t-1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  text-align: center;
 }
 
-.card-upload-csv {
-  flex: 1 1 30%;
-  min-width: 520px;
-  min-height: 400px;
-  height: auto;
+.page-subtitle {
+  margin: 0;
+}
+
+.main-panel {
   background-color: var(--form-bg-light);
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  border: 1px solid #444;
+  border-radius: 12px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
+  padding: 1.5rem;
 }
 
-/* Contenedor centrado */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+.panel-section {
+  width: 100%;
 }
 
-.t-2 {
+.section-title {
+  margin: 0 0 1.25rem;
   font-size: 1.3rem;
+  font-weight: 600;
   text-align: center;
-  margin-bottom: 1rem;
-  margin-top: 1rem;
+  color: var(--text-color-light);
+}
+
+.section-title-inline {
+  text-align: left;
+  margin-bottom: 0.35rem;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background-color: #f8f9fa;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  padding: 1.25rem 1rem 1rem;
+  box-sizing: border-box;
+}
+
+.card-title {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.35;
+  color: #1a1a1a;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
 }
 
 .texto-dropdown {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
-  text-align: center;
+  font-size: 1rem;
 }
 
-.section { 
+.btn-primary {
   width: 100%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 5px;
- } 
-
-.t-3 {
-  margin-bottom: 0.7rem;
-  margin-top: 1rem;
-  font-size: 1.1rem;
-  text-align: center;
+  margin-top: auto;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #2196f3;
+  border-radius: 6px;
+  text-transform: uppercase;
+  border: none;
+  color: white;
+  cursor: pointer;
 }
 
-.btn {
-  padding: 0.5rem;
-  border-radius: 0.375rem; 
-  background-color: #0054e9;
-  color: #FFFFFF;
-  font-size: 1.1rem;
-  margin-top: 0.8rem;
+.btn-primary:hover {
+  background-color: #1565c0;
 }
 
-.btn:hover {
-  background-color: #1461eb;
-}
-
-.btn:disabled {
+.btn-primary:disabled {
   background-color: #7fa9f4;
   cursor: not-allowed;
 }
 
+.btn-mini {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+.seccion-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-left .input-nueva-asignatura {
+  width: auto;
+}
+
+.btn-guardar-todo {
+  width: auto;
+}
+
+.eliminar-asignatura {
+  color: #ef4444;
+  font-size: 1.3rem;
+  line-height: 1;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 0 4px;
+  vertical-align: middle;
+}
+
+.btn-delete {
+  padding: 5px 10px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-delete:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.panel-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #cfd8e3 15%, #cfd8e3 85%, transparent);
+  margin: 1.75rem 0;
+}
+
+.listado-section {
+  padding-top: 0.25rem;
+}
+
+.listado-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.listado-header-left {
+  flex: 1;
+  min-width: 200px;
+}
+
+.datos-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 1.25rem;
+  text-align: center;
+  color: #666;
+  background-color: #f8f9fa;
+  border: 1px dashed #cfd8e3;
+  border-radius: 8px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: center;
+  background-color: #f8f9fa;
+  color: #1a1a1a;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+th, td {
+  border: 2px solid #007bff;
+  padding: 8px 6px;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* Con border-collapse el borde se desplaza al hacer scroll; el box-shadow
+     mantiene la línea de separación visible bajo la cabecera fija. */
+  box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
+}
+
+td {
+  background-color: #e9f5ff;
+  height: 38px;
+}
+
+tr:hover td {
+  background-color: #d0eaff;
+}
+
+/* ---- Columnas identificativas fijas horizontalmente (sticky-left) ----
+   Apellidos es la 3.ª columna (tras "Eliminar" y "Nombre"). Para que el
+   offset `left` sea estable y las columnas previas no se deslicen por
+   debajo de Apellidos, se fija el bloque completo (Eliminar + Nombre +
+   Apellidos) con anchos fijos y offsets acumulados. Los offsets llevan un
+   solapamiento de 2px para evitar que asome contenido entre columnas con
+   border-collapse. La 4.ª columna en adelante (asignaturas) y "Acción"
+   hacen scroll normal. */
+.tabla-matriculas th:nth-child(1), .tabla-matriculas td:nth-child(1) {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.tabla-matriculas th:nth-child(2), .tabla-matriculas td:nth-child(2) {
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
+  position: sticky;
+  left: 88px;
+  z-index: 1;
+}
+
+.tabla-matriculas th:nth-child(3), .tabla-matriculas td:nth-child(3) {
+  width: 170px;
+  min-width: 170px;
+  max-width: 170px;
+  position: sticky;
+  left: 216px;
+  z-index: 1;
+}
+
+/* Las celdas del cuerpo de las columnas fijas necesitan fondo sólido para
+   tapar las celdas que pasan por debajo al hacer scroll horizontal. */
+.tabla-matriculas tbody td:nth-child(1),
+.tabla-matriculas tbody td:nth-child(2),
+.tabla-matriculas tbody td:nth-child(3) {
+  background-color: #e9f5ff;
+}
+
+.tabla-matriculas tbody tr:hover td:nth-child(1),
+.tabla-matriculas tbody tr:hover td:nth-child(2),
+.tabla-matriculas tbody tr:hover td:nth-child(3) {
+  background-color: #d0eaff;
+}
+
+/* Esquina cabecera+identificativas: fija en vertical (top) y horizontal
+   (left) a la vez, por encima de todo. */
+.tabla-matriculas thead th:nth-child(1),
+.tabla-matriculas thead th:nth-child(2),
+.tabla-matriculas thead th:nth-child(3) {
+  z-index: 3;
+}
+
+.table-scroll {
+  width: 100%;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.cell-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  padding: 4px 6px;
+  outline: none;
+  color: #000;
+}
+
+.input-nueva-asignatura {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  width: 100%;
+  min-width: 160px;
+  padding: 4px 6px;
+  outline: none;
+  font-size: 0.95rem;
+  color: #000;
+}
+
+.editable-cell {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  width: 100%;
+  min-width: calc(8ch + 2em);
+  padding: 2px;
+  outline: none;
+  font: inherit;
+  color: #000;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.editable-cell option {
+  background-color: #fff;
+  color: #000;
+}
+
 .fondo-gris {
-  position: fixed; 
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); 
-  z-index: 9998; 
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -742,7 +1164,7 @@ onMounted(async () => {
 
 .circulo {
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #4782eb;
+  border-top: 4px solid #2196f3;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -751,338 +1173,43 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  0% { 
-    transform: rotate(0deg); 
-  }
-  100% { 
-    transform: rotate(360deg); 
-  }
-}
-
-.card-upload-table {
-  justify-content: flex-start;
-  overflow: auto;
-    height: 380px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.th {
-  width: 100%;
-  border: 1px solid currentColor; 
-  padding: 0.5rem 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  text-align: center;
-}
-
-.eliminar {
-  color: #EF4444;
-  font-size: 2rem; /* <-- Reducir tamaño */
-  background-color: transparent;
-  line-height: 1; /* <-- Ajuste para evitar desbordamiento */
-  border: none;
-}
-
-.card-upload-data {
-  min-width: 1060px;
-  min-height: 500px;
-  max-width: 900px;
-  height: auto;
-  background-color: var(--form-bg-light);
-  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-  border-radius: 10px;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  margin-top: 0.5rem;
-  margin-bottom: 2rem;
-  overflow-y: auto;
-    max-width: 300px;
-  overflow-x: auto;
-    max-height: 300px;
-  font-size: 13px;
-}
-
-.centro {
-  justify-items: center;
-}
-
-.dropdown-datos { 
-  display: flex;
-  flex-direction: row;
-}
-
-.btn-csv {
-  width: 170px;
-  padding: 0.5rem;
-  border-radius: 0.375rem; 
-  background-color: #0054e9;
-  color: #FFFFFF;
-  font-size: 1.1rem;
-  align-self: center;
-  margin-left: 20px;
-  margin-bottom: 30px;
-}
-
-.btn-csv:hover {
-  background-color: #1461eb;
-}
-
-.columna {
-  border: 1px solid currentColor; 
-  padding-left: 0.5rem; 
-  padding-right: 0.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-
-.btn-guardar-registrar {
-  padding: 0.5rem;
-  border-radius: 0.375rem; 
-  background-color: #0054e9;
-  color: #FFFFFF;
-  font-size: 1.1rem;
-}
-
-.btn-guardar-registrar:hover {
-  background-color: #1461eb;
-}
-
-input {
-    background: transparent;
-    border: none;
-    text-align: center;
-    width: 100%;
-    padding: 0;
-    outline: none;
-}
-
-.nueva-asignatura-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.input-nueva-asignatura {
-    background: var(--form-bg-light, #fff);
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    text-align: center;
-    width: 100%;
-    min-width: 160px;
-    padding: 4px 6px;
-    outline: none;
-    font-size: 1rem;
-    color: inherit;
-}
-
-.input-nueva-asignatura::placeholder {
-    font-size: 1rem;
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @media (prefers-color-scheme: dark) {
-  .input-nueva-asignatura {
-    background: var(--form-bg-dark, #2a2a2a);
-    border-color: #555;
-    color: #fff;
-  }
-}
-
-.columna select.editable-cell {
-    background: transparent;
-    border: none;
-    text-align: center;
-    width: 100%;
-    min-width: calc(8ch + 2em);
-    padding: 2px;
-    outline: none;
-    font: inherit;
-    color: inherit;
-    cursor: pointer;
-    appearance: auto;
-}
-
-.columna select.editable-cell option {
-    background-color: var(--form-bg-light);
-    color: initial;
-}
-
-@media (prefers-color-scheme: dark) {
-  .columna select.editable-cell option {
+  .main-panel {
     background-color: var(--form-bg-dark);
-    color: #ffffff;
+    box-shadow: rgba(255, 255, 255, 0.08) 0 8px 24px;
+    border-color: #444;
+  }
+
+  .section-title { color: var(--text-color-dark); }
+  .page-subtitle, .empty-state { color: #c8c8c8; }
+  .action-card { background-color: #2a302b; border-color: #555; }
+  .card-title, .field label { color: var(--text-color-dark); }
+  .empty-state { background-color: #2a302b; border-color: #555; }
+  .panel-divider {
+    background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
   }
 }
 
-.btn-guardar-todo {
-  width: 170px;
-  padding: 0.5rem;
-  border-radius: 0.375rem; 
-  background-color: #0054e9;
-  color: #FFFFFF;
-  font-size: 1.1rem;
-  margin-top: 15px;
-  margin-bottom: 5px;
-  position: sticky;
-  top: 0;
-  left: 850px;
-}
-
-.btn-guardar-todo:hover {
-  background-color: #1461eb;
-}
-
-/* Modo oscuro */
-@media (prefers-color-scheme: dark) {
-  .card-upload-csv, 
-  .card-upload-data {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-
-  .card-upload-table {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
-    border: 1px solid #444;
-  }
-
-  .btn,
-  .btn-csv,
-  .btn-guardar-registrar,
-  .btn-guardar-todo {
-    background-color: #4782eb;
-    color: #000000;
-  }
-
-  .btn:hover {
-    background-color: #3476eb;
-  }
-  
-  .btn:disabled {
-  color: #000000;
-  background-color: #7fa9f4;
-  }
-
-  .btn-csv:hover {
-    background-color: #3476eb;
-  }
-
-  .btn-guardar-registrar:hover {
-    background-color: #3476eb;
-  }
-
-  .btn-guardar-todo:hover {
-    background-color: #3476eb;
+@media (max-width: 1024px) {
+  .actions-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Media queries para hacer que la tarjeta sea más responsive */
 @media (max-width: 768px) {
-  .top-section {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .card-upload-csv,
-  .card-upload-data {
-    flex: 1 1 100%;
-    min-width: 350px;
-    min-height: 100%;
-    margin-right: 5px;
-  }
-  .card-upload-table {
-    max-width: 400px;
-  }
-
-  .card-upload-data {
-    max-width: 75%;
-  }
-  
-  .dropdown-datos { 
-  display: flex;
-  flex-direction: column;
-  }
-  
-  .btn-guardar-todo {
-    position: sticky;
-    top: 0;
-    left: 160px;
-  }
-}
-
-@media ((min-width: 768px) and (max-width: 1190px)) {
-  .card-upload-csv {
-    min-width: 350px;
-    max-height: 380px;
-    margin-right: 5px;
-  }
-
-  .card-upload-table {
-    max-width: 100%;
-  }
-  
-  .card-upload-data {
-    min-width: 85%;
-    min-height: 100%;
-    margin-right: 5px;
-  }
-  
-  .dropdown-datos { 
-    display: flex;
-    flex-direction: column;
-  }
-
-  .btn-guardar-todo {
-    position: sticky;
-    top: 0;
-    left: calc(100% - 180px);
-  }
-}
-
-@media (max-width: 540px) {
-
-  .card-upload-csv, 
-  .card-upload-data {
-    min-width: 100%;
-    max-width: 100%;
-  }
-
-  .card-upload-table {
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .btn-guardar-todo {
-    position: sticky;
-    top: 0;
-    left: 250px;
-  }
-}
-
-@media (max-width: 440px) {
-
-  .card-upload-csv, 
-  .card-upload-data {
-    min-width: 100%;
-    max-width: 100%;
-  }
-
-  .card-upload-table {
-    max-width: 100%;
-    width: 100%;
-  }
-
-  .btn-guardar-todo {
-    position: sticky;
-    top: 0;
-    left: 90px;
-  }
+  .page-carga-matriculas { padding-inline: 0.75rem; }
+  .main-panel { padding: 1rem; }
+  .t-1 { font-size: 1.75rem; }
+  .listado-header { flex-direction: column; align-items: stretch; }
+  .datos-controls { flex-direction: column; align-items: stretch; }
+  .seccion-footer { flex-direction: column; align-items: stretch; }
+  .footer-left { width: 100%; }
+  .footer-left .input-nueva-asignatura { flex: 1; min-width: 0; }
+  .btn-guardar-todo { width: 100%; }
+  table { font-size: 14px; }
 }
 </style>
