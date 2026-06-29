@@ -144,14 +144,15 @@ export const matricularAlumnos = async (nombre, apellidos, asignatura, curso, et
     return await fetch(schoolManagerApiUrl + '/schoolManager/cargarMatriculas/datosMatriculas', 
       {
         method: 'POST',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'nombre': nombre,
           'apellidos': apellidos,
           'asignatura': asignatura,
           'curso': curso,
           'etapa': etapa,
           'estado': estado,
-        }),
+        },
       });
   }
 
@@ -162,14 +163,15 @@ export const desmatricularAlumnos = async (nombre, apellidos, asignatura, curso,
     return await fetch(schoolManagerApiUrl + '/schoolManager/cargarMatriculas/datosMatriculas', 
       {
         method: 'DELETE',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'nombre': nombre,
           'apellidos': apellidos,
           'asignatura': asignatura,
           'curso': curso,
           'etapa': etapa,
           'estado': estado,
-        }),
+        },
       });
   }
 
@@ -182,8 +184,7 @@ export const crearAsignaturaAdHoc = async (toastMessage, toastColor, isToastOpen
     const response = await fetch(schoolManagerApiUrl + '/schoolManager/cargarMatriculas/asignaturaAdHoc',
       {
         method: 'POST',
-        headers:
-        {
+        headers: {
           'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
         },
@@ -205,8 +206,7 @@ export const borrarAsignaturaAdHoc = async (toastMessage, toastColor, isToastOpe
     const response = await fetch(schoolManagerApiUrl + '/schoolManager/cargarMatriculas/asignaturaAdHoc',
       {
         method: 'DELETE',
-        headers:
-        {
+        headers: {
           'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
         },
@@ -228,10 +228,11 @@ export const cargarAsignaturas = async (curso, etapa, toastMessage, toastColor, 
     const response = await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/asignaturas', 
       {
         method: 'GET',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'curso': curso,
           'etapa': etapa,
-        }),
+        },
       });
 
     if (!response.ok) {
@@ -255,9 +256,10 @@ export const crearBloques = async (curso, etapa, asignaturas, toastMessage, toas
     return await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/bloques?' + queryParams, 
       {
         method: 'POST',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json'
-        }),
+        },
       });
   }
 
@@ -268,12 +270,13 @@ export const eliminarBloques = async (curso, etapa, nombre, toastMessage, toastC
     return await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/bloques', 
       {
         method: 'DELETE',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
           'curso': curso,
           'etapa': etapa,
           'nombre': nombre
-        }),
+        },
       });
   }
 
@@ -285,13 +288,14 @@ export const asignaturasSinDocencia = async (curso, etapa, nombreAsignatura, sin
     return await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/sinDocencia', 
       {
         method: 'PUT',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
           'nombreAsignatura': nombreAsignatura,
           'curso': curso,
           'etapa': etapa,
           'sinDocencia': sinDocencia
-        }),
+        },
       });
   }
 
@@ -303,13 +307,14 @@ export const asignaturasDesdobles = async (curso, etapa, nombreAsignatura, desdo
     return await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/desdoble', 
       {
         method: 'PUT',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
           'nombreAsignatura': nombreAsignatura,
           'curso': curso,
           'etapa': etapa,
           'desdoble': desdoble
-        }),
+        },
       });
   }
 
@@ -320,11 +325,12 @@ export const mostrarHoras = async (curso, etapa, toastMessage, toastColor, isToa
     const response = await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/horas', 
       {
         method: 'GET',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
           'curso': curso,
           'etapa': etapa
-        }),
+        },
       });
 
     if (!response.ok) {
@@ -342,13 +348,14 @@ export const asignarHoras = async (curso, etapa, nombreAsignatura, horas, toastM
     return await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/horas', 
       {
         method: 'PUT',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'Content-Type': 'application/json',
           'curso': curso,
           'etapa': etapa,
           'nombreAsignatura': nombreAsignatura,
           'horas': horas
-        }),
+        },
       });
   }
 
@@ -363,10 +370,11 @@ export const subirHorasAsignaturasCsv = async (file, curso, etapa, toastMessage,
     return await fetch(schoolManagerApiUrl + '/schoolManager/asignaturasYBloques/horas/csv',
       {
         method: 'POST',
-        headers: headersConToken(tokenPropio, {
+        headers: {
+          'Authorization': `Bearer ${tokenPropio}`,
           'curso': parseInt(curso, 10),
           'etapa': etapa,
-        }),
+        },
         body: file
       });
   }
@@ -1831,10 +1839,11 @@ export const obtenerBloquesConAsignaturas = async (curso, etapa, toastMessage, t
   const response = await fetch(schoolManagerApiUrl + '/schoolManager/crearGrupos/bloques',
   {
     method: 'GET',
-    headers: headersConToken(tokenPropio, {
+    headers: {
+      'Authorization': `Bearer ${tokenPropio}`,
       'curso': curso,
       'etapa': etapa,
-    }),
+    },
   })
 
   if (!response.ok) {
