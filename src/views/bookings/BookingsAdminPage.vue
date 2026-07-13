@@ -110,41 +110,8 @@
     </div>
   </div>
 
-  <!-- Actualizar Constantes -->
+  <!-- Borrado Reservas -->
   <div class="form-wrapper">
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Actualizar Constantes</h1>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Clave de la constante:</ion-label>
-            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
-                {{ constante.clave }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item v-if="selectedConstante">
-            <ion-label position="stacked">Valor:</ion-label>
-            <ion-input v-model="selectedConstante.valor"></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
-            Actualizar
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
-    <!-- Borrado Reservas -->
     <div class="form-container">
       <div class="title-container">
         <h1 class="title">Borrado de Reservas por recurso</h1>
@@ -213,7 +180,6 @@
 </template>
 
 <script setup>
-import { bookingsApiUrl } from "@/environment/apiUrls.ts";
 import { ref, onMounted } from "vue";
 import { IonRow, IonCol, IonItem, IonLabel } from "@ionic/vue";
 import {
@@ -224,7 +190,6 @@ import {
   IonToast,
 } from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
-import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
 import {
   postRecurso,
   getRecursosCompartible,
@@ -237,10 +202,7 @@ import {
   getPaginatedLogs,
 } from "@/services/bookings";
 
-// Selección de constante
-const selectedConstante = ref(null);
 const selectedRecurso = ref(null);
-const constantes = ref([]);
 const recursosNoCompartido = ref([]);
 const recursosCompartido = ref([]);
 const esCompartibleLista = ref(false);
@@ -260,15 +222,6 @@ const cantidad = ref("");
 
 // Nueva variable reactiva para el mensaje de actualización
 let mensajeColor = "";
-
-// Función que se llama cuando el usuario selecciona una constante
-const onConstanteChange = () => {
-  if (!selectedConstante.value) {
-    selectedConstante.value = { valor: "" };
-  } else if (selectedConstante.value.valor === undefined) {
-    selectedConstante.value.valor = "";
-  }
-};
 
 // Función que se llama cuando el usuario selecciona una reserva para borrar
 const onReservaChange = () => {
@@ -337,71 +290,6 @@ const getCantMax = async () => {
     );
   }
 }
-
-// Función para actualizar la constante seleccionada
-const actualizarConstanteSeleccionada = async () => {
-  try {
-    const constantesActualizadas = constantes.value.map((c) =>
-      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
-    );
-
-    await actualizarConstantes(
-      bookingsApiUrl + "/bookings/constants",
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      constantesActualizadas
-    );
-    mensajeColor = "success";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      "Constantes actualizadas con éxito"
-    );
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-};
-
-// Función para obtener las constantes al cargar el componente
-const cargarConstantes = async () => {
-  try {
-    constantes.value = await obtenerConstantes(
-      bookingsApiUrl + "/bookings/constants",
-      toastMessage,
-      toastColor,
-      isToastOpen
-    );
-    getCantMax();
-
-    // Seleccionar la constante "Reserva Deshabilitada" por defecto
-    const reservaDeshabilitada = constantes.value.find(
-      (c) => c.clave === "Reserva Deshabilitada"
-    );
-
-    if (reservaDeshabilitada) {
-      selectedConstante.value = reservaDeshabilitada;
-    }
-  } catch (error) {
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      error.message
-    );
-  }
-};
 
 const crearRecurso = async () => {
   try {
@@ -622,7 +510,7 @@ function irPaginaSiguiente()
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
   await paginarLogs(0);
-  await cargarConstantes();
+  await getCantMax();
   await cargarRecursos();
   await getRecurso();
   await switchRecurso();

@@ -57,3 +57,20 @@ export declare function obtenerDatosUsuarioSesion(toastMessage: Ref<string>,
                                                   toastColor: Ref<string>,
                                                   isToastOpen: Ref<boolean>
                                                 ): Promise<DatosUsuarioSesion>;
+
+export interface DtoConstante {
+  proyecto: string;
+  clave: string;
+  valor: string;
+}
+
+export declare function obtenerConstantes(toastMessage: Ref<string>,
+                                          toastColor: Ref<string>,
+                                          isToastOpen: Ref<boolean>,
+                                          proyecto?: string,
+                                          clave?: string): Promise<DtoConstante[]>;
+
+export declare function actualizarConstantes(toastMessage: Ref<string>,
+                                             toastColor: Ref<string>,
+                                             isToastOpen: Ref<boolean>,
+                                             payload: DtoConstante[]): Promise<Response>;

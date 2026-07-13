@@ -214,10 +214,8 @@ import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { getWeek, format, startOfWeek, addWeeks, getMonth, addDays } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
-import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
+import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario, obtenerConstantes } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
-import { obtenerConstantes } from '@/services/constantes';
-import { bookingsApiUrl } from '@/environment/apiUrls';
 
 // Variables reactivas
 const diasSemanas = ref([])
@@ -529,10 +527,10 @@ const verificarRecursos = () => {
 
 const verificarConstantes = async () => {
   try {
-    constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
+    constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen, 'bookings');
 
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas temporales');
-    valorMaxDays.value = constantes.value.find(c => c.clave === 'Máximo vista calendario en días').valor - 1;
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'bookings.reservasTemporales');
+    valorMaxDays.value = constantes.value.find(c => c.clave === 'bookings.maxDiasCalendario').valor - 1;
     valorConstante.value = reservaDeshabilitada.valor
   }
   catch (error) {

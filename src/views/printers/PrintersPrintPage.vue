@@ -210,13 +210,11 @@ import { useRouter } from 'vue-router';
 import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, filtrarDatosPaginado, prevalidacionesImpresion, imprimir } from '@/services/printers';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue';
-import { obtenerConstantes } from '@/services/constantes';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import FileUpload from '@/components/printers/FileUpload.vue';
 import PdfViewer from '@/components/printers/PdfViewer.vue';
-import { obtenerNombreYApellidosUsuario } from '@/services/firebaseService';
-import { printersApiUrl } from "@/environment/apiUrls.ts";
+import { obtenerNombreYApellidosUsuario, obtenerConstantes } from '@/services/firebaseService';
 import { closeOutline } from 'ionicons/icons';
 
 // Configuramos la URL del Worker
@@ -879,9 +877,9 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
 {
   try
   {
-    const constantes = await obtenerConstantes(printersApiUrl + '/printers/web/constantes', toastMessage, toastColor, isToastOpen) ;
+    const constantes = await obtenerConstantes(toastMessage, toastColor, isToastOpen, 'printers') ;
 
-    const maxHojasImpresionConstante = constantes.find(constante => constante.clave === 'Maximo hojas impresion') ;
+    const maxHojasImpresionConstante = constantes.find(constante => constante.clave === 'printers.maximoHojasImpresion') ;
     
     if (!maxHojasImpresionConstante)
     {

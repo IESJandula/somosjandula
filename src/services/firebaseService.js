@@ -256,3 +256,84 @@ export async function obtenerDatosUsuarioSesion(toastMessage, toastColor, isToas
     roles,
   };
 }
+
+/**
+ * Obtiene las constantes de configuración desde Reaktor_FirebaseServer (ruta base /firebase/constants).
+ *
+ * Las cabeceras 'proyecto' y 'clave' son OPCIONALES y permiten filtrar el resultado:
+ *  - proyecto + clave -> devuelve esa constante concreta (lista de 0 o 1 elemento).
+ *  - solo proyecto     -> devuelve todas las constantes de ese proyecto.
+ *  - sin ninguna       -> devuelve todas las constantes de todos los proyectos.
+ *
+ * @param {*} toastMessage mensaje emergente
+ * @param {*} toastColor color del mensaje emergente
+ * @param {*} isToastOpen si el mensaje emergente se mostrará
+ * @param {string} [proyecto] nombre del proyecto/microservicio (p.ej. 'printers', 'bookings', 'schoolManager', 'notifications')
+ * @param {string} [clave] ruta completa con puntos (p.ej. 'printers.impresionDeshabilitada')
+ * @returns {Promise<Array<{proyecto: string, clave: string, valor: string}>>} lista de constantes
+ */
+export async function obtenerConstantes(toastMessage, toastColor, isToastOpen, proyecto, clave) {
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  // Construimos las cabeceras. 'proyecto' y 'clave' son opcionales.
+  const headers = {
+    'Authorization': `Bearer ${tokenPropio}`
+  };
+
+  if (proyecto) {
+    headers['proyecto'] = proyecto;
+  }
+
+  if (clave) {
+    headers['clave'] = clave;
+  }
+
+  const response = await fetch(firebaseApiUrl + '/firebase/constants',
+    {
+      method: 'GET',
+      headers: headers
+    });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al obtener las constantes');
+    throw new Error(errorMessage || 'Error al obtener las constantes');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Actualiza (upsert) el valor de una o varias constantes en Reaktor_FirebaseServer.
+ *
+ * El cuerpo de la petición es un ARRAY de objetos { proyecto, clave, valor }. El backend hace upsert por la
+ * clave primaria compuesta (proyecto + clave): si la constante existe se sobreescribe su valor y, si no, se crea.
+ *
+ * @param {*} toastMessage mensaje emergente
+ * @param {*} toastColor color del mensaje emergente
+ * @param {*} isToastOpen si el mensaje emergente se mostrará
+ * @param {Array<{proyecto: string, clave: string, valor: string}>} payload array de constantes a actualizar
+ * @returns {Promise<Response>} la respuesta del servidor
+ */
+export async function actualizarConstantes(toastMessage, toastColor, isToastOpen, payload) {
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(firebaseApiUrl + '/firebase/constants',
+    {
+      method: 'POST',
+      headers:
+      {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokenPropio}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al actualizar las constantes');
+    throw new Error(errorMessage || 'Error al actualizar las constantes');
+  }
+
+  return response;
+}

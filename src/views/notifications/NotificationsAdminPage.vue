@@ -147,55 +147,17 @@
         </div>
       </div>
     </div>
-    <div class="form-container">
-      <div class="title-container">
-        <h1 class="title">Actualizar Constantes</h1>
-      </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Clave de la constante:</ion-label>
-            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
-                {{ constante.clave }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item v-if="selectedConstante">
-            <ion-label position="stacked">Valor:</ion-label>
-            <ion-input v-model="selectedConstante.valor"></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
-            Actualizar
-          </ion-button>
-        </ion-col>
-      </ion-row>
-    </div>
   </div>
   <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
     @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup>
-import { notificationsApiUrl } from "@/environment/apiUrls.ts";
 import { ref, onMounted } from "vue";
-import { IonRow, IonCol, IonItem, IonLabel } from "@ionic/vue";
-import { IonSelect, IonSelectOption, IonInput, IonButton, IonToast } from "@ionic/vue";
+import { IonButton, IonToast } from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
-import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
 import { autorizarGmailOAuth, listarAplicaciones, actualizarNotificacionesMaximasCalendar, actualizarNotificacionesMaximasEmail, actualizarNotificacionesMaximasWeb, borrarAplicacion, crearAplicacion } from '@/services/notifications';
 
-// Selección de constante
-const selectedConstante = ref(null);
-const constantes = ref([]);
 const aplicaciones = ref([]);
 
 // Campos para la nueva aplicación a insertar
@@ -208,62 +170,6 @@ const nuevaAplicacionNotificacionesMaximasWeb = ref(0);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
-
-// Nueva variable reactiva para el mensaje de actualización
-let mensajeColor = "";
-
-/**
- * Función que se llama cuando el usuario selecciona una constante
- */
-const onConstanteChange = () =>
-{
-  if (!selectedConstante.value)
-  {
-    selectedConstante.value = { valor: "" };
-  }
-  else if (selectedConstante.value.valor === undefined)
-  {
-    selectedConstante.value.valor = "";
-  }
-};
-
-/**
- * Función para actualizar la constante seleccionada
- */
-const actualizarConstanteSeleccionada = async () =>
-{
-  try
-  {
-    // Buscamos la constante seleccionada y la actualizamos
-    const constantesActualizadas = constantes.value.map((c) => c.clave === selectedConstante.value.clave ? selectedConstante.value : c);
-
-    // Llamamos al servicio para actualizar las constantes
-    await actualizarConstantes(notificationsApiUrl + "/notifications/constants", toastMessage, toastColor, isToastOpen, constantesActualizadas);
-
-    // Listamos de nuevo las aplicaciones
-    await listarAplicacionesVista();
-  }
-  catch (error)
-  {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
-  }
-};
-
-/**
- * Función para obtener las constantes al cargar el componente
- */
-const cargarConstantes = async () =>
-{
-  try
-  {
-    // Llamamos al servicio para obtener las constantes
-    constantes.value = await obtenerConstantes(notificationsApiUrl + "/notifications/constants", toastMessage, toastColor, isToastOpen);
-  }
-  catch (error)
-  {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
-  }
-};
 
 /**
  * Función para listar las aplicaciones
@@ -467,7 +373,6 @@ const crearAplicacionHandler = async () =>
 
 // Ejecutar las funciones iniciales al montar el componente
 onMounted(async () => {
-  await cargarConstantes();
   await listarAplicacionesVista();
 });
 </script>

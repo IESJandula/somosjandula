@@ -1,145 +1,31 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <!-- Actualizar Constantes -->
   <div class="form-wrapper">
     <div class="form-container">
       <div class="title-container">
-        <h1 class="title">Actualizar Constantes</h1>
+        <h1 class="title">Administración</h1>
       </div>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item>
-            <ion-label position="stacked">Clave de la constante:</ion-label>
-            <ion-select v-model="selectedConstante" @ionChange="onConstanteChange">
-              <ion-select-option v-for="constante in constantes" :key="constante.clave" :value="constante">
-                {{ constante.clave }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-item v-if="selectedConstante">
-            <ion-label position="stacked">Valor:</ion-label>
-            <ion-input v-model="selectedConstante.valor"></ion-input>
-          </ion-item>
-        </ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col size="12">
-          <ion-button expand="block" color="primary" @click="actualizarConstanteSeleccionada">
-            Actualizar
-          </ion-button>
-        </ion-col>
-      </ion-row>
+      <p class="info-text">
+        La gestión de constantes se ha unificado en la página de administración de Firebase.
+        Desde allí puedes obtener y actualizar las constantes de todos los proyectos (incluido
+        <strong>schoolManager</strong>) en una única tarjeta.
+      </p>
+      <ion-button expand="block" color="primary" @click="irAGestionConstantes">
+        Ir a gestión de constantes
+      </ion-button>
     </div>
-    </div>
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top">
-  </ion-toast>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
-import { IonToast, IonInput, IonRow, IonCol, IonItem, IonLabel, IonSelect, IonSelectOption, IonButton } from "@ionic/vue";
-import { crearToast } from '@/utils/toast.js';
-import { obtenerConstantes, actualizarConstantes } from "@/services/constantes";
-import { schoolManagerApiUrl } from "@/environment/apiUrls.ts";
+import { IonButton } from "@ionic/vue";
+import { useRouter } from "vue-router";
 
-const selectedConstante = ref(null);
-const constantes = ref([]);
+const router = useRouter();
 
-// Variable para el toast
-const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
-// Nueva variable reactiva para el mensaje de actualización
-let mensajeActualizacion = "";
-let mensajeColor = "";
-
-// Función que se llama cuando el usuario selecciona una constante
-const onConstanteChange = () => {
-  if (!selectedConstante.value) {
-    selectedConstante.value = { valor: "" };
-  } else if (selectedConstante.value.valor === undefined) {
-    selectedConstante.value.valor = "";
-  }
+const irAGestionConstantes = () => {
+  router.push({ name: "AdminFirebase" });
 };
-
-// Función para actualizar la constante seleccionada
-const actualizarConstanteSeleccionada = async () => {
-  try {
-    const constantesActualizadas = constantes.value.map((c) =>
-      c.clave === selectedConstante.value.clave ? selectedConstante.value : c
-    );
-
-    await actualizarConstantes(
-      schoolManagerApiUrl + "/schoolManager/constants",
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      constantesActualizadas
-    );
-    mensajeActualizacion = "Constantes actualizadas con éxito";
-    mensajeColor = "success";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      mensajeActualizacion
-    );
-  } catch (error) {
-    mensajeActualizacion = "Error al actualizar la constante";
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      mensajeActualizacion
-    );
-    throw new Error(error.message);
-
-  }
-};
-
-// Función para obtener las constantes al cargar el componente
-const cargarConstantes = async () => {
-  try {
-    constantes.value = await obtenerConstantes(
-      schoolManagerApiUrl + "/schoolManager/constants",
-      toastMessage,
-      toastColor,
-      isToastOpen
-    );
-
-    // Seleccionar la constante "Reserva Deshabilitada" por defecto
-    const solicitudDeshabilitada = constantes.value.find(
-      (c) => c.clave === "Solicitudes Deshabilitada"
-    );
-
-    if (solicitudDeshabilitada) {
-      selectedConstante.value = solicitudDeshabilitada;
-    }
-  } catch (error) {
-    mensajeActualizacion = "Error al obtener constantes";
-    mensajeColor = "danger";
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      mensajeColor,
-      mensajeActualizacion
-    );
-    throw new Error(error.message);
-  }
-};
-
-onMounted(async () => {
-  await cargarConstantes();
-});
-
 </script>
 
 <style scoped>
@@ -147,9 +33,7 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  /* Espaciado entre las tarjetas */
   justify-content: center;
-  /* Centrar las tarjetas */
 }
 
 .form-container {
@@ -178,6 +62,12 @@ onMounted(async () => {
   font-size: 24px;
 }
 
+.info-text {
+  text-align: center;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   .form-container {
@@ -192,13 +82,8 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-    .form-container {
+  .form-container {
     border: 1px solid #444;
-  }
-
-  table {
-    font-size: 14px;
-    width: 100%;
   }
 }
 </style>

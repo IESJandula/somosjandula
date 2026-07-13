@@ -211,7 +211,7 @@
 import {computed, onMounted, ref, watch} from 'vue';
 import {IonInput, IonToast} from "@ionic/vue";
 import {crearToast} from '@/utils/toast.js';
-import {obtenerEmailUsuario, obtenerRolesUsuario} from '@/services/firebaseService';
+import {obtenerEmailUsuario, obtenerRolesUsuario, obtenerConstantes} from '@/services/firebaseService';
 import {
   actualizarConciliacion,
   actualizarOtrasObservaciones,
@@ -229,8 +229,6 @@ import {
   obtenerReducciones,
   obtenerSolicitudes
 } from "@/services/schoolManager.js";
-import {obtenerConstantes} from '@/services/constantes'
-import {schoolManagerApiUrl} from "@/environment/apiUrls.ts";
 
 const rolesUsuario = ref([]);
 const profesorSeleccionado = ref('');
@@ -266,9 +264,9 @@ const isInitializing = ref(true);
 //FUNCION PARA DESHABILITAR EN FUNCION DE LA CONSTANTE DE LA VENTANA DE ADMINISTRACION
 const verificarConstantes = async () => {
   try {
-    constantes.value = await obtenerConstantes(schoolManagerApiUrl + '/schoolManager/constants');
+    constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen, 'schoolManager');
 
-    const solicitudesDeshabilitada = constantes.value.find(c => c.clave === 'Selección horarios por claustro');
+    const solicitudesDeshabilitada = constantes.value.find(c => c.clave === 'schoolManager.seleccionHorariosPorClaustro');
     valorConstante.value = solicitudesDeshabilitada.valor;
 
     // Deshabilitar solo si no es dirección/admin y hay valor en la constante

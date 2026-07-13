@@ -140,10 +140,8 @@ import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
-import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
+import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario, obtenerConstantes } from '@/services/firebaseService';
 import { crearToast } from '@/utils/toast.js';
-import { obtenerConstantes } from '@/services/constantes';
-import { bookingsApiUrl } from '@/environment/apiUrls';
 
 // Variables reactivas
 const diasSemanas = ref([])
@@ -190,9 +188,9 @@ const verificarRecursos = () => {
 
 const verificarConstantes = async () => {
   try {
-    constantes.value = await obtenerConstantes(bookingsApiUrl + '/bookings/constants', toastMessage, toastColor, isToastOpen);
+    constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen, 'bookings');
 
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'Reservas fijas');
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'bookings.reservasFijas');
     
     // Verificar si existe antes de acceder a .valor
     if (reservaDeshabilitada) {
