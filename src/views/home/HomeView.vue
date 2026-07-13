@@ -49,7 +49,7 @@
 <script setup>
 import { IonIcon } from "@ionic/vue";
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { obtenerRolesUsuario } from "@/services/firebaseService";
+import { obtenerRolesUsuario, obtenerConstantes } from "@/services/firebaseService";
 import { obtenerRolSeleccionado, EVENTO_ROL_CAMBIADO, fuerzaRol } from "@/utils/roles";
 import {
   starOutline,
@@ -109,6 +109,43 @@ const mostrarDepartamentoInformatica = computed(
 const toastMessage = ref("");
 const toastColor = ref("");
 const isToastOpen = ref(false);
+
+// Destino DINÁMICO del ítem "Reserva" de Favoritos. Por defecto apunta a reservas
+// temporales; si la constante 'bookings.reservasFijasHabilitadas' es "true" pasa a
+// reservas fijas. Se resuelve en onMounted leyendo la constante desde el Admin Server.
+const reservaTo = ref({ name: "BookingsTemporary" });
+
+// Lee la constante 'bookings.reservasFijasHabilitadas' del proyecto 'bookings' y
+// decide el destino del ítem "Reserva". Cualquier fallo (incluido 403 para usuarios
+// sin rol ADMINISTRADOR/DIRECCION) cae de forma SILENCIOSA al destino por defecto
+// (reservas temporales). Se usan refs de toast desechables para no mostrar avisos ruidosos.
+const resolverDestinoReserva = async () => {
+  try {
+    const silentToastMessage = ref("");
+    const silentToastColor = ref("");
+    const silentToastOpen = ref(false);
+
+    const constantes = await obtenerConstantes(
+      silentToastMessage,
+      silentToastColor,
+      silentToastOpen,
+      "bookings",
+      "bookings.reservasFijasHabilitadas"
+    );
+
+    const constante = Array.isArray(constantes)
+      ? constantes.find((c) => c.clave === "bookings.reservasFijasHabilitadas")
+      : null;
+
+    reservaTo.value =
+      constante?.valor === "true"
+        ? { name: "BookingsFixed" }
+        : { name: "BookingsTemporary" };
+  } catch {
+    // Fallback silencioso: sin permisos o error de red => reservas temporales.
+    reservaTo.value = { name: "BookingsTemporary" };
+  }
+};
 
 // Listas de tips independientes por sección. No comparten textos.
 // Favoritos: tips sobre los servicios de esa sección (imprimir, reservar, incidencias,
@@ -173,6 +210,9 @@ onMounted(async () => {
   } catch (error) {
     console.error("Error al obtener los roles del usuario:", error);
   }
+
+  // Resolvemos el destino dinámico del ítem "Reserva" (no bloquea el resto del Home).
+  await resolverDestinoReserva();
 });
 
 // Limpiamos el intervalo y el listener al desmontar para evitar fugas de memoria.
@@ -219,7 +259,7 @@ const seccionFavoritos = computed(() => ({
   items: [
     { label: "sabiasQue-favoritos", tipo: "tip", fuente: "favoritos" },
     { label: "Imprime", icono: printOutline, to: { name: "PrintersPrint" } },
-    { label: "Reserva", icono: calendarOutline, to: { name: "BookingsTemporary" } },
+    { label: "Reserva", icono: calendarOutline, to: reservaTo.value },
     { label: "Incidencias", icono: alertCircleOutline, to: { name: "Issues" } },
     { label: "Vista de pájaro", icono: eyeOutline, to: { name: "AutomationsMapView" } },
     { label: "Guía del profesorado", icono: bookOutline, to: "/documents/teacherGuide" },
