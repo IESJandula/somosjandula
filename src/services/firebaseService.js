@@ -304,18 +304,18 @@ export async function obtenerConstantes(toastMessage, toastColor, isToastOpen, p
 }
 
 /**
- * Actualiza (upsert) el valor de una o varias constantes en Reaktor_FirebaseServer.
+ * Actualiza (upsert) el valor de UNA constante en Reaktor_FirebaseServer.
  *
- * El cuerpo de la petición es un ARRAY de objetos { proyecto, clave, valor }. El backend hace upsert por la
+ * El cuerpo de la petición es un ÚNICO objeto { proyecto, clave, valor }. El backend hace upsert por la
  * clave primaria compuesta (proyecto + clave): si la constante existe se sobreescribe su valor y, si no, se crea.
  *
  * @param {*} toastMessage mensaje emergente
  * @param {*} toastColor color del mensaje emergente
  * @param {*} isToastOpen si el mensaje emergente se mostrará
- * @param {Array<{proyecto: string, clave: string, valor: string}>} payload array de constantes a actualizar
+ * @param {{proyecto: string, clave: string, valor: string}} constante constante a actualizar
  * @returns {Promise<Response>} la respuesta del servidor
  */
-export async function actualizarConstantes(toastMessage, toastColor, isToastOpen, payload) {
+export async function actualizarConstante(toastMessage, toastColor, isToastOpen, constante) {
   let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
   const response = await fetch(firebaseApiUrl + '/firebase/constants',
@@ -326,13 +326,13 @@ export async function actualizarConstantes(toastMessage, toastColor, isToastOpen
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${tokenPropio}`
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(constante)
     });
 
   if (!response.ok) {
     const errorMessage = await response.text();
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al actualizar las constantes');
-    throw new Error(errorMessage || 'Error al actualizar las constantes');
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al actualizar la constante');
+    throw new Error(errorMessage || 'Error al actualizar la constante');
   }
 
   return response;

@@ -70,7 +70,7 @@ export declare function obtenerConstantes(toastMessage: Ref<string>,
                                           proyecto?: string,
                                           clave?: string): Promise<DtoConstante[]>;
 
-export declare function actualizarConstantes(toastMessage: Ref<string>,
-                                             toastColor: Ref<string>,
-                                             isToastOpen: Ref<boolean>,
-                                             payload: DtoConstante[]): Promise<Response>;
+export declare function actualizarConstante(toastMessage: Ref<string>,
+                                            toastColor: Ref<string>,
+                                            isToastOpen: Ref<boolean>,
+                                            constante: DtoConstante): Promise<Response>;
