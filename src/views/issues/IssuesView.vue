@@ -230,8 +230,9 @@ import { obtenerDatosUsuarioSesion } from "@/services/firebaseService";
 const categorias = ref<Categoria[]>([]);
 
 // Ubicaciones e incidencias.
-// Cada ubicación separa el `value` (nombre del aula, lo que se guarda en la incidencia)
-// de la `label` visible (nombre + curso/etapa/grupo cuando el espacio es "fijo").
+// El `value` de cada ubicación coincide con la `label` visible (nombre + curso/etapa/grupo
+// cuando el espacio es "fijo"; solo nombre para sin docencia/desdoble), de modo que la
+// incidencia guarda exactamente el texto mostrado en el desplegable.
 const ubicaciones = ref<Array<{ value: string; label: string }>>([]);
 
 // Paginación
@@ -386,8 +387,9 @@ function irPagina(pagina: number) {
  *
  * Igual que el "Localizador (zona)" de automations/map, la etiqueta visible añade el
  * curso/etapa/grupo relacionado cuando existe (formato `"<nombre> - <curso> <etapa> <grupo>"`);
- * los espacios sin grupo (sin docencia/desdoble) muestran solo el nombre. El valor guardado
- * en la incidencia sigue siendo el nombre del aula, para no romper el contrato del backend.
+ * los espacios sin grupo (sin docencia/desdoble) muestran solo el nombre. El valor que se
+ * guarda en la incidencia es exactamente esa etiqueta completa (`value === label`); el backend
+ * de incidencias almacena la ubicación como String libre (VARCHAR(255)).
  *
  * El curso académico lo resuelven las propias funciones del servicio (cabecera
  * `cursoAcademico` leída de localStorage donde procede).
@@ -405,7 +407,8 @@ async function cargarUbicaciones() {
     // que trae curso/etapa/grupo para enriquecer la etiqueta.
     const opcionesPorNombre = new Map<string, { value: string; label: string }>();
 
-    // 1) Espacios fijos primero: etiqueta con curso/etapa/grupo cuando existe
+    // 1) Espacios fijos primero: etiqueta con curso/etapa/grupo cuando existe.
+    // El `value` es igual a la `label` para que la incidencia guarde exactamente lo que se ve.
     for (const espacio of (fijos as any[])) {
       const nombre = espacio?.nombre;
       if (typeof nombre !== "string" || nombre.trim() === "" || opcionesPorNombre.has(nombre)) continue;
@@ -415,7 +418,7 @@ async function cargarUbicaciones() {
         const grupoInfo = `${espacio.curso} ${espacio.etapa} ${espacio.grupo}`.replace(/\s+/g, " ").trim();
         label = `${nombre} - ${grupoInfo}`;
       }
-      opcionesPorNombre.set(nombre, { value: nombre, label });
+      opcionesPorNombre.set(nombre, { value: label, label });
     }
 
     // 2) Sin docencia y desdoble: solo nombre, sin sobrescribir la variante con grupo
