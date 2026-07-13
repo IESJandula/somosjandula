@@ -203,7 +203,6 @@ import {
   crearIncidencia,
   listarIncidencias,
   borrarIncidencia,
-  listarUbicaciones,
   listarCategorias,
   listarUsuariosCategoria,
   actualizarCategoriaIncidencia,
@@ -212,6 +211,15 @@ import {
   actualizarResponsableIncidencia,
   listarEstados,
 } from "@/services/issues.js";
+
+// Las ubicaciones del desplegable provienen ahora del catálogo de espacios/aulas
+// del centro gestionado por Reaktor_SchoolManagementServer: unión de los tres tipos
+// de espacio (sin docencia, fijo y desdoble).
+import {
+  obtenerEspaciosSinDocencia,
+  obtenerEspaciosFijo,
+  obtenerEspaciosDesdoble,
+} from "@/services/schoolManager.js";
 
 // Servicio que te da email y roles del usuario logueado.
 import { obtenerDatosUsuarioSesion } from "@/services/firebaseService";
@@ -369,15 +377,29 @@ function irPagina(pagina: number) {
 }
 
 /**
- * Cargar las ubicaciones.
+ * Cargar las ubicaciones (espacios/aulas del centro desde SchoolManagementServer).
+ * Se combinan los tres tipos de espacio (sin docencia, fijo y desdoble) y se
+ * deduplican por nombre de aula. Cada función devuelve un array de objetos con la
+ * forma { cursoAcademico, nombre, ... } (los fijos añaden además curso/etapa/grupo).
+ * El curso académico lo resuelven las propias funciones del servicio (cabecera
+ * `cursoAcademico` leída de localStorage donde procede).
  */
 async function cargarUbicaciones() {
   try {
-    // Obtenemos las ubicaciones
-    const lista = await listarUbicaciones(toastMessage, toastColor, isToastOpen);
+    // Obtenemos los tres tipos de espacio del centro en paralelo
+    const [sinDocencia, fijos, desdobles] = await Promise.all([
+      obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen),
+      obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen),
+      obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen),
+    ]);
 
-    // Asignamos las ubicaciones a las variables
-    ubicaciones.value = lista.map((u: any) => u.nombre);
+    // Combinamos los tres listados y extraemos el nombre del aula de cada espacio
+    const nombres = [...sinDocencia, ...fijos, ...desdobles]
+      .map((espacio: any) => espacio?.nombre)
+      .filter((nombre: any): nombre is string => typeof nombre === "string" && nombre.trim() !== "");
+
+    // Unión deduplicada por nombre de aula, ordenada alfabéticamente
+    ubicaciones.value = Array.from(new Set(nombres)).sort((a, b) => a.localeCompare(b, "es"));
   }
   catch (e: any) {
     // Mostramos el mensaje de error en la consola

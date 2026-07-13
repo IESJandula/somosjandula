@@ -5,14 +5,6 @@ import type { Ref } from "vue";
 /*************************************************/
 
 /**
- * Tipo que representa una ubicación para incidencias
- */
-export interface Ubicacion {
-  id?: number;
-  nombre: string;
-}
-
-/**
  * Tipo que representa una categoría de incidencia
  */
 export interface Categoria {
@@ -55,22 +47,6 @@ export interface PageResponse<T> {
   last: boolean;
   empty: boolean;
 }
-
-/*************************************************/
-/**************** Ubicaciones ********************/
-/*************************************************/
-
-/** Listar ubicaciones */
-export declare function listarUbicaciones(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Ubicacion[]>;
-
-/** Crear ubicación */
-export declare function crearUbicacion(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
-
-/** Borrar ubicación */
-export declare function borrarUbicacion(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
 
 /*************************************************/
 /**************** Categorías *********************/

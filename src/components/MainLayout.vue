@@ -33,15 +33,46 @@
 
           <div class="end-section" slot="end">
             <div class="top-bar">
-              <div class="button-container" @mouseenter="handleLogoutEnter($event)" @mouseleave="showTooltip = false">
-                <ion-button class="logout-button" fill="solid" @click="desconectar"
-                  :aria-label="userName ? `Desconectar (${userName})` : 'Desconectar'">
-                  <ion-icon :icon="powerOutline" aria-hidden="true"></ion-icon>
+              <div class="button-container" @mouseenter="handleProfileEnter($event)" @mouseleave="showTooltip = false">
+                <ion-button class="profile-button" fill="solid" @click="toggleDropdown($event)"
+                  aria-haspopup="true" :aria-expanded="showDropdown ? 'true' : 'false'"
+                  :aria-label="userName ? `Perfil (${userName})` : 'Perfil'">
+                  <ion-icon :icon="personCircleOutline" aria-hidden="true"></ion-icon>
                 </ion-button>
               </div>
               <teleport to="body">
-                <div v-if="showTooltip && userName" class="logout-tooltip" :style="logoutTooltipPosition">
+                <div v-if="showTooltip && userName && !showDropdown" class="logout-tooltip"
+                  :style="logoutTooltipPosition">
                   {{ userName }}
+                </div>
+              </teleport>
+
+              <teleport to="body">
+                <div v-if="showDropdown" class="perfil-dropdown-backdrop" @click="closeDropdown"></div>
+                <div v-if="showDropdown" class="perfil-dropdown" :style="dropdownPosition" role="menu">
+                  <!-- Sección "Perfil": selector de rol. Se muestra siempre que haya al menos
+                       un rol. Si solo hay uno, aparece marcado y bloqueado (no desmarcable). -->
+                  <template v-if="puedeSeleccionarRol">
+                    <div class="perfil-dropdown-header">Perfil</div>
+                    <button v-for="rol in rolesOrdenados" :key="rol"
+                      class="perfil-dropdown-item perfil-rol-item" type="button" role="menuitemradio"
+                      :class="{ 'is-locked': rolUnico }"
+                      :aria-checked="rol === rolSeleccionado ? 'true' : 'false'"
+                      :disabled="rolUnico"
+                      @click="seleccionarRolEnMenu(rol)">
+                      <ion-icon class="perfil-check" :class="{ 'is-visible': rol === rolSeleccionado }"
+                        :icon="checkmarkOutline" aria-hidden="true"></ion-icon>
+                      <span>{{ etiquetaRol(rol) }}</span>
+                    </button>
+                    <div class="perfil-dropdown-separator"></div>
+                  </template>
+
+                  <!-- Ítem "Desconectar": conserva la acción actual. -->
+                  <button class="perfil-dropdown-item perfil-desconectar" type="button" role="menuitem"
+                    @click="desconectarDesdeMenu">
+                    <ion-icon class="perfil-item-icon" :icon="logOutOutline" aria-hidden="true"></ion-icon>
+                    <span>Desconectar</span>
+                  </button>
                 </div>
               </teleport>
             </div>
@@ -70,13 +101,19 @@ import {
   IonIcon,
   IonApp,
 } from "@ionic/vue";
-import { defineComponent, ref, onMounted, onBeforeUnmount } from "vue";
-import { homeOutline, powerOutline } from "ionicons/icons";
+import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { homeOutline, personCircleOutline, checkmarkOutline, logOutOutline } from "ionicons/icons";
 import { useRouter } from "vue-router";
 import { menuController } from "@ionic/vue";
 import { getAuth, signOut } from "firebase/auth";
-import { obtenerNombreYApellidosUsuario } from "@/services/firebaseService";
+import { obtenerNombreYApellidosUsuario, obtenerRolesUsuario } from "@/services/firebaseService";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
+import {
+  etiquetaRol,
+  ordenarRolesPorPrioridad,
+  obtenerRolSeleccionado,
+  seleccionarRol,
+} from "@/utils/roles";
 import { obtenerNotificacionesVigentesPorTipo } from "@/services/notifications";
 import { crearToast } from "@/utils/toast.js";
 
@@ -99,6 +136,20 @@ export default defineComponent({
     const router = useRouter();
     const userName = ref("");
     const showTooltip = ref(false);
+
+    // Estado del selector de rol / dropdown de perfil.
+    const roles = ref([]);
+    const rolSeleccionado = ref("");
+    const showDropdown = ref(false);
+    const dropdownPosition = ref(null);
+
+    // El ítem "Perfil" (selector de rol) se muestra siempre que el usuario tenga al
+    // menos un rol. Con un único rol, se muestra ese rol marcado y bloqueado.
+    const puedeSeleccionarRol = computed(() => roles.value.length > 0);
+    // Indica si el usuario solo tiene un rol: en ese caso el check queda fijo/no desmarcable.
+    const rolUnico = computed(() => roles.value.length === 1);
+    // Roles ordenados de más fuerte a menos fuerte para mostrarlos en el desplegable.
+    const rolesOrdenados = computed(() => ordenarRolesPorPrioridad(roles.value));
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -131,7 +182,7 @@ export default defineComponent({
 
     const logoutTooltipPosition = ref(null);
 
-    const handleLogoutEnter = (event) => {
+    const handleProfileEnter = (event) => {
       showTooltip.value = true;
       const rect = event.currentTarget.getBoundingClientRect();
       // Anclado a la derecha del botón: crece hacia la izquierda y no se sale por el borde derecho
@@ -140,6 +191,45 @@ export default defineComponent({
         right: `${Math.max(window.innerWidth - rect.right, 8)}px`,
         left: 'auto'
       };
+    };
+
+    // Abre/cierra el desplegable del botón de perfil. Se ancla a la derecha del botón
+    // (posición fixed vía teleport) para que no se recorte dentro del toolbar.
+    const toggleDropdown = (event) => {
+      if (showDropdown.value) {
+        closeDropdown();
+        return;
+      }
+      showTooltip.value = false;
+      const rect = event.currentTarget.getBoundingClientRect();
+      dropdownPosition.value = {
+        top: `${rect.bottom + 8}px`,
+        right: `${Math.max(window.innerWidth - rect.right, 8)}px`,
+        left: 'auto'
+      };
+      showDropdown.value = true;
+    };
+
+    const closeDropdown = () => {
+      showDropdown.value = false;
+    };
+
+    // Selecciona un rol (comportamiento tipo radio): siempre queda exactamente un rol
+    // seleccionado. Pulsar el rol ya activo NO lo desmarca, solo cierra el desplegable.
+    // Al cambiar de rol, se actualiza estado local, se persiste y se emite 'rol-cambiado'.
+    const seleccionarRolEnMenu = (rol) => {
+      if (rol === rolSeleccionado.value) {
+        closeDropdown();
+        return;
+      }
+      rolSeleccionado.value = rol;
+      seleccionarRol(rol);
+      closeDropdown();
+    };
+
+    const desconectarDesdeMenu = () => {
+      closeDropdown();
+      desconectar();
     };
 
     const actualizarNotificacionesSoloTexto = async () => {
@@ -168,6 +258,17 @@ export default defineComponent({
       obtenerNombreYApellidosUsuario().then((userInfo) => {
         userName.value = `${userInfo.nombre ?? ""} ${userInfo.apellidos ?? ""}`.trim();
       });
+
+      // Cargamos los roles del usuario e inicializamos el rol seleccionado según la
+      // jerarquía de fuerza (o el valor persistido si sigue siendo válido).
+      obtenerRolesUsuario(toastMessage, toastColor, isToastOpen)
+        .then((rolesUsuario) => {
+          roles.value = rolesUsuario || [];
+          rolSeleccionado.value = obtenerRolSeleccionado(roles.value);
+        })
+        .catch((error) => {
+          console.error("Error al obtener los roles del usuario:", error);
+        });
     });
 
     onBeforeUnmount(() => {
@@ -220,14 +321,28 @@ export default defineComponent({
 
     return {
       homeOutline,
-      powerOutline,
+      personCircleOutline,
+      checkmarkOutline,
+      logOutOutline,
       logoutTooltipPosition,
-      handleLogoutEnter,
+      handleProfileEnter,
       userName,
       showTooltip,
       desconectar,
       navigateAndCloseMenu,
       irAInicio,
+      roles,
+      rolSeleccionado,
+      showDropdown,
+      dropdownPosition,
+      puedeSeleccionarRol,
+      rolUnico,
+      rolesOrdenados,
+      etiquetaRol,
+      toggleDropdown,
+      closeDropdown,
+      seleccionarRolEnMenu,
+      desconectarDesdeMenu,
       notificacionesSoloTexto,
       notificacionesSoloTextoIndex,
       showNotificationTooltip,
@@ -265,7 +380,7 @@ export default defineComponent({
   color: #ffffff !important;
 }
 
-.logout-button {
+.profile-button {
   --background: #3880ff;
   --color: #ffffff;
   color: #ffffff;
@@ -280,7 +395,7 @@ export default defineComponent({
   border-radius: 50%;
 }
 
-.logout-button ion-icon {
+.profile-button ion-icon {
   width: 26px !important;
   height: 26px !important;
   font-size: 26px !important;
@@ -438,14 +553,14 @@ ion-toolbar {
   }
 
   .home-button,
-  .logout-button {
+  .profile-button {
     --background: #4c8dff;
     --color: #ffffff;
     color: #ffffff;
   }
 
   .home-button ion-icon,
-  .logout-button ion-icon {
+  .profile-button ion-icon {
     color: #ffffff !important;
   }
 
@@ -496,6 +611,105 @@ ion-toolbar {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
+/* Capa transparente a pantalla completa: cierra el dropdown al pulsar fuera. */
+.perfil-dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: transparent;
+}
+
+/* Menú desplegable del botón de perfil (teleportado a body, position fixed). */
+.perfil-dropdown {
+  position: fixed;
+  min-width: 220px;
+  max-width: 90vw;
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 6px;
+  z-index: 99999;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.perfil-dropdown-header {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.perfil-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.perfil-dropdown-item:hover {
+  background-color: rgba(56, 128, 255, 0.12);
+}
+
+.perfil-check {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  font-size: 16px;
+  color: #3880ff;
+  visibility: hidden;
+}
+
+.perfil-check.is-visible {
+  visibility: visible;
+}
+
+/* Rol único: aparece marcado y bloqueado (no desmarcable). Se mantiene legible
+   con el check visible, pero sin efecto hover ni cursor de acción. El :disabled
+   nativo tendería a atenuar el texto; forzamos el color para conservar legibilidad. */
+.perfil-dropdown-item.is-locked {
+  cursor: default;
+  opacity: 1;
+  color: #1f2937;
+}
+
+.perfil-dropdown-item.is-locked:hover {
+  background-color: transparent;
+}
+
+.perfil-item-icon {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  font-size: 18px;
+  color: #64748b;
+}
+
+.perfil-desconectar {
+  color: #dc2626;
+}
+
+.perfil-desconectar .perfil-item-icon {
+  color: #dc2626;
+}
+
+.perfil-dropdown-separator {
+  height: 1px;
+  margin: 6px 4px;
+  background-color: #e2e8f0;
+}
+
 @media (prefers-color-scheme: dark) {
   .notification-tooltip {
     background: #1a1a1a;
@@ -509,6 +723,46 @@ ion-toolbar {
   .logout-tooltip {
     background: #1a1a1a;
     color: #fff;
+  }
+
+  .perfil-dropdown {
+    background: #1f2622;
+    color: #e5e7eb;
+    border-color: #3a3f3b;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  .perfil-dropdown-header {
+    color: #94a3b8;
+  }
+
+  .perfil-dropdown-item:hover {
+    background-color: rgba(76, 141, 255, 0.18);
+  }
+
+  .perfil-dropdown-item.is-locked {
+    color: #e5e7eb;
+  }
+
+  .perfil-dropdown-item.is-locked:hover {
+    background-color: transparent;
+  }
+
+  .perfil-check {
+    color: #4c8dff;
+  }
+
+  .perfil-item-icon {
+    color: #94a3b8;
+  }
+
+  .perfil-desconectar,
+  .perfil-desconectar .perfil-item-icon {
+    color: #f87171;
+  }
+
+  .perfil-dropdown-separator {
+    background-color: #3a3f3b;
   }
 }
 </style>

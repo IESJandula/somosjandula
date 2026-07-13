@@ -49,7 +49,8 @@
 <script setup>
 import { IonIcon } from "@ionic/vue";
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { validarRolesMenu } from "@/services/firebaseService";
+import { obtenerRolesUsuario } from "@/services/firebaseService";
+import { obtenerRolSeleccionado, EVENTO_ROL_CAMBIADO, fuerzaRol } from "@/utils/roles";
 import {
   starOutline,
   printOutline,
@@ -85,11 +86,25 @@ import {
   serverOutline,
 } from "ionicons/icons";
 
-const mostrarAdmin = ref(false);
-const mostrarDireccion = ref(false);
-// Reutilizamos el flag `mostrarDepartamentoInformatica` de `validarRolesMenu`
-// (rol DEPARTAMENTO_INFORMATICA), el mismo que usa MainLayout.vue para Clonezilla.
-const mostrarDepartamentoInformatica = ref(false);
+// Rol actualmente SELECCIONADO en el desplegable de perfil (MainLayout.vue).
+// El menú del Home depende de este rol, no de "tener el rol".
+const rolSeleccionado = ref("");
+
+// Visibilidad JERÁRQUICA/acumulativa según la FUERZA del rol SELECCIONADO: cada rol
+// ve su nivel y todo lo inferior. Se compara por rango numérico (fuerzaRol), no con
+// igualdades encadenadas. Fuerza: ADMINISTRADOR > DIRECCION > DEPARTAMENTO_INFORMATICA > PROFESOR.
+//  - Administración: visible si fuerza >= ADMINISTRADOR (solo admin).
+//  - Dirección: visible si fuerza >= DIRECCION (admin o dirección).
+//  - Ítem "Imágenes Clonezilla": visible si fuerza >= DEPARTAMENTO_INFORMATICA (admin, dirección o informática).
+const mostrarAdmin = computed(
+  () => fuerzaRol(rolSeleccionado.value) >= fuerzaRol("ADMINISTRADOR")
+);
+const mostrarDireccion = computed(
+  () => fuerzaRol(rolSeleccionado.value) >= fuerzaRol("DIRECCION")
+);
+const mostrarDepartamentoInformatica = computed(
+  () => fuerzaRol(rolSeleccionado.value) >= fuerzaRol("DEPARTAMENTO_INFORMATICA")
+);
 
 const toastMessage = ref("");
 const toastColor = ref("");
@@ -131,6 +146,14 @@ const tipKey = (item) =>
 
 let tipInterval = null;
 
+// Reacciona al cambio de rol emitido desde el desplegable de perfil (MainLayout.vue).
+const onRolCambiado = (event) => {
+  const nuevoRol = event?.detail?.rol;
+  if (nuevoRol) {
+    rolSeleccionado.value = nuevoRol;
+  }
+};
+
 onMounted(async () => {
   // Rotación automática de los tips cada 4 segundos; cada lista avanza sobre su longitud.
   tipInterval = setInterval(() => {
@@ -138,19 +161,24 @@ onMounted(async () => {
     tipIndexUtilidades.value = (tipIndexUtilidades.value + 1) % tipsUtilidades.length;
   }, 5000);
 
+  // Escuchamos el cambio de rol para recomponer el menú sin recargar.
+  window.addEventListener(EVENTO_ROL_CAMBIADO, onRolCambiado);
+
   try {
-    const rolesMenu = await validarRolesMenu(toastMessage, toastColor, isToastOpen);
-    mostrarAdmin.value = rolesMenu.mostrarAdmin;
-    mostrarDireccion.value = rolesMenu.mostrarDireccion;
-    mostrarDepartamentoInformatica.value = rolesMenu.mostrarDepartamentoInformatica;
+    // Inicializamos el rol seleccionado según lo guardado o la jerarquía de fuerza.
+    // Todas las secciones/ítems dependientes de rol (incluido Clonezilla) son computeds
+    // reactivas sobre `rolSeleccionado`, así que basta con mantenerlo actualizado.
+    const rolesUsuario = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+    rolSeleccionado.value = obtenerRolSeleccionado(rolesUsuario || []);
   } catch (error) {
     console.error("Error al obtener los roles del usuario:", error);
   }
 });
 
-// Limpiamos el intervalo al desmontar para evitar fugas de memoria.
+// Limpiamos el intervalo y el listener al desmontar para evitar fugas de memoria.
 onUnmounted(() => {
   if (tipInterval) clearInterval(tipInterval);
+  window.removeEventListener(EVENTO_ROL_CAMBIADO, onRolCambiado);
 });
 
 const seccionAdministracion = computed(() => ({

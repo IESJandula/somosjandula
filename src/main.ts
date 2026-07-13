@@ -58,6 +58,9 @@ import {
   calendarNumber,
   logoElectron,
   homeOutline,
+  personCircleOutline,
+  checkmarkOutline,
+  logOutOutline,
 } from "ionicons/icons";
 
 import { initializeApp } from "firebase/app";
@@ -98,6 +101,9 @@ addIcons({
   "bar-chart": barChart,
   "logo-electron": logoElectron,
   "home-outline": homeOutline,
+  "person-circle-outline": personCircleOutline,
+  "checkmark-outline": checkmarkOutline,
+  "log-out-outline": logOutOutline,
 });
 
 // Variables para el toast

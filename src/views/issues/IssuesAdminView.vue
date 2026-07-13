@@ -1,55 +1,5 @@
 <template>
-  <h1 class="t-1">Administración de Incidencias TIC</h1>
-
-  <div class="top-container">
-    <div class="top-section">
-      <div class="card-upload-csv">
-        <div class="container">
-          <div class="t-2">Crear nueva ubicación</div>
-
-          <div class="section">
-            <label class="t-3">Nombre de la ubicación</label>
-            <input
-              v-model="nuevaUbicacion"
-              class="input"
-              placeholder="Ej: Aula 1.15, Laboratorio Informática..."
-            />
-            <button
-              @click="crearNuevaUbicacionFunc"
-              class="btn"
-              :disabled="isLoading || !nuevaUbicacion.trim()"
-            >
-              Guardar ubicación
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card-upload-table card-upload-csv">
-        <div class="t-2">Listado de ubicaciones</div>
-        <div class="tabla-container">
-          <table>
-            <thead>
-              <tr>
-                <th class="th">Nombre</th>
-                <th class="th">Acción</th>
-              </tr>
-            </thead>
-            <tbody class="t-3">
-              <tr v-for="u in ubicaciones" :key="u.nombre">
-                <td class="th">{{ u.nombre }}</td>
-                <td class="th">
-                  <button class="eliminar" @click="borrarUbicacionFunc(u.nombre)">&times;</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <h1 class="t-1 mt-10">Administración de categorías</h1>
+  <h1 class="t-1">Administración de categorías</h1>
 
   <div class="top-container">
     <div class="top-section">
@@ -187,22 +137,15 @@ import { ref, onMounted } from "vue";
 import { IonToast } from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
 import {
-  listarUbicaciones,
-  crearUbicacion,
-  borrarUbicacion,
   listarCategorias,
   crearCategoria,
   borrarCategoria,
   listarUsuariosCategoria,
   crearUsuarioCategoria,
   borrarUsuarioCategoria,
-  Ubicacion,
   Categoria,
   UsuarioCategoria,
 } from "@/services/issues.js";
-
-const ubicaciones = ref<Ubicacion[]>([]);
-const nuevaUbicacion = ref("");
 
 const categorias = ref<Categoria[]>([]);
 const nuevaCategoriaNombre = ref<string>("");
@@ -215,51 +158,9 @@ const nuevoUsuarioCategoria = ref<UsuarioCategoria>({
   emailResponsable: "",
 });
 
-const isLoading = ref(false);
 const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
-
-async function cargarUbicaciones() {
-  try {
-    ubicaciones.value = await listarUbicaciones(toastMessage, toastColor, isToastOpen);
-  } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al cargar ubicaciones");
-  }
-}
-
-async function crearNuevaUbicacionFunc() {
-  const nombre = nuevaUbicacion.value.trim();
-  if (!nombre) return;
-  try {
-    isLoading.value = true;
-    const resp = await crearUbicacion(toastMessage, toastColor, isToastOpen, nombre);
-    if (!resp.ok) throw new Error("Error al crear ubicación");
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Ubicación creada correctamente");
-    nuevaUbicacion.value = "";
-    await cargarUbicaciones();
-  } catch (e: any) {
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      "danger",
-      e.message || "Error al crear ubicación"
-    );
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function borrarUbicacionFunc(nombre: string) {
-  try {
-    await borrarUbicacion(toastMessage, toastColor, isToastOpen, nombre);
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Ubicación eliminada");
-    await cargarUbicaciones();
-  } catch {
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al borrar ubicación");
-  }
-}
 
 async function cargarCategorias() {
   try {
@@ -468,7 +369,6 @@ async function borrarUsuarioCategoriaFunc(usuario: UsuarioCategoria) {
 }
 
 onMounted(async () => {
-  await cargarUbicaciones();
   await cargarCategorias();
   await cargarUsuariosCategoria();
 });
