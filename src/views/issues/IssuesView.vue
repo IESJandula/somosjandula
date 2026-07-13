@@ -12,8 +12,8 @@
             <label class="t-3">Ubicación</label>
             <select v-model="nuevaIncidenciaUbicacion" class="input">
               <option disabled value="">Selecciona una ubicación</option>
-              <option v-for="u in ubicaciones" :key="u" :value="u">
-                {{ u }}
+              <option v-for="u in ubicaciones" :key="u.value" :value="u.value">
+                {{ u.label }}
               </option>
             </select>
 
@@ -229,8 +229,10 @@ import { obtenerDatosUsuarioSesion } from "@/services/firebaseService";
 
 const categorias = ref<Categoria[]>([]);
 
-// Ubicaciones e incidencias
-const ubicaciones = ref<string[]>([]);
+// Ubicaciones e incidencias.
+// Cada ubicación separa el `value` (nombre del aula, lo que se guarda en la incidencia)
+// de la `label` visible (nombre + curso/etapa/grupo cuando el espacio es "fijo").
+const ubicaciones = ref<Array<{ value: string; label: string }>>([]);
 
 // Paginación
 const incidenciasPaginadas = ref<Incidencia[]>([]);  
@@ -380,7 +382,13 @@ function irPagina(pagina: number) {
  * Cargar las ubicaciones (espacios/aulas del centro desde SchoolManagementServer).
  * Se combinan los tres tipos de espacio (sin docencia, fijo y desdoble) y se
  * deduplican por nombre de aula. Cada función devuelve un array de objetos con la
- * forma { cursoAcademico, nombre, ... } (los fijos añaden además curso/etapa/grupo).
+ * forma { cursoAcademico, nombre, ... }; los fijos añaden además { curso, etapa, grupo }.
+ *
+ * Igual que el "Localizador (zona)" de automations/map, la etiqueta visible añade el
+ * curso/etapa/grupo relacionado cuando existe (formato `"<nombre> - <curso> <etapa> <grupo>"`);
+ * los espacios sin grupo (sin docencia/desdoble) muestran solo el nombre. El valor guardado
+ * en la incidencia sigue siendo el nombre del aula, para no romper el contrato del backend.
+ *
  * El curso académico lo resuelven las propias funciones del servicio (cabecera
  * `cursoAcademico` leída de localStorage donde procede).
  */
@@ -393,13 +401,34 @@ async function cargarUbicaciones() {
       obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen),
     ]);
 
-    // Combinamos los tres listados y extraemos el nombre del aula de cada espacio
-    const nombres = [...sinDocencia, ...fijos, ...desdobles]
-      .map((espacio: any) => espacio?.nombre)
-      .filter((nombre: any): nombre is string => typeof nombre === "string" && nombre.trim() !== "");
+    // Deduplicamos por nombre de aula. Priorizamos la variante "fijo" porque es la única
+    // que trae curso/etapa/grupo para enriquecer la etiqueta.
+    const opcionesPorNombre = new Map<string, { value: string; label: string }>();
 
-    // Unión deduplicada por nombre de aula, ordenada alfabéticamente
-    ubicaciones.value = Array.from(new Set(nombres)).sort((a, b) => a.localeCompare(b, "es"));
+    // 1) Espacios fijos primero: etiqueta con curso/etapa/grupo cuando existe
+    for (const espacio of (fijos as any[])) {
+      const nombre = espacio?.nombre;
+      if (typeof nombre !== "string" || nombre.trim() === "" || opcionesPorNombre.has(nombre)) continue;
+
+      let label = nombre;
+      if (espacio.curso && espacio.etapa && espacio.grupo) {
+        const grupoInfo = `${espacio.curso} ${espacio.etapa} ${espacio.grupo}`.replace(/\s+/g, " ").trim();
+        label = `${nombre} - ${grupoInfo}`;
+      }
+      opcionesPorNombre.set(nombre, { value: nombre, label });
+    }
+
+    // 2) Sin docencia y desdoble: solo nombre, sin sobrescribir la variante con grupo
+    for (const espacio of [...(sinDocencia as any[]), ...(desdobles as any[])]) {
+      const nombre = espacio?.nombre;
+      if (typeof nombre !== "string" || nombre.trim() === "" || opcionesPorNombre.has(nombre)) continue;
+
+      opcionesPorNombre.set(nombre, { value: nombre, label: nombre });
+    }
+
+    // Unión deduplicada por nombre de aula, ordenada alfabéticamente por nombre
+    ubicaciones.value = Array.from(opcionesPorNombre.values())
+      .sort((a, b) => a.value.localeCompare(b.value, "es"));
   }
   catch (e: any) {
     // Mostramos el mensaje de error en la consola
