@@ -1,4 +1,4 @@
-import { strikesApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
+import { strikesApiUrl, adminApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 import { crearToast } from "@/utils/toast.js";
 

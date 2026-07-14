@@ -1,4 +1,4 @@
-import { bookingsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
+import { bookingsApiUrl, adminApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
 export const getDiasSemana = async (toastMessage, toastColor, isToastOpen) => {
@@ -228,7 +228,7 @@ export const deleteReserva = async (toastMessage, toastColor, isToastOpen, email
 export const getProfesores = async (toastMessage, toastColor, isToastOpen) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(firebaseApiUrl + '/firebase/queries/users', {
+  const response = await fetch(adminApiUrl + '/admin/queries/users', {
     method: 'GET',
     headers:
     {

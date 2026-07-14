@@ -1,4 +1,4 @@
-import { automationsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
+import { automationsApiUrl, adminApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 
 export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, tipo, umbralMinimo, umbralMaximo) => {

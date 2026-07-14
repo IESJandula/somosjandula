@@ -1,4 +1,4 @@
-import { eventsApiUrl, firebaseApiUrl } from '@/environment/apiUrls';
+import { eventsApiUrl, adminApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/firebaseService';
 import { crearToast } from "@/utils/toast.js";
 

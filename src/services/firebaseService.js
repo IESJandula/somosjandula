@@ -1,4 +1,4 @@
-import { firebaseApiUrl } from '@/environment/apiUrls';
+import { adminApiUrl } from '@/environment/apiUrls';
 import { crearToast } from '@/utils/toast.js';
 import { getAuth } from "firebase/auth";
 import { SESSION_JWT_TOKEN } from '@/utils/constants';
@@ -15,7 +15,7 @@ export async function importarUsuarios(toastMessage, toastColor, isToastOpen, fi
 
   try {
     // Hacemos la llamada al microservicio para importar usuarios
-    const response = await fetch(firebaseApiUrl + '/firebase/imports/users',
+    const response = await fetch(adminApiUrl + '/admin/imports/users',
       {
         method: 'POST',
         headers: {
@@ -58,7 +58,7 @@ export async function importarAplicaciones(toastMessage, toastColor, isToastOpen
 
   try {
     // Hacemos la llamada al microservicio para importar usuarios
-    const response = await fetch(firebaseApiUrl + '/firebase/imports/apps',
+    const response = await fetch(adminApiUrl + '/admin/imports/apps',
       {
         method: 'POST',
         headers: {
@@ -191,7 +191,7 @@ async function obtenerTokenJwt(toastMessage, toastColor, isToastOpen) {
   const tokenGoogle = await auth.currentUser.getIdToken(true);
 
   // Realizamos una solicitud POST al servidor Spring Boot para obtener el JWT
-  const response = await fetch(firebaseApiUrl + '/firebase/token/user',
+  const response = await fetch(adminApiUrl + '/admin/token/user',
     {
       method: 'POST',
       headers:
@@ -237,7 +237,7 @@ function tokenExpirado(token) {
 export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen) {
   let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  return await fetch(firebaseApiUrl + '/firebase/queries/users',
+  return await fetch(adminApiUrl + '/admin/queries/users',
     {
       method: 'GET',
       headers:
@@ -258,7 +258,7 @@ export async function obtenerDatosUsuarioSesion(toastMessage, toastColor, isToas
 }
 
 /**
- * Obtiene las constantes de configuración desde Reaktor_FirebaseServer (ruta base /firebase/constants).
+ * Obtiene las constantes de configuración desde Reaktor_AdminServer (ruta base /admin/constants).
  *
  * Las cabeceras 'proyecto' y 'clave' son OPCIONALES y permiten filtrar el resultado:
  *  - proyecto + clave -> devuelve esa constante concreta (lista de 0 o 1 elemento).
@@ -288,7 +288,7 @@ export async function obtenerConstantes(toastMessage, toastColor, isToastOpen, p
     headers['clave'] = clave;
   }
 
-  const response = await fetch(firebaseApiUrl + '/firebase/constants',
+  const response = await fetch(adminApiUrl + '/admin/constants',
     {
       method: 'GET',
       headers: headers
@@ -304,7 +304,7 @@ export async function obtenerConstantes(toastMessage, toastColor, isToastOpen, p
 }
 
 /**
- * Actualiza (upsert) el valor de UNA constante en Reaktor_FirebaseServer.
+ * Actualiza (upsert) el valor de UNA constante en Reaktor_AdminServer.
  *
  * El cuerpo de la petición es un ÚNICO objeto { proyecto, clave, valor }. El backend hace upsert por la
  * clave primaria compuesta (proyecto + clave): si la constante existe se sobreescribe su valor y, si no, se crea.
@@ -318,7 +318,7 @@ export async function obtenerConstantes(toastMessage, toastColor, isToastOpen, p
 export async function actualizarConstante(toastMessage, toastColor, isToastOpen, constante) {
   let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(firebaseApiUrl + '/firebase/constants',
+  const response = await fetch(adminApiUrl + '/admin/constants',
     {
       method: 'POST',
       headers:
