@@ -529,7 +529,7 @@ const verificarConstantes = async () => {
   try {
     constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen, 'bookings');
 
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'bookings.reservasTemporales');
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'bookings.textoRestriccionTemporales');
     valorMaxDays.value = constantes.value.find(c => c.clave === 'bookings.maxDiasCalendario').valor - 1;
     valorConstante.value = reservaDeshabilitada.valor
   }

@@ -15,7 +15,7 @@ construye la imagen y cómo configurarla en Dokploy.
 | Servidor runtime | Nginx (`nginx:1.27-alpine`) con fallback SPA |
 | Puerto expuesto | `80` (Nginx) |
 | Base href | `/` (`VITE_BASE_URL`) |
-| Dominio | `intranet.iesjandula.es` (subdominio `intranet`) |
+| Dominio | `prointranet.iesjandula.es` (subdominio `prointranet`) |
 
 > **Vite inyecta la configuración en tiempo de BUILD.** Las variables `VITE_*`
 > se "hornean" en el bundle durante `vite build`; NO se leen en runtime. Por eso
@@ -94,7 +94,7 @@ Crear una aplicación de tipo **Dockerfile**:
 
 - **Build Type:** Dockerfile · **Dockerfile Path:** `Dockerfile` · **Context:** raíz del repo
 - **Container Port:** `80`
-- **Dominio:** `intranet.iesjandula.es` + HTTPS (Let's Encrypt)
+- **Dominio:** `prointranet.iesjandula.es` + HTTPS (Let's Encrypt)
 
 ### Build Args a configurar en Dokploy
 
@@ -123,7 +123,7 @@ Crear una aplicación de tipo **Dockerfile**:
 
 ## CORS
 
-El usuario ya configuró `CORS_ALLOWED_ORIGINS=https://intranet.iesjandula.es` en
+El usuario ya configuró `CORS_ALLOWED_ORIGINS=https://prointranet.iesjandula.es` en
 el AdminServer de Dokploy. Si otros microservicios restringen CORS, deben incluir
 también ese origen.
 

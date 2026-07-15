@@ -190,7 +190,7 @@ const verificarConstantes = async () => {
   try {
     constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen, 'bookings');
 
-    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'bookings.reservasFijas');
+    const reservaDeshabilitada = constantes.value.find(c => c.clave === 'bookings.textoRestriccionFijas');
     
     // Verificar si existe antes de acceder a .valor
     if (reservaDeshabilitada) {
