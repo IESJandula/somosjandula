@@ -810,27 +810,6 @@ export const borrarReducciones = async (nombre, horas, decideDireccion, toastMes
       });
   }
 
-export const obtenerProfesores = async (toastMessage, toastColor, isToastOpen) =>
-  {
-    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
-
-    const response = await fetch(schoolManagerApiUrl + '/schoolManager/crearReducciones/profesores',
-      {
-        method: 'GET',
-        headers:
-        {
-          'Authorization': `Bearer ${tokenPropio}`,
-        },
-      });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message);
-    }
-
-    return await response.json();
-  }
-
 export const obtenerReduccionesProfesores = async (toastMessage, toastColor, isToastOpen) =>
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
