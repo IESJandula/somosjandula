@@ -138,7 +138,7 @@ import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { IonToast } from "@ionic/vue";
 import { crearToast } from '@/utils/toast.js';
-import { cargarReducciones, obtenerProfesores, asignarReducciones, obtenerReduccionesProfesores, borrarReduccionesProfesores, obtenerCursoAcademicoSeleccionado, obtenerCursosEtapasGrupos } from '@/services/schoolManager.js';
+import { cargarReducciones, asignarReducciones, obtenerReduccionesProfesores, borrarReduccionesProfesores, obtenerCursoAcademicoSeleccionado, obtenerCursosEtapasGrupos } from '@/services/schoolManager.js';
 import SchoolManagerNav from '@/components/school_manager/SchoolManagerNav.vue';
 
 const router = useRouter();
@@ -258,7 +258,7 @@ const obtenerProfesor = async () => {
 
   try {
 
-    const response = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
+    //TODO const response = await obtenerProfesores(toastMessage, toastColor, isToastOpen);
     listaProfesores.value = Array.isArray(response) ? response : [];
 
     profesorSeleccionado.value = '';
