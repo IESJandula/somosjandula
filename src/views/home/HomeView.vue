@@ -225,7 +225,7 @@ const seccionAdministracion = computed(() => ({
   titulo: "Administración",
   icono: shieldCheckmarkOutline,
   items: [
-    { label: "Firebase", icono: logoFirebase, to: "/admin/firebase" },
+    { label: "Firebase", icono: logoFirebase, to: "/admin" },
     { label: "Impresión", icono: printOutline, to: "/printers/admin" },
     { label: "Reservas", icono: calendarOutline, to: "/bookings/admin" },
     { label: "Notificaciones", icono: notificationsOutline, to: "/notifications/admin" },

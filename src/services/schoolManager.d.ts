@@ -460,11 +460,6 @@ export declare function obtenerCursosAcademicos(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<any[]>;
 
-export declare function seleccionarCursoAcademico(toastMessage: Ref<string>,
-                                           toastColor: Ref<string>,
-                                           isToastOpen: Ref<boolean>,
-                                           cursoAcademico: string): Promise<Response>;
-
 export declare function obtenerCursoAcademicoSeleccionado(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,
                                            isToastOpen: Ref<boolean>): Promise<string>;

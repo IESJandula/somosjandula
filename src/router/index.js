@@ -10,7 +10,7 @@ import HomeView from '@/views/home/HomeView.vue';
 
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 
-import AdminFirebasePage from '@/views/admin/AdminFirebasePage.vue';
+import AdminPage from '@/views/admin/AdminPage.vue';
 
 import PrintersAdminPage from '@/views/printers/PrintersAdminPage.vue';
 import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
@@ -94,9 +94,9 @@ const routes = [
         },
       },
       {
-        path: 'admin/firebase',
-        component: AdminFirebasePage,
-        name: 'AdminFirebase',
+        path: 'admin',
+        component: AdminPage,
+        name: 'AdminPage',
         meta: {
           role: 'ADMINISTRADOR'
         },

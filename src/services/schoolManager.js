@@ -1498,26 +1498,8 @@ export const obtenerCursosAcademicos = async (toastMessage, toastColor, isToastO
   return await response.json()
 }
 
-export const seleccionarCursoAcademico = async (toastMessage, toastColor, isToastOpen, cursoAcademico) =>
-{
-  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
-
-  const response = await fetch(schoolManagerApiUrl + '/schoolManager/espacios/admin/cursosAcademicos',
-  {
-    method: 'POST',
-    headers:
-    {
-      'Authorization': `Bearer ${tokenPropio}`,
-      'cursoAcademico': cursoAcademico,
-    },
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message);
-  }
-  return response;
-}
+// NOTA: seleccionarCursoAcademico se ha eliminado. El curso académico actual es ahora una constante centralizada
+// en AdminServer (CURSO_ACADEMICO_ACTUAL) que se edita en "Gestión de constantes"; ya no se selecciona aquí.
 
 export const obtenerCursoAcademicoSeleccionado = async (toastMessage, toastColor, isToastOpen) =>
 {

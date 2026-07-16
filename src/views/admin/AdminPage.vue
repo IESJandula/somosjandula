@@ -1,0 +1,1030 @@
+<template>
+  <div class="page-admin-firebase">
+    <header class="page-header">
+      <h1 class="t-1">Administración de Firebase</h1>
+      <p class="page-subtitle">
+        Inserta usuarios y aplicaciones de forma masiva mediante ficheros, consulta y edita los listados y gestiona
+        las constantes de configuración de los microservicios.
+      </p>
+    </header>
+
+    <div class="main-panel">
+      <section class="panel-section">
+        <h2 class="section-title">Inserciones masivas y listados</h2>
+
+        <div class="actions-grid">
+          <!-- Columna USUARIOS: inserción masiva + tabla -->
+          <div class="action-column">
+            <!-- Inserción masiva de usuarios -->
+            <article class="action-card">
+              <h3 class="card-title">Inserción masiva de usuarios</h3>
+              <div class="card-body">
+                <div class="field">
+                  <label>Adjunta el fichero de usuarios</label>
+                  <FileUpload ref="fileUploadUsersRef" @file-selected="onArchivoUsuariosSeleccionado" />
+                  <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-primary"
+                  :disabled="!archivoUsuarios || cargandoUsuarios"
+                  @click="uploadUsers">
+                  Crear usuarios
+                </button>
+              </div>
+            </article>
+
+            <!-- Tabla de usuarios -->
+            <article class="action-card table-card">
+              <div class="table-card-header">
+                <h3 class="card-title card-title-inline">Usuarios del sistema</h3>
+                <button
+                  type="button"
+                  class="btn-secondary btn-mini"
+                  :disabled="!hayUsuarios"
+                  @click="exportarUsuariosCsv">
+                  Exportar CSV
+                </button>
+              </div>
+
+              <div v-if="cargandoTablaUsuarios" class="table-loading">
+                <div class="circulo"></div>
+              </div>
+
+              <div class="table-scroll">
+                <table class="tabla-datos">
+                  <thead>
+                    <tr>
+                      <th class="col-accion">Eliminar</th>
+                      <th>Email</th>
+                      <th>Nombre</th>
+                      <th>Apellidos</th>
+                      <th>Departamento</th>
+                      <th>Fecha nac.</th>
+                      <th>Roles</th>
+                      <th class="col-accion">Guardar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(usuario, index) in usuarios" :key="index">
+                      <td class="col-accion">
+                        <button
+                          v-if="usuario._persistido"
+                          type="button"
+                          class="btn-delete"
+                          title="Borrar usuario"
+                          @click="borrarUsuarioFila(index)">X</button>
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          v-model="usuario.email"
+                          class="cell-input"
+                          :disabled="usuario._persistido"
+                          placeholder="email@dominio">
+                      </td>
+                      <td><input type="text" v-model="usuario.nombre" class="cell-input"></td>
+                      <td><input type="text" v-model="usuario.apellidos" class="cell-input"></td>
+                      <td><input type="text" v-model="usuario.departamento" class="cell-input"></td>
+                      <td><input type="text" v-model="usuario.fechaNacimiento" class="cell-input" placeholder="dd/mm/aaaa"></td>
+                      <td><input type="text" v-model="usuario.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                      <td class="col-accion">
+                        <button type="button" class="btn-primary btn-mini" @click="guardarUsuarioFila(index)">Guardar</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p v-if="!hayUsuarios && !cargandoTablaUsuarios" class="empty-state">
+                No hay usuarios cargados. Usa la última fila para añadir uno nuevo.
+              </p>
+            </article>
+          </div>
+
+          <!-- Columna APPS: inserción masiva + tabla -->
+          <div class="action-column">
+            <!-- Inserción masiva de apps -->
+            <article class="action-card">
+              <h3 class="card-title">Inserción masiva de apps</h3>
+              <div class="card-body">
+                <div class="field">
+                  <label>Adjunta el fichero de aplicaciones</label>
+                  <FileUpload ref="fileUploadAppsRef" @file-selected="onArchivoAppsSeleccionado" />
+                  <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-primary"
+                  :disabled="!archivoApps || cargandoApps"
+                  @click="uploadApps">
+                  Crear aplicaciones
+                </button>
+              </div>
+            </article>
+
+            <!-- Tabla de apps -->
+            <article class="action-card table-card">
+              <div class="table-card-header">
+                <h3 class="card-title card-title-inline">Aplicaciones registradas</h3>
+                <button
+                  type="button"
+                  class="btn-secondary btn-mini"
+                  :disabled="!hayApps"
+                  @click="exportarAppsCsv">
+                  Exportar CSV
+                </button>
+              </div>
+
+              <div v-if="cargandoTablaApps" class="table-loading">
+                <div class="circulo"></div>
+              </div>
+
+              <div class="table-scroll">
+                <table class="tabla-datos">
+                  <thead>
+                    <tr>
+                      <th class="col-accion">Eliminar</th>
+                      <th>Client ID</th>
+                      <th>Nombre</th>
+                      <th>Roles</th>
+                      <th class="col-accion">Guardar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(app, index) in apps" :key="index">
+                      <td class="col-accion">
+                        <button
+                          v-if="app._persistido"
+                          type="button"
+                          class="btn-delete"
+                          title="Borrar aplicación"
+                          @click="borrarAppFila(index)">X</button>
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          v-model="app.clientId"
+                          class="cell-input"
+                          :disabled="app._persistido"
+                          placeholder="clientId">
+                      </td>
+                      <td><input type="text" v-model="app.nombre" class="cell-input"></td>
+                      <td><input type="text" v-model="app.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                      <td class="col-accion">
+                        <button type="button" class="btn-primary btn-mini" @click="guardarAppFila(index)">Guardar</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p v-if="!hayApps && !cargandoTablaApps" class="empty-state">
+                No hay aplicaciones cargadas. Usa la última fila para añadir una nueva.
+              </p>
+            </article>
+          </div>
+        </div>
+
+        <div v-if="cargandoUsuarios || cargandoApps" class="fondo-gris">
+          <div class="circulo"></div>
+        </div>
+      </section>
+
+      <div class="panel-divider" aria-hidden="true"></div>
+
+      <!-- Gestión de constantes -->
+      <section class="panel-section">
+        <h2 class="section-title">Gestión de constantes</h2>
+
+        <div class="constantes-card">
+          <div class="constantes-grid">
+            <div class="field">
+              <label for="proyecto-select">Proyecto</label>
+              <select
+                id="proyecto-select"
+                v-model="proyectoSeleccionado"
+                class="custom-select"
+                @change="filtrarPorProyecto">
+                <option :value="''">Todos</option>
+                <option v-for="proyecto in proyectos" :key="proyecto" :value="proyecto">
+                  {{ proyecto }}
+                </option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="clave-select">Clave de la constante</label>
+              <select id="clave-select" v-model="selectedConstante" class="custom-select">
+                <option disabled :value="null">Selecciona una constante</option>
+                <option v-for="constante in constantesFiltradas" :key="constante.proyecto + '::' + constante.clave" :value="constante">
+                  {{ constante.clave }}
+                </option>
+              </select>
+            </div>
+
+            <div class="field" v-if="selectedConstante">
+              <label for="valor-input">Valor</label>
+              <input id="valor-input" type="text" v-model="selectedConstante.valor" />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="!selectedConstante"
+            @click="actualizarConstanteSeleccionada">
+            Actualizar constante
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
+      @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
+  </div>
+</template>
+
+<script setup>
+  import { IonToast } from '@ionic/vue';
+  import { ref, computed, onMounted, watch } from 'vue';
+  import FileUpload from '@/components/printers/FileUpload.vue';
+  import {
+    importarUsuarios,
+    importarAplicaciones,
+    obtenerConstantes,
+    actualizarConstante,
+    obtenerInfoUsuarios,
+    obtenerInfoApps,
+    guardarUsuario,
+    guardarApp,
+    borrarUsuario,
+    borrarApp,
+  } from '@/services/firebaseService';
+  import { crearToast } from '@/utils/toast.js';
+
+  const toastMessage = ref('');
+  const toastColor = ref('success');
+  const isToastOpen = ref(false);
+
+  // Ficheros seleccionados (por arrastre o selección en disco) mediante el componente FileUpload
+  const fileUploadUsersRef = ref(null);
+  const fileUploadAppsRef = ref(null);
+  const archivoUsuarios = ref(null);
+  const archivoApps = ref(null);
+  const cargandoUsuarios = ref(false);
+  const cargandoApps = ref(false);
+
+  // Tablas editables de usuarios y aplicaciones
+  const usuarios = ref([]);
+  const apps = ref([]);
+  const cargandoTablaUsuarios = ref(false);
+  const cargandoTablaApps = ref(false);
+
+  // Gestión de constantes: todas las constantes (todos los proyectos) y filtrado por proyecto
+  const constantes = ref([]);
+  const selectedConstante = ref(null);
+  const proyectoSeleccionado = ref('');
+
+  // Lista única de proyectos disponibles a partir de las constantes cargadas
+  const proyectos = computed(() => [...new Set(constantes.value.map((c) => c.proyecto))].sort());
+
+  // Constantes visibles según el proyecto seleccionado (o todas si no hay filtro)
+  const constantesFiltradas = computed(() =>
+    proyectoSeleccionado.value
+      ? constantes.value.filter((c) => c.proyecto === proyectoSeleccionado.value)
+      : constantes.value
+  );
+
+  // Hay datos reales (excluyendo la fila vacía final) si alguna fila está persistida
+  const hayUsuarios = computed(() => usuarios.value.some((u) => u._persistido));
+  const hayApps = computed(() => apps.value.some((a) => a._persistido));
+
+  // ---- Helpers de filas y roles ----
+  const filaUsuarioVacia = () => ({
+    email: '',
+    nombre: '',
+    apellidos: '',
+    departamento: '',
+    fechaNacimiento: '',
+    roles: '',
+    cursoAcademico: '',
+    _persistido: false,
+  });
+
+  const filaAppVacia = () => ({
+    clientId: '',
+    nombre: '',
+    roles: '',
+    cursoAcademico: '',
+    _persistido: false,
+  });
+
+  // Convierte el texto de roles (separado por comas o barras) en un array limpio
+  const parsearRoles = (texto) =>
+    (texto || '')
+      .split(/[|,]/)
+      .map((r) => r.trim())
+      .filter(Boolean);
+
+  // Convierte un array de roles del backend en texto editable
+  const rolesATexto = (roles) => (Array.isArray(roles) ? roles.join(', ') : (roles || ''));
+
+  // Garantiza que SIEMPRE exista una fila vacía al final para permitir añadir nuevos elementos.
+  // Al escribir en la fila vacía (rellenando su clave), se genera otra fila vacía al final.
+  const asegurarFilaVaciaUsuarios = () => {
+    const arr = usuarios.value;
+    const ultima = arr[arr.length - 1];
+    if (!ultima || (ultima.email && ultima.email.trim() !== '')) {
+      arr.push(filaUsuarioVacia());
+    }
+  };
+
+  const asegurarFilaVaciaApps = () => {
+    const arr = apps.value;
+    const ultima = arr[arr.length - 1];
+    if (!ultima || (ultima.clientId && ultima.clientId.trim() !== '')) {
+      arr.push(filaAppVacia());
+    }
+  };
+
+  watch(usuarios, asegurarFilaVaciaUsuarios, { deep: true });
+  watch(apps, asegurarFilaVaciaApps, { deep: true });
+
+  // ---- Inserciones masivas (ficheros CSV) ----
+  const onArchivoUsuariosSeleccionado = (archivo) => {
+    archivoUsuarios.value = archivo || null;
+  };
+
+  const onArchivoAppsSeleccionado = (archivo) => {
+    archivoApps.value = archivo || null;
+  };
+
+  const uploadUsers = async () => {
+    if (!archivoUsuarios.value) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Selecciona un fichero de usuarios');
+      return;
+    }
+
+    cargandoUsuarios.value = true;
+    try {
+      await importarUsuarios(toastMessage, toastColor, isToastOpen, archivoUsuarios.value);
+      archivoUsuarios.value = null;
+      fileUploadUsersRef.value?.fileClear();
+      await cargarUsuarios();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      cargandoUsuarios.value = false;
+    }
+  };
+
+  const uploadApps = async () => {
+    if (!archivoApps.value) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Selecciona un fichero de aplicaciones');
+      return;
+    }
+
+    cargandoApps.value = true;
+    try {
+      await importarAplicaciones(toastMessage, toastColor, isToastOpen, archivoApps.value);
+      archivoApps.value = null;
+      fileUploadAppsRef.value?.fileClear();
+      await cargarApps();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      cargandoApps.value = false;
+    }
+  };
+
+  // ---- Carga de las tablas ----
+  const cargarUsuarios = async () => {
+    cargandoTablaUsuarios.value = true;
+    try {
+      const data = (await obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)) || [];
+      usuarios.value = data.map((u) => ({
+        email: u.email || '',
+        nombre: u.nombre || '',
+        apellidos: u.apellidos || '',
+        departamento: u.departamento || '',
+        fechaNacimiento: u.fechaNacimiento || '',
+        roles: rolesATexto(u.roles),
+        cursoAcademico: u.cursoAcademico || '',
+        _persistido: true,
+      }));
+      asegurarFilaVaciaUsuarios();
+    } catch (error) {
+      console.error(error);
+      usuarios.value = [];
+      asegurarFilaVaciaUsuarios();
+    } finally {
+      cargandoTablaUsuarios.value = false;
+    }
+  };
+
+  const cargarApps = async () => {
+    cargandoTablaApps.value = true;
+    try {
+      const data = (await obtenerInfoApps(toastMessage, toastColor, isToastOpen)) || [];
+      apps.value = data.map((a) => ({
+        clientId: a.clientId || '',
+        nombre: a.nombre || '',
+        roles: rolesATexto(a.roles),
+        cursoAcademico: a.cursoAcademico || '',
+        _persistido: true,
+      }));
+      asegurarFilaVaciaApps();
+    } catch (error) {
+      console.error(error);
+      apps.value = [];
+      asegurarFilaVaciaApps();
+    } finally {
+      cargandoTablaApps.value = false;
+    }
+  };
+
+  // ---- Guardado (upsert) por fila ----
+  const guardarUsuarioFila = async (index) => {
+    const usuario = usuarios.value[index];
+
+    if (!usuario.email || usuario.email.trim() === '') {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El email es obligatorio para guardar el usuario');
+      return;
+    }
+
+    try {
+      // SEGURIDAD: no se envía cursoAcademico; el servidor lo resuelve desde la constante del curso actual
+      await guardarUsuario(toastMessage, toastColor, isToastOpen, {
+        email: usuario.email.trim(),
+        nombre: usuario.nombre,
+        apellidos: usuario.apellidos,
+        departamento: usuario.departamento,
+        fechaNacimiento: usuario.fechaNacimiento,
+        roles: parsearRoles(usuario.roles),
+      });
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Usuario guardado con éxito');
+      await cargarUsuarios();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const guardarAppFila = async (index) => {
+    const app = apps.value[index];
+
+    if (!app.clientId || app.clientId.trim() === '') {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El clientId es obligatorio para guardar la aplicación');
+      return;
+    }
+
+    try {
+      // SEGURIDAD: no se envía cursoAcademico; el servidor lo resuelve desde la constante del curso actual
+      await guardarApp(toastMessage, toastColor, isToastOpen, {
+        clientId: app.clientId.trim(),
+        nombre: app.nombre,
+        roles: parsearRoles(app.roles),
+      });
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Aplicación guardada con éxito');
+      await cargarApps();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ---- Borrado por fila ----
+  const borrarUsuarioFila = async (index) => {
+    const usuario = usuarios.value[index];
+
+    if (!usuario._persistido) {
+      return;
+    }
+
+    if (!window.confirm(`¿Borrar el usuario "${usuario.email}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      await borrarUsuario(toastMessage, toastColor, isToastOpen, usuario.email);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Usuario borrado con éxito');
+      await cargarUsuarios();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const borrarAppFila = async (index) => {
+    const app = apps.value[index];
+
+    if (!app._persistido) {
+      return;
+    }
+
+    if (!window.confirm(`¿Borrar la aplicación "${app.clientId}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    try {
+      await borrarApp(toastMessage, toastColor, isToastOpen, app.clientId);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Aplicación borrada con éxito');
+      await cargarApps();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ---- Exportación a CSV (generada en el frontend a partir de los datos cargados) ----
+  const escaparCampoCsv = (valor) => {
+    const texto = valor == null ? '' : String(valor);
+    // Entrecomillamos si el campo contiene comas, comillas o saltos de línea (RFC 4180)
+    if (/[",\n\r]/.test(texto)) {
+      return '"' + texto.replace(/"/g, '""') + '"';
+    }
+    return texto;
+  };
+
+  const descargarCsv = (nombreFichero, cabeceras, filas) => {
+    const lineas = [cabeceras.map(escaparCampoCsv).join(',')];
+    filas.forEach((fila) => {
+      lineas.push(fila.map(escaparCampoCsv).join(','));
+    });
+
+    // BOM para que Excel interprete correctamente los acentos (UTF-8)
+    const contenido = '\uFEFF' + lineas.join('\r\n');
+    const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.setAttribute('download', nombreFichero);
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportarUsuariosCsv = () => {
+    const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Curso académico'];
+    const filas = usuarios.value
+      .filter((u) => u._persistido)
+      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, u.cursoAcademico]);
+
+    if (filas.length === 0) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay usuarios para exportar');
+      return;
+    }
+
+    descargarCsv('usuarios.csv', cabeceras, filas);
+  };
+
+  const exportarAppsCsv = () => {
+    const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Curso académico'];
+    const filas = apps.value
+      .filter((a) => a._persistido)
+      .map((a) => [a.clientId, a.nombre, a.roles, a.cursoAcademico]);
+
+    if (filas.length === 0) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay aplicaciones para exportar');
+      return;
+    }
+
+    descargarCsv('aplicaciones.csv', cabeceras, filas);
+  };
+
+  /**
+   * Carga TODAS las constantes de TODOS los proyectos (GET sin cabeceras).
+   */
+  const cargarConstantes = async () => {
+    try {
+      constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen);
+    } catch (error) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
+    }
+  };
+
+  /**
+   * Al cambiar de proyecto, si la constante seleccionada ya no pertenece al filtro, se deselecciona.
+   */
+  const filtrarPorProyecto = () => {
+    if (selectedConstante.value && proyectoSeleccionado.value &&
+        selectedConstante.value.proyecto !== proyectoSeleccionado.value) {
+      selectedConstante.value = null;
+    }
+  };
+
+  /**
+   * Actualiza (POST) la constante seleccionada de una en una. El backend recibe un ÚNICO objeto
+   * { proyecto, clave, valor } y hace upsert por proyecto + clave.
+   */
+  const actualizarConstanteSeleccionada = async () => {
+    if (!selectedConstante.value) {
+      return;
+    }
+
+    try {
+      await actualizarConstante(toastMessage, toastColor, isToastOpen, {
+        proyecto: selectedConstante.value.proyecto,
+        clave: selectedConstante.value.clave,
+        valor: selectedConstante.value.valor,
+      });
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Constante actualizada con éxito');
+
+      // Recargamos para reflejar el valor persistido
+      await cargarConstantes();
+    } catch (error) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
+    }
+  };
+
+  onMounted(async () => {
+    await Promise.all([cargarUsuarios(), cargarApps(), cargarConstantes()]);
+  });
+</script>
+
+<style scoped>
+.page-admin-firebase {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  font-family: "Roboto", sans-serif;
+}
+
+.page-header {
+  margin-bottom: 1.75rem;
+  width: 100%;
+}
+
+.t-1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  text-align: center;
+}
+
+.page-subtitle {
+  margin: 0;
+  text-align: center;
+}
+
+.main-panel {
+  background-color: var(--form-bg-light);
+  border: 1px solid #444;
+  border-radius: 12px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
+  padding: 1.5rem;
+}
+
+.panel-section {
+  width: 100%;
+}
+
+.section-title {
+  margin: 0 0 1.25rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-color-light);
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.action-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  padding: 1.25rem 1rem 1rem;
+  box-sizing: border-box;
+}
+
+.card-title {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.35;
+  color: #1a1a1a;
+}
+
+.card-title-inline {
+  margin: 0;
+  text-align: left;
+}
+
+.table-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.field-hint {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.field input,
+.custom-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  font-size: 15px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  background-color: white;
+  color: #000;
+  outline: none;
+}
+
+.custom-select {
+  cursor: pointer;
+}
+
+.custom-select:hover,
+.field input:hover {
+  border-color: #0056b3;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.35);
+}
+
+.constantes-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  padding: 1.25rem 1rem 1rem;
+  box-sizing: border-box;
+}
+
+.constantes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.btn-primary {
+  width: 100%;
+  margin-top: auto;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background-color: #2196f3;
+  border-radius: 6px;
+  text-transform: uppercase;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #1565c0;
+}
+
+.btn-primary:disabled {
+  background-color: #7fa9f4;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: bold;
+  background-color: #e2e8f0;
+  color: #1a3c6e;
+  border: 1px solid #b6c2d4;
+  border-radius: 6px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: #cbd5e1;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-mini {
+  width: auto;
+  margin-top: 0;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+.btn-delete {
+  padding: 5px 10px;
+  border: none;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-delete:hover {
+  background-color: #b02a37;
+}
+
+/* ---- Tablas de datos (estilo /school_manager/cargaMatriculas) ---- */
+.table-card {
+  min-width: 0;
+}
+
+.table-scroll {
+  width: 100%;
+  max-height: 360px;
+  overflow: auto;
+}
+
+table.tabla-datos {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: center;
+  background-color: #f8f9fa;
+  color: #1a1a1a;
+  border: 2px solid #007bff;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.tabla-datos th,
+.tabla-datos td {
+  border: 2px solid #007bff;
+  padding: 8px 6px;
+}
+
+.tabla-datos th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  white-space: nowrap;
+  /* Con border-collapse el borde se desplaza al hacer scroll; el box-shadow
+     mantiene la línea de separación visible bajo la cabecera fija. */
+  box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
+}
+
+.tabla-datos td {
+  background-color: #e9f5ff;
+  height: 38px;
+}
+
+.tabla-datos tr:hover td {
+  background-color: #d0eaff;
+}
+
+.col-accion {
+  width: 90px;
+  min-width: 80px;
+}
+
+.cell-input {
+  width: 100%;
+  min-width: 90px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  padding: 4px 6px;
+  outline: none;
+  color: #000;
+  font: inherit;
+}
+
+.cell-input:disabled {
+  background: #eef1f4;
+  color: #555;
+  cursor: not-allowed;
+}
+
+.table-loading {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.empty-state {
+  margin: 0.75rem 0 0;
+  padding: 0.85rem;
+  text-align: center;
+  color: #666;
+  background-color: #f8f9fa;
+  border: 1px dashed #cfd8e3;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.panel-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #cfd8e3 15%, #cfd8e3 85%, transparent);
+  margin: 1.75rem 0;
+}
+
+.fondo-gris {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.circulo {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #2196f3;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  z-index: 9999;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (prefers-color-scheme: dark) {
+  .main-panel {
+    background-color: var(--form-bg-dark);
+    box-shadow: rgba(255, 255, 255, 0.08) 0 8px 24px;
+    border-color: #444;
+  }
+
+  .section-title { color: var(--text-color-dark); }
+  .page-subtitle, .field-hint { color: #c8c8c8; }
+  .action-card, .constantes-card { background-color: #2a302b; border-color: #555; }
+  .card-title, .field label { color: var(--text-color-dark); }
+  .empty-state { background-color: #2a302b; border-color: #555; color: #c8c8c8; }
+  .btn-secondary {
+    background-color: #3a4048;
+    color: #e6ebf1;
+    border-color: #5a616b;
+  }
+  .btn-secondary:hover { background-color: #474e57; }
+  .panel-divider {
+    background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
+  }
+}
+
+@media (max-width: 1024px) {
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+  .constantes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .page-admin-firebase { padding-inline: 0.75rem; }
+  .main-panel { padding: 1rem; }
+  .t-1 { font-size: 1.75rem; }
+  .constantes-grid { grid-template-columns: 1fr; }
+  .tabla-datos { font-size: 14px; }
+}
+</style>

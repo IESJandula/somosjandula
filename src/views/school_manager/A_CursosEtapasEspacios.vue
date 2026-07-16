@@ -3,7 +3,7 @@
     <header class="page-header">
       <h1 class="t-1">Configuración básica</h1>
       <SchoolManagerNav>
-        <p class="page-subtitle">Elige el curso académico y añade espacios, departamentos y cursos y etapas</p>
+        <p class="page-subtitle">Añade espacios, departamentos y cursos y etapas</p>
       </SchoolManagerNav>
     </header>
 
@@ -12,24 +12,8 @@
         <h2 class="section-title">Acciones</h2>
 
         <div class="actions-grid">
-          <!-- Elección de curso académico (sin modo dual)-->
-          <article class="action-card">
-            <h3 class="card-title">Selector de curso académico</h3>
-            <div class="card-body">
-              <div class="field">
-                <label for="curso-elegido">Curso académico</label>
-                <select id="curso-elegido" v-model="cursoElegido" class="custom-select">
-                  <option
-                    v-for="curso in cursos"
-                    :key="curso.cursoAcademico"
-                    :value="curso.cursoAcademico"
-                  >
-                    {{ curso.cursoAcademico }}
-                  </option>
-                </select>
-              </div>
-            </div>
-          </article>
+          <!-- El curso académico actual es ahora una constante gestionada en la página de administración
+               ("Gestión de constantes"), por lo que ya no se selecciona aquí. -->
 
           <!-- Creador (modo dual)-->
           <article class="action-card">
@@ -467,7 +451,7 @@ import SchoolManagerNav from "@/components/school_manager/SchoolManagerNav.vue";
 import FileUpload from "@/components/printers/FileUpload.vue";
 import {
   obtenerCursosAcademicos,
-  seleccionarCursoAcademico,
+  obtenerCursoAcademicoSeleccionado,
   subirEspaciosCsv,
   subirCursosEtapasCsv,
   subirDepartamentosCsv,
@@ -585,9 +569,6 @@ const ayudaCargaCsv = computed(() => {
 });
 
 let inicializandoCurso = true;
-// Cuando el curso académico cambia desde otra ventana (evento global), sincronizamos
-// `cursoElegido` sin volver a llamar a seleccionarCursoAcademico ni reemitir el evento.
-let aplicandoCambioExterno = false;
 
 const lanzarToast = (color, mensaje) => {
   isToastOpen.value = false;
@@ -698,36 +679,20 @@ const validarCursoEtapaDto = () => {
   };
 };
 
+// El curso académico actual es una constante gestionada en AdminServer, no se cambia desde esta vista. Solo
+// recargamos el listado si el curso resuelto cambia (p.ej. sincronización desde otra ventana).
 watch(cursoElegido, async (nuevoCurso, cursoAnterior) => {
   if (inicializandoCurso) return;
   if (!nuevoCurso || nuevoCurso === cursoAnterior) return;
-  // Cambio originado por otra ventana: solo recargamos el listado con el nuevo curso,
-  // sin re-persistir ni reemitir el evento (evita bucles entre ventanas).
-  if (aplicandoCambioExterno) {
-    aplicandoCambioExterno = false;
-    await cargarListado();
-    return;
-  }
-  try {
-    await seleccionarCursoAcademico(toastMessage, toastColor, isToastOpen, nuevoCurso);
-    localStorage.setItem("cursoAcademicoSeleccionado", nuevoCurso);
-    window.dispatchEvent(
-      new CustomEvent("curso-academico-cambiado", { detail: { cursoAcademico: nuevoCurso } })
-    );
-    await cargarListado();
-  } catch (error) {
-    lanzarToast("danger", error.message);
-  }
+  await cargarListado();
 });
 
 const onCursoAcademicoCambiado = (event) => {
   const nuevoCurso = event.detail?.cursoAcademico || '';
   // Ignoramos el evento que esta misma ventana acaba de emitir (ya está sincronizada).
   if (!nuevoCurso || nuevoCurso === cursoElegido.value) return;
-  aplicandoCambioExterno = true;
   localStorage.setItem("cursoAcademicoSeleccionado", nuevoCurso);
-  // Al asignar cursoElegido se dispara el watch, que recargará el listado y
-  // reseteará el flag aplicandoCambioExterno.
+  // Al asignar cursoElegido se dispara el watch, que recargará el listado.
   cursoElegido.value = nuevoCurso;
 };
 
@@ -840,13 +805,16 @@ const cargarListado = async () => {
 
 const obtenerCursosAcademicosVista = async () => {
   try {
+    // Catálogo de cursos (para los selectores de origen/destino de la copia)
     const data = await obtenerCursosAcademicos(isToastOpen, toastMessage, toastColor);
     cursos.value = data;
-    const cursoSeleccionado = data.find(c => c.seleccionado === true);
-    if (cursoSeleccionado) {
+
+    // El curso académico actual es la constante gestionada en AdminServer; lo obtenemos del backend
+    const cursoActual = (await obtenerCursoAcademicoSeleccionado(isToastOpen, toastMessage, toastColor))?.trim();
+    if (cursoActual) {
       await nextTick();
-      cursoElegido.value = cursoSeleccionado.cursoAcademico;
-      localStorage.setItem("cursoAcademicoSeleccionado", cursoSeleccionado.cursoAcademico);
+      cursoElegido.value = cursoActual;
+      localStorage.setItem("cursoAcademicoSeleccionado", cursoActual);
     }
   } catch (error) {
     lanzarToast("danger", error.message);
