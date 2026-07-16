@@ -97,6 +97,7 @@
                   <th class="sortable" @click="ordenarUsuarios('departamento')">Departamento<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'departamento') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('fechaNacimiento')">Fecha nac.<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'fechaNacimiento') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
                   <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
@@ -128,6 +129,9 @@
                   </td>
                   <td><input type="text" v-model="usuario.fechaNacimiento" class="cell-input" placeholder="dd/mm/aaaa"></td>
                   <td><input type="text" v-model="usuario.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                  <td class="col-conexion">
+                    <span class="conexion-text" :title="formatearFechaExacta(usuario.ultimaConexion)">{{ formatearUltimaConexion(usuario.ultimaConexion) }}</span>
+                  </td>
                   <td class="col-accion">
                     <button type="button" class="btn-primary btn-mini" @click="guardarUsuarioFila(usuario)">Guardar</button>
                   </td>
@@ -179,6 +183,7 @@
                   <th class="sortable" @click="ordenarApps('clientId')">Client ID<span class="sort-ind">{{ indicadorOrden(ordenApps, 'clientId') }}</span></th>
                   <th class="sortable" @click="ordenarApps('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
                   <th class="sortable" @click="ordenarApps('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
+                  <th class="sortable" @click="ordenarApps('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenApps, 'ultimaConexion') }}</span></th>
                   <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
@@ -202,6 +207,9 @@
                   </td>
                   <td><input type="text" v-model="app.nombre" class="cell-input"></td>
                   <td><input type="text" v-model="app.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                  <td class="col-conexion">
+                    <span class="conexion-text" :title="formatearFechaExacta(app.ultimaConexion)">{{ formatearUltimaConexion(app.ultimaConexion) }}</span>
+                  </td>
                   <td class="col-accion">
                     <button type="button" class="btn-primary btn-mini" @click="guardarAppFila(app)">Guardar</button>
                   </td>
@@ -319,9 +327,10 @@
   const busquedaUsuarios = ref('');
   const busquedaApps = ref('');
 
-  // Estado de ordenación por columna, independiente por tabla ({ campo, dir: 'asc' | 'desc' | null })
-  const ordenUsuarios = ref({ campo: null, dir: null });
-  const ordenApps = ref({ campo: null, dir: null });
+  // Estado de ordenación por columna, independiente por tabla ({ campo, dir: 'asc' | 'desc' | null }).
+  // Por defecto se ordena por última conexión descendente (más reciente primero; los "Nunca" al final).
+  const ordenUsuarios = ref({ campo: 'ultimaConexion', dir: 'desc' });
+  const ordenApps = ref({ campo: 'ultimaConexion', dir: 'desc' });
 
   // Identificador estable por fila (para :key), de modo que la ordenación/filtrado no reutilice inputs por error
   let uidCounter = 0;
@@ -355,6 +364,7 @@
     fechaNacimiento: '',
     roles: '',
     cursoAcademico: '',
+    ultimaConexion: null,
     _persistido: false,
     _uid: nextUid(),
   });
@@ -364,6 +374,7 @@
     nombre: '',
     roles: '',
     cursoAcademico: '',
+    ultimaConexion: null,
     _persistido: false,
     _uid: nextUid(),
   });
@@ -418,7 +429,74 @@
     return new Date(anio, mes, dia).getTime();
   };
 
+  // ---- Última conexión: parseo, formato relativo y formato exacto ----
+  // La última conexión llega del backend como fecha-hora ISO (LocalDateTime -> "2026-07-16T19:20:00").
+  const parsearUltimaConexionMs = (valor) => {
+    if (!valor) return NaN;
+    const ms = Date.parse(valor);
+    return isNaN(ms) ? NaN : ms;
+  };
+
+  const dos = (n) => String(n).padStart(2, '0');
+
+  // Formato exacto para el tooltip y el CSV: "DD/MM/YYYY HH:MM:SS"
+  const formatearFechaExacta = (valor) => {
+    const ms = parsearUltimaConexionMs(valor);
+    if (isNaN(ms)) return '';
+    const f = new Date(ms);
+    return `${dos(f.getDate())}/${dos(f.getMonth() + 1)}/${f.getFullYear()} ${dos(f.getHours())}:${dos(f.getMinutes())}:${dos(f.getSeconds())}`;
+  };
+
+  // Formato relativo tipo "Ahora", "Hace 3 minutos", "Hace 1 hora y 21 minutos", "Hace 2 días", "Hace 1 semana"...
+  const formatearUltimaConexion = (valor) => {
+    const ms = parsearUltimaConexionMs(valor);
+    if (isNaN(ms)) return 'Nunca';
+
+    let diff = Date.now() - ms;
+    if (diff < 0) diff = 0;
+
+    const segundos = Math.floor(diff / 1000);
+    if (segundos < 60) return 'Ahora';
+
+    const minutos = Math.floor(segundos / 60);
+    if (minutos < 60) return `Hace ${minutos} ${minutos === 1 ? 'minuto' : 'minutos'}`;
+
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) {
+      const minsRestantes = minutos % 60;
+      const parteHoras = `${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+      if (minsRestantes > 0) {
+        return `Hace ${parteHoras} y ${minsRestantes} ${minsRestantes === 1 ? 'minuto' : 'minutos'}`;
+      }
+      return `Hace ${parteHoras}`;
+    }
+
+    const dias = Math.floor(horas / 24);
+    if (dias < 7) return `Hace ${dias} ${dias === 1 ? 'día' : 'días'}`;
+
+    const semanas = Math.floor(dias / 7);
+    if (dias < 30) return `Hace ${semanas} ${semanas === 1 ? 'semana' : 'semanas'}`;
+
+    const meses = Math.floor(dias / 30);
+    if (dias < 365) return `Hace ${meses} ${meses === 1 ? 'mes' : 'meses'}`;
+
+    const anios = Math.floor(dias / 365);
+    return `Hace ${anios} ${anios === 1 ? 'año' : 'años'}`;
+  };
+
   const compararCampo = (a, b, campo, dir) => {
+    // La última conexión se ordena por su valor real de fecha; los "Nunca" (null) SIEMPRE al final
+    if (campo === 'ultimaConexion') {
+      const ma = parsearUltimaConexionMs(a[campo]);
+      const mb = parsearUltimaConexionMs(b[campo]);
+      const aNulo = isNaN(ma);
+      const bNulo = isNaN(mb);
+      if (aNulo && bNulo) return 0;
+      if (aNulo) return 1;
+      if (bNulo) return -1;
+      return dir === 'desc' ? mb - ma : ma - mb;
+    }
+
     let res;
     if (campo === 'fechaNacimiento') {
       const fa = parsearFecha(a[campo]);
@@ -434,6 +512,10 @@
     return dir === 'desc' ? -res : res;
   };
 
+  // Devuelve el texto buscable de un campo (para 'ultimaConexion' usa el texto relativo mostrado)
+  const valorBusqueda = (fila, campo) =>
+    campo === 'ultimaConexion' ? formatearUltimaConexion(fila[campo]) : fila[campo];
+
   // Aplica filtro (búsqueda global) + orden a las filas persistidas, y añade SIEMPRE las no persistidas al final
   // (incluida la fila vacía para dar de alta), de modo que nunca se mezclan con la ordenación.
   const construirFilasMostradas = (filas, campos, busqueda, orden) => {
@@ -442,7 +524,7 @@
 
     const q = normalizarTexto(busqueda).trim();
     let visibles = q
-      ? persistidos.filter((f) => campos.some((campo) => normalizarTexto(f[campo]).includes(q)))
+      ? persistidos.filter((f) => campos.some((campo) => normalizarTexto(valorBusqueda(f, campo)).includes(q)))
       : persistidos;
 
     if (orden.campo && orden.dir) {
@@ -452,8 +534,8 @@
     return [...visibles, ...noPersistidos];
   };
 
-  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles'];
-  const CAMPOS_APPS = ['clientId', 'nombre', 'roles'];
+  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles', 'ultimaConexion'];
+  const CAMPOS_APPS = ['clientId', 'nombre', 'roles', 'ultimaConexion'];
 
   const usuariosMostrados = computed(() =>
     construirFilasMostradas(usuarios.value, CAMPOS_USUARIOS, busquedaUsuarios.value, ordenUsuarios.value)
@@ -559,6 +641,7 @@
         fechaNacimiento: u.fechaNacimiento || '',
         roles: rolesATexto(u.roles),
         cursoAcademico: u.cursoAcademico || '',
+        ultimaConexion: u.ultimaConexion || null,
         _persistido: true,
         _uid: nextUid(),
       }));
@@ -583,6 +666,7 @@
         nombre: a.nombre || '',
         roles: rolesATexto(a.roles),
         cursoAcademico: a.cursoAcademico || '',
+        ultimaConexion: a.ultimaConexion || null,
         _persistido: true,
         _uid: nextUid(),
       }));
@@ -744,10 +828,10 @@
   };
 
   const exportarUsuariosCsv = () => {
-    const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Curso académico'];
+    const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Curso académico', 'Última conexión'];
     const filas = usuariosMostrados.value
       .filter((u) => u._persistido)
-      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, u.cursoAcademico]);
+      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, u.cursoAcademico, u.ultimaConexion ? formatearFechaExacta(u.ultimaConexion) : 'Nunca']);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay usuarios para exportar');
@@ -758,10 +842,10 @@
   };
 
   const exportarAppsCsv = () => {
-    const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Curso académico'];
+    const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Curso académico', 'Última conexión'];
     const filas = appsMostradas.value
       .filter((a) => a._persistido)
-      .map((a) => [a.clientId, a.nombre, a.roles, a.cursoAcademico]);
+      .map((a) => [a.clientId, a.nombre, a.roles, a.cursoAcademico, a.ultimaConexion ? formatearFechaExacta(a.ultimaConexion) : 'Nunca']);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay aplicaciones para exportar');
@@ -1136,6 +1220,15 @@ table.tabla-datos {
 .col-accion {
   width: 90px;
   min-width: 80px;
+}
+
+.col-conexion {
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+.conexion-text {
+  cursor: default;
 }
 
 .cell-input {
