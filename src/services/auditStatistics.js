@@ -1,5 +1,5 @@
 import { auditApiUrl } from "@/environment/apiUrls";
-import { obtenerTokenJWTValido } from "@/services/firebaseService";
+import { obtenerTokenJWTValido } from "@/services/adminService";
 
 /**
  * Obtiene las peticiones agrupadas por día de la semana.

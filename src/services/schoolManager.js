@@ -1,5 +1,5 @@
 import {schoolManagerApiUrl} from '@/environment/apiUrls';
-import {obtenerTokenJWTValido} from '@/services/firebaseService';
+import {obtenerTokenJWTValido} from '@/services/adminService';
 
 /****************************** Ventana X Common ******************************/
 export const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) => 

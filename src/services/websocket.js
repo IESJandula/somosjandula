@@ -1,6 +1,6 @@
 import { Client } from "@stomp/stompjs";
 import { automationsApiUrl } from "@/environment/apiUrls";
-import { obtenerTokenJWTValido } from "@/services/firebaseService";
+import { obtenerTokenJWTValido } from "@/services/adminService";
 
 // Cliente STOMP global
 let stompClient = null;

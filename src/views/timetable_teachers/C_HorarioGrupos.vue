@@ -59,7 +59,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { IonToast } from '@ionic/vue';
-import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/firebaseService';
+import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/adminService';
 import { crearToast } from '@/utils/toast.js';
 import { 
   obtenerCursosEtapasGrupos,

@@ -1,7 +1,7 @@
 <template>
   <div class="page-admin-firebase">
     <header class="page-header">
-      <h1 class="t-1">Administración de Firebase</h1>
+      <h1 class="t-1">Administración del sistema</h1>
       <p class="page-subtitle">
         Inserta usuarios y aplicaciones de forma masiva mediante ficheros, consulta y edita los listados y gestiona
         las constantes de configuración de los microservicios.
@@ -291,7 +291,7 @@
     borrarTodosLosUsuarios,
     borrarTodasLasApps,
     obtenerDepartamentos,
-  } from '@/services/firebaseService';
+  } from '@/services/adminService';
   import { crearToast } from '@/utils/toast.js';
 
   const toastMessage = ref('');

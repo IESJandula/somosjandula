@@ -46,7 +46,7 @@ import { IonContent, IonIcon, IonToast, IonPage } from '@ionic/vue';
 import { logoGoogle as googleIcon, car as carIcon } from 'ionicons/icons';
 import { signInWithPopup, signOut } from "firebase/auth";
 import { crearToast } from '@/utils/toast.js';
-import { obtenerRolesUsuario } from '@/services/firebaseService.js';
+import { obtenerRolesUsuario } from '@/services/adminService.js';
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { firebaseConfig } from '@/environment/firebaseConfig';

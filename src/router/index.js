@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { ref } from 'vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { obtenerRolesUsuario } from '@/services/firebaseService';
+import { obtenerRolesUsuario } from '@/services/adminService';
 
 import LoginPage from '@/views/LoginPage.vue';
 import MainLayout from '@/components/MainLayout.vue';

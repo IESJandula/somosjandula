@@ -1,5 +1,5 @@
 import { issuesApiUrl } from '@/environment/apiUrls';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 
 /*************************************************/
 /**************** Categorías *********************/

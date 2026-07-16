@@ -1,5 +1,5 @@
 import { eventsApiUrl, adminApiUrl } from '@/environment/apiUrls';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 import { crearToast } from "@/utils/toast.js";
 
 export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) => {

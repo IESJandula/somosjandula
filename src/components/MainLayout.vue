@@ -106,7 +106,7 @@ import { homeOutline, personCircleOutline, checkmarkOutline, logOutOutline } fro
 import { useRouter } from "vue-router";
 import { menuController } from "@ionic/vue";
 import { getAuth, signOut } from "firebase/auth";
-import { obtenerNombreYApellidosUsuario, obtenerRolesUsuario } from "@/services/firebaseService";
+import { obtenerNombreYApellidosUsuario, obtenerRolesUsuario } from "@/services/adminService";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
 import {
   etiquetaRol,
@@ -280,7 +280,7 @@ export default defineComponent({
         const auth = getAuth();
         await signOut(auth);
 
-        // El JWT de sesión se persiste en sessionStorage (ver firebaseService)
+        // El JWT de sesión se persiste en sessionStorage (ver adminService)
         sessionStorage.removeItem(SESSION_JWT_TOKEN);
         // Limpieza defensiva por si quedara en localStorage
         localStorage.removeItem(SESSION_JWT_TOKEN);

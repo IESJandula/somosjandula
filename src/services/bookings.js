@@ -1,5 +1,5 @@
 import { bookingsApiUrl, adminApiUrl } from '@/environment/apiUrls';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 
 export const getDiasSemana = async (toastMessage, toastColor, isToastOpen) => {
   const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);

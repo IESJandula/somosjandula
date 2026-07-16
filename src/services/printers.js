@@ -1,5 +1,5 @@
 import { printersApiUrl } from '@/environment/apiUrls';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 
 export const obtenerImpresoras = async (toastMessage, toastColor, isToastOpen) =>
 {

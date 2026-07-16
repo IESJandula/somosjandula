@@ -1,5 +1,5 @@
 import { imagesClonerApiUrl } from '@/environment/apiUrls';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 import { crearToast } from '@/utils/toast.js';
 
 const ADMIN_BASE = `${imagesClonerApiUrl}/images_cloner/admin/`;

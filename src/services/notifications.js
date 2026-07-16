@@ -1,6 +1,6 @@
 import { notificationsApiUrl } from '@/environment/apiUrls';
 import { crearToast } from '@/utils/toast.js';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 
 /*************************************************/
 /******** Gestión de notificaciones web **********/

@@ -211,7 +211,7 @@
 import {computed, onMounted, ref, watch} from 'vue';
 import {IonInput, IonToast} from "@ionic/vue";
 import {crearToast} from '@/utils/toast.js';
-import {obtenerEmailUsuario, obtenerRolesUsuario, obtenerConstantes} from '@/services/firebaseService';
+import {obtenerEmailUsuario, obtenerRolesUsuario, obtenerConstantes} from '@/services/adminService';
 import {
   actualizarConciliacion,
   actualizarOtrasObservaciones,

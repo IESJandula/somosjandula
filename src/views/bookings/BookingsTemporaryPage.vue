@@ -214,7 +214,7 @@ import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import { getWeek, format, startOfWeek, addWeeks, getMonth, addDays } from 'date-fns';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservasTemporary, postReservaTemporary, deleteReservaTemporary, deleteReserva, getCheckAvailable } from '@/services/bookings.js'
-import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario, obtenerConstantes } from '@/services/firebaseService';
+import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario, obtenerConstantes } from '@/services/adminService';
 import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas

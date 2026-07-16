@@ -126,7 +126,7 @@
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonIcon } from '@ionic/vue';
 import { ref, onMounted } from 'vue';
-import { obtenerInfoUsuarios } from '@/services/firebaseService';
+import { obtenerInfoUsuarios } from '@/services/adminService';
 import { crearToast } from '@/utils/toast.js';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { obtenerImpresoras, obtenerEstados, filtrarDatos, filtrarDatosPaginado } from '@/services/printers';

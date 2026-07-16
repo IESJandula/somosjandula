@@ -1,5 +1,5 @@
 import { bookingsApiUrl } from '@/environment/apiUrls';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 
 /**
  * Obtiene el recurso más reservado según las reservas reales (FIJAS + TEMPORALES).

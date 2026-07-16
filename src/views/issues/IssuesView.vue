@@ -222,7 +222,7 @@ import {
 } from "@/services/schoolManager.js";
 
 // Servicio que te da email y roles del usuario logueado.
-import { obtenerDatosUsuarioSesion } from "@/services/firebaseService";
+import { obtenerDatosUsuarioSesion } from "@/services/adminService";
 
 
 // ------------ Estado global de la vista ------------

@@ -49,7 +49,7 @@
 <script setup>
 import { IonIcon } from "@ionic/vue";
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { obtenerRolesUsuario, obtenerConstantes } from "@/services/firebaseService";
+import { obtenerRolesUsuario, obtenerConstantes } from "@/services/adminService";
 import { obtenerRolSeleccionado, EVENTO_ROL_CAMBIADO, fuerzaRol } from "@/utils/roles";
 import {
   starOutline,
@@ -225,7 +225,7 @@ const seccionAdministracion = computed(() => ({
   titulo: "Administración",
   icono: shieldCheckmarkOutline,
   items: [
-    { label: "Firebase", icono: logoFirebase, to: "/admin" },
+    { label: "Sistema", icono: logoFirebase, to: "/admin" },
     { label: "Impresión", icono: printOutline, to: "/printers/admin" },
     { label: "Reservas", icono: calendarOutline, to: "/bookings/admin" },
     { label: "Notificaciones", icono: notificationsOutline, to: "/notifications/admin" },

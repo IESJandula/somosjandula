@@ -1,5 +1,5 @@
 import { strikesApiUrl, adminApiUrl } from '@/environment/apiUrls';
-import { obtenerTokenJWTValido } from '@/services/firebaseService';
+import { obtenerTokenJWTValido } from '@/services/adminService';
 import { crearToast } from "@/utils/toast.js";
 
 export const crearHuelga = async (toastMessage, toastColor, isToastOpen, titulo, fechaInicio, fechaFin) => 

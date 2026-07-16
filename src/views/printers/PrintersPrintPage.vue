@@ -214,7 +214,7 @@ import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
 import FileUpload from '@/components/printers/FileUpload.vue';
 import PdfViewer from '@/components/printers/PdfViewer.vue';
-import { obtenerNombreYApellidosUsuario, obtenerConstantes } from '@/services/firebaseService';
+import { obtenerNombreYApellidosUsuario, obtenerConstantes } from '@/services/adminService';
 import { closeOutline } from 'ionicons/icons';
 
 // Configuramos la URL del Worker

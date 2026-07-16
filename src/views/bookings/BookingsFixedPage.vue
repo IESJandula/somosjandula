@@ -140,7 +140,7 @@ import { ref, onMounted, watch } from 'vue'
 import { IonToast } from '@ionic/vue';
 import { useRouter } from 'vue-router';
 import { getDiasSemana, getTramosHorarios, getRecursos, getReservas, postReserva, deleteReserva } from '@/services/bookings.js'
-import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario, obtenerConstantes } from '@/services/firebaseService';
+import { obtenerInfoUsuarios, obtenerRolesUsuario, obtenerEmailUsuario, obtenerConstantes } from '@/services/adminService';
 import { crearToast } from '@/utils/toast.js';
 
 // Variables reactivas
