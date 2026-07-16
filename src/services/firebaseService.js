@@ -417,6 +417,87 @@ export async function borrarApp(toastMessage, toastColor, isToastOpen, clientId)
   return response;
 }
 
+/**
+ * Borra TODOS los usuarios EXCEPTO los que tengan rol ADMINISTRADOR (DELETE /admin/save/users/all).
+ * El curso académico se resuelve SIEMPRE en el servidor desde la constante; no se envía.
+ *
+ * @param {*} toastMessage mensaje emergente
+ * @param {*} toastColor color del mensaje emergente
+ * @param {*} isToastOpen si el mensaje emergente se mostrará
+ * @returns {Promise<number>} número de usuarios borrados
+ */
+export async function borrarTodosLosUsuarios(toastMessage, toastColor, isToastOpen) {
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(adminApiUrl + '/admin/save/users/all',
+    {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${tokenPropio}` }
+    });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al borrar los usuarios');
+    throw new Error(errorMessage || 'Error al borrar los usuarios');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Borra TODAS las aplicaciones del curso académico actual (DELETE /admin/save/apps/all).
+ * El curso académico se resuelve SIEMPRE en el servidor desde la constante; no se envía.
+ *
+ * @param {*} toastMessage mensaje emergente
+ * @param {*} toastColor color del mensaje emergente
+ * @param {*} isToastOpen si el mensaje emergente se mostrará
+ * @returns {Promise<number>} número de aplicaciones borradas
+ */
+export async function borrarTodasLasApps(toastMessage, toastColor, isToastOpen) {
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(adminApiUrl + '/admin/save/apps/all',
+    {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${tokenPropio}` }
+    });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al borrar las aplicaciones');
+    throw new Error(errorMessage || 'Error al borrar las aplicaciones');
+  }
+
+  return await response.json();
+}
+
+/**
+ * Obtiene la lista de departamentos disponibles (GET /admin/queries/departments).
+ * El curso académico se resuelve SIEMPRE en el servidor desde la constante; no se envía.
+ *
+ * @param {*} toastMessage mensaje emergente
+ * @param {*} toastColor color del mensaje emergente
+ * @param {*} isToastOpen si el mensaje emergente se mostrará
+ * @returns {Promise<string[]>} lista de departamentos
+ */
+export async function obtenerDepartamentos(toastMessage, toastColor, isToastOpen) {
+  let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(adminApiUrl + '/admin/queries/departments',
+    {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${tokenPropio}` }
+    });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage || 'Error al obtener los departamentos');
+    throw new Error(errorMessage || 'Error al obtener los departamentos');
+  }
+
+  return await response.json();
+}
+
 export async function obtenerDatosUsuarioSesion(toastMessage, toastColor, isToastOpen) {
   const email = await obtenerEmailUsuario(toastMessage, toastColor, isToastOpen);
   const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);

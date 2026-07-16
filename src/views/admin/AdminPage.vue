@@ -12,179 +12,207 @@
       <section class="panel-section">
         <h2 class="section-title">Inserciones masivas y listados</h2>
 
-        <div class="actions-grid">
-          <!-- Columna USUARIOS: inserción masiva + tabla -->
-          <div class="action-column">
-            <!-- Inserción masiva de usuarios -->
-            <article class="action-card">
-              <h3 class="card-title">Inserción masiva de usuarios</h3>
-              <div class="card-body">
-                <div class="field">
-                  <label>Adjunta el fichero de usuarios</label>
-                  <FileUpload ref="fileUploadUsersRef" @file-selected="onArchivoUsuariosSeleccionado" />
-                  <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
-                </div>
-
-                <button
-                  type="button"
-                  class="btn-primary"
-                  :disabled="!archivoUsuarios || cargandoUsuarios"
-                  @click="uploadUsers">
-                  Crear usuarios
-                </button>
-              </div>
-            </article>
-
-            <!-- Tabla de usuarios -->
-            <article class="action-card table-card">
-              <div class="table-card-header">
-                <h3 class="card-title card-title-inline">Usuarios del sistema</h3>
-                <button
-                  type="button"
-                  class="btn-secondary btn-mini"
-                  :disabled="!hayUsuarios"
-                  @click="exportarUsuariosCsv">
-                  Exportar CSV
-                </button>
+        <!-- 1) Arriba: las dos tarjetas de inserción masiva (usuarios y apps) -->
+        <div class="import-grid">
+          <!-- Inserción masiva de usuarios -->
+          <article class="action-card">
+            <h3 class="card-title">Inserción masiva de usuarios</h3>
+            <div class="card-body">
+              <div class="field">
+                <label>Adjunta el fichero de usuarios</label>
+                <FileUpload ref="fileUploadUsersRef" @file-selected="onArchivoUsuariosSeleccionado" />
+                <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
               </div>
 
-              <div v-if="cargandoTablaUsuarios" class="table-loading">
-                <div class="circulo"></div>
+              <button
+                type="button"
+                class="btn-primary"
+                :disabled="!archivoUsuarios || cargandoUsuarios"
+                @click="uploadUsers">
+                Crear usuarios
+              </button>
+            </div>
+          </article>
+
+          <!-- Inserción masiva de apps -->
+          <article class="action-card">
+            <h3 class="card-title">Inserción masiva de apps</h3>
+            <div class="card-body">
+              <div class="field">
+                <label>Adjunta el fichero de aplicaciones</label>
+                <FileUpload ref="fileUploadAppsRef" @file-selected="onArchivoAppsSeleccionado" />
+                <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
               </div>
 
-              <div class="table-scroll">
-                <table class="tabla-datos">
-                  <thead>
-                    <tr>
-                      <th class="col-accion">Eliminar</th>
-                      <th>Email</th>
-                      <th>Nombre</th>
-                      <th>Apellidos</th>
-                      <th>Departamento</th>
-                      <th>Fecha nac.</th>
-                      <th>Roles</th>
-                      <th class="col-accion">Guardar</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(usuario, index) in usuarios" :key="index">
-                      <td class="col-accion">
-                        <button
-                          v-if="usuario._persistido"
-                          type="button"
-                          class="btn-delete"
-                          title="Borrar usuario"
-                          @click="borrarUsuarioFila(index)">X</button>
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          v-model="usuario.email"
-                          class="cell-input"
-                          :disabled="usuario._persistido"
-                          placeholder="email@dominio">
-                      </td>
-                      <td><input type="text" v-model="usuario.nombre" class="cell-input"></td>
-                      <td><input type="text" v-model="usuario.apellidos" class="cell-input"></td>
-                      <td><input type="text" v-model="usuario.departamento" class="cell-input"></td>
-                      <td><input type="text" v-model="usuario.fechaNacimiento" class="cell-input" placeholder="dd/mm/aaaa"></td>
-                      <td><input type="text" v-model="usuario.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
-                      <td class="col-accion">
-                        <button type="button" class="btn-primary btn-mini" @click="guardarUsuarioFila(index)">Guardar</button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p v-if="!hayUsuarios && !cargandoTablaUsuarios" class="empty-state">
-                No hay usuarios cargados. Usa la última fila para añadir uno nuevo.
-              </p>
-            </article>
-          </div>
-
-          <!-- Columna APPS: inserción masiva + tabla -->
-          <div class="action-column">
-            <!-- Inserción masiva de apps -->
-            <article class="action-card">
-              <h3 class="card-title">Inserción masiva de apps</h3>
-              <div class="card-body">
-                <div class="field">
-                  <label>Adjunta el fichero de aplicaciones</label>
-                  <FileUpload ref="fileUploadAppsRef" @file-selected="onArchivoAppsSeleccionado" />
-                  <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
-                </div>
-
-                <button
-                  type="button"
-                  class="btn-primary"
-                  :disabled="!archivoApps || cargandoApps"
-                  @click="uploadApps">
-                  Crear aplicaciones
-                </button>
-              </div>
-            </article>
-
-            <!-- Tabla de apps -->
-            <article class="action-card table-card">
-              <div class="table-card-header">
-                <h3 class="card-title card-title-inline">Aplicaciones registradas</h3>
-                <button
-                  type="button"
-                  class="btn-secondary btn-mini"
-                  :disabled="!hayApps"
-                  @click="exportarAppsCsv">
-                  Exportar CSV
-                </button>
-              </div>
-
-              <div v-if="cargandoTablaApps" class="table-loading">
-                <div class="circulo"></div>
-              </div>
-
-              <div class="table-scroll">
-                <table class="tabla-datos">
-                  <thead>
-                    <tr>
-                      <th class="col-accion">Eliminar</th>
-                      <th>Client ID</th>
-                      <th>Nombre</th>
-                      <th>Roles</th>
-                      <th class="col-accion">Guardar</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(app, index) in apps" :key="index">
-                      <td class="col-accion">
-                        <button
-                          v-if="app._persistido"
-                          type="button"
-                          class="btn-delete"
-                          title="Borrar aplicación"
-                          @click="borrarAppFila(index)">X</button>
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          v-model="app.clientId"
-                          class="cell-input"
-                          :disabled="app._persistido"
-                          placeholder="clientId">
-                      </td>
-                      <td><input type="text" v-model="app.nombre" class="cell-input"></td>
-                      <td><input type="text" v-model="app.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
-                      <td class="col-accion">
-                        <button type="button" class="btn-primary btn-mini" @click="guardarAppFila(index)">Guardar</button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <p v-if="!hayApps && !cargandoTablaApps" class="empty-state">
-                No hay aplicaciones cargadas. Usa la última fila para añadir una nueva.
-              </p>
-            </article>
-          </div>
+              <button
+                type="button"
+                class="btn-primary"
+                :disabled="!archivoApps || cargandoApps"
+                @click="uploadApps">
+                Crear aplicaciones
+              </button>
+            </div>
+          </article>
         </div>
+
+        <!-- 2) Debajo: tabla de usuarios a ancho completo -->
+        <article class="action-card table-card">
+          <div class="table-card-header">
+            <h3 class="card-title card-title-inline">Usuarios del sistema</h3>
+            <div class="table-actions">
+              <input
+                type="text"
+                v-model="busquedaUsuarios"
+                class="search-input"
+                placeholder="Buscar...">
+              <button
+                type="button"
+                class="btn-delete btn-mini"
+                :disabled="!hayUsuarios"
+                @click="borrarTodosUsuarios">
+                Borrar todos
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-mini"
+                :disabled="!hayUsuarios"
+                @click="exportarUsuariosCsv">
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+
+          <div v-if="cargandoTablaUsuarios" class="table-loading">
+            <div class="circulo"></div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="tabla-datos">
+              <thead>
+                <tr>
+                  <th class="col-accion">Eliminar</th>
+                  <th class="sortable" @click="ordenarUsuarios('email')">Email<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'email') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'nombre') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('apellidos')">Apellidos<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'apellidos') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('departamento')">Departamento<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'departamento') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('fechaNacimiento')">Fecha nac.<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'fechaNacimiento') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
+                  <th class="col-accion">Guardar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="usuario in usuariosMostrados" :key="usuario._uid">
+                  <td class="col-accion">
+                    <button
+                      v-if="usuario._persistido"
+                      type="button"
+                      class="btn-delete"
+                      title="Borrar usuario"
+                      @click="borrarUsuarioFila(usuario)">X</button>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      v-model="usuario.email"
+                      class="cell-input"
+                      :disabled="usuario._persistido"
+                      placeholder="email@dominio">
+                  </td>
+                  <td><input type="text" v-model="usuario.nombre" class="cell-input"></td>
+                  <td><input type="text" v-model="usuario.apellidos" class="cell-input"></td>
+                  <td>
+                    <select v-model="usuario.departamento" class="cell-input">
+                      <option value="">—</option>
+                      <option v-for="dep in opcionesDepartamento(usuario.departamento)" :key="dep" :value="dep">{{ dep }}</option>
+                    </select>
+                  </td>
+                  <td><input type="text" v-model="usuario.fechaNacimiento" class="cell-input" placeholder="dd/mm/aaaa"></td>
+                  <td><input type="text" v-model="usuario.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                  <td class="col-accion">
+                    <button type="button" class="btn-primary btn-mini" @click="guardarUsuarioFila(usuario)">Guardar</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-if="!hayUsuarios && !cargandoTablaUsuarios" class="empty-state">
+            No hay usuarios cargados. Usa la última fila para añadir uno nuevo.
+          </p>
+        </article>
+
+        <!-- 3) Debajo: tabla de aplicaciones a ancho completo -->
+        <article class="action-card table-card">
+          <div class="table-card-header">
+            <h3 class="card-title card-title-inline">Aplicaciones registradas</h3>
+            <div class="table-actions">
+              <input
+                type="text"
+                v-model="busquedaApps"
+                class="search-input"
+                placeholder="Buscar...">
+              <button
+                type="button"
+                class="btn-delete btn-mini"
+                :disabled="!hayApps"
+                @click="borrarTodasApps">
+                Borrar todos
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-mini"
+                :disabled="!hayApps"
+                @click="exportarAppsCsv">
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+
+          <div v-if="cargandoTablaApps" class="table-loading">
+            <div class="circulo"></div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="tabla-datos">
+              <thead>
+                <tr>
+                  <th class="col-accion">Eliminar</th>
+                  <th class="sortable" @click="ordenarApps('clientId')">Client ID<span class="sort-ind">{{ indicadorOrden(ordenApps, 'clientId') }}</span></th>
+                  <th class="sortable" @click="ordenarApps('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
+                  <th class="sortable" @click="ordenarApps('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
+                  <th class="col-accion">Guardar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="app in appsMostradas" :key="app._uid">
+                  <td class="col-accion">
+                    <button
+                      v-if="app._persistido"
+                      type="button"
+                      class="btn-delete"
+                      title="Borrar aplicación"
+                      @click="borrarAppFila(app)">X</button>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      v-model="app.clientId"
+                      class="cell-input"
+                      :disabled="app._persistido"
+                      placeholder="clientId">
+                  </td>
+                  <td><input type="text" v-model="app.nombre" class="cell-input"></td>
+                  <td><input type="text" v-model="app.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                  <td class="col-accion">
+                    <button type="button" class="btn-primary btn-mini" @click="guardarAppFila(app)">Guardar</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-if="!hayApps && !cargandoTablaApps" class="empty-state">
+            No hay aplicaciones cargadas. Usa la última fila para añadir una nueva.
+          </p>
+        </article>
 
         <div v-if="cargandoUsuarios || cargandoApps" class="fondo-gris">
           <div class="circulo"></div>
@@ -193,7 +221,7 @@
 
       <div class="panel-divider" aria-hidden="true"></div>
 
-      <!-- Gestión de constantes -->
+      <!-- 4) Al final: gestión de constantes -->
       <section class="panel-section">
         <h2 class="section-title">Gestión de constantes</h2>
 
@@ -260,6 +288,9 @@
     guardarApp,
     borrarUsuario,
     borrarApp,
+    borrarTodosLosUsuarios,
+    borrarTodasLasApps,
+    obtenerDepartamentos,
   } from '@/services/firebaseService';
   import { crearToast } from '@/utils/toast.js';
 
@@ -280,6 +311,21 @@
   const apps = ref([]);
   const cargandoTablaUsuarios = ref(false);
   const cargandoTablaApps = ref(false);
+
+  // Departamentos disponibles para el desplegable de la tabla de usuarios
+  const departamentos = ref([]);
+
+  // Búsqueda (filtro global en cliente) por tabla
+  const busquedaUsuarios = ref('');
+  const busquedaApps = ref('');
+
+  // Estado de ordenación por columna, independiente por tabla ({ campo, dir: 'asc' | 'desc' | null })
+  const ordenUsuarios = ref({ campo: null, dir: null });
+  const ordenApps = ref({ campo: null, dir: null });
+
+  // Identificador estable por fila (para :key), de modo que la ordenación/filtrado no reutilice inputs por error
+  let uidCounter = 0;
+  const nextUid = () => ++uidCounter;
 
   // Gestión de constantes: todas las constantes (todos los proyectos) y filtrado por proyecto
   const constantes = ref([]);
@@ -310,6 +356,7 @@
     roles: '',
     cursoAcademico: '',
     _persistido: false,
+    _uid: nextUid(),
   });
 
   const filaAppVacia = () => ({
@@ -318,6 +365,7 @@
     roles: '',
     cursoAcademico: '',
     _persistido: false,
+    _uid: nextUid(),
   });
 
   // Convierte el texto de roles (separado por comas o barras) en un array limpio
@@ -350,6 +398,97 @@
 
   watch(usuarios, asegurarFilaVaciaUsuarios, { deep: true });
   watch(apps, asegurarFilaVaciaApps, { deep: true });
+
+  // ---- Búsqueda + ordenación (en cliente) ----
+  // Normaliza texto: minúsculas y sin acentos, para búsqueda/orden insensibles
+  const normalizarTexto = (valor) =>
+    String(valor == null ? '' : valor)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
+  // Parsea una fecha dd/mm/aaaa (o dd-mm-aaaa) a timestamp; NaN si no aplica
+  const parsearFecha = (valor) => {
+    if (!valor) return NaN;
+    const m = String(valor).trim().match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+    if (!m) return NaN;
+    const dia = +m[1];
+    const mes = +m[2] - 1;
+    const anio = +m[3] < 100 ? 2000 + +m[3] : +m[3];
+    return new Date(anio, mes, dia).getTime();
+  };
+
+  const compararCampo = (a, b, campo, dir) => {
+    let res;
+    if (campo === 'fechaNacimiento') {
+      const fa = parsearFecha(a[campo]);
+      const fb = parsearFecha(b[campo]);
+      if (!isNaN(fa) && !isNaN(fb)) {
+        res = fa - fb;
+      } else {
+        res = normalizarTexto(a[campo]).localeCompare(normalizarTexto(b[campo]));
+      }
+    } else {
+      res = normalizarTexto(a[campo]).localeCompare(normalizarTexto(b[campo]));
+    }
+    return dir === 'desc' ? -res : res;
+  };
+
+  // Aplica filtro (búsqueda global) + orden a las filas persistidas, y añade SIEMPRE las no persistidas al final
+  // (incluida la fila vacía para dar de alta), de modo que nunca se mezclan con la ordenación.
+  const construirFilasMostradas = (filas, campos, busqueda, orden) => {
+    const persistidos = filas.filter((f) => f._persistido);
+    const noPersistidos = filas.filter((f) => !f._persistido);
+
+    const q = normalizarTexto(busqueda).trim();
+    let visibles = q
+      ? persistidos.filter((f) => campos.some((campo) => normalizarTexto(f[campo]).includes(q)))
+      : persistidos;
+
+    if (orden.campo && orden.dir) {
+      visibles = [...visibles].sort((a, b) => compararCampo(a, b, orden.campo, orden.dir));
+    }
+
+    return [...visibles, ...noPersistidos];
+  };
+
+  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles'];
+  const CAMPOS_APPS = ['clientId', 'nombre', 'roles'];
+
+  const usuariosMostrados = computed(() =>
+    construirFilasMostradas(usuarios.value, CAMPOS_USUARIOS, busquedaUsuarios.value, ordenUsuarios.value)
+  );
+
+  const appsMostradas = computed(() =>
+    construirFilasMostradas(apps.value, CAMPOS_APPS, busquedaApps.value, ordenApps.value)
+  );
+
+  // Alterna el orden de una columna: asc -> desc -> sin orden
+  const cambiarOrden = (ordenRef, campo) => {
+    const actual = ordenRef.value;
+    if (actual.campo !== campo) {
+      ordenRef.value = { campo, dir: 'asc' };
+    } else if (actual.dir === 'asc') {
+      ordenRef.value = { campo, dir: 'desc' };
+    } else {
+      ordenRef.value = { campo: null, dir: null };
+    }
+  };
+
+  const ordenarUsuarios = (campo) => cambiarOrden(ordenUsuarios, campo);
+  const ordenarApps = (campo) => cambiarOrden(ordenApps, campo);
+
+  const indicadorOrden = (orden, campo) =>
+    orden.campo === campo ? (orden.dir === 'asc' ? ' ▲' : ' ▼') : '';
+
+  // Opciones del desplegable de departamento: la lista disponible + el valor actual si no estuviera en ella
+  const opcionesDepartamento = (actual) => {
+    const base = departamentos.value;
+    if (actual && !base.includes(actual)) {
+      return [actual, ...base];
+    }
+    return base;
+  };
 
   // ---- Inserciones masivas (ficheros CSV) ----
   const onArchivoUsuariosSeleccionado = (archivo) => {
@@ -399,6 +538,15 @@
   };
 
   // ---- Carga de las tablas ----
+  const cargarDepartamentos = async () => {
+    try {
+      departamentos.value = (await obtenerDepartamentos(toastMessage, toastColor, isToastOpen)) || [];
+    } catch (error) {
+      console.error(error);
+      departamentos.value = [];
+    }
+  };
+
   const cargarUsuarios = async () => {
     cargandoTablaUsuarios.value = true;
     try {
@@ -412,8 +560,11 @@
         roles: rolesATexto(u.roles),
         cursoAcademico: u.cursoAcademico || '',
         _persistido: true,
+        _uid: nextUid(),
       }));
       asegurarFilaVaciaUsuarios();
+      // Refrescamos la lista de departamentos disponibles
+      await cargarDepartamentos();
     } catch (error) {
       console.error(error);
       usuarios.value = [];
@@ -433,6 +584,7 @@
         roles: rolesATexto(a.roles),
         cursoAcademico: a.cursoAcademico || '',
         _persistido: true,
+        _uid: nextUid(),
       }));
       asegurarFilaVaciaApps();
     } catch (error) {
@@ -445,9 +597,7 @@
   };
 
   // ---- Guardado (upsert) por fila ----
-  const guardarUsuarioFila = async (index) => {
-    const usuario = usuarios.value[index];
-
+  const guardarUsuarioFila = async (usuario) => {
     if (!usuario.email || usuario.email.trim() === '') {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El email es obligatorio para guardar el usuario');
       return;
@@ -470,9 +620,7 @@
     }
   };
 
-  const guardarAppFila = async (index) => {
-    const app = apps.value[index];
-
+  const guardarAppFila = async (app) => {
     if (!app.clientId || app.clientId.trim() === '') {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El clientId es obligatorio para guardar la aplicación');
       return;
@@ -493,9 +641,7 @@
   };
 
   // ---- Borrado por fila ----
-  const borrarUsuarioFila = async (index) => {
-    const usuario = usuarios.value[index];
-
+  const borrarUsuarioFila = async (usuario) => {
     if (!usuario._persistido) {
       return;
     }
@@ -513,9 +659,7 @@
     }
   };
 
-  const borrarAppFila = async (index) => {
-    const app = apps.value[index];
-
+  const borrarAppFila = async (app) => {
     if (!app._persistido) {
       return;
     }
@@ -533,7 +677,44 @@
     }
   };
 
-  // ---- Exportación a CSV (generada en el frontend a partir de los datos cargados) ----
+  // ---- Borrado masivo ----
+  const borrarTodosUsuarios = async () => {
+    if (!hayUsuarios.value) {
+      return;
+    }
+
+    if (!window.confirm('Se borrarán todos los usuarios excepto los que tengan rol ADMINISTRADOR. ¿Continuar?')) {
+      return;
+    }
+
+    try {
+      const borrados = await borrarTodosLosUsuarios(toastMessage, toastColor, isToastOpen);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', `Usuarios borrados: ${borrados}`);
+      await cargarUsuarios();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const borrarTodasApps = async () => {
+    if (!hayApps.value) {
+      return;
+    }
+
+    if (!window.confirm('Se borrarán TODAS las aplicaciones. ¿Continuar?')) {
+      return;
+    }
+
+    try {
+      const borradas = await borrarTodasLasApps(toastMessage, toastColor, isToastOpen);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', `Aplicaciones borradas: ${borradas}`);
+      await cargarApps();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ---- Exportación a CSV (genera el CSV a partir de lo actualmente mostrado: filtrado + ordenado) ----
   const escaparCampoCsv = (valor) => {
     const texto = valor == null ? '' : String(valor);
     // Entrecomillamos si el campo contiene comas, comillas o saltos de línea (RFC 4180)
@@ -564,7 +745,7 @@
 
   const exportarUsuariosCsv = () => {
     const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Curso académico'];
-    const filas = usuarios.value
+    const filas = usuariosMostrados.value
       .filter((u) => u._persistido)
       .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, u.cursoAcademico]);
 
@@ -578,7 +759,7 @@
 
   const exportarAppsCsv = () => {
     const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Curso académico'];
-    const filas = apps.value
+    const filas = appsMostradas.value
       .filter((a) => a._persistido)
       .map((a) => [a.clientId, a.nombre, a.roles, a.cursoAcademico]);
 
@@ -685,18 +866,12 @@
   color: var(--text-color-light);
 }
 
-.actions-grid {
+/* Rejilla superior: las dos tarjetas de inserción masiva, una al lado de la otra en pantallas anchas */
+.import-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.25rem;
   align-items: start;
-}
-
-.action-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-width: 0;
 }
 
 .action-card {
@@ -730,6 +905,31 @@
   gap: 0.75rem;
   flex-wrap: wrap;
   margin-bottom: 0.85rem;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.search-input {
+  box-sizing: border-box;
+  padding: 7px 10px;
+  font-size: 13px;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #000;
+  outline: none;
+  max-width: 220px;
+}
+
+.search-input:hover,
+.search-input:focus {
+  border-color: #0056b3;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.35);
 }
 
 .card-body {
@@ -862,14 +1062,26 @@
   background-color: #b02a37;
 }
 
-/* ---- Tablas de datos (estilo /school_manager/cargaMatriculas) ---- */
+.btn-delete.btn-mini {
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+.btn-delete:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---- Tablas de datos (estilo /school_manager/cargaMatriculas), a ancho completo ---- */
 .table-card {
   min-width: 0;
+  width: 100%;
+  margin-top: 1.25rem;
 }
 
 .table-scroll {
   width: 100%;
-  max-height: 360px;
+  max-height: 420px;
   overflow: auto;
 }
 
@@ -901,6 +1113,15 @@ table.tabla-datos {
   /* Con border-collapse el borde se desplaza al hacer scroll; el box-shadow
      mantiene la línea de separación visible bajo la cabecera fija. */
   box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
+}
+
+.tabla-datos th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-ind {
+  font-size: 0.85em;
 }
 
 .tabla-datos td {
@@ -1006,13 +1227,18 @@ table.tabla-datos {
     border-color: #5a616b;
   }
   .btn-secondary:hover { background-color: #474e57; }
+  .search-input {
+    background-color: #1f2937;
+    color: #e6ebf1;
+    border-color: #3b82f6;
+  }
   .panel-divider {
     background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
   }
 }
 
 @media (max-width: 1024px) {
-  .actions-grid {
+  .import-grid {
     grid-template-columns: 1fr;
   }
   .constantes-grid {
@@ -1026,5 +1252,6 @@ table.tabla-datos {
   .t-1 { font-size: 1.75rem; }
   .constantes-grid { grid-template-columns: 1fr; }
   .tabla-datos { font-size: 14px; }
+  .search-input { max-width: 100%; flex: 1 1 100%; }
 }
 </style>
