@@ -430,9 +430,31 @@
   };
 
   // ---- Última conexión: parseo, formato relativo y formato exacto ----
-  // La última conexión llega del backend como fecha-hora ISO (LocalDateTime -> "2026-07-16T19:20:00").
+  // La última conexión puede llegar del backend como:
+  //   (a) ARRAY de Java LocalDateTime: [año, mes(1-12), día, hora, minuto, segundo, nanos]
+  //   (b) string ISO-8601 (si en el futuro se serializa como texto)
+  //   (c) null/undefined/array vacío -> sin fecha (NaN -> "Nunca")
   const parsearUltimaConexionMs = (valor) => {
-    if (!valor) return NaN;
+    if (valor == null) return NaN;
+
+    // Caso (a): array de LocalDateTime
+    if (Array.isArray(valor)) {
+      if (valor.length < 3) return NaN;
+      const [anio, mes, dia, hora, minuto, segundo, nanos] = valor;
+      const fecha = new Date(
+        anio,
+        (mes || 1) - 1,
+        dia,
+        hora || 0,
+        minuto || 0,
+        segundo || 0,
+        nanos ? Math.floor(nanos / 1e6) : 0
+      );
+      const ms = fecha.getTime();
+      return isNaN(ms) ? NaN : ms;
+    }
+
+    // Caso (b): string ISO-8601 (u otro parseable por Date)
     const ms = Date.parse(valor);
     return isNaN(ms) ? NaN : ms;
   };
@@ -831,7 +853,7 @@
     const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Curso académico', 'Última conexión'];
     const filas = usuariosMostrados.value
       .filter((u) => u._persistido)
-      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, u.cursoAcademico, u.ultimaConexion ? formatearFechaExacta(u.ultimaConexion) : 'Nunca']);
+      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, u.cursoAcademico, formatearFechaExacta(u.ultimaConexion) || 'Nunca']);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay usuarios para exportar');
@@ -845,7 +867,7 @@
     const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Curso académico', 'Última conexión'];
     const filas = appsMostradas.value
       .filter((a) => a._persistido)
-      .map((a) => [a.clientId, a.nombre, a.roles, a.cursoAcademico, a.ultimaConexion ? formatearFechaExacta(a.ultimaConexion) : 'Nunca']);
+      .map((a) => [a.clientId, a.nombre, a.roles, a.cursoAcademico, formatearFechaExacta(a.ultimaConexion) || 'Nunca']);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay aplicaciones para exportar');
