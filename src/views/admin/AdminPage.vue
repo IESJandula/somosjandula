@@ -107,6 +107,7 @@
                   <th class="sortable" @click="ordenarUsuarios('departamento')">Departamento<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'departamento') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('fechaNacimiento')">Fecha nac.<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'fechaNacimiento') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
                   <th class="col-accion">Guardar</th>
                 </tr>
@@ -139,6 +140,11 @@
                   </td>
                   <td><input type="text" v-model="usuario.fechaNacimiento" class="cell-input" placeholder="dd/mm/aaaa"></td>
                   <td><input type="text" v-model="usuario.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                  <td>
+                    <select v-model="usuario.estado" class="cell-input">
+                      <option v-for="opcion in ESTADOS_USUARIO" :key="opcion.valor" :value="opcion.valor">{{ opcion.etiqueta }}</option>
+                    </select>
+                  </td>
                   <td class="col-conexion">
                     <span class="conexion-text" :title="formatearFechaExacta(usuario.ultimaConexion)">{{ formatearUltimaConexion(usuario.ultimaConexion) }}</span>
                   </td>
@@ -376,6 +382,26 @@
   const hayUsuarios = computed(() => usuarios.value.some((u) => u._persistido));
   const hayApps = computed(() => apps.value.some((a) => a._persistido));
 
+  // Opciones del desplegable de estado (valor canónico que espera el backend + etiqueta mostrada)
+  const ESTADOS_USUARIO = [
+    { valor: 'ACTIVO', etiqueta: 'Activo' },
+    { valor: 'PENDIENTE', etiqueta: 'Pendiente' },
+    { valor: 'INACTIVO', etiqueta: 'Inactivo' },
+  ];
+
+  // Normaliza el estado recibido del backend: null/vacío se trata como ACTIVO (usuarios existentes sin estado)
+  const normalizarEstado = (estado) => {
+    const valor = (estado || '').toString().trim().toUpperCase();
+    return ESTADOS_USUARIO.some((e) => e.valor === valor) ? valor : 'ACTIVO';
+  };
+
+  // Devuelve la etiqueta legible (Activo/Pendiente/Inactivo) de un estado canónico, para el CSV
+  const etiquetaEstado = (estado) => {
+    const valor = normalizarEstado(estado);
+    const opcion = ESTADOS_USUARIO.find((e) => e.valor === valor);
+    return opcion ? opcion.etiqueta : valor;
+  };
+
   // ---- Helpers de filas y roles ----
   const filaUsuarioVacia = () => ({
     email: '',
@@ -384,6 +410,7 @@
     departamento: '',
     fechaNacimiento: '',
     roles: '',
+    estado: 'ACTIVO',
     cursoAcademico: '',
     ultimaConexion: null,
     _persistido: false,
@@ -555,9 +582,12 @@
     return dir === 'desc' ? -res : res;
   };
 
-  // Devuelve el texto buscable de un campo (para 'ultimaConexion' usa el texto relativo mostrado)
-  const valorBusqueda = (fila, campo) =>
-    campo === 'ultimaConexion' ? formatearUltimaConexion(fila[campo]) : fila[campo];
+  // Devuelve el texto buscable de un campo (para 'ultimaConexion' el texto relativo; para 'estado' su etiqueta)
+  const valorBusqueda = (fila, campo) => {
+    if (campo === 'ultimaConexion') return formatearUltimaConexion(fila[campo]);
+    if (campo === 'estado') return etiquetaEstado(fila[campo]);
+    return fila[campo];
+  };
 
   // Aplica filtro (búsqueda global) + orden a las filas persistidas, y añade SIEMPRE las no persistidas al final
   // (incluida la fila vacía para dar de alta), de modo que nunca se mezclan con la ordenación.
@@ -577,7 +607,7 @@
     return [...visibles, ...noPersistidos];
   };
 
-  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles', 'ultimaConexion'];
+  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles', 'estado', 'ultimaConexion'];
   const CAMPOS_APPS = ['clientId', 'nombre', 'roles', 'ultimaConexion'];
 
   const usuariosMostrados = computed(() =>
@@ -683,6 +713,7 @@
         departamento: u.departamento || '',
         fechaNacimiento: u.fechaNacimiento || '',
         roles: rolesATexto(u.roles),
+        estado: normalizarEstado(u.estado),
         cursoAcademico: u.cursoAcademico || '',
         ultimaConexion: u.ultimaConexion || null,
         _persistido: true,
@@ -739,6 +770,7 @@
         departamento: usuario.departamento,
         fechaNacimiento: usuario.fechaNacimiento,
         roles: parsearRoles(usuario.roles),
+        estado: normalizarEstado(usuario.estado),
       });
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Usuario guardado con éxito');
       await cargarUsuarios();
@@ -871,10 +903,10 @@
   };
 
   const exportarUsuariosCsv = () => {
-    const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Curso académico', 'Última conexión'];
+    const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Estado', 'Curso académico', 'Última conexión'];
     const filas = usuariosMostrados.value
       .filter((u) => u._persistido)
-      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, u.cursoAcademico, formatearFechaExacta(u.ultimaConexion) || 'Nunca']);
+      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, etiquetaEstado(u.estado), u.cursoAcademico, formatearFechaExacta(u.ultimaConexion) || 'Nunca']);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay usuarios para exportar');
