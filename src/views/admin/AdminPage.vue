@@ -58,7 +58,17 @@
         <!-- 2) Debajo: tabla de usuarios a ancho completo -->
         <article class="action-card table-card">
           <div class="table-card-header">
-            <h3 class="card-title card-title-inline">Usuarios del sistema</h3>
+            <div class="title-with-refresh">
+              <h3 class="card-title card-title-inline">Usuarios del sistema</h3>
+              <button
+                type="button"
+                class="btn-refresh"
+                :disabled="cargandoTablaUsuarios"
+                title="Refrescar usuarios"
+                @click="cargarUsuarios">
+                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoTablaUsuarios }" />
+              </button>
+            </div>
             <div class="table-actions">
               <input
                 type="text"
@@ -147,7 +157,17 @@
         <!-- 3) Debajo: tabla de aplicaciones a ancho completo -->
         <article class="action-card table-card">
           <div class="table-card-header">
-            <h3 class="card-title card-title-inline">Aplicaciones registradas</h3>
+            <div class="title-with-refresh">
+              <h3 class="card-title card-title-inline">Aplicaciones registradas</h3>
+              <button
+                type="button"
+                class="btn-refresh"
+                :disabled="cargandoTablaApps"
+                title="Refrescar aplicaciones"
+                @click="cargarApps">
+                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoTablaApps }" />
+              </button>
+            </div>
             <div class="table-actions">
               <input
                 type="text"
@@ -282,7 +302,8 @@
 </template>
 
 <script setup>
-  import { IonToast } from '@ionic/vue';
+  import { IonToast, IonIcon } from '@ionic/vue';
+  import { refreshOutline } from 'ionicons/icons';
   import { ref, computed, onMounted, watch } from 'vue';
   import FileUpload from '@/components/printers/FileUpload.vue';
   import {
@@ -1020,6 +1041,49 @@
   flex-wrap: wrap;
 }
 
+.title-with-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #b6c2d4;
+  border-radius: 6px;
+  background-color: #e2e8f0;
+  color: #1a3c6e;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.btn-refresh:hover {
+  background-color: #cbd5e1;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-refresh ion-icon {
+  font-size: 18px;
+}
+
+.girando {
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
 .search-input {
   box-sizing: border-box;
   padding: 7px 10px;
@@ -1342,6 +1406,12 @@ table.tabla-datos {
     border-color: #5a616b;
   }
   .btn-secondary:hover { background-color: #474e57; }
+  .btn-refresh {
+    background-color: #3a4048;
+    color: #e6ebf1;
+    border-color: #5a616b;
+  }
+  .btn-refresh:hover { background-color: #474e57; }
   .search-input {
     background-color: #1f2937;
     color: #e6ebf1;
