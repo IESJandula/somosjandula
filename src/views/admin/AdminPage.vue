@@ -209,6 +209,9 @@
                   <th class="sortable" @click="ordenarApps('clientId')">Client ID<span class="sort-ind">{{ indicadorOrden(ordenApps, 'clientId') }}</span></th>
                   <th class="sortable" @click="ordenarApps('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
                   <th class="sortable" @click="ordenarApps('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
+                  <th class="col-notif">Calendar (hoy/max)</th>
+                  <th class="col-notif">Email (hoy/max)</th>
+                  <th class="col-notif">Web (hoy/max)</th>
                   <th class="sortable" @click="ordenarApps('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenApps, 'ultimaConexion') }}</span></th>
                   <th class="col-accion">Guardar</th>
                 </tr>
@@ -233,6 +236,39 @@
                   </td>
                   <td><input type="text" v-model="app.nombre" class="cell-input"></td>
                   <td><input type="text" v-model="app.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                  <td class="col-notif">
+                    <div
+                      v-if="app._persistido && notifsDe(app)"
+                      class="notif-cell"
+                      :title="notifsDe(app).fechaUltimaNotificacionCalendar ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionCalendar) : ''">
+                      <span class="notif-hoy">{{ notifsDe(app).notifHoyCalendar }}</span>
+                      <span class="notif-sep">/</span>
+                      <input type="number" min="0" class="notif-max" :value="notifsDe(app).notifMaxCalendar" @change="actualizarMaxCalendar(app, $event.target.value)">
+                    </div>
+                    <span v-else class="notif-vacio">—</span>
+                  </td>
+                  <td class="col-notif">
+                    <div
+                      v-if="app._persistido && notifsDe(app)"
+                      class="notif-cell"
+                      :title="notifsDe(app).fechaUltimaNotificacionEmail ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionEmail) : ''">
+                      <span class="notif-hoy">{{ notifsDe(app).notifHoyEmail }}</span>
+                      <span class="notif-sep">/</span>
+                      <input type="number" min="0" class="notif-max" :value="notifsDe(app).notifMaxEmail" @change="actualizarMaxEmail(app, $event.target.value)">
+                    </div>
+                    <span v-else class="notif-vacio">—</span>
+                  </td>
+                  <td class="col-notif">
+                    <div
+                      v-if="app._persistido && notifsDe(app)"
+                      class="notif-cell"
+                      :title="notifsDe(app).fechaUltimaNotificacionWeb ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionWeb) : ''">
+                      <span class="notif-hoy">{{ notifsDe(app).notifHoyWeb }}</span>
+                      <span class="notif-sep">/</span>
+                      <input type="number" min="0" class="notif-max" :value="notifsDe(app).notifMaxWeb" @change="actualizarMaxWeb(app, $event.target.value)">
+                    </div>
+                    <span v-else class="notif-vacio">—</span>
+                  </td>
                   <td class="col-conexion">
                     <span class="conexion-text" :title="formatearFechaExacta(app.ultimaConexion)">{{ formatearUltimaConexion(app.ultimaConexion) }}</span>
                   </td>
@@ -246,6 +282,14 @@
           <p v-if="!hayApps && !cargandoTablaApps" class="empty-state">
             No hay aplicaciones cargadas. Usa la última fila para añadir una nueva.
           </p>
+        </article>
+
+        <!-- 3b) Debajo de la tabla de apps: configuración de Gmail (unificada desde /notifications/admin) -->
+        <article class="action-card gmail-card">
+          <h3 class="card-title card-title-inline">Configuración de Gmail</h3>
+          <div class="card-body">
+            <ion-button expand="block" @click="autorizarGmailOAuthHandler">Autorizar Gmail OAuth</ion-button>
+          </div>
         </article>
 
         <div v-if="cargandoUsuarios || cargandoApps" class="fondo-gris">
@@ -308,7 +352,7 @@
 </template>
 
 <script setup>
-  import { IonToast, IonIcon } from '@ionic/vue';
+  import { IonToast, IonIcon, IonButton } from '@ionic/vue';
   import { refreshOutline } from 'ionicons/icons';
   import { ref, computed, onMounted, watch } from 'vue';
   import FileUpload from '@/components/printers/FileUpload.vue';
@@ -327,6 +371,13 @@
     borrarTodasLasApps,
     obtenerDepartamentos,
   } from '@/services/adminService';
+  import {
+    listarAplicaciones,
+    actualizarNotificacionesMaximasCalendar,
+    actualizarNotificacionesMaximasEmail,
+    actualizarNotificacionesMaximasWeb,
+    autorizarGmailOAuth,
+  } from '@/services/notifications';
   import { crearToast } from '@/utils/toast.js';
 
   const toastMessage = ref('');
@@ -346,6 +397,11 @@
   const apps = ref([]);
   const cargandoTablaUsuarios = ref(false);
   const cargandoTablaApps = ref(false);
+
+  // Contadores de notificaciones (NotificationsServer) indexados por NOMBRE de aplicación. Cada entrada trae
+  // notifHoy/notifMax (Calendar/Email/Web) y la fecha de la última notificación. Se casan con las filas de apps por
+  // su campo 'nombre', igual que hacía la vista /notifications/admin.
+  const notifsPorNombre = ref({});
 
   // Departamentos disponibles para el desplegable de la tabla de usuarios
   const departamentos = ref([]);
@@ -745,12 +801,99 @@
         _uid: nextUid(),
       }));
       asegurarFilaVaciaApps();
+      // Refrescamos los contadores de notificaciones (NotificationsServer) para casarlos por nombre
+      await cargarNotificaciones();
     } catch (error) {
       console.error(error);
       apps.value = [];
       asegurarFilaVaciaApps();
     } finally {
       cargandoTablaApps.value = false;
+    }
+  };
+
+  // ---- Notificaciones (NotificationsServer): carga de contadores por nombre y actualización en vivo del "max" ----
+  const cargarNotificaciones = async () => {
+    try {
+      // Pedimos una página amplia para traer todas las aplicaciones con sus contadores
+      const lista = (await listarAplicaciones(toastMessage, toastColor, isToastOpen, 1, 1000)) || [];
+      const mapa = {};
+      lista.forEach((a) => {
+        if (a && a.nombre) {
+          mapa[a.nombre] = a;
+        }
+      });
+      notifsPorNombre.value = mapa;
+    } catch (error) {
+      console.error(error);
+      notifsPorNombre.value = {};
+    }
+  };
+
+  // Devuelve los contadores de notificaciones de una app (casados por nombre) o undefined si no existen
+  const notifsDe = (app) => (app && app.nombre ? notifsPorNombre.value[app.nombre] : undefined);
+
+  // Valida que el nuevo valor de "max" sea un número entero >= 0
+  const validarMaxNotificaciones = (valor) => {
+    const numero = parseInt(valor, 10);
+    const valido = !isNaN(numero) && numero >= 0;
+    if (!valido) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El valor debe ser un número positivo');
+    }
+    return valido;
+  };
+
+  // Actualiza EN VIVO el máximo de notificaciones de calendario para la app (persiste y refleja el nuevo valor)
+  const actualizarMaxCalendar = async (app, valor) => {
+    if (!app._persistido || !validarMaxNotificaciones(valor)) {
+      return;
+    }
+    try {
+      await actualizarNotificacionesMaximasCalendar(toastMessage, toastColor, isToastOpen, app.nombre, valor);
+      if (notifsPorNombre.value[app.nombre]) {
+        notifsPorNombre.value[app.nombre].notifMaxCalendar = parseInt(valor, 10);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Actualiza EN VIVO el máximo de notificaciones de email para la app
+  const actualizarMaxEmail = async (app, valor) => {
+    if (!app._persistido || !validarMaxNotificaciones(valor)) {
+      return;
+    }
+    try {
+      await actualizarNotificacionesMaximasEmail(toastMessage, toastColor, isToastOpen, app.nombre, valor);
+      if (notifsPorNombre.value[app.nombre]) {
+        notifsPorNombre.value[app.nombre].notifMaxEmail = parseInt(valor, 10);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Actualiza EN VIVO el máximo de notificaciones de web para la app
+  const actualizarMaxWeb = async (app, valor) => {
+    if (!app._persistido || !validarMaxNotificaciones(valor)) {
+      return;
+    }
+    try {
+      await actualizarNotificacionesMaximasWeb(toastMessage, toastColor, isToastOpen, app.nombre, valor);
+      if (notifsPorNombre.value[app.nombre]) {
+        notifsPorNombre.value[app.nombre].notifMaxWeb = parseInt(valor, 10);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Autoriza el OAuth de Gmail (reutiliza el servicio de NotificationsServer)
+  const autorizarGmailOAuthHandler = async () => {
+    try {
+      await autorizarGmailOAuth(toastMessage, toastColor, isToastOpen);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -916,11 +1059,18 @@
     descargarCsv('usuarios.csv', cabeceras, filas);
   };
 
+  // Devuelve "hoy/max" de un tipo de notificación para el CSV, o '' si la app no tiene contadores
+  const notifCsv = (app, tipo) => {
+    const n = notifsDe(app);
+    if (!n) return '';
+    return `${n['notifHoy' + tipo] ?? 0}/${n['notifMax' + tipo] ?? 0}`;
+  };
+
   const exportarAppsCsv = () => {
-    const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Curso académico', 'Última conexión'];
+    const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Calendar (hoy/max)', 'Email (hoy/max)', 'Web (hoy/max)', 'Curso académico', 'Última conexión'];
     const filas = appsMostradas.value
       .filter((a) => a._persistido)
-      .map((a) => [a.clientId, a.nombre, a.roles, a.cursoAcademico, formatearFechaExacta(a.ultimaConexion) || 'Nunca']);
+      .map((a) => [a.clientId, a.nombre, a.roles, notifCsv(a, 'Calendar'), notifCsv(a, 'Email'), notifCsv(a, 'Web'), a.cursoAcademico, formatearFechaExacta(a.ultimaConexion) || 'Nunca']);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay aplicaciones para exportar');
@@ -1345,6 +1495,55 @@ table.tabla-datos {
   min-width: 120px;
 }
 
+/* ---- Celdas de notificaciones (Calendar/Email/Web) unificadas desde /notifications/admin ---- */
+.col-notif {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.notif-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.notif-hoy {
+  font-weight: 600;
+}
+
+.notif-sep {
+  margin: 0 2px;
+}
+
+.notif-max {
+  width: 58px;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: center;
+  background: #fff;
+  color: #000;
+  font: inherit;
+  outline: none;
+}
+
+.notif-max:focus {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.notif-vacio {
+  opacity: 0.6;
+}
+
+/* Tarjeta de configuración de Gmail bajo la tabla de aplicaciones */
+.gmail-card {
+  margin-top: 1.25rem;
+  max-width: 420px;
+}
+
 .conexion-text {
   cursor: default;
 }
@@ -1448,6 +1647,15 @@ table.tabla-datos {
     background-color: #1f2937;
     color: #e6ebf1;
     border-color: #3b82f6;
+  }
+  .notif-max {
+    background-color: #1f2937;
+    color: #e6ebf1;
+    border-color: #555;
+  }
+  .notif-max:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.2);
   }
   .panel-divider {
     background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
