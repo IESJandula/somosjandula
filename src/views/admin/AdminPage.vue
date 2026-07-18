@@ -173,6 +173,12 @@
                 @click="cargarApps">
                 <ion-icon :icon="refreshOutline" :class="{ girando: cargandoTablaApps }" />
               </button>
+              <button
+                type="button"
+                class="btn-secondary btn-mini btn-gmail-oauth"
+                @click="autorizarGmailOAuthHandler">
+                Autorizar GMAIL OAuth
+              </button>
             </div>
             <div class="table-actions">
               <input
@@ -238,36 +244,42 @@
                   <td><input type="text" v-model="app.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
                   <td class="col-notif">
                     <div
-                      v-if="app._persistido && notifsDe(app)"
                       class="notif-cell"
-                      :title="notifsDe(app).fechaUltimaNotificacionCalendar ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionCalendar) : ''">
-                      <span class="notif-hoy">{{ notifsDe(app).notifHoyCalendar }}</span>
+                      :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionCalendar ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionCalendar) : ''">
+                      <span class="notif-hoy">{{ notifHoyTexto(app, 'Calendar') }}</span>
                       <span class="notif-sep">/</span>
-                      <input type="number" min="0" class="notif-max" :value="notifsDe(app).notifMaxCalendar" @change="actualizarMaxCalendar(app, $event.target.value)">
+                      <span class="notif-stepper">
+                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Calendar', -1)">−</button>
+                        <span class="stepper-val">{{ app._maxCalendar }}</span>
+                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Calendar', 1)">+</button>
+                      </span>
                     </div>
-                    <span v-else class="notif-vacio">—</span>
                   </td>
                   <td class="col-notif">
                     <div
-                      v-if="app._persistido && notifsDe(app)"
                       class="notif-cell"
-                      :title="notifsDe(app).fechaUltimaNotificacionEmail ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionEmail) : ''">
-                      <span class="notif-hoy">{{ notifsDe(app).notifHoyEmail }}</span>
+                      :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionEmail ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionEmail) : ''">
+                      <span class="notif-hoy">{{ notifHoyTexto(app, 'Email') }}</span>
                       <span class="notif-sep">/</span>
-                      <input type="number" min="0" class="notif-max" :value="notifsDe(app).notifMaxEmail" @change="actualizarMaxEmail(app, $event.target.value)">
+                      <span class="notif-stepper">
+                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Email', -1)">−</button>
+                        <span class="stepper-val">{{ app._maxEmail }}</span>
+                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Email', 1)">+</button>
+                      </span>
                     </div>
-                    <span v-else class="notif-vacio">—</span>
                   </td>
                   <td class="col-notif">
                     <div
-                      v-if="app._persistido && notifsDe(app)"
                       class="notif-cell"
-                      :title="notifsDe(app).fechaUltimaNotificacionWeb ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionWeb) : ''">
-                      <span class="notif-hoy">{{ notifsDe(app).notifHoyWeb }}</span>
+                      :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionWeb ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionWeb) : ''">
+                      <span class="notif-hoy">{{ notifHoyTexto(app, 'Web') }}</span>
                       <span class="notif-sep">/</span>
-                      <input type="number" min="0" class="notif-max" :value="notifsDe(app).notifMaxWeb" @change="actualizarMaxWeb(app, $event.target.value)">
+                      <span class="notif-stepper">
+                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Web', -1)">−</button>
+                        <span class="stepper-val">{{ app._maxWeb }}</span>
+                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Web', 1)">+</button>
+                      </span>
                     </div>
-                    <span v-else class="notif-vacio">—</span>
                   </td>
                   <td class="col-conexion">
                     <span class="conexion-text" :title="formatearFechaExacta(app.ultimaConexion)">{{ formatearUltimaConexion(app.ultimaConexion) }}</span>
@@ -282,14 +294,6 @@
           <p v-if="!hayApps && !cargandoTablaApps" class="empty-state">
             No hay aplicaciones cargadas. Usa la última fila para añadir una nueva.
           </p>
-        </article>
-
-        <!-- 3b) Debajo de la tabla de apps: configuración de Gmail (unificada desde /notifications/admin) -->
-        <article class="action-card gmail-card">
-          <h3 class="card-title card-title-inline">Configuración de Gmail</h3>
-          <div class="card-body">
-            <ion-button expand="block" @click="autorizarGmailOAuthHandler">Autorizar Gmail OAuth</ion-button>
-          </div>
         </article>
 
         <div v-if="cargandoUsuarios || cargandoApps" class="fondo-gris">
@@ -352,7 +356,7 @@
 </template>
 
 <script setup>
-  import { IonToast, IonIcon, IonButton } from '@ionic/vue';
+  import { IonToast, IonIcon } from '@ionic/vue';
   import { refreshOutline } from 'ionicons/icons';
   import { ref, computed, onMounted, watch } from 'vue';
   import FileUpload from '@/components/printers/FileUpload.vue';
@@ -376,6 +380,7 @@
     actualizarNotificacionesMaximasCalendar,
     actualizarNotificacionesMaximasEmail,
     actualizarNotificacionesMaximasWeb,
+    crearAplicacion,
     autorizarGmailOAuth,
   } from '@/services/notifications';
   import { crearToast } from '@/utils/toast.js';
@@ -479,6 +484,11 @@
     roles: '',
     cursoAcademico: '',
     ultimaConexion: null,
+    // Borrador local de los máximos de notificaciones (Calendar/Email/Web). Para una fila nueva empiezan a 0
+    // y solo se persisten cuando se pulsa GUARDAR.
+    _maxCalendar: 0,
+    _maxEmail: 0,
+    _maxWeb: 0,
     _persistido: false,
     _uid: nextUid(),
   });
@@ -797,6 +807,10 @@
         roles: rolesATexto(a.roles),
         cursoAcademico: a.cursoAcademico || '',
         ultimaConexion: a.ultimaConexion || null,
+        // Borrador de los máximos; se sincroniza con los contadores reales tras cargarNotificaciones()
+        _maxCalendar: 0,
+        _maxEmail: 0,
+        _maxWeb: 0,
         _persistido: true,
         _uid: nextUid(),
       }));
@@ -824,6 +838,8 @@
         }
       });
       notifsPorNombre.value = mapa;
+      // Sincronizamos el borrador de máximos de cada fila con los contadores reales recién cargados
+      sincronizarBorradorMax();
     } catch (error) {
       console.error(error);
       notifsPorNombre.value = {};
@@ -833,59 +849,31 @@
   // Devuelve los contadores de notificaciones de una app (casados por nombre) o undefined si no existen
   const notifsDe = (app) => (app && app.nombre ? notifsPorNombre.value[app.nombre] : undefined);
 
-  // Valida que el nuevo valor de "max" sea un número entero >= 0
-  const validarMaxNotificaciones = (valor) => {
-    const numero = parseInt(valor, 10);
-    const valido = !isNaN(numero) && numero >= 0;
-    if (!valido) {
-      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El valor debe ser un número positivo');
-    }
-    return valido;
+  // Texto de "hoy" (solo lectura) para un tipo de notificación: el valor real si la app existe en notifications,
+  // o "—" si todavía no tiene contadores (p. ej. una app recién creada aún sin persistir en notifications).
+  const notifHoyTexto = (app, tipo) => {
+    const n = notifsDe(app);
+    if (!n) return '—';
+    return n['notifHoy' + tipo] ?? 0;
   };
 
-  // Actualiza EN VIVO el máximo de notificaciones de calendario para la app (persiste y refleja el nuevo valor)
-  const actualizarMaxCalendar = async (app, valor) => {
-    if (!app._persistido || !validarMaxNotificaciones(valor)) {
-      return;
-    }
-    try {
-      await actualizarNotificacionesMaximasCalendar(toastMessage, toastColor, isToastOpen, app.nombre, valor);
-      if (notifsPorNombre.value[app.nombre]) {
-        notifsPorNombre.value[app.nombre].notifMaxCalendar = parseInt(valor, 10);
-      }
-    } catch (error) {
-      console.error(error);
-    }
+  // Copia los máximos reales (de notifications) al borrador local de cada fila. Las filas sin contadores
+  // (nuevas o aún no dadas de alta en notifications) quedan a 0.
+  const sincronizarBorradorMax = () => {
+    apps.value.forEach((app) => {
+      const n = app.nombre ? notifsPorNombre.value[app.nombre] : undefined;
+      app._maxCalendar = n ? (n.notifMaxCalendar ?? 0) : 0;
+      app._maxEmail = n ? (n.notifMaxEmail ?? 0) : 0;
+      app._maxWeb = n ? (n.notifMaxWeb ?? 0) : 0;
+    });
   };
 
-  // Actualiza EN VIVO el máximo de notificaciones de email para la app
-  const actualizarMaxEmail = async (app, valor) => {
-    if (!app._persistido || !validarMaxNotificaciones(valor)) {
-      return;
-    }
-    try {
-      await actualizarNotificacionesMaximasEmail(toastMessage, toastColor, isToastOpen, app.nombre, valor);
-      if (notifsPorNombre.value[app.nombre]) {
-        notifsPorNombre.value[app.nombre].notifMaxEmail = parseInt(valor, 10);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  // Actualiza EN VIVO el máximo de notificaciones de web para la app
-  const actualizarMaxWeb = async (app, valor) => {
-    if (!app._persistido || !validarMaxNotificaciones(valor)) {
-      return;
-    }
-    try {
-      await actualizarNotificacionesMaximasWeb(toastMessage, toastColor, isToastOpen, app.nombre, valor);
-      if (notifsPorNombre.value[app.nombre]) {
-        notifsPorNombre.value[app.nombre].notifMaxWeb = parseInt(valor, 10);
-      }
-    } catch (error) {
-      console.error(error);
-    }
+  // Modifica el borrador local del máximo (Calendar/Email/Web) de una fila. NO persiste: el guardado real
+  // ocurre al pulsar GUARDAR en la fila. Nunca baja de 0.
+  const cambiarMax = (app, tipo, delta) => {
+    const key = '_max' + tipo;
+    const actual = parseInt(app[key], 10) || 0;
+    app[key] = Math.max(0, actual + delta);
   };
 
   // Autoriza el OAuth de Gmail (reutiliza el servicio de NotificationsServer)
@@ -935,10 +923,38 @@
         nombre: app.nombre,
         roles: parsearRoles(app.roles),
       });
+
+      // Persistimos los máximos de notificaciones (borrador editado con los steppers) en el microservicio
+      // notifications. Solo si la app tiene nombre (los contadores se indexan por NOMBRE de aplicación).
+      await guardarMaximosNotificaciones(app);
+
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Aplicación guardada con éxito');
       await cargarApps();
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  // Persiste los máximos (Calendar/Email/Web) del borrador de una fila en el microservicio notifications.
+  // - Si la app YA tiene contadores (existe en notifications), se actualizan con los PUT actualizarNotificacionesMaximas*.
+  // - Si NO existe todavía (app recién creada), se INSERTA con crearAplicacion, ya que los PUT del backend son
+  //   UPDATE puros (WHERE nombre = ...) y no dan de alta filas nuevas.
+  const guardarMaximosNotificaciones = async (app) => {
+    const nombre = (app.nombre || '').trim();
+    if (!nombre) {
+      return;
+    }
+
+    const maxCalendar = parseInt(app._maxCalendar, 10) || 0;
+    const maxEmail = parseInt(app._maxEmail, 10) || 0;
+    const maxWeb = parseInt(app._maxWeb, 10) || 0;
+
+    if (notifsPorNombre.value[nombre]) {
+      await actualizarNotificacionesMaximasCalendar(toastMessage, toastColor, isToastOpen, nombre, maxCalendar);
+      await actualizarNotificacionesMaximasEmail(toastMessage, toastColor, isToastOpen, nombre, maxEmail);
+      await actualizarNotificacionesMaximasWeb(toastMessage, toastColor, isToastOpen, nombre, maxWeb);
+    } else {
+      await crearAplicacion(toastMessage, toastColor, isToastOpen, nombre, maxCalendar, maxEmail, maxWeb);
     }
   };
 
@@ -1516,32 +1532,47 @@ table.tabla-datos {
   margin: 0 2px;
 }
 
-.notif-max {
-  width: 58px;
-  box-sizing: border-box;
-  padding: 4px 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  text-align: center;
-  background: #fff;
-  color: #000;
-  font: inherit;
-  outline: none;
+/* Stepper (− valor +) para editar el "max" de notificaciones sin persistir en vivo */
+.notif-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.notif-max:focus {
-  border-color: #2196f3;
-  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+.stepper-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #b6c2d4;
+  border-radius: 4px;
+  background-color: #e2e8f0;
+  color: #1a3c6e;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stepper-btn:hover {
+  background-color: #cbd5e1;
+}
+
+.stepper-val {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 600;
 }
 
 .notif-vacio {
   opacity: 0.6;
 }
 
-/* Tarjeta de configuración de Gmail bajo la tabla de aplicaciones */
-.gmail-card {
-  margin-top: 1.25rem;
-  max-width: 420px;
+/* Botón de autorización de Gmail OAuth, junto a la cabecera de Aplicaciones registradas */
+.btn-gmail-oauth {
+  white-space: nowrap;
 }
 
 .conexion-text {
@@ -1648,15 +1679,12 @@ table.tabla-datos {
     color: #e6ebf1;
     border-color: #3b82f6;
   }
-  .notif-max {
-    background-color: #1f2937;
+  .stepper-btn {
+    background-color: #3a4048;
     color: #e6ebf1;
-    border-color: #555;
+    border-color: #5a616b;
   }
-  .notif-max:focus {
-    border-color: #64b5f6;
-    box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.2);
-  }
+  .stepper-btn:hover { background-color: #474e57; }
   .panel-divider {
     background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
   }
