@@ -209,17 +209,20 @@
 
           <div class="table-scroll">
             <table class="tabla-datos">
-              <thead>
-                <tr>
-                  <th class="col-accion">Eliminar</th>
-                  <th class="sortable" @click="ordenarApps('clientId')">Client ID<span class="sort-ind">{{ indicadorOrden(ordenApps, 'clientId') }}</span></th>
-                  <th class="sortable" @click="ordenarApps('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
-                  <th class="sortable" @click="ordenarApps('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
+              <thead class="thead-apps">
+                <tr class="fila-grupo">
+                  <th class="col-accion" rowspan="2">Eliminar</th>
+                  <th class="sortable" rowspan="2" @click="ordenarApps('clientId')">Client ID<span class="sort-ind">{{ indicadorOrden(ordenApps, 'clientId') }}</span></th>
+                  <th class="sortable" rowspan="2" @click="ordenarApps('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
+                  <th class="sortable" rowspan="2" @click="ordenarApps('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
+                  <th class="col-notif-grupo" colspan="3">Notificaciones</th>
+                  <th class="sortable" rowspan="2" @click="ordenarApps('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenApps, 'ultimaConexion') }}</span></th>
+                  <th class="col-accion" rowspan="2">Guardar</th>
+                </tr>
+                <tr class="fila-subcabecera">
                   <th class="col-notif">Calendar (hoy/max)</th>
                   <th class="col-notif">Email (hoy/max)</th>
                   <th class="col-notif">Web (hoy/max)</th>
-                  <th class="sortable" @click="ordenarApps('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenApps, 'ultimaConexion') }}</span></th>
-                  <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
               <tbody>
@@ -249,9 +252,9 @@
                       <span class="notif-hoy">{{ notifHoyTexto(app, 'Calendar') }}</span>
                       <span class="notif-sep">/</span>
                       <span class="notif-stepper">
-                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Calendar', -1)">−</button>
+                        <button type="button" class="stepper-btn" title="Disminuir" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Calendar', -1)">−</button>
                         <span class="stepper-val">{{ app._maxCalendar }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Calendar', 1)">+</button>
+                        <button type="button" class="stepper-btn" title="Incrementar" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Calendar', 1)">+</button>
                       </span>
                     </div>
                   </td>
@@ -262,9 +265,9 @@
                       <span class="notif-hoy">{{ notifHoyTexto(app, 'Email') }}</span>
                       <span class="notif-sep">/</span>
                       <span class="notif-stepper">
-                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Email', -1)">−</button>
+                        <button type="button" class="stepper-btn" title="Disminuir" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Email', -1)">−</button>
                         <span class="stepper-val">{{ app._maxEmail }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Email', 1)">+</button>
+                        <button type="button" class="stepper-btn" title="Incrementar" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Email', 1)">+</button>
                       </span>
                     </div>
                   </td>
@@ -275,9 +278,9 @@
                       <span class="notif-hoy">{{ notifHoyTexto(app, 'Web') }}</span>
                       <span class="notif-sep">/</span>
                       <span class="notif-stepper">
-                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Web', -1)">−</button>
+                        <button type="button" class="stepper-btn" title="Disminuir" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Web', -1)">−</button>
                         <span class="stepper-val">{{ app._maxWeb }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Web', 1)">+</button>
+                        <button type="button" class="stepper-btn" title="Incrementar" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Web', 1)">+</button>
                       </span>
                     </div>
                   </td>
@@ -381,6 +384,8 @@
     actualizarNotificacionesMaximasEmail,
     actualizarNotificacionesMaximasWeb,
     crearAplicacion,
+    borrarAplicacion,
+    borrarTodasLasAplicaciones,
     autorizarGmailOAuth,
   } from '@/services/notifications';
   import { crearToast } from '@/utils/toast.js';
@@ -876,6 +881,15 @@
     app[key] = Math.max(0, actual + delta);
   };
 
+  // Rol necesario para poder editar los máximos de notificaciones de una aplicación
+  const ROL_NOTIFICACIONES = 'APLICACION_NOTIFICACIONES';
+
+  // Indica si una fila de aplicación puede editar sus máximos de notificaciones: solo si entre sus roles
+  // figura EXACTAMENTE APLICACION_NOTIFICACIONES (no como subcadena). Reutiliza parsearRoles para separar
+  // por el mismo delimitador que el resto del componente, de modo que refleja también el borrador en edición inline.
+  const puedeEditarNotificaciones = (app) =>
+    parsearRoles(app && app.roles).includes(ROL_NOTIFICACIONES);
+
   // Autoriza el OAuth de Gmail (reutiliza el servicio de NotificationsServer)
   const autorizarGmailOAuthHandler = async () => {
     try {
@@ -988,6 +1002,15 @@
 
     try {
       await borrarApp(toastMessage, toastColor, isToastOpen, app.clientId);
+      // También eliminamos el registro en NotificationsServer (identificado por NOMBRE).
+      // Si la app no existe allí, el fallo es tolerable y no debe romper la UX.
+      if (app.nombre) {
+        try {
+          await borrarAplicacion(toastMessage, toastColor, isToastOpen, app.nombre);
+        } catch (errorNotifications) {
+          console.error(errorNotifications);
+        }
+      }
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Aplicación borrada con éxito');
       await cargarApps();
     } catch (error) {
@@ -1025,6 +1048,15 @@
 
     try {
       const borradas = await borrarTodasLasApps(toastMessage, toastColor, isToastOpen);
+
+      // También eliminamos todas las aplicaciones en NotificationsServer con una única llamada.
+      // Es tolerante a errores: si falla, no debe romper la UX del borrado principal.
+      try {
+        await borrarTodasLasAplicaciones(toastMessage, toastColor, isToastOpen);
+      } catch (errorNotifications) {
+        console.error(errorNotifications);
+      }
+
       crearToast(toastMessage, toastColor, isToastOpen, 'success', `Aplicaciones borradas: ${borradas}`);
       await cargarApps();
     } catch (error) {
@@ -1511,6 +1543,23 @@ table.tabla-datos {
   min-width: 120px;
 }
 
+/* ---- Cabecera agrupada "Notificaciones" (dos filas de <thead> en la tabla de aplicaciones) ---- */
+/* La primera fila de cabecera queda pegada arriba (top: 0) y la segunda (subcabeceras Calendar/Email/Web)
+   se pega justo debajo. Al ser todas las celdas de cabecera del mismo azul, un desfase mínimo del offset
+   resulta imperceptible y no rompe el scroll horizontal ni la ordenación. */
+.thead-apps tr.fila-grupo th {
+  top: 0;
+}
+
+.thead-apps tr.fila-subcabecera th {
+  top: 36px;
+}
+
+.col-notif-grupo {
+  text-align: center;
+  min-width: 360px;
+}
+
 /* ---- Celdas de notificaciones (Calendar/Email/Web) unificadas desde /notifications/admin ---- */
 .col-notif {
   min-width: 120px;
@@ -1558,6 +1607,12 @@ table.tabla-datos {
 
 .stepper-btn:hover {
   background-color: #cbd5e1;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #e2e8f0;
 }
 
 .stepper-val {
@@ -1685,6 +1740,8 @@ table.tabla-datos {
     border-color: #5a616b;
   }
   .stepper-btn:hover { background-color: #474e57; }
+  .stepper-btn:disabled,
+  .stepper-btn:disabled:hover { background-color: #3a4048; }
   .panel-divider {
     background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
   }

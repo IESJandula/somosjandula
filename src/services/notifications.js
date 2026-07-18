@@ -467,3 +467,40 @@ export async function borrarAplicacion(toastMessage, toastColor, isToastOpen, no
     throw error;
   }
 }
+
+/**
+ * Borra todas las aplicaciones.
+ */
+export async function borrarTodasLasAplicaciones(toastMessage, toastColor, isToastOpen)
+{
+  try
+  {
+    // Obtenemos el token JWT válido
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    // Enviamos la petición al backend
+    const response = await fetch(notificationsApiUrl + '/notifications/admin/all',
+    {
+      method: 'DELETE',
+      headers:
+      {
+        Authorization: `Bearer ${token}`
+      },
+    });
+
+    // Si la respuesta es de error, lanzamos la excepción
+    if (!response.ok)
+    {
+      const errorMessage = await response.json();
+      throw new Error(errorMessage.message || 'Error al borrar todas las aplicaciones');
+    }
+
+    // Si llegamos aquí es porque la respuesta es correcta y mostramos el toast
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Aplicaciones borradas correctamente");
+  }
+  catch (error)
+  {
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message);
+    throw error;
+  }
+}
