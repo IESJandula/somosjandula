@@ -175,9 +175,11 @@
               </button>
               <button
                 type="button"
-                class="btn-secondary btn-mini btn-gmail-oauth"
+                class="btn-refresh btn-gmail-oauth"
+                title="Autorizar GMAIL OAuth"
+                aria-label="Autorizar GMAIL OAuth"
                 @click="autorizarGmailOAuthHandler">
-                Autorizar GMAIL OAuth
+                <ion-icon :icon="mailOutline" />
               </button>
             </div>
             <div class="table-actions">
@@ -251,11 +253,12 @@
                       :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionCalendar ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionCalendar) : ''">
                       <span class="notif-hoy">{{ notifHoyTexto(app, 'Calendar') }}</span>
                       <span class="notif-sep">/</span>
-                      <span class="notif-stepper">
-                        <button type="button" class="stepper-btn" title="Disminuir" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Calendar', -1)">−</button>
+                      <span class="notif-stepper" v-if="puedeEditarNotificaciones(app)">
+                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Calendar', -1)">−</button>
                         <span class="stepper-val">{{ app._maxCalendar }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Calendar', 1)">+</button>
+                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Calendar', 1)">+</button>
                       </span>
+                      <span class="notif-max-ro" v-else>{{ app._maxCalendar }}</span>
                     </div>
                   </td>
                   <td class="col-notif">
@@ -264,11 +267,12 @@
                       :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionEmail ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionEmail) : ''">
                       <span class="notif-hoy">{{ notifHoyTexto(app, 'Email') }}</span>
                       <span class="notif-sep">/</span>
-                      <span class="notif-stepper">
-                        <button type="button" class="stepper-btn" title="Disminuir" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Email', -1)">−</button>
+                      <span class="notif-stepper" v-if="puedeEditarNotificaciones(app)">
+                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Email', -1)">−</button>
                         <span class="stepper-val">{{ app._maxEmail }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Email', 1)">+</button>
+                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Email', 1)">+</button>
                       </span>
+                      <span class="notif-max-ro" v-else>{{ app._maxEmail }}</span>
                     </div>
                   </td>
                   <td class="col-notif">
@@ -277,11 +281,12 @@
                       :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionWeb ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionWeb) : ''">
                       <span class="notif-hoy">{{ notifHoyTexto(app, 'Web') }}</span>
                       <span class="notif-sep">/</span>
-                      <span class="notif-stepper">
-                        <button type="button" class="stepper-btn" title="Disminuir" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Web', -1)">−</button>
+                      <span class="notif-stepper" v-if="puedeEditarNotificaciones(app)">
+                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Web', -1)">−</button>
                         <span class="stepper-val">{{ app._maxWeb }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" :disabled="!puedeEditarNotificaciones(app)" @click="cambiarMax(app, 'Web', 1)">+</button>
+                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Web', 1)">+</button>
                       </span>
+                      <span class="notif-max-ro" v-else>{{ app._maxWeb }}</span>
                     </div>
                   </td>
                   <td class="col-conexion">
@@ -360,7 +365,7 @@
 
 <script setup>
   import { IonToast, IonIcon } from '@ionic/vue';
-  import { refreshOutline } from 'ionicons/icons';
+  import { refreshOutline, mailOutline } from 'ionicons/icons';
   import { ref, computed, onMounted, watch } from 'vue';
   import FileUpload from '@/components/printers/FileUpload.vue';
   import {
@@ -1547,17 +1552,25 @@ table.tabla-datos {
 /* La primera fila de cabecera queda pegada arriba (top: 0) y la segunda (subcabeceras Calendar/Email/Web)
    se pega justo debajo. Al ser todas las celdas de cabecera del mismo azul, un desfase mínimo del offset
    resulta imperceptible y no rompe el scroll horizontal ni la ordenación. */
+/* La primera fila del thead (grupo) se pega arriba con una altura fija y determinista, de modo que
+   la segunda fila (subcabeceras Calendar/Email/Web) pueda pegarse EXACTAMENTE debajo sin dejar
+   sliver del cuerpo ni solaparse. */
 .thead-apps tr.fila-grupo th {
   top: 0;
+  height: 34px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  box-sizing: border-box;
 }
 
 .thead-apps tr.fila-subcabecera th {
-  top: 36px;
+  top: 34px;
 }
 
 .col-notif-grupo {
   text-align: center;
   min-width: 360px;
+  letter-spacing: 0.02em;
 }
 
 /* ---- Celdas de notificaciones (Calendar/Email/Web) unificadas desde /notifications/admin ---- */
@@ -1621,13 +1634,26 @@ table.tabla-datos {
   font-weight: 600;
 }
 
+/* Valor "max" en modo solo lectura (apps sin el rol APLICACION_NOTIFICACIONES: sin controles +/−) */
+.notif-max-ro {
+  min-width: 26px;
+  text-align: center;
+  font-weight: 600;
+}
+
 .notif-vacio {
   opacity: 0.6;
 }
 
-/* Botón de autorización de Gmail OAuth, junto a la cabecera de Aplicaciones registradas */
+/* Botón de autorización de Gmail OAuth (icono de correo), junto al botón refrescar de
+   Aplicaciones registradas. Reutiliza el chrome de .btn-refresh; solo tinta el icono con el
+   rojo característico de Gmail para diferenciarlo del refrescar. */
 .btn-gmail-oauth {
-  white-space: nowrap;
+  color: #d93025;
+}
+
+.btn-gmail-oauth ion-icon {
+  font-size: 18px;
 }
 
 .conexion-text {
@@ -1729,6 +1755,7 @@ table.tabla-datos {
     border-color: #5a616b;
   }
   .btn-refresh:hover { background-color: #474e57; }
+  .btn-gmail-oauth { color: #f28b82; }
   .search-input {
     background-color: #1f2937;
     color: #e6ebf1;
