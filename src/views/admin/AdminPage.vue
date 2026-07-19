@@ -717,6 +717,13 @@
   // Convierte un array de roles del backend en texto editable
   const rolesATexto = (roles) => (Array.isArray(roles) ? roles.join(', ') : (roles || ''));
 
+  // Normaliza los roles para la EXPORTACIÓN CSV: acepta array o texto (separado por comas o barras) y
+  // SIEMPRE los devuelve unidos por '|', que es lo que el importador del backend espera (roles.split("\\|")).
+  const rolesAPipe = (roles) => {
+    const texto = Array.isArray(roles) ? roles.join('|') : (roles || '');
+    return parsearRoles(texto).join('|');
+  };
+
   // Garantiza que SIEMPRE exista una fila vacía al final para permitir añadir nuevos elementos.
   // Al escribir en la fila vacía (rellenando su clave), se genera otra fila vacía al final.
   const asegurarFilaVaciaUsuarios = () => {
@@ -1311,11 +1318,17 @@
     URL.revokeObjectURL(url);
   };
 
+  // Exporta EXACTAMENTE el formato que el importador del backend puede volver a leer
+  // (ImportsManager#importarUsuariosProcesarCsvProcesarLinea): 6 columnas separadas por coma en el orden
+  // email, nombre, apellidos, departamento, fechaNacimiento, roles (roles unidos por '|'). El importador
+  // SALTA SIEMPRE la primera línea, por lo que incluimos una fila de cabecera (imprescindible para no perder
+  // el primer usuario al reimportar). Se exportan solo las filas persistidas (nunca la fila vacía de alta),
+  // respetando el filtro/orden actualmente mostrado.
   const exportarUsuariosCsv = () => {
-    const cabeceras = ['Email', 'Nombre', 'Apellidos', 'Departamento', 'Fecha nacimiento', 'Roles', 'Estado', 'Curso académico', 'Última conexión'];
+    const cabeceras = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles'];
     const filas = usuariosMostrados.value
       .filter((u) => u._persistido)
-      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, u.roles, etiquetaEstado(u.estado), u.cursoAcademico, formatearFechaExacta(u.ultimaConexion) || 'Nunca']);
+      .map((u) => [u.email, u.nombre, u.apellidos, u.departamento, u.fechaNacimiento, rolesAPipe(u.roles)]);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay usuarios para exportar');
@@ -1325,18 +1338,16 @@
     descargarCsv('usuarios.csv', cabeceras, filas);
   };
 
-  // Devuelve "hoy/max" de un tipo de notificación para el CSV, o '' si la app no tiene contadores
-  const notifCsv = (app, tipo) => {
-    const n = notifsDe(app);
-    if (!n) return '';
-    return `${n['notifHoy' + tipo] ?? 0}/${n['notifMax' + tipo] ?? 0}`;
-  };
-
+  // Exporta EXACTAMENTE el formato que el importador del backend puede volver a leer
+  // (ImportsManager#importarAppsProcesarCsvProcesarLinea): 3 columnas separadas por coma en el orden
+  // clientId, nombre, roles (roles unidos por '|'). El importador SALTA SIEMPRE la primera línea, por lo que
+  // incluimos una fila de cabecera. Se exportan solo las filas persistidas (nunca la fila vacía de alta),
+  // respetando el filtro/orden actualmente mostrado.
   const exportarAppsCsv = () => {
-    const cabeceras = ['Client ID', 'Nombre', 'Roles', 'Calendar (hoy/max)', 'Email (hoy/max)', 'Web (hoy/max)', 'Curso académico', 'Última conexión'];
+    const cabeceras = ['clientId', 'nombre', 'roles'];
     const filas = appsMostradas.value
       .filter((a) => a._persistido)
-      .map((a) => [a.clientId, a.nombre, a.roles, notifCsv(a, 'Calendar'), notifCsv(a, 'Email'), notifCsv(a, 'Web'), a.cursoAcademico, formatearFechaExacta(a.ultimaConexion) || 'Nunca']);
+      .map((a) => [a.clientId, a.nombre, rolesAPipe(a.roles)]);
 
     if (filas.length === 0) {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay aplicaciones para exportar');
