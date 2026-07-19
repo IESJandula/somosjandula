@@ -45,7 +45,6 @@ import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
 import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 
-import AutomationsAdminPage from '@/views/automations/AutomationsAdminPage.vue'
 import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
 
 import ClonezillaImagesAdminPage from '@/views/clonezilla/ClonezillaImagesAdminPage.vue'
@@ -297,14 +296,6 @@ const routes = [
         meta: { role: 'ADMINISTRADOR' },
       },
       {
-        path: 'automations/admin',
-        component: AutomationsAdminPage,
-        name: 'AutomationsAdmin',
-        meta: {
-          role: 'ADMINISTRADOR'
-        },
-      },
-      {
         path: 'automations/map',
         component: AutomationsMapView,
         name: 'AutomationsMapView',
@@ -334,14 +325,6 @@ const routes = [
         name: 'IAView',
         meta: {
           role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'automations/admin',
-        component: AutomationsAdminPage,
-        name: 'AutomationsAdmin',
-        meta: {
-          role: 'ADMINISTRADOR'
         },
       },
       {

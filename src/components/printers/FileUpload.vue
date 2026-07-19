@@ -1,7 +1,7 @@
 <template>
   <div class="file-drop-area" @dragover.prevent="handleDragOver" @dragleave.prevent="handleDragLeave"
     @drop.prevent="handleDrop" @click="triggerFileInput" :class="{ 'dragging': isDragging }">
-    <p v-if="!file">Arrastra un archivo o haz clic aquí</p>
+    <p v-if="!file">{{ idleText }}</p>
     <p v-else>Archivo seleccionado: {{ file.name }}</p>
     <input ref="fileInput" type="file" class="hidden" :accept="accept" @change="handleFileChange" />
   </div>
@@ -14,6 +14,10 @@ defineProps({
   accept: {
     type: String,
     default: ''
+  },
+  idleText: {
+    type: String,
+    default: 'Arrastra un archivo o haz clic aquí'
   }
 });
 

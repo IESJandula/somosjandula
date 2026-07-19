@@ -65,7 +65,6 @@ import {
   logoFirebase,
   videocamOutline,
   bandageOutline,
-  bulbOutline,
   peopleOutline,
   briefcaseOutline,
   settingsOutline,
@@ -229,7 +228,6 @@ const seccionAdministracion = computed(() => ({
     { label: "Reservas", icono: calendarOutline, to: "/bookings/admin" },
     { label: "Eventos", icono: calendarNumberOutline, to: "/eventsSchool/admin" },
     { label: "Incidencias", icono: bandageOutline, to: "/issues/admin" },
-    { label: "Domótica", icono: bulbOutline, to: "/automations/admin" },
     { label: "Huelgas", icono: peopleOutline, to: "/strikesSchool/admin" },
   ],
 }));

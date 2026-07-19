@@ -12,50 +12,7 @@
       <section class="panel-section">
         <h2 class="section-title">Inserciones masivas y listados</h2>
 
-        <!-- 1) Arriba: las dos tarjetas de inserción masiva (usuarios y apps) -->
-        <div class="import-grid">
-          <!-- Inserción masiva de usuarios -->
-          <article class="action-card">
-            <h3 class="card-title">Inserción masiva de usuarios</h3>
-            <div class="card-body">
-              <div class="field">
-                <label>Adjunta el fichero de usuarios</label>
-                <FileUpload ref="fileUploadUsersRef" @file-selected="onArchivoUsuariosSeleccionado" />
-                <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
-              </div>
-
-              <button
-                type="button"
-                class="btn-primary"
-                :disabled="!archivoUsuarios || cargandoUsuarios"
-                @click="uploadUsers">
-                Crear usuarios
-              </button>
-            </div>
-          </article>
-
-          <!-- Inserción masiva de apps -->
-          <article class="action-card">
-            <h3 class="card-title">Inserción masiva de apps</h3>
-            <div class="card-body">
-              <div class="field">
-                <label>Adjunta el fichero de aplicaciones</label>
-                <FileUpload ref="fileUploadAppsRef" @file-selected="onArchivoAppsSeleccionado" />
-                <span class="field-hint">Arrastra el fichero o haz clic para buscarlo en disco.</span>
-              </div>
-
-              <button
-                type="button"
-                class="btn-primary"
-                :disabled="!archivoApps || cargandoApps"
-                @click="uploadApps">
-                Crear aplicaciones
-              </button>
-            </div>
-          </article>
-        </div>
-
-        <!-- 2) Debajo: tabla de usuarios a ancho completo -->
+        <!-- 1) Tabla de usuarios a ancho completo (importación masiva compactada en su barra de acciones) -->
         <article class="action-card table-card">
           <div class="table-card-header">
             <div class="title-with-refresh">
@@ -75,6 +32,12 @@
                 v-model="busquedaUsuarios"
                 class="search-input"
                 placeholder="Buscar...">
+              <div class="import-inline" title="Importa usuarios: arrastra el fichero o haz clic para buscarlo en disco">
+                <FileUpload
+                  ref="fileUploadUsersRef"
+                  idleText="Importar usuarios"
+                  @file-selected="onArchivoUsuariosSeleccionado" />
+              </div>
               <button
                 type="button"
                 class="btn-delete btn-mini"
@@ -188,6 +151,12 @@
                 v-model="busquedaApps"
                 class="search-input"
                 placeholder="Buscar...">
+              <div class="import-inline" title="Importa aplicaciones: arrastra el fichero o haz clic para buscarlo en disco">
+                <FileUpload
+                  ref="fileUploadAppsRef"
+                  idleText="Importar apps"
+                  @file-selected="onArchivoAppsSeleccionado" />
+              </div>
               <button
                 type="button"
                 class="btn-delete btn-mini"
@@ -311,6 +280,212 @@
 
       <div class="panel-divider" aria-hidden="true"></div>
 
+      <!-- 3) Domótica: dispositivos (actuadores/sensores) y sus comandos, migrados desde /automations/admin -->
+      <section class="panel-section">
+        <h2 class="section-title">Domótica</h2>
+
+        <article class="action-card table-card">
+          <div class="table-card-header">
+            <div class="title-with-refresh">
+              <h3 class="card-title card-title-inline">Dispositivos</h3>
+              <button
+                type="button"
+                class="btn-refresh"
+                :disabled="cargandoTablaDispositivos"
+                title="Refrescar dispositivos"
+                @click="cargarDispositivos">
+                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoTablaDispositivos }" />
+              </button>
+            </div>
+            <div class="table-actions">
+              <input
+                type="text"
+                v-model="busquedaDispositivos"
+                class="search-input"
+                placeholder="Buscar...">
+              <button
+                type="button"
+                class="btn-delete btn-mini"
+                :disabled="!hayDispositivos"
+                @click="borrarTodosDispositivos">
+                Borrar todos
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-mini"
+                :disabled="!hayDispositivos"
+                @click="exportarDispositivosCsv">
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+
+          <div v-if="cargandoTablaDispositivos" class="table-loading">
+            <div class="circulo"></div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="tabla-datos">
+              <thead>
+                <tr>
+                  <th class="col-accion">Detalles</th>
+                  <th class="col-accion">Eliminar</th>
+                  <th class="sortable" @click="ordenarDispositivos('mac')">MAC<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'mac') }}</span></th>
+                  <th class="sortable" @click="ordenarDispositivos('nombreUbicacion')">Ubicación<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'nombreUbicacion') }}</span></th>
+                  <th class="sortable" @click="ordenarDispositivos('clase')">Clase<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'clase') }}</span></th>
+                  <th class="sortable" @click="ordenarDispositivos('tipo')">Tipo<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'tipo') }}</span></th>
+                  <th>Configuración</th>
+                  <th class="col-accion">Guardar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-for="dispositivo in dispositivosMostrados" :key="dispositivo._uid">
+                  <tr>
+                    <td class="col-accion">
+                      <button
+                        v-if="dispositivo._persistido && dispositivo.clase === 'ACTUADOR'"
+                        type="button"
+                        class="btn-secondary btn-detalles"
+                        :title="dispositivo._detallesAbiertos ? 'Ocultar comandos' : 'Ver comandos'"
+                        @click="alternarDetalles(dispositivo)">{{ dispositivo._detallesAbiertos ? '−' : '+' }}</button>
+                    </td>
+                    <td class="col-accion">
+                      <button
+                        v-if="dispositivo._persistido"
+                        type="button"
+                        class="btn-delete"
+                        title="Borrar dispositivo"
+                        @click="borrarDispositivoFila(dispositivo)">X</button>
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        v-model="dispositivo.mac"
+                        class="cell-input"
+                        :disabled="dispositivo._persistido"
+                        placeholder="AA:BB:CC:DD:EE:FF">
+                    </td>
+                    <td>
+                      <select v-model="dispositivo.nombreUbicacion" class="cell-input">
+                        <option value="">—</option>
+                        <option v-for="u in opcionesUbicacion(dispositivo.nombreUbicacion)" :key="u" :value="u">{{ u }}</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select
+                        v-model="dispositivo.clase"
+                        class="cell-input"
+                        :disabled="dispositivo._persistido"
+                        @change="onCambioClase(dispositivo)">
+                        <option value="ACTUADOR">Actuador</option>
+                        <option value="SENSOR">Sensor</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select v-model="dispositivo.tipo" class="cell-input" :disabled="dispositivo._persistido">
+                        <option value="">—</option>
+                        <option v-for="t in tiposDeClase(dispositivo.clase)" :key="t" :value="t">{{ t }}</option>
+                      </select>
+                    </td>
+                    <td class="col-config">
+                      <div v-if="dispositivo.clase === 'ACTUADOR' && esTipoPuertaVal(dispositivo.tipo)" class="config-cell">
+                        <label class="config-label">Nº relés</label>
+                        <input type="number" min="1" v-model="dispositivo.numeroReles" class="cell-input cell-input-num">
+                      </div>
+                      <div v-else-if="dispositivo.clase === 'ACTUADOR' && esTipoProyectorVal(dispositivo.tipo)" class="config-cell">
+                        <label class="config-label">Comando estado</label>
+                        <input type="text" v-model="dispositivo.comandoEstado" class="cell-input">
+                      </div>
+                      <div v-else-if="dispositivo.clase === 'SENSOR'" class="config-cell config-cell-sensor">
+                        <select v-model="dispositivo.naturaleza" class="cell-input cell-input-nat" :disabled="dispositivo._persistido">
+                          <option value="BOOLEANO">Booleano</option>
+                          <option value="NUMERICO">Numérico</option>
+                        </select>
+                        <input type="number" v-model="dispositivo.umbralMinimo" class="cell-input cell-input-num" placeholder="Mín" title="Umbral mínimo">
+                        <input type="number" v-model="dispositivo.umbralMaximo" class="cell-input cell-input-num" placeholder="Máx" title="Umbral máximo">
+                      </div>
+                      <span v-else class="config-empty">—</span>
+                    </td>
+                    <td class="col-accion">
+                      <button type="button" class="btn-primary btn-mini" @click="guardarDispositivoFila(dispositivo)">Guardar</button>
+                    </td>
+                  </tr>
+
+                  <tr
+                    v-if="dispositivo._persistido && dispositivo.clase === 'ACTUADOR' && dispositivo._detallesAbiertos"
+                    class="fila-detalles">
+                    <td :colspan="8" class="celda-detalles">
+                      <div class="detalles-wrap">
+                        <div class="detalles-header">
+                          <h4 class="detalles-title">Comandos de «{{ dispositivo.mac }}»</h4>
+                          <button
+                            type="button"
+                            class="btn-refresh btn-refresh-sm"
+                            :disabled="dispositivo._cargandoComandos"
+                            title="Refrescar comandos"
+                            @click="cargarComandosDispositivo(dispositivo)">
+                            <ion-icon :icon="refreshOutline" :class="{ girando: dispositivo._cargandoComandos }" />
+                          </button>
+                        </div>
+
+                        <div class="table-scroll">
+                          <table class="tabla-datos tabla-sub">
+                            <thead>
+                              <tr>
+                                <th class="col-accion">Eliminar</th>
+                                <th>Keyword</th>
+                                <th>Comando</th>
+                                <th>Texto OK</th>
+                                <th v-if="esTipoPuertaVal(dispositivo.tipo)">Relé</th>
+                                <th class="col-accion">Guardar</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr v-for="cmd in dispositivo._comandos" :key="cmd._uid">
+                                <td class="col-accion">
+                                  <button
+                                    v-if="cmd._persistido"
+                                    type="button"
+                                    class="btn-delete"
+                                    title="Borrar comando"
+                                    @click="borrarComandoFila(dispositivo, cmd)">X</button>
+                                </td>
+                                <td>
+                                  <input type="text" v-model="cmd.keyword" class="cell-input" :disabled="cmd._persistido" placeholder="keyword">
+                                </td>
+                                <td><input type="text" v-model="cmd.comandos" class="cell-input" placeholder="comando"></td>
+                                <td><input type="text" v-model="cmd.textoOk" class="cell-input" placeholder="texto OK"></td>
+                                <td v-if="esTipoPuertaVal(dispositivo.tipo)">
+                                  <select v-model="cmd.indiceRele" class="cell-input" :disabled="cmd._persistido">
+                                    <option :value="null">—</option>
+                                    <option v-for="r in relesDisponiblesComando(dispositivo, cmd)" :key="r" :value="r">{{ r }}</option>
+                                  </select>
+                                </td>
+                                <td class="col-accion">
+                                  <button type="button" class="btn-primary btn-mini" @click="guardarComandoFila(dispositivo, cmd)">Guardar</button>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <p v-if="sinComandosPersistidos(dispositivo) && !dispositivo._cargandoComandos" class="empty-state">
+                          No hay comandos. Usa la última fila para añadir uno nuevo.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <p v-if="!hayDispositivos && !cargandoTablaDispositivos" class="empty-state">
+            No hay dispositivos cargados. Usa la última fila para añadir uno nuevo.
+          </p>
+        </article>
+      </section>
+
+      <div class="panel-divider" aria-hidden="true"></div>
+
       <!-- 4) Al final: gestión de constantes -->
       <section class="panel-section">
         <h2 class="section-title">Gestión de constantes</h2>
@@ -393,6 +568,35 @@
     borrarTodasLasAplicaciones,
     autorizarGmailOAuth,
   } from '@/services/notifications';
+  import {
+    obtenerActuadores,
+    obtenerSensorBooleano,
+    obtenerSensorNumerico,
+    obtenerTiposActuador,
+    obtenerTiposSensores,
+    crearActuador,
+    crearActuadorPuerta,
+    crearActuadorProyector,
+    crearSensorBooleano,
+    crearSensorNumerico,
+    eliminarActuador,
+    eliminarActuadorPuerta,
+    eliminarActuadorProyector,
+    eliminarSensorBooleano,
+    eliminarSensorNumerico,
+    crearComandoActuador,
+    crearComandoActuadorPuerta,
+    obtenerComandosActuador,
+    obtenerComandosActuadorPuerta,
+    eliminarComandoActuador,
+    eliminarComandoActuadorPuerta,
+  } from '@/services/automations';
+  import {
+    obtenerCursosAcademicos,
+    obtenerEspaciosFijo,
+    obtenerEspaciosDesdoble,
+    obtenerEspaciosSinDocencia,
+  } from '@/services/schoolManager';
   import { crearToast } from '@/utils/toast.js';
 
   const toastMessage = ref('');
@@ -722,12 +926,21 @@
   };
 
   // ---- Inserciones masivas (ficheros CSV) ----
-  const onArchivoUsuariosSeleccionado = (archivo) => {
+  // Al arrastrar/seleccionar el fichero desde la barra de acciones se dispara la importación automáticamente
+  // (el control compacto sustituye a la antigua tarjeta grande con su botón "Crear"). uploadUsers/uploadApps
+  // se encargan de limpiar el fichero y refrescar la tabla, además del feedback vía toast.
+  const onArchivoUsuariosSeleccionado = async (archivo) => {
     archivoUsuarios.value = archivo || null;
+    if (archivoUsuarios.value) {
+      await uploadUsers();
+    }
   };
 
-  const onArchivoAppsSeleccionado = (archivo) => {
+  const onArchivoAppsSeleccionado = async (archivo) => {
     archivoApps.value = archivo || null;
+    if (archivoApps.value) {
+      await uploadApps();
+    }
   };
 
   const uploadUsers = async () => {
@@ -1178,8 +1391,498 @@
     }
   };
 
+  // ===================== DOMÓTICA (migrada desde /automations/admin) =====================
+  // Tabla unificada de dispositivos (actuadores y sensores) con alta/edición inline y una subtabla de
+  // comandos por actuador. Reutiliza los servicios de @/services/automations y las ubicaciones de
+  // schoolManager (espacios del curso académico activo), igual que hacía la vista original.
+  const dispositivos = ref([]);
+  const cargandoTablaDispositivos = ref(false);
+  const busquedaDispositivos = ref('');
+  const ordenDispositivos = ref({ campo: 'mac', dir: 'asc' });
+  const ubicaciones = ref([]);
+  const tiposActuador = ref([]);
+  const tiposSensor = ref([]);
+
+  const hayDispositivos = computed(() => dispositivos.value.some((d) => d._persistido));
+
+  const esTipoPuertaVal = (tipo) => String(tipo ?? '').trim().toLowerCase() === 'puerta';
+  const esTipoProyectorVal = (tipo) => String(tipo ?? '').trim().toLowerCase() === 'proyector';
+
+  const tiposDeClase = (clase) => (clase === 'SENSOR' ? tiposSensor.value : tiposActuador.value);
+
+  // Opciones del desplegable de ubicación: la lista disponible + el valor actual si no estuviera en ella
+  const opcionesUbicacion = (actual) => {
+    const base = ubicaciones.value;
+    if (actual && !base.includes(actual)) {
+      return [actual, ...base];
+    }
+    return base;
+  };
+
+  const filaComandoVacia = () => ({
+    keyword: '',
+    comandos: '',
+    textoOk: '',
+    indiceRele: null,
+    _persistido: false,
+    _uid: nextUid(),
+  });
+
+  const filaDispositivoVacia = () => ({
+    mac: '',
+    nombreUbicacion: '',
+    clase: 'ACTUADOR',
+    tipo: '',
+    estado: 'indefinido',
+    numeroReles: 1,
+    comandoEstado: '',
+    estadoProyector: '',
+    naturaleza: 'BOOLEANO',
+    umbralMinimo: 0,
+    umbralMaximo: 0,
+    valorActual: null,
+    ultimaActualizacion: null,
+    _persistido: false,
+    _detallesAbiertos: false,
+    _comandos: [],
+    _cargandoComandos: false,
+    _uid: nextUid(),
+  });
+
+  const asegurarFilaVaciaDispositivos = () => {
+    const arr = dispositivos.value;
+    const ultima = arr[arr.length - 1];
+    if (!ultima || (ultima.mac && ultima.mac.trim() !== '')) {
+      arr.push(filaDispositivoVacia());
+    }
+  };
+
+  const asegurarFilaVaciaComandos = (dispositivo) => {
+    const arr = dispositivo._comandos;
+    if (!Array.isArray(arr)) {
+      return;
+    }
+    const ultima = arr[arr.length - 1];
+    if (!ultima || (ultima.keyword && ultima.keyword.trim() !== '')) {
+      arr.push(filaComandoVacia());
+    }
+  };
+
+  // Garantiza una fila vacía al final de la tabla de dispositivos y de cada subtabla de comandos abierta.
+  watch(dispositivos, () => {
+    asegurarFilaVaciaDispositivos();
+    dispositivos.value.forEach((d) => {
+      if (d._detallesAbiertos) {
+        asegurarFilaVaciaComandos(d);
+      }
+    });
+  }, { deep: true });
+
+  const CAMPOS_DISPOSITIVOS = ['mac', 'nombreUbicacion', 'clase', 'tipo'];
+  const dispositivosMostrados = computed(() =>
+    construirFilasMostradas(dispositivos.value, CAMPOS_DISPOSITIVOS, busquedaDispositivos.value, ordenDispositivos.value)
+  );
+  const ordenarDispositivos = (campo) => cambiarOrden(ordenDispositivos, campo);
+
+  const sinComandosPersistidos = (dispositivo) =>
+    !(dispositivo._comandos || []).some((c) => c._persistido);
+
+  // Relés disponibles para una fila de comando de una puerta: los no usados por OTRAS filas, más el propio si ya tiene.
+  const relesDisponiblesComando = (dispositivo, cmd) => {
+    const total = Number(dispositivo.numeroReles ?? 0);
+    if (!esTipoPuertaVal(dispositivo.tipo) || total <= 0) {
+      return [];
+    }
+    const usados = new Set(
+      (dispositivo._comandos ?? [])
+        .filter((c) => c !== cmd && c.indiceRele != null && c.indiceRele !== '')
+        .map((c) => Number(c.indiceRele))
+    );
+    const disponibles = [];
+    for (let i = 0; i < total; i++) {
+      if (!usados.has(i)) {
+        disponibles.push(i);
+      }
+    }
+    if (cmd.indiceRele != null && cmd.indiceRele !== '' && !disponibles.includes(Number(cmd.indiceRele))) {
+      disponibles.unshift(Number(cmd.indiceRele));
+    }
+    return disponibles;
+  };
+
+  // ---- Carga de catálogos (tipos y ubicaciones) ----
+  const cargarTiposDispositivos = async () => {
+    try {
+      const [ta, ts] = await Promise.all([
+        obtenerTiposActuador(toastMessage, toastColor, isToastOpen),
+        obtenerTiposSensores(toastMessage, toastColor, isToastOpen),
+      ]);
+      const normalizar = (raw) =>
+        (raw ?? [])
+          .map((t) => (typeof t === 'string' ? t : (t?.tipo ?? t?.nombreTipo ?? '')))
+          .filter((t) => String(t).trim() !== '');
+      tiposActuador.value = normalizar(ta);
+      tiposSensor.value = normalizar(ts);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const cargarUbicaciones = async () => {
+    try {
+      const cursos = await obtenerCursosAcademicos(toastMessage, toastColor, isToastOpen);
+      const curso = cursos?.[0]?.cursoAcademico ?? cursos?.[0] ?? '';
+      if (!curso) {
+        ubicaciones.value = [];
+        return;
+      }
+
+      const [fijos, desdobles, sinDocencia] = await Promise.all([
+        obtenerEspaciosFijo(toastMessage, toastColor, isToastOpen, curso),
+        obtenerEspaciosDesdoble(toastMessage, toastColor, isToastOpen, curso),
+        obtenerEspaciosSinDocencia(toastMessage, toastColor, isToastOpen, curso),
+      ]);
+
+      const normalizar = (arr) =>
+        (arr ?? [])
+          .map((e) =>
+            e?.nombreEspacio ?? e?.nombreUbicacion ?? e?.aula ?? e?.nombre ?? e?.descripcion ?? e?.id ?? ''
+          )
+          .filter((x) => String(x).trim() !== '');
+
+      const mezcla = [...normalizar(fijos), ...normalizar(desdobles), ...normalizar(sinDocencia)];
+      ubicaciones.value = Array.from(new Set(mezcla)).sort((a, b) => a.localeCompare(b, 'es'));
+    } catch (error) {
+      console.error(error);
+      ubicaciones.value = [];
+    }
+  };
+
+  // ---- Carga de la tabla de dispositivos (une actuadores + sensores booleanos + numéricos) ----
+  const cargarDispositivos = async () => {
+    cargandoTablaDispositivos.value = true;
+    try {
+      const [actuadores, sensBool, sensNum] = await Promise.all([
+        obtenerActuadores(toastMessage, toastColor, isToastOpen),
+        obtenerSensorBooleano(toastMessage, toastColor, isToastOpen),
+        obtenerSensorNumerico(toastMessage, toastColor, isToastOpen),
+      ]);
+
+      const mapaActuador = (a) => ({
+        mac: a.mac || '',
+        nombreUbicacion: a.nombreUbicacion || '',
+        clase: 'ACTUADOR',
+        tipo: a.tipo || '',
+        estado: a.estado || 'indefinido',
+        numeroReles: a.numeroReles ?? 1,
+        comandoEstado: a.comandoEstado ?? '',
+        estadoProyector: a.estadoProyector ?? '',
+        naturaleza: 'BOOLEANO',
+        umbralMinimo: 0,
+        umbralMaximo: 0,
+        valorActual: null,
+        ultimaActualizacion: a.ultimaActualizacion ?? null,
+        _persistido: true,
+        _detallesAbiertos: false,
+        _comandos: [],
+        _cargandoComandos: false,
+        _uid: nextUid(),
+      });
+
+      const mapaSensor = (s, naturaleza) => ({
+        mac: s.mac || '',
+        nombreUbicacion: s.nombreUbicacion || '',
+        clase: 'SENSOR',
+        tipo: s.tipo || '',
+        estado: s.estado || 'indefinido',
+        numeroReles: 1,
+        comandoEstado: '',
+        estadoProyector: '',
+        naturaleza,
+        umbralMinimo: s.umbralMinimo ?? 0,
+        umbralMaximo: s.umbralMaximo ?? 0,
+        valorActual: s.valorActual ?? null,
+        ultimaActualizacion: s.ultimaActualizacion ?? null,
+        _persistido: true,
+        _detallesAbiertos: false,
+        _comandos: [],
+        _cargandoComandos: false,
+        _uid: nextUid(),
+      });
+
+      dispositivos.value = [
+        ...((actuadores ?? []).map(mapaActuador)),
+        ...((sensBool ?? []).map((s) => mapaSensor(s, 'BOOLEANO'))),
+        ...((sensNum ?? []).map((s) => mapaSensor(s, 'NUMERICO'))),
+      ];
+      asegurarFilaVaciaDispositivos();
+    } catch (error) {
+      console.error(error);
+      dispositivos.value = [];
+      asegurarFilaVaciaDispositivos();
+    } finally {
+      cargandoTablaDispositivos.value = false;
+    }
+  };
+
+  // Al cambiar la clase (Actuador/Sensor) de una fila nueva, reseteamos los campos condicionales
+  const onCambioClase = (dispositivo) => {
+    dispositivo.tipo = '';
+    dispositivo.numeroReles = 1;
+    dispositivo.comandoEstado = '';
+    dispositivo.naturaleza = 'BOOLEANO';
+    dispositivo.umbralMinimo = 0;
+    dispositivo.umbralMaximo = 0;
+  };
+
+  // ---- Guardado (upsert) de un dispositivo ----
+  const guardarDispositivoFila = async (dispositivo) => {
+    const mac = (dispositivo.mac || '').trim();
+    if (!mac) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'La MAC es obligatoria para guardar el dispositivo');
+      return;
+    }
+    if (!dispositivo.nombreUbicacion) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Selecciona una ubicación');
+      return;
+    }
+    if (!dispositivo.tipo) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Selecciona un tipo');
+      return;
+    }
+
+    try {
+      if (dispositivo.clase === 'ACTUADOR') {
+        if (esTipoPuertaVal(dispositivo.tipo)) {
+          const nReles = Number(dispositivo.numeroReles);
+          if (!(nReles >= 1)) {
+            crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El número de relés debe ser mayor o igual que 1');
+            return;
+          }
+          await crearActuadorPuerta(toastMessage, toastColor, isToastOpen, mac, dispositivo.estado, dispositivo.nombreUbicacion, dispositivo.tipo, nReles);
+        } else if (esTipoProyectorVal(dispositivo.tipo)) {
+          if (!(dispositivo.comandoEstado || '').trim()) {
+            crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Indica el comando de estado del proyector');
+            return;
+          }
+          await crearActuadorProyector(toastMessage, toastColor, isToastOpen, mac, dispositivo.estado, dispositivo.nombreUbicacion, dispositivo.tipo, dispositivo.comandoEstado);
+        } else {
+          await crearActuador(toastMessage, toastColor, isToastOpen, mac, dispositivo.estado, dispositivo.nombreUbicacion, dispositivo.tipo);
+        }
+      } else {
+        const min = Number(dispositivo.umbralMinimo);
+        const max = Number(dispositivo.umbralMaximo);
+        if (!(min < max)) {
+          crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El umbral mínimo debe ser menor que el máximo');
+          return;
+        }
+        if (dispositivo.naturaleza === 'NUMERICO') {
+          await crearSensorNumerico(toastMessage, toastColor, isToastOpen, mac, dispositivo.estado, dispositivo.nombreUbicacion, dispositivo.tipo, min, max);
+        } else {
+          await crearSensorBooleano(toastMessage, toastColor, isToastOpen, mac, dispositivo.estado, dispositivo.nombreUbicacion, dispositivo.tipo, min, max);
+        }
+      }
+
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Dispositivo guardado con éxito');
+      await cargarDispositivos();
+    } catch (error) {
+      console.error(error);
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo guardar el dispositivo');
+    }
+  };
+
+  // ---- Borrado de un dispositivo (según su clase/tipo) ----
+  const borrarDispositivoBackend = async (dispositivo) => {
+    if (dispositivo.clase === 'ACTUADOR') {
+      if (esTipoPuertaVal(dispositivo.tipo)) {
+        await eliminarActuadorPuerta(toastMessage, toastColor, isToastOpen, dispositivo.mac);
+      } else if (esTipoProyectorVal(dispositivo.tipo)) {
+        await eliminarActuadorProyector(toastMessage, toastColor, isToastOpen, dispositivo.mac);
+      } else {
+        await eliminarActuador(toastMessage, toastColor, isToastOpen, dispositivo.mac);
+      }
+    } else if (dispositivo.naturaleza === 'NUMERICO') {
+      await eliminarSensorNumerico(toastMessage, toastColor, isToastOpen, dispositivo.mac);
+    } else {
+      await eliminarSensorBooleano(toastMessage, toastColor, isToastOpen, dispositivo.mac);
+    }
+  };
+
+  const borrarDispositivoFila = async (dispositivo) => {
+    if (!dispositivo._persistido) {
+      return;
+    }
+    if (!window.confirm(`¿Borrar el dispositivo "${dispositivo.mac}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+    try {
+      await borrarDispositivoBackend(dispositivo);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Dispositivo borrado con éxito');
+      await cargarDispositivos();
+    } catch (error) {
+      console.error(error);
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo borrar el dispositivo');
+    }
+  };
+
+  // Borra TODOS los dispositivos iterando en cliente (el backend no expone un "borrar todos" para domótica).
+  const borrarTodosDispositivos = async () => {
+    if (!hayDispositivos.value) {
+      return;
+    }
+    if (!window.confirm('Se borrarán TODOS los dispositivos de domótica. ¿Continuar?')) {
+      return;
+    }
+    cargandoTablaDispositivos.value = true;
+    try {
+      const persistidos = dispositivos.value.filter((d) => d._persistido);
+      let borrados = 0;
+      for (const d of persistidos) {
+        try {
+          await borrarDispositivoBackend(d);
+          borrados++;
+        } catch (error) {
+          console.error(error);
+        }
+      }
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', `Dispositivos borrados: ${borrados}`);
+      await cargarDispositivos();
+    } finally {
+      cargandoTablaDispositivos.value = false;
+    }
+  };
+
+  // ---- Subtabla de comandos (ComandoActuador / ComandoActuadorPuerta) ----
+  const alternarDetalles = async (dispositivo) => {
+    dispositivo._detallesAbiertos = !dispositivo._detallesAbiertos;
+    if (dispositivo._detallesAbiertos) {
+      await cargarComandosDispositivo(dispositivo);
+    }
+  };
+
+  const cargarComandosDispositivo = async (dispositivo) => {
+    dispositivo._cargandoComandos = true;
+    try {
+      const [resp, relaciones] = await Promise.all([
+        obtenerComandosActuador(toastMessage, toastColor, isToastOpen, 0, 1000),
+        obtenerComandosActuadorPuerta(toastMessage, toastColor, isToastOpen),
+      ]);
+
+      const mapaReles = new Map();
+      for (const rel of (relaciones ?? [])) {
+        const m = rel?.comandoActuadorMac ?? rel?.mac ?? '';
+        const k = rel?.comandoActuadorKeyword ?? rel?.keyword ?? '';
+        const idx = rel?.indiceRele ?? null;
+        mapaReles.set(`${m}__${k}`, idx);
+      }
+
+      const contenido = (resp?.content ?? (Array.isArray(resp) ? resp : []))
+        .filter((c) => c.mac === dispositivo.mac);
+
+      dispositivo._comandos = contenido.map((c) => ({
+        keyword: c.keyword || '',
+        comandos: c.comandos || '',
+        textoOk: c.textoOk || '',
+        indiceRele: mapaReles.get(`${c.mac}__${c.keyword}`) ?? null,
+        _persistido: true,
+        _uid: nextUid(),
+      }));
+      asegurarFilaVaciaComandos(dispositivo);
+    } catch (error) {
+      console.error(error);
+      dispositivo._comandos = [];
+      asegurarFilaVaciaComandos(dispositivo);
+    } finally {
+      dispositivo._cargandoComandos = false;
+    }
+  };
+
+  const guardarComandoFila = async (dispositivo, cmd) => {
+    if (!cmd.keyword || cmd.keyword.trim() === '') {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'La keyword es obligatoria');
+      return;
+    }
+    if (!cmd.comandos || cmd.comandos.trim() === '') {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El comando es obligatorio');
+      return;
+    }
+    if (!cmd.textoOk || cmd.textoOk.trim() === '') {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El texto OK es obligatorio');
+      return;
+    }
+    if (esTipoPuertaVal(dispositivo.tipo) && (cmd.indiceRele === null || cmd.indiceRele === undefined || cmd.indiceRele === '')) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Selecciona el número de relé');
+      return;
+    }
+
+    try {
+      await crearComandoActuador(toastMessage, toastColor, isToastOpen, dispositivo.mac, cmd.keyword, cmd.comandos, cmd.textoOk);
+      if (esTipoPuertaVal(dispositivo.tipo)) {
+        await crearComandoActuadorPuerta(toastMessage, toastColor, isToastOpen, dispositivo.mac, cmd.keyword, Number(cmd.indiceRele));
+      }
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Comando guardado con éxito');
+      await cargarComandosDispositivo(dispositivo);
+    } catch (error) {
+      console.error(error);
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo guardar el comando');
+    }
+  };
+
+  const borrarComandoFila = async (dispositivo, cmd) => {
+    if (!cmd._persistido) {
+      return;
+    }
+    if (!window.confirm(`¿Borrar el comando "${cmd.keyword}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+    try {
+      if (cmd.indiceRele !== null && cmd.indiceRele !== undefined && cmd.indiceRele !== '') {
+        await eliminarComandoActuadorPuerta(toastMessage, toastColor, isToastOpen, dispositivo.mac, cmd.keyword, cmd.indiceRele);
+      }
+      await eliminarComandoActuador(toastMessage, toastColor, isToastOpen, dispositivo.mac, cmd.keyword);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Comando borrado con éxito');
+      await cargarComandosDispositivo(dispositivo);
+    } catch (error) {
+      console.error(error);
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo borrar el comando');
+    }
+  };
+
+  // ---- Exportación a CSV de los dispositivos mostrados (filtrados + ordenados) ----
+  const exportarDispositivosCsv = () => {
+    const cabeceras = ['MAC', 'Ubicación', 'Clase', 'Tipo', 'Naturaleza', 'Nº relés', 'Comando estado', 'Umbral mínimo', 'Umbral máximo', 'Estado'];
+    const filas = dispositivosMostrados.value
+      .filter((d) => d._persistido)
+      .map((d) => [
+        d.mac,
+        d.nombreUbicacion,
+        d.clase === 'SENSOR' ? 'Sensor' : 'Actuador',
+        d.tipo,
+        d.clase === 'SENSOR' ? (d.naturaleza === 'NUMERICO' ? 'Numérico' : 'Booleano') : '',
+        d.clase === 'ACTUADOR' && esTipoPuertaVal(d.tipo) ? d.numeroReles : '',
+        d.clase === 'ACTUADOR' && esTipoProyectorVal(d.tipo) ? d.comandoEstado : '',
+        d.clase === 'SENSOR' ? d.umbralMinimo : '',
+        d.clase === 'SENSOR' ? d.umbralMaximo : '',
+        d.estado,
+      ]);
+
+    if (filas.length === 0) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay dispositivos para exportar');
+      return;
+    }
+
+    descargarCsv('dispositivos.csv', cabeceras, filas);
+  };
+
   onMounted(async () => {
-    await Promise.all([cargarUsuarios(), cargarApps(), cargarConstantes()]);
+    await Promise.all([
+      cargarUsuarios(),
+      cargarApps(),
+      cargarConstantes(),
+      cargarTiposDispositivos(),
+      cargarUbicaciones(),
+      cargarDispositivos(),
+    ]);
   });
 </script>
 
@@ -1697,6 +2400,119 @@ table.tabla-datos {
   font-size: 0.85rem;
 }
 
+/* ---- Control de importación compacto (FileUpload) integrado en la barra de acciones de la tabla ---- */
+/* Reutiliza el componente FileUpload (drag & drop + selección en disco) pero comprimido al tamaño de
+   los botones de la barra (algo más ancho). Se estiliza vía :deep porque FileUpload usa estilos scoped. */
+.import-inline {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 210px;
+}
+
+.import-inline :deep(.file-drop-area) {
+  min-height: 0;
+  width: 100%;
+  padding: 6px 14px;
+  border-width: 2px;
+  border-radius: 6px;
+  background-color: #e2e8f0;
+  border-color: #b6c2d4;
+  color: #1a3c6e;
+}
+
+.import-inline :deep(.file-drop-area.dragging) {
+  border-color: #1a3c6e;
+  background-color: #cbd5e1;
+}
+
+.import-inline :deep(.file-drop-area p) {
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Domótica: celda de configuración condicional y subtabla de comandos ---- */
+.btn-detalles {
+  width: 30px;
+  min-width: 30px;
+  padding: 5px 0;
+  font-size: 16px;
+  line-height: 1;
+  text-transform: none;
+}
+
+.col-config {
+  min-width: 210px;
+}
+
+.config-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.config-cell-sensor {
+  flex-wrap: wrap;
+}
+
+.config-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.cell-input-num {
+  max-width: 78px;
+  min-width: 58px;
+}
+
+.cell-input-nat {
+  max-width: 108px;
+  min-width: 90px;
+}
+
+.config-empty {
+  opacity: 0.6;
+}
+
+.fila-detalles > .celda-detalles {
+  padding: 0;
+  background-color: #dceafe;
+}
+
+.detalles-wrap {
+  padding: 10px 14px 14px;
+}
+
+.detalles-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.detalles-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.btn-refresh-sm {
+  width: 26px;
+  height: 26px;
+  font-size: 15px;
+}
+
+.tabla-sub {
+  font-size: 12px;
+}
+
 .panel-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, #cfd8e3 15%, #cfd8e3 85%, transparent);
@@ -1743,6 +2559,18 @@ table.tabla-datos {
   .action-card, .constantes-card { background-color: #2a302b; border-color: #555; }
   .card-title, .field label { color: var(--text-color-dark); }
   .empty-state { background-color: #2a302b; border-color: #555; color: #c8c8c8; }
+  .import-inline :deep(.file-drop-area) {
+    background-color: #3a4048;
+    color: #e6ebf1;
+    border-color: #5a616b;
+  }
+  .import-inline :deep(.file-drop-area.dragging) {
+    background-color: #474e57;
+    border-color: #e6ebf1;
+  }
+  .config-label { color: #c8c8c8; }
+  .fila-detalles > .celda-detalles { background-color: #20262e; }
+  .detalles-title { color: var(--text-color-dark); }
   .btn-secondary {
     background-color: #3a4048;
     color: #e6ebf1;
