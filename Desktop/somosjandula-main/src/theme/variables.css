@@ -1,0 +1,20 @@
+/* For information on how to create your own theme, please see:
+http://ionicframework.com/docs/theming/ */
+:root {
+  --background-light: #ffffff;
+  --text-color-light: #3a7ca5;
+  --form-bg-light: #ffffff;
+  --button-bg-light: #f0f0f0;
+  --button-border-light: #747474;
+  --google-icon-light: #3a7ca5;
+
+  --background-dark: #121212;
+  --text-color-dark: #76c7c0;
+  --form-bg-dark: #353c36;
+  --button-bg-dark: #333;
+  --button-border-dark: #999;
+  --google-icon-dark: #76c7c0;
+
+  --ion-padding-bg-light: linear-gradient(90deg, #3a7ca5 0%, #66a6d1 40%, #66a6d1 60%, #a2cffe 100%);
+  --ion-padding-bg-dark: linear-gradient(90deg, #171831 0%, #202245 40%, #2a2d5b 60%, #353973 100%);
+}

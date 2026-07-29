@@ -1,0 +1,47 @@
+# Dependencias y artefactos de build (se generan dentro de la imagen)
+node_modules/
+dist/
+www/
+coverage/
+
+# Plataformas nativas de Capacitor (no aplican al despliegue web)
+android/
+ios/
+platforms/
+plugins/
+
+# Fichero base .env (contiene la config Firebase local / secretos): NUNCA debe
+# entrar en la imagen. La config de Firebase se inyecta como Build Args en Dokploy.
+# (Se mantienen .env.development / .env.production / .env.staging, que NO tienen secretos.)
+.env
+
+# Control de versiones
+.git/
+.gitignore
+.gitattributes
+
+# Metadatos de IDE
+.idea/
+.vscode/
+*.iml
+.ionic/
+
+# Logs y temporales
+*.log
+log.txt
+npm-debug.log*
+.tmp
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Tests e2e (no necesarios para construir la SPA)
+tests/
+cypress.config.ts
+
+# Documentacion de contenedorizacion (no necesaria dentro de la imagen)
+DOCKER.md
+
+# El propio Dockerfile y su ignore
+Dockerfile
+.dockerignore
