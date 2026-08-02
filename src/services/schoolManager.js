@@ -1,20 +1,85 @@
 import {schoolManagerApiUrl} from '@/environment/apiUrls';
 import {obtenerTokenJWTValido} from '@/services/adminService';
 
+/****************************** Ventana de Administración de Días Festivos ******************************/
+export const obtenerDiasFestivos = async (toastMessage, toastColor, isToastOpen) => 
+
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolManagerApiUrl + '/schoolManager/dias_festivos', 
+    {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    });
+
+    if (!response.ok)
+    {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+
+    return await response.json();
+}
+
+export const crearDiaFestivo = async (diaFestivoDto, toastMessage, toastColor, isToastOpen) => 
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolManagerApiUrl + '/schoolManager/dias_festivos', 
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(diaFestivoDto),
+    });
+
+    if (!response.ok)
+    {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+  }
+
+export const borrarDiaFestivo = async (diaFestivoDto, toastMessage, toastColor, isToastOpen) => 
+  {
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(schoolManagerApiUrl + '/schoolManager/dias_festivos', 
+    {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(diaFestivoDto),
+    });
+
+    if (!response.ok)
+    {
+      const errorData = await response.json();
+      throw new Error(errorData.message);
+    }
+  }
+
 /****************************** Ventana X Common ******************************/
 export const cargarCursosEtapas = async (toastMessage, toastColor, isToastOpen) => 
   {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     const response = await fetch(schoolManagerApiUrl + '/schoolManager/common/cursoEtapa', 
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${tokenPropio}`,
-        },
-      });
+    {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+      },
+    });
 
-    if (!response.ok) {
+    if (!response.ok)
+    {
       const errorData = await response.json();
       throw new Error(errorData.message);
     }

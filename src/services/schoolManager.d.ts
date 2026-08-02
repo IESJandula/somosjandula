@@ -1,3 +1,24 @@
+/****************************** Ventana de Administración de Días Festivos ******************************/
+
+export interface DiaFestivoDto {
+  fecha: number;
+  descripcion: string;
+}
+
+export declare function obtenerDiasFestivos(toastMessage: Ref<string>,
+                                           toastColor: Ref<string>,
+                                           isToastOpen: Ref<boolean>): Promise<DiaFestivoDto[]>;
+
+export declare function crearDiaFestivo(diaFestivoDto: DiaFestivoDto,
+                                        toastMessage: Ref<string>,
+                                        toastColor: Ref<string>,
+                                        isToastOpen: Ref<boolean>): Promise<void>;
+
+export declare function borrarDiaFestivo(diaFestivoDto: DiaFestivoDto,
+                                         toastMessage: Ref<string>,
+                                         toastColor: Ref<string>,
+                                         isToastOpen: Ref<boolean>): Promise<void>;
+
 /****************************** Ventana X Common ******************************/
 export declare function cargarCursosEtapas(toastMessage: Ref<string>,
                                            toastColor: Ref<string>,

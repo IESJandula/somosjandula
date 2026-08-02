@@ -3,8 +3,7 @@
     <header class="page-header">
       <h1 class="t-1">Administración del sistema</h1>
       <p class="page-subtitle">
-        Inserta usuarios y aplicaciones de forma masiva mediante ficheros, consulta y edita los listados y gestiona
-        las constantes de configuración de los microservicios.
+        Gestión de usuarios, aplicaciones y dispositivos domóticos, junto con la consulta y edición de constantes.
       </p>
     </header>
 

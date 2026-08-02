@@ -7,7 +7,7 @@ export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) => {
 
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${eventsApiUrl}/events/manager/`, {
+    const response = await fetch(`${eventsApiUrl}/events/eventos/`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -27,12 +27,12 @@ export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) => {
   }
 };
 
-export const crearEvento = async (toastMessage, toastColor, isToastOpen, titulo, nombre, fechaInicio, fechaFin, usuarioNombre, usuarioApellidos, usuarioEmail) => {
+export const crearEvento = async (toastMessage, toastColor, isToastOpen, titulo, fechaInicio, fechaFin, nombreCategoria) => {
 try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
     
-    const payload = { titulo, nombre, fechaInicio, fechaFin} ;
-    const response = await fetch(`${eventsApiUrl}/events/manager/`, {
+    const payload = { titulo, fechaInicio, fechaFin, nombreCategoria} ;
+    const response = await fetch(`${eventsApiUrl}/events/eventos/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -61,7 +61,7 @@ export const borrarEvento = async (toastMessage, toastColor, isToastOpen, titulo
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${eventsApiUrl}/events/manager/`, {
+    const response = await fetch(`${eventsApiUrl}/events/eventos/`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -89,7 +89,7 @@ export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nomb
 
     const payload = { nombre, color };
 
-    const response = await fetch(`${eventsApiUrl}/events/categories/`, {
+    const response = await fetch(`${eventsApiUrl}/events/categorias/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -117,7 +117,7 @@ export const obtenerCategorias = async (toastMessage, toastColor, isToastOpen) =
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${eventsApiUrl}/events/categories/`, {
+    const response = await fetch(`${eventsApiUrl}/events/categorias/`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
@@ -144,7 +144,7 @@ export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nom
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
     const response = await fetch(
-      `${eventsApiUrl}/events/categories/${encodeURIComponent(nombre)}`,
+      `${eventsApiUrl}/events/categorias/${encodeURIComponent(nombre)}`,
       {
         method: 'DELETE',
         headers: {
