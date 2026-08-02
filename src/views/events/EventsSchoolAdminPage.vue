@@ -147,9 +147,6 @@
                   <td>{{ eventoItem.nombre }}</td>
                   <td>{{ formatFecha(eventoItem.fechaInicio) }}</td>
                   <td>{{ formatFecha(eventoItem.fechaFin) }}</td>
-                  <td>{{ eventoItem.usuarioNombre }}</td>
-                  <td>{{ eventoItem.usuarioApellidos }}</td>
-                  <td>{{ eventoItem.usuarioEmail }}</td>
                   <td>
                     <button @click="borrarEventoFn(eventoItem)" class="btn-eliminar">
                       X
@@ -190,9 +187,6 @@ interface Evento {
   fechaInicio: number;
   fechaFin: number;
   nombre: string;
-  usuarioNombre: string;
-  usuarioApellidos: string;
-  usuarioEmail: string;
 }
 
 interface EventoForm {
@@ -200,9 +194,6 @@ interface EventoForm {
   fechaInicio: string;
   fechaFin: string;
   nombre: string;
-  usuarioNombre: string;
-  usuarioApellidos: string;
-  usuarioEmail: string;
 }
 
 interface Categoria {
@@ -217,7 +208,6 @@ const toastColor = ref("success");
 const eventos = ref<Evento[]>([]);
 const categorias = ref<Categoria[]>([]);
 const eventoMismoDia = ref(true);
-const fechaEspecial = ref<string>('');
 
 // Formulario evento
 const evento = ref<EventoForm>({
@@ -225,9 +215,6 @@ const evento = ref<EventoForm>({
   nombre: "",
   fechaInicio: "",
   fechaFin: "",
-  usuarioNombre: "",
-  usuarioApellidos: "",
-  usuarioEmail: ""
 });
 
 // Nueva categoría
@@ -290,8 +277,6 @@ async function crearEventoFn() {
       fechaInicio: fechaInicioLong,
       fechaFin: fechaFinLong,
       nombre: evento.value.nombre,
-      usuarioNombre: evento.value.usuarioNombre,
-      usuarioEmail: evento.value.usuarioEmail
     });
 
     await crearEvento(
@@ -299,12 +284,9 @@ async function crearEventoFn() {
       toastColor,
       isToastOpen,
       evento.value.titulo,
-      evento.value.nombre,
       fechaInicioLong,
       fechaFinLong,
-      evento.value.usuarioNombre,
-      evento.value.usuarioApellidos,
-      evento.value.usuarioEmail,
+      evento.value.nombre,
     );
 
     console.log("Evento creado, recargando lista");
@@ -315,14 +297,11 @@ async function crearEventoFn() {
       nombre: "",
       fechaInicio: "",
       fechaFin: "",
-      usuarioNombre: "",
-      usuarioApellidos: "",
-      usuarioEmail: ""
     };
 
 
     // Limpiar formulario
-    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombre: "", usuarioNombre: "", usuarioApellidos: "", usuarioEmail: "" };
+    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombre: "" };
     eventoMismoDia.value = true;
 
     // Recargar lista de eventos
