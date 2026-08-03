@@ -50,6 +50,8 @@ import ClonezillaImagesAdminPage from '@/views/clonezilla/ClonezillaImagesAdminP
 
 import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
+import MetricsAdminPage from '@/views/metrics/MetricsAdminPage.vue';
+
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
 import IAView from '@/views/ia/IAView.vue';
@@ -310,6 +312,14 @@ const routes = [
         name: 'Statistics',
         meta: {
           role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'metrics/admin',
+        component: MetricsAdminPage,
+        name: 'MetricsAdmin',
+        meta: {
+          role: 'ADMINISTRADOR'
         },
       },
       {

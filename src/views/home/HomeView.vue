@@ -81,6 +81,7 @@ import {
   logoElectron,
   shieldOutline,
   serverOutline,
+  analyticsOutline,
 } from "ionicons/icons";
 
 // Rol actualmente SELECCIONADO en el desplegable de perfil (MainLayout.vue).
@@ -227,6 +228,7 @@ const seccionAdministracion = computed(() => ({
     { label: "Reservas", icono: calendarOutline, to: "/bookings/admin" },
     { label: "Eventos", icono: calendarNumberOutline, to: "/eventsSchool/admin" },
     { label: "Huelgas", icono: peopleOutline, to: "/strikesSchool/admin" },
+    { label: "Métricas", icono: analyticsOutline, to: "/metrics/admin" },
   ],
 }));
 
