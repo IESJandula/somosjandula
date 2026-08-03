@@ -197,14 +197,14 @@ import { ref, onMounted, computed, watch } from "vue";
 import { IonToast } from "@ionic/vue";
 import { crearToast } from "@/utils/toast.js";
 import {
-  Categoria,
+  Resolutor,
   Incidencia,
-  UsuarioCategoria,
+  UsuarioResolutor,
   crearIncidencia,
   listarIncidencias,
   borrarIncidencia,
-  listarCategorias,
-  listarUsuariosCategoria,
+  listarResolutores,
+  listarUsuariosResolutor,
   actualizarCategoriaIncidencia,
   actualizarEstadoIncidencia,
   actualizarSolucionIncidencia,
@@ -227,7 +227,7 @@ import { obtenerDatosUsuarioSesion } from "@/services/adminService";
 
 // ------------ Estado global de la vista ------------
 
-const categorias = ref<Categoria[]>([]);
+const categorias = ref<Resolutor[]>([]);
 
 // Ubicaciones e incidencias.
 // El `value` de cada ubicación coincide con la `label` visible (nombre + curso/etapa/grupo
@@ -253,7 +253,7 @@ const toastColor = ref("success");
 const estados = ref<string[]>([]);
 
 // Usuarios responsables por categoría
-const usuariosCategoria = ref<UsuarioCategoria[]>([]);
+const usuariosCategoria = ref<UsuarioResolutor[]>([]);
 
 // Usuario actual
 const emailUsuario = ref<string>("");
@@ -448,7 +448,7 @@ async function cargarUbicaciones() {
 async function cargarCategorias() {
   try {
     // Obtenemos las categorías
-    categorias.value = await listarCategorias(toastMessage, toastColor, isToastOpen);
+    categorias.value = await listarResolutores(toastMessage, toastColor, isToastOpen);
   }
   catch (e: any) {
     // Mostramos el mensaje de error en la consola
@@ -482,7 +482,7 @@ async function cargarEstados() {
 async function cargarUsuariosCategoria() {
   try {
     // Obtenemos los usuarios de categoría
-    usuariosCategoria.value = await listarUsuariosCategoria(toastMessage, toastColor, isToastOpen);
+    usuariosCategoria.value = await listarUsuariosResolutor(toastMessage, toastColor, isToastOpen);
   }
   catch (e: any) {
     // Mostramos el mensaje de error en la consola
@@ -812,9 +812,9 @@ async function actualizarResponsableIncidenciaFunc(id: number, nombreCategoria: 
  * @param nombreCategoria - El nombre de la categoría.
  * @return Los responsables de la categoría.
  */
-function responsablesDeCategoria(nombreCategoria?: string): UsuarioCategoria[] {
+function responsablesDeCategoria(nombreCategoria?: string): UsuarioResolutor[] {
   // Creamos un array de responsables
-  let responsables: UsuarioCategoria[] = [];
+  let responsables: UsuarioResolutor[] = [];
 
   // Si hay nombre de categoría, se obtienen los responsables de la categoría
   if (nombreCategoria) {

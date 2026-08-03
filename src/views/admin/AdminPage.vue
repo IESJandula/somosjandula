@@ -3,7 +3,7 @@
     <header class="page-header">
       <h1 class="t-1">Administración del sistema</h1>
       <p class="page-subtitle">
-        Gestión de usuarios, aplicaciones y dispositivos domóticos, junto con la consulta y edición de constantes.
+        Gestión de usuarios, resolutores, aplicaciones y dispositivos domóticos, junto con la consulta y edición de constantes.
       </p>
     </header>
 
@@ -69,6 +69,7 @@
                   <th class="sortable" @click="ordenarUsuarios('departamento')">Departamento<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'departamento') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('fechaNacimiento')">Fecha nac.<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'fechaNacimiento') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('resolutores')">Resolutor<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'resolutores') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
                   <th class="col-accion">Guardar</th>
@@ -102,6 +103,33 @@
                   </td>
                   <td><input type="text" v-model="usuario.fechaNacimiento" class="cell-input" placeholder="dd/mm/aaaa"></td>
                   <td><input type="text" v-model="usuario.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
+                  <td class="col-resolutores">
+                    <div class="multi-select">
+                      <button
+                        type="button"
+                        class="multi-select-toggle"
+                        :title="textoResolutoresUsuario(usuario)"
+                        @click="usuario._resolutoresAbierto = !usuario._resolutoresAbierto">
+                        <span class="multi-select-texto">{{ textoResolutoresUsuario(usuario) }}</span>
+                        <span class="multi-select-flecha">{{ usuario._resolutoresAbierto ? '▴' : '▾' }}</span>
+                      </button>
+                      <div v-if="usuario._resolutoresAbierto" class="multi-select-panel">
+                        <p v-if="resolutoresDisponibles.length === 0" class="multi-select-vacio">
+                          No hay resolutores dados de alta
+                        </p>
+                        <label
+                          v-for="nombreResolutor in resolutoresDisponibles"
+                          :key="nombreResolutor"
+                          class="multi-select-opcion">
+                          <input
+                            type="checkbox"
+                            :checked="usuario.resolutores.includes(nombreResolutor)"
+                            @change="alternarResolutorDeUsuario(usuario, nombreResolutor)">
+                          <span>{{ nombreResolutor }}</span>
+                        </label>
+                      </div>
+                    </div>
+                  </td>
                   <td>
                     <select v-model="usuario.estado" class="cell-input">
                       <option v-for="opcion in ESTADOS_USUARIO" :key="opcion.valor" :value="opcion.valor">{{ opcion.etiqueta }}</option>
@@ -119,6 +147,96 @@
           </div>
           <p v-if="!hayUsuarios && !cargandoTablaUsuarios" class="empty-state">
             No hay usuarios cargados. Usa la última fila para añadir uno nuevo.
+          </p>
+        </article>
+
+        <!-- 2) Resolutores: catálogo de resolutores de incidencias, migrado desde /issues/admin -->
+        <article class="action-card table-card">
+          <div class="table-card-header">
+            <div class="title-with-refresh">
+              <h3 class="card-title card-title-inline">Resolutor</h3>
+              <button
+                type="button"
+                class="btn-refresh"
+                :disabled="cargandoTablaResolutores"
+                title="Refrescar resolutores"
+                @click="cargarResolutores">
+                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoTablaResolutores }" />
+              </button>
+            </div>
+            <div class="table-actions">
+              <input
+                type="text"
+                v-model="busquedaResolutores"
+                class="search-input"
+                placeholder="Buscar...">
+              <div class="import-inline" title="Importa resolutores: arrastra el fichero o haz clic para buscarlo en disco">
+                <FileUpload
+                  ref="fileUploadResolutoresRef"
+                  idleText="Importar resolutores"
+                  @file-selected="onArchivoResolutoresSeleccionado" />
+              </div>
+              <button
+                type="button"
+                class="btn-delete btn-mini"
+                :disabled="!hayResolutores"
+                @click="borrarTodosResolutores">
+                Borrar todos
+              </button>
+              <button
+                type="button"
+                class="btn-secondary btn-mini"
+                :disabled="!hayResolutores"
+                @click="exportarResolutoresCsv">
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+
+          <div v-if="cargandoTablaResolutores" class="table-loading">
+            <div class="circulo"></div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="tabla-datos">
+              <thead>
+                <tr>
+                  <th class="col-accion">Eliminar</th>
+                  <th class="sortable" @click="ordenarResolutores('nombre')">Resolutor<span class="sort-ind">{{ indicadorOrden(ordenResolutores, 'nombre') }}</span></th>
+                  <th class="sortable" @click="ordenarResolutores('imprimirInforme')">Imprimir informe<span class="sort-ind">{{ indicadorOrden(ordenResolutores, 'imprimirInforme') }}</span></th>
+                  <th class="col-accion">Guardar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="resolutor in resolutoresMostrados" :key="resolutor._uid">
+                  <td class="col-accion">
+                    <button
+                      v-if="resolutor._persistido"
+                      type="button"
+                      class="btn-delete"
+                      title="Borrar resolutor"
+                      @click="borrarResolutorFila(resolutor)">X</button>
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      v-model="resolutor.nombre"
+                      class="cell-input"
+                      :disabled="resolutor._persistido"
+                      placeholder="TIC, DIRECCIÓN...">
+                  </td>
+                  <td>
+                    <input type="checkbox" v-model="resolutor.imprimirInforme" class="cell-checkbox">
+                  </td>
+                  <td class="col-accion">
+                    <button type="button" class="btn-primary btn-mini" @click="guardarResolutorFila(resolutor)">Guardar</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p v-if="!hayResolutores && !cargandoTablaResolutores" class="empty-state">
+            No hay resolutores cargados. Usa la última fila para añadir uno nuevo.
           </p>
         </article>
 
@@ -558,6 +676,15 @@
     obtenerDepartamentos,
   } from '@/services/adminService';
   import {
+    listarResolutores,
+    guardarResolutor,
+    borrarResolutor,
+    borrarTodosLosResolutores,
+    listarUsuariosResolutor,
+    crearUsuarioResolutor,
+    borrarUsuarioResolutor,
+  } from '@/services/issues';
+  import {
     listarAplicaciones,
     actualizarNotificacionesMaximasCalendar,
     actualizarNotificacionesMaximasEmail,
@@ -616,6 +743,16 @@
   const cargandoTablaUsuarios = ref(false);
   const cargandoTablaApps = ref(false);
 
+  // Tabla editable de resolutores (IssuesServer) y su importación masiva
+  const resolutores = ref([]);
+  const cargandoTablaResolutores = ref(false);
+  const fileUploadResolutoresRef = ref(null);
+  const archivoResolutores = ref(null);
+
+  // Resolutores asignados a cada usuario, indexados por email en minúsculas. Es el estado persistido con el
+  // que se compara el borrador de la columna "Resolutor" de la tabla de usuarios al guardar cada fila.
+  const asignacionesResolutorPorEmail = ref({});
+
   // Contadores de notificaciones (NotificationsServer) indexados por NOMBRE de aplicación. Cada entrada trae
   // notifHoy/notifMax (Calendar/Email/Web) y la fecha de la última notificación. Se casan con las filas de apps por
   // su campo 'nombre', igual que hacía la vista /notifications/admin.
@@ -627,11 +764,13 @@
   // Búsqueda (filtro global en cliente) por tabla
   const busquedaUsuarios = ref('');
   const busquedaApps = ref('');
+  const busquedaResolutores = ref('');
 
   // Estado de ordenación por columna, independiente por tabla ({ campo, dir: 'asc' | 'desc' | null }).
   // Por defecto se ordena por última conexión descendente (más reciente primero; los "Nunca" al final).
   const ordenUsuarios = ref({ campo: 'ultimaConexion', dir: 'desc' });
   const ordenApps = ref({ campo: 'ultimaConexion', dir: 'desc' });
+  const ordenResolutores = ref({ campo: 'nombre', dir: 'asc' });
 
   // Identificador estable por fila (para :key), de modo que la ordenación/filtrado no reutilice inputs por error
   let uidCounter = 0;
@@ -655,6 +794,12 @@
   // Hay datos reales (excluyendo la fila vacía final) si alguna fila está persistida
   const hayUsuarios = computed(() => usuarios.value.some((u) => u._persistido));
   const hayApps = computed(() => apps.value.some((a) => a._persistido));
+  const hayResolutores = computed(() => resolutores.value.some((r) => r._persistido));
+
+  // Nombres de los resolutores dados de alta, que son las opciones del desplegable de la columna "Resolutor"
+  const resolutoresDisponibles = computed(() =>
+    resolutores.value.filter((r) => r._persistido).map((r) => r.nombre)
+  );
 
   // Opciones del desplegable de estado (valor canónico que espera el backend + etiqueta mostrada)
   const ESTADOS_USUARIO = [
@@ -687,6 +832,18 @@
     estado: 'ACTIVO',
     cursoAcademico: '',
     ultimaConexion: null,
+    // Borrador de los resolutores asignados al usuario (0, 1 o varios). Solo se persiste al pulsar GUARDAR,
+    // comparándolo con _resolutoresOriginales para saber qué asignaciones crear y cuáles borrar.
+    resolutores: [],
+    _resolutoresOriginales: [],
+    _resolutoresAbierto: false,
+    _persistido: false,
+    _uid: nextUid(),
+  });
+
+  const filaResolutorVacia = () => ({
+    nombre: '',
+    imprimirInforme: false,
     _persistido: false,
     _uid: nextUid(),
   });
@@ -741,8 +898,17 @@
     }
   };
 
+  const asegurarFilaVaciaResolutores = () => {
+    const arr = resolutores.value;
+    const ultima = arr[arr.length - 1];
+    if (!ultima || (ultima.nombre && ultima.nombre.trim() !== '')) {
+      arr.push(filaResolutorVacia());
+    }
+  };
+
   watch(usuarios, asegurarFilaVaciaUsuarios, { deep: true });
   watch(apps, asegurarFilaVaciaApps, { deep: true });
+  watch(resolutores, asegurarFilaVaciaResolutores, { deep: true });
 
   // ---- Búsqueda + ordenación (en cliente) ----
   // Normaliza texto: minúsculas y sin acentos, para búsqueda/orden insensibles
@@ -872,6 +1038,8 @@
   const valorBusqueda = (fila, campo) => {
     if (campo === 'ultimaConexion') return formatearUltimaConexion(fila[campo]);
     if (campo === 'estado') return etiquetaEstado(fila[campo]);
+    if (campo === 'resolutores') return (fila[campo] || []).join(', ');
+    if (campo === 'imprimirInforme') return fila[campo] ? 'Sí' : 'No';
     return fila[campo];
   };
 
@@ -893,8 +1061,9 @@
     return [...visibles, ...noPersistidos];
   };
 
-  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles', 'estado', 'ultimaConexion'];
+  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles', 'resolutores', 'estado', 'ultimaConexion'];
   const CAMPOS_APPS = ['clientId', 'nombre', 'roles', 'ultimaConexion'];
+  const CAMPOS_RESOLUTORES = ['nombre', 'imprimirInforme'];
 
   const usuariosMostrados = computed(() =>
     construirFilasMostradas(usuarios.value, CAMPOS_USUARIOS, busquedaUsuarios.value, ordenUsuarios.value)
@@ -902,6 +1071,10 @@
 
   const appsMostradas = computed(() =>
     construirFilasMostradas(apps.value, CAMPOS_APPS, busquedaApps.value, ordenApps.value)
+  );
+
+  const resolutoresMostrados = computed(() =>
+    construirFilasMostradas(resolutores.value, CAMPOS_RESOLUTORES, busquedaResolutores.value, ordenResolutores.value)
   );
 
   // Alterna el orden de una columna: asc -> desc -> sin orden
@@ -918,6 +1091,7 @@
 
   const ordenarUsuarios = (campo) => cambiarOrden(ordenUsuarios, campo);
   const ordenarApps = (campo) => cambiarOrden(ordenApps, campo);
+  const ordenarResolutores = (campo) => cambiarOrden(ordenResolutores, campo);
 
   const indicadorOrden = (orden, campo) =>
     orden.campo === campo ? (orden.dir === 'asc' ? ' ▲' : ' ▼') : '';
@@ -987,6 +1161,54 @@
     }
   };
 
+  // La importación de resolutores se resuelve en el cliente: IssuesServer no expone un endpoint de importación,
+  // así que se lee el CSV y se da de alta cada resolutor con el mismo POST que usa el botón GUARDAR de la fila.
+  const onArchivoResolutoresSeleccionado = async (archivo) => {
+    archivoResolutores.value = archivo || null;
+    if (archivoResolutores.value) {
+      await uploadResolutores();
+    }
+  };
+
+  const uploadResolutores = async () => {
+    if (!archivoResolutores.value) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Selecciona un fichero de resolutores');
+      return;
+    }
+
+    cargandoTablaResolutores.value = true;
+    try {
+      const contenido = await archivoResolutores.value.text();
+      const filas = parsearCsvResolutores(contenido);
+
+      if (filas.length === 0) {
+        crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El fichero no contiene resolutores');
+        return;
+      }
+
+      let importados = 0;
+      for (const fila of filas) {
+        try {
+          await guardarResolutor(toastMessage, toastColor, isToastOpen, fila.nombre, fila.imprimirInforme);
+          importados++;
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      const color = importados === filas.length ? 'success' : 'danger';
+      crearToast(toastMessage, toastColor, isToastOpen, color, `Resolutores importados: ${importados} de ${filas.length}`);
+    } catch (error) {
+      console.error(error);
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo importar el fichero de resolutores');
+    } finally {
+      archivoResolutores.value = null;
+      fileUploadResolutoresRef.value?.fileClear();
+      cargandoTablaResolutores.value = false;
+      await cargarResolutores();
+    }
+  };
+
   // ---- Carga de las tablas ----
   const cargarDepartamentos = async () => {
     try {
@@ -997,23 +1219,77 @@
     }
   };
 
-  const cargarUsuarios = async () => {
-    cargandoTablaUsuarios.value = true;
+  // Carga el catálogo de resolutores (IssuesServer)
+  const cargarResolutores = async () => {
+    cargandoTablaResolutores.value = true;
     try {
-      const data = (await obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)) || [];
-      usuarios.value = data.map((u) => ({
-        email: u.email || '',
-        nombre: u.nombre || '',
-        apellidos: u.apellidos || '',
-        departamento: u.departamento || '',
-        fechaNacimiento: u.fechaNacimiento || '',
-        roles: rolesATexto(u.roles),
-        estado: normalizarEstado(u.estado),
-        cursoAcademico: u.cursoAcademico || '',
-        ultimaConexion: u.ultimaConexion || null,
+      const data = (await listarResolutores(toastMessage, toastColor, isToastOpen)) || [];
+      resolutores.value = data.map((r) => ({
+        nombre: r.nombre || '',
+        imprimirInforme: r.imprimirInforme === true,
         _persistido: true,
         _uid: nextUid(),
       }));
+      asegurarFilaVaciaResolutores();
+    } catch (error) {
+      console.error(error);
+      resolutores.value = [];
+      asegurarFilaVaciaResolutores();
+    } finally {
+      cargandoTablaResolutores.value = false;
+    }
+  };
+
+  // Carga las asignaciones usuario -> resolutor y las agrupa por email (en minúsculas), ya que un mismo
+  // usuario puede ser responsable de varios resolutores.
+  const cargarAsignacionesResolutor = async () => {
+    try {
+      const asignaciones = (await listarUsuariosResolutor(toastMessage, toastColor, isToastOpen)) || [];
+      const mapa = {};
+      asignaciones.forEach((asignacion) => {
+        const email = (asignacion.emailResponsable || '').trim().toLowerCase();
+        if (!email) {
+          return;
+        }
+        if (!mapa[email]) {
+          mapa[email] = [];
+        }
+        mapa[email].push(asignacion.nombreCategoria);
+      });
+      asignacionesResolutorPorEmail.value = mapa;
+    } catch (error) {
+      console.error(error);
+      asignacionesResolutorPorEmail.value = {};
+    }
+  };
+
+  const cargarUsuarios = async () => {
+    cargandoTablaUsuarios.value = true;
+    try {
+      // Las asignaciones de resolutores alimentan la columna "Resolutor", por lo que se cargan antes de las filas
+      await cargarAsignacionesResolutor();
+
+      const data = (await obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)) || [];
+      usuarios.value = data.map((u) => {
+        const asignados = [...(asignacionesResolutorPorEmail.value[(u.email || '').trim().toLowerCase()] || [])];
+
+        return {
+          email: u.email || '',
+          nombre: u.nombre || '',
+          apellidos: u.apellidos || '',
+          departamento: u.departamento || '',
+          fechaNacimiento: u.fechaNacimiento || '',
+          roles: rolesATexto(u.roles),
+          estado: normalizarEstado(u.estado),
+          cursoAcademico: u.cursoAcademico || '',
+          ultimaConexion: u.ultimaConexion || null,
+          resolutores: [...asignados],
+          _resolutoresOriginales: [...asignados],
+          _resolutoresAbierto: false,
+          _persistido: true,
+          _uid: nextUid(),
+        };
+      });
       asegurarFilaVaciaUsuarios();
       // Refrescamos la lista de departamentos disponibles
       await cargarDepartamentos();
@@ -1123,6 +1399,53 @@
     }
   };
 
+  // ---- Columna "Resolutor" de la tabla de usuarios ----
+  // Texto resumido que muestra el desplegable cerrado: el nombre si solo hay uno y el recuento si hay varios.
+  const textoResolutoresUsuario = (usuario) => {
+    const asignados = usuario.resolutores || [];
+    if (asignados.length === 0) {
+      return '—';
+    }
+    if (asignados.length === 1) {
+      return asignados[0];
+    }
+    return `${asignados.length} resolutores`;
+  };
+
+  // Marca o desmarca un resolutor en el borrador de la fila. NO persiste: el guardado real ocurre al pulsar GUARDAR.
+  const alternarResolutorDeUsuario = (usuario, nombreResolutor) => {
+    const asignados = usuario.resolutores || [];
+    const indice = asignados.indexOf(nombreResolutor);
+    if (indice === -1) {
+      asignados.push(nombreResolutor);
+    } else {
+      asignados.splice(indice, 1);
+    }
+    usuario.resolutores = asignados;
+  };
+
+  // El nombre del responsable que se registra en la asignación es el del propio usuario (o su email si no lo tuviese)
+  const nombreResponsableDe = (usuario) => {
+    const nombreCompleto = `${usuario.nombre || ''} ${usuario.apellidos || ''}`.trim();
+    return nombreCompleto || usuario.email;
+  };
+
+  // Persiste el borrador de la columna "Resolutor": da de alta las asignaciones nuevas y borra las eliminadas.
+  const sincronizarResolutoresUsuario = async (usuario) => {
+    const email = usuario.email.trim();
+    const nombreResponsable = nombreResponsableDe(usuario);
+    const deseados = usuario.resolutores || [];
+    const originales = usuario._resolutoresOriginales || [];
+
+    for (const nombreResolutor of deseados.filter((r) => !originales.includes(r))) {
+      await crearUsuarioResolutor(toastMessage, toastColor, isToastOpen, nombreResolutor, nombreResponsable, email);
+    }
+
+    for (const nombreResolutor of originales.filter((r) => !deseados.includes(r))) {
+      await borrarUsuarioResolutor(toastMessage, toastColor, isToastOpen, nombreResolutor, nombreResponsable, email);
+    }
+  };
+
   // ---- Guardado (upsert) por fila ----
   const guardarUsuarioFila = async (usuario) => {
     if (!usuario.email || usuario.email.trim() === '') {
@@ -1141,6 +1464,10 @@
         roles: parsearRoles(usuario.roles),
         estado: normalizarEstado(usuario.estado),
       });
+
+      // Persistimos los resolutores asignados (columna "Resolutor") en el microservicio issues
+      await sincronizarResolutoresUsuario(usuario);
+
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Usuario guardado con éxito');
       await cargarUsuarios();
     } catch (error) {
@@ -1208,6 +1535,17 @@
 
     try {
       await borrarUsuario(toastMessage, toastColor, isToastOpen, usuario.email);
+
+      // También retiramos sus asignaciones de resolutores en el microservicio issues. Es tolerante a errores:
+      // una asignación con incidencias asociadas no se puede borrar y no debe romper la UX del borrado principal.
+      for (const nombreResolutor of (usuario._resolutoresOriginales || [])) {
+        try {
+          await borrarUsuarioResolutor(toastMessage, toastColor, isToastOpen, nombreResolutor, nombreResponsableDe(usuario), usuario.email.trim());
+        } catch (errorResolutor) {
+          console.error(errorResolutor);
+        }
+      }
+
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Usuario borrado con éxito');
       await cargarUsuarios();
     } catch (error) {
@@ -1288,6 +1626,82 @@
     }
   };
 
+  // ---- Resolutores: alta/edición y borrado ----
+  // El POST del backend hace upsert por nombre (su clave), de modo que una fila ya persistida solo actualiza
+  // su flag de imprimir informe: por eso el nombre no es editable una vez dado de alta.
+  const guardarResolutorFila = async (resolutor) => {
+    if (!resolutor.nombre || resolutor.nombre.trim() === '') {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El nombre del resolutor es obligatorio');
+      return;
+    }
+
+    const nombre = resolutor.nombre.trim();
+
+    // Al dar de alta uno nuevo evitamos duplicados que sobreescribirían al existente sin avisar
+    if (!resolutor._persistido && resolutores.value.some((r) => r._persistido && r.nombre.toLowerCase() === nombre.toLowerCase())) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Ya existe el resolutor "${nombre}"`);
+      return;
+    }
+
+    try {
+      await guardarResolutor(toastMessage, toastColor, isToastOpen, nombre, resolutor.imprimirInforme === true);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Resolutor guardado con éxito');
+      await cargarResolutores();
+    } catch (error) {
+      console.error(error);
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo guardar el resolutor');
+    }
+  };
+
+  const borrarResolutorFila = async (resolutor) => {
+    if (!resolutor._persistido) {
+      return;
+    }
+
+    if (!window.confirm(`¿Borrar el resolutor "${resolutor.nombre}"? También se borrarán los usuarios asignados a él.`)) {
+      return;
+    }
+
+    try {
+      await borrarResolutor(toastMessage, toastColor, isToastOpen, resolutor.nombre);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Resolutor borrado con éxito');
+      await cargarResolutores();
+
+      // Los usuarios asignados a ese resolutor pierden la asignación, así que refrescamos su tabla
+      await cargarUsuarios();
+    } catch (error) {
+      console.error(error);
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo borrar el resolutor');
+    }
+  };
+
+  const borrarTodosResolutores = async () => {
+    if (!hayResolutores.value) {
+      return;
+    }
+
+    if (!window.confirm('Se borrarán todos los resolutores que no tengan incidencias asociadas, junto con sus usuarios asignados. ¿Continuar?')) {
+      return;
+    }
+
+    try {
+      const total = resolutores.value.filter((r) => r._persistido).length;
+      const borrados = await borrarTodosLosResolutores(toastMessage, toastColor, isToastOpen);
+
+      // Los resolutores con incidencias asociadas no se pueden borrar, así que avisamos si alguno ha quedado
+      const color = borrados < total ? 'danger' : 'success';
+      const mensaje = borrados < total
+        ? `Resolutores borrados: ${borrados} de ${total}. El resto tiene incidencias asociadas.`
+        : `Resolutores borrados: ${borrados}`;
+
+      crearToast(toastMessage, toastColor, isToastOpen, color, mensaje);
+      await cargarResolutores();
+      await cargarUsuarios();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   // ---- Exportación a CSV (genera el CSV a partir de lo actualmente mostrado: filtrado + ordenado) ----
   const escaparCampoCsv = (valor) => {
     const texto = valor == null ? '' : String(valor);
@@ -1354,6 +1768,73 @@
     }
 
     descargarCsv('aplicaciones.csv', cabeceras, filas);
+  };
+
+  // Exporta los resolutores en el mismo formato que lee el importador de esta vista: 2 columnas separadas por
+  // coma (resolutor, imprimirInforme) con una fila de cabecera, que el importador salta siempre.
+  const exportarResolutoresCsv = () => {
+    const cabeceras = ['resolutor', 'imprimirInforme'];
+    const filas = resolutoresMostrados.value
+      .filter((r) => r._persistido)
+      .map((r) => [r.nombre, r.imprimirInforme ? 'true' : 'false']);
+
+    if (filas.length === 0) {
+      crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'No hay resolutores para exportar');
+      return;
+    }
+
+    descargarCsv('resolutores.csv', cabeceras, filas);
+  };
+
+  // Trocea una línea CSV en campos, respetando los campos entrecomillados y las comillas escapadas ("")
+  const parsearLineaCsv = (linea) => {
+    const campos = [];
+    let campoActual = '';
+    let entreComillas = false;
+
+    for (let i = 0; i < linea.length; i++) {
+      const caracter = linea[i];
+
+      if (entreComillas) {
+        if (caracter === '"') {
+          if (linea[i + 1] === '"') {
+            campoActual += '"';
+            i++;
+          } else {
+            entreComillas = false;
+          }
+        } else {
+          campoActual += caracter;
+        }
+      } else if (caracter === '"') {
+        entreComillas = true;
+      } else if (caracter === ',' || caracter === ';') {
+        campos.push(campoActual);
+        campoActual = '';
+      } else {
+        campoActual += caracter;
+      }
+    }
+
+    campos.push(campoActual);
+
+    return campos.map((campo) => campo.trim());
+  };
+
+  // Interpreta el valor de la columna imprimirInforme del CSV, aceptando las formas más habituales
+  const booleanoDesdeCsv = (valor) =>
+    ['true', '1', 'si', 'sí', 'x', 'y', 'yes'].includes(String(valor ?? '').trim().toLowerCase());
+
+  // Lee el CSV de resolutores, saltando SIEMPRE la primera línea (cabecera) igual que los importadores del backend
+  const parsearCsvResolutores = (contenido) => {
+    const lineas = String(contenido).replace(/^\uFEFF/, '').split(/\r?\n/);
+
+    return lineas
+      .slice(1)
+      .filter((linea) => linea.trim() !== '')
+      .map((linea) => parsearLineaCsv(linea))
+      .map((campos) => ({ nombre: campos[0], imprimirInforme: booleanoDesdeCsv(campos[1]) }))
+      .filter((fila) => fila.nombre !== '');
   };
 
   /**
@@ -1888,6 +2369,7 @@
     await Promise.all([
       cargarUsuarios(),
       cargarApps(),
+      cargarResolutores(),
       cargarConstantes(),
       cargarTiposDispositivos(),
       cargarUbicaciones(),
@@ -2391,6 +2873,90 @@ table.tabla-datos {
   background: #eef1f4;
   color: #555;
   cursor: not-allowed;
+}
+
+.cell-checkbox {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  accent-color: #007bff;
+}
+
+/* ---- Columna "Resolutor" de la tabla de usuarios: desplegable de selección múltiple ---- */
+/* El panel se despliega EN FLUJO (no absoluto) porque .table-scroll recorta con overflow su contenido,
+   de modo que la fila crece al abrirlo en lugar de quedar el panel oculto tras el borde de la tabla. */
+.col-resolutores {
+  min-width: 150px;
+}
+
+.multi-select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: stretch;
+}
+
+.multi-select-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #000;
+  font: inherit;
+  cursor: pointer;
+}
+
+.multi-select-toggle:hover {
+  border-color: #007bff;
+}
+
+.multi-select-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.multi-select-flecha {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.multi-select-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 132px;
+  overflow-y: auto;
+  padding: 5px 6px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.multi-select-opcion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.multi-select-opcion input {
+  cursor: pointer;
+  accent-color: #007bff;
+}
+
+.multi-select-vacio {
+  margin: 0;
+  color: #666;
+  font-size: 12px;
 }
 
 .table-loading {

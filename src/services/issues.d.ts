@@ -5,17 +5,18 @@ import type { Ref } from "vue";
 /*************************************************/
 
 /**
- * Tipo que representa una categoría de incidencia
+ * Tipo que representa un resolutor de incidencias
  */
-export interface Categoria {
+export interface Resolutor {
   nombre: string;
   imprimirInforme: boolean;
 }
 
 /**
- * Tipo que representa un usuario responsable de una categoría
+ * Tipo que representa un usuario responsable de un resolutor. El campo `nombreCategoria` es el nombre
+ * del resolutor: el microservicio sigue modelando el resolutor como "categoría".
  */
-export interface UsuarioCategoria {
+export interface UsuarioResolutor {
   nombreCategoria: string;
   nombreResponsable: string;
   emailResponsable: string;
@@ -49,36 +50,40 @@ export interface PageResponse<T> {
 }
 
 /*************************************************/
-/**************** Categorías *********************/
+/**************** Resolutores ********************/
 /*************************************************/
 
-/** Listar categorías */
-export declare function listarCategorias(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Categoria[]>;
+/** Listar resolutores */
+export declare function listarResolutores(
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<Resolutor[]>;
 
-/** Crear categoría */
-export declare function crearCategoria(
+/** Crear un resolutor o actualizarlo si ya existiese */
+export declare function guardarResolutor(
   toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string, imprimirInforme: boolean): Promise<any>;
 
-/** Borrar categoría */
-export declare function borrarCategoria(
+/** Borrar resolutor */
+export declare function borrarResolutor(
   toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string): Promise<any>;
 
+/** Borrar todos los resolutores que no tengan incidencias asociadas, devolviendo cuántos se borraron */
+export declare function borrarTodosLosResolutores(
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<number>;
+
 /*************************************************/
-/************ Usuarios Categoría *****************/
+/*********** Usuarios de un Resolutor ************/
 /*************************************************/
 
 /** Listar responsables */
-export declare function listarUsuariosCategoria(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<UsuarioCategoria[]>;
+export declare function listarUsuariosResolutor(
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>): Promise<UsuarioResolutor[]>;
 
-/** Crear responsable */
-export declare function crearUsuarioCategoria(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombreCategoria: string, nombreResponsable: string, emailResponsable: string): Promise<any>;
+/** Asignar un responsable a un resolutor */
+export declare function crearUsuarioResolutor(
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombreResolutor: string, nombreResponsable: string, emailResponsable: string): Promise<any>;
 
-/** Borrar responsable */
-export declare function borrarUsuarioCategoria(
-  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombreCategoria: string, nombreResponsable: string, emailResponsable: string): Promise<any>;
+/** Desasignar un responsable de un resolutor */
+export declare function borrarUsuarioResolutor(
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombreResolutor: string, nombreResponsable: string, emailResponsable: string): Promise<any>;
 
 /*************************************************/
 /**************** Incidencias ********************/

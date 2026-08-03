@@ -43,7 +43,6 @@ import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPa
 import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
 
 import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
-import IncidenciasTicAdminPage from '@/views/issues/IssuesAdminView.vue';
 
 import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
 
@@ -288,12 +287,6 @@ const routes = [
         meta: {
           role: 'PROFESOR'
         },
-      },
-      {
-        path: 'issues/admin',
-        name: 'IssuesTicAdminPage',
-        component: IncidenciasTicAdminPage,
-        meta: { role: 'ADMINISTRADOR' },
       },
       {
         path: 'automations/map',

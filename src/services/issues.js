@@ -2,17 +2,23 @@ import { issuesApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/adminService';
 
 /*************************************************/
-/**************** Categorías *********************/
+/**************** Resolutores ********************/
 /*************************************************/
 
+/*
+ * NOTA: el microservicio Reaktor_IssuesServer sigue modelando el resolutor como "categoría"
+ * (rutas /issues/categorias y cabecera nombreCategoria), por lo que las rutas y las cabeceras
+ * conservan ese nombre aunque el concepto de la aplicación sea el resolutor.
+ */
+
 /**
- * Listar categorías (solo nombreCategoria).
+ * Listar resolutores.
  * @param toastMessage - El mensaje de toast.
  * @param toastColor - El color de toast.
  * @param isToastOpen - Indica si el toast está abierto.
- * @returns La respuesta de la API con las categorías listadas.
+ * @returns La respuesta de la API con los resolutores listados.
  */
-export const listarCategorias = async (toastMessage, toastColor, isToastOpen) =>
+export const listarResolutores = async (toastMessage, toastColor, isToastOpen) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -27,23 +33,23 @@ export const listarCategorias = async (toastMessage, toastColor, isToastOpen) =>
   {
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
-    console.error("Error al listar categorías:", response.status, text);
-    throw new Error(text || 'Error al obtener las categorías');
+    console.error("Error al listar resolutores:", response.status, text);
+    throw new Error(text || 'Error al obtener los resolutores');
   }
 
   return await response.json();
 };
 
 /**
- * Crear una nueva categoría.
+ * Crear un resolutor o actualizarlo si ya existiese (el nombre es su clave).
  * @param toastMessage - El mensaje de toast.
  * @param toastColor - El color de toast.
  * @param isToastOpen - Indica si el toast está abierto.
- * @param nombre - El nombre de la categoría.
+ * @param nombre - El nombre del resolutor.
  * @param imprimirInforme - Indica si se debe imprimir el informe
- * @returns La respuesta de la API con la categoría creada.
+ * @returns La respuesta de la API con el resolutor guardado.
  */
-export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nombre, imprimirInforme) =>
+export const guardarResolutor = async (toastMessage, toastColor, isToastOpen, nombre, imprimirInforme) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -52,7 +58,7 @@ export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nomb
     headers: {
       'Authorization': `Bearer ${token}`,
       'nombre': nombre,
-      'imprimirInforme': imprimirInforme,
+      'imprimirInforme': String(imprimirInforme),
     },
   });
 
@@ -60,22 +66,22 @@ export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nomb
   {
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
-    console.error('Error al crear categoría:', response.status, text);
-    throw new Error(text || 'Error al crear categoría');
+    console.error('Error al guardar el resolutor:', response.status, text);
+    throw new Error(text || 'Error al guardar el resolutor');
   }
 
   return response;
 };
 
 /**
- * Borrar una categoría.
+ * Borrar un resolutor.
  * @param toastMessage - El mensaje de toast.
  * @param toastColor - El color de toast.
  * @param isToastOpen - Indica si el toast está abierto.
- * @param nombre - El nombre de la categoría.
- * @returns La respuesta de la API con la categoría borrada.
+ * @param nombre - El nombre del resolutor.
+ * @returns La respuesta de la API con el resolutor borrado.
  */
-export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nombre) =>
+export const borrarResolutor = async (toastMessage, toastColor, isToastOpen, nombre) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -93,26 +99,55 @@ export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nom
   {
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();  
-    console.error('Error al borrar categoría:', response.status, text);
-    throw new Error(text || 'Error al borrar categoría');
+    console.error('Error al borrar el resolutor:', response.status, text);
+    throw new Error(text || 'Error al borrar el resolutor');
   }
 
   return response;
 };
 
-
-/*************************************************/
-/************ Usuarios Categoría *****************/
-/*************************************************/
-
 /**
- * Listar todos los usuarios responsables de categorías.
+ * Borrar todos los resolutores que no tengan incidencias asociadas.
  * @param toastMessage - El mensaje de toast.
  * @param toastColor - El color de toast.
  * @param isToastOpen - Indica si el toast está abierto.
- * @returns La respuesta de la API con los usuarios responsables de categorías listados.
+ * @returns El número de resolutores borrados.
  */
-export const listarUsuariosCategoria = async (toastMessage, toastColor, isToastOpen) =>
+export const borrarTodosLosResolutores = async (toastMessage, toastColor, isToastOpen) =>
+{
+  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(`${issuesApiUrl}/issues/categorias/all`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok)
+  {
+    const errorData = await response.json().catch(() => ({}));
+    const text = errorData.message || await response.text();
+    console.error('Error al borrar todos los resolutores:', response.status, text);
+    throw new Error(text || 'Error al borrar todos los resolutores');
+  }
+
+  return await response.json();
+};
+
+
+/*************************************************/
+/*********** Usuarios de un Resolutor ************/
+/*************************************************/
+
+/**
+ * Listar todos los usuarios responsables de resolutores.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @returns La respuesta de la API con los usuarios responsables de resolutores listados.
+ */
+export const listarUsuariosResolutor = async (toastMessage, toastColor, isToastOpen) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -127,24 +162,24 @@ export const listarUsuariosCategoria = async (toastMessage, toastColor, isToastO
   {
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
-    console.error("Error al listar usuarios de categoría:", response.status, text);
-    throw new Error(text || 'Error al obtener los usuarios de categoría');
+    console.error("Error al listar usuarios de resolutor:", response.status, text);
+    throw new Error(text || 'Error al obtener los usuarios de resolutor');
   }
 
   return await response.json();
 };
 
 /**
- * Crear un nuevo usuario responsable de una categoría.
+ * Asignar un usuario responsable a un resolutor.
  * @param toastMessage - El mensaje de toast.
  * @param toastColor - El color de toast.
  * @param isToastOpen - Indica si el toast está abierto.
- * @param nombreCategoria - El nombre de la categoría.
+ * @param nombreResolutor - El nombre del resolutor.
  * @param nombreResponsable - El nombre del usuario responsable.
  * @param emailResponsable - El email del usuario responsable.
- * @returns La respuesta de la API con el usuario responsable de categoría creado.
+ * @returns La respuesta de la API con el usuario responsable de resolutor creado.
  */
-export const crearUsuarioCategoria = async (toastMessage, toastColor, isToastOpen, nombreCategoria, nombreResponsable, emailResponsable) =>
+export const crearUsuarioResolutor = async (toastMessage, toastColor, isToastOpen, nombreResolutor, nombreResponsable, emailResponsable) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -152,7 +187,7 @@ export const crearUsuarioCategoria = async (toastMessage, toastColor, isToastOpe
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'nombreCategoria': nombreCategoria,
+      'nombreCategoria': nombreResolutor,
       'nombreResponsable': nombreResponsable,
       'emailResponsable': emailResponsable,
     },
@@ -162,24 +197,24 @@ export const crearUsuarioCategoria = async (toastMessage, toastColor, isToastOpe
   {
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
-    console.error('Error al crear usuario de categoría:', response.status, text);
-    throw new Error(text || 'Error al crear usuario de categoría');
+    console.error('Error al crear usuario de resolutor:', response.status, text);
+    throw new Error(text || 'Error al crear usuario de resolutor');
   }
 
   return response;
 };
 
 /**
- * Borrar un usuario de categoría (por clave compuesta, usando body).
+ * Desasignar un usuario responsable de un resolutor.
  * @param toastMessage - El mensaje de toast.
  * @param toastColor - El color de toast.
  * @param isToastOpen - Indica si el toast está abierto.
- * @param nombreCategoria - El nombre de la categoría.
+ * @param nombreResolutor - El nombre del resolutor.
  * @param nombreResponsable - El nombre del usuario responsable.
  * @param emailResponsable - El email del usuario responsable.
- * @returns La respuesta de la API con el usuario responsable de categoría borrado.
+ * @returns La respuesta de la API con el usuario responsable de resolutor borrado.
  */
-export const borrarUsuarioCategoria = async (toastMessage, toastColor, isToastOpen, nombreCategoria, nombreResponsable, emailResponsable) =>
+export const borrarUsuarioResolutor = async (toastMessage, toastColor, isToastOpen, nombreResolutor, nombreResponsable, emailResponsable) =>
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -187,7 +222,7 @@ export const borrarUsuarioCategoria = async (toastMessage, toastColor, isToastOp
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'nombreCategoria': nombreCategoria,
+      'nombreCategoria': nombreResolutor,
       'nombreResponsable': nombreResponsable,
       'emailResponsable': emailResponsable,
     },
@@ -197,8 +232,8 @@ export const borrarUsuarioCategoria = async (toastMessage, toastColor, isToastOp
   {
     const errorData = await response.json().catch(() => ({}));
     const text = errorData.message || await response.text();
-    console.error('Error al borrar usuario de categoría:', response.status, text);
-    throw new Error(text || 'Error al borrar usuario de categoría');
+    console.error('Error al borrar usuario de resolutor:', response.status, text);
+    throw new Error(text || 'Error al borrar usuario de resolutor');
   }
 
   return response;
