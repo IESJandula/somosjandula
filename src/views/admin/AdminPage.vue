@@ -9,7 +9,7 @@
 
     <div class="main-panel">
       <section class="panel-section">
-        <h2 class="section-title">Inserciones masivas y listados</h2>
+        <h2 class="section-title">Usuarios</h2>
 
         <!-- 1) Tabla de usuarios a ancho completo (importación masiva compactada en su barra de acciones) -->
         <article class="action-card table-card">
@@ -126,7 +126,7 @@
         <article class="action-card table-card">
           <div class="table-card-header">
             <div class="title-with-refresh">
-              <h3 class="card-title card-title-inline">Aplicaciones registradas</h3>
+              <h3 class="card-title card-title-inline">Aplicaciones</h3>
               <button
                 type="button"
                 class="btn-refresh"

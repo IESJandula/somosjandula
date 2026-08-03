@@ -27,7 +27,13 @@ export declare function obtenerPeticionesPorTramoHorario(
     isToastOpen: Ref<boolean>
 ): Promise<EstadisticaTramoHorario[]>;
 
-export declare function obtenerPeticionesPorMicroservicio(
+export declare function obtenerPeticionesPorMicroservicioInternas(
+    toastMessage: Ref<string>,
+    toastColor: Ref<string>,
+    isToastOpen: Ref<boolean>
+): Promise<EstadisticaMicroservicio[]>;
+
+export declare function obtenerPeticionesPorMicroservicioExternas(
     toastMessage: Ref<string>,
     toastColor: Ref<string>,
     isToastOpen: Ref<boolean>
