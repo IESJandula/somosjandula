@@ -17,11 +17,11 @@
               </option>
             </select>
 
-            <label class="t-3">Categoría</label>
-            <select v-model="nuevaIncidenciaCategoria" class="input">
-              <option value="" disabled>Selecciona una categoría</option>
-              <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
-                {{categoria.nombre }}
+            <label class="t-3">Resolutor</label>
+            <select v-model="nuevaIncidenciaResolutor" class="input">
+              <option value="" disabled>Selecciona un resolutor</option>
+              <option v-for="resolutor in resolutores" :key="resolutor.nombre" :value="resolutor.nombre">
+                {{resolutor.nombre }}
               </option>
             </select>
 
@@ -65,7 +65,7 @@
           <thead>
             <tr>
               <th class="th">Ubicación</th>
-              <th class="th">Categoría</th>
+              <th class="th">Resolutor</th>
               <th class="th">Problema</th>
               <th class="th th-estado">Estado</th>
               <th class="th">Responsable</th>
@@ -79,16 +79,16 @@
                 {{ incidencia.ubicacion }}
               </td>
               <td class="th" :title="incidencia.fecha">
-                <select v-model="incidencia.categoria" class="input"
-                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)"
-                  @change="incidencia.id && actualizarCategoriaIncidenciaFunc(incidencia.id, incidencia.categoria)">
-                  <option value="" disabled>Sin categoría asignada</option>
-                  <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
-                    {{ categoria.nombre }}
+                <select v-model="incidencia.resolutor" class="input"
+                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.resolutor)"
+                  @change="incidencia.id && actualizarResolutorIncidenciaFunc(incidencia.id, incidencia.resolutor)">
+                  <option value="" disabled>Sin resolutor asignado</option>
+                  <option v-for="resolutor in resolutores" :key="resolutor.nombre" :value="resolutor.nombre">
+                    {{ resolutor.nombre }}
                   </option>
                 </select>
                 <span v-else>
-                  {{ incidencia.categoria || '—' }}
+                  {{ incidencia.resolutor || '—' }}
                 </span>
               </td>
 
@@ -102,7 +102,7 @@
               <!-- Estado -->
               <td class="th th-estado">
                 <select v-model="incidencia.estado" class="input"
-                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)"
+                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.resolutor)"
                   @change="incidencia.id && actualizarEstadoIncidenciaFunc(incidencia.id, incidencia.estado)">
                   <option value="" disabled>Selecciona estado</option>
                   <option v-for="estado in estados" :key="estado" :value="estado">
@@ -117,10 +117,10 @@
               <!-- Responsable -->
               <td class="th">
                 <select v-model="incidencia.emailResponsable" class="input"
-                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)"
-                  @change="incidencia.id && actualizarResponsableIncidenciaFunc(incidencia.id, incidencia.categoria, incidencia.emailResponsable)">
+                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.resolutor)"
+                  @change="incidencia.id && actualizarResponsableIncidenciaFunc(incidencia.id, incidencia.resolutor, incidencia.emailResponsable)">
                   <option value="" disabled>Sin responsable asignado</option>
-                  <option v-for="resp in responsablesDeCategoria(incidencia.categoria)" :key="resp.emailResponsable"
+                  <option v-for="resp in responsablesDeResolutor(incidencia.resolutor)" :key="resp.emailResponsable"
                     :value="resp.emailResponsable">
                     {{ resp.nombreResponsable }}
                   </option>
@@ -137,7 +137,7 @@
                   class="input textarea-solucion"
                   placeholder="Describe la solución..."
                   rows="3"
-                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)"
+                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.resolutor)"
                 ></textarea>
                 <span v-else>
                   {{ incidencia.solucion || '—' }}
@@ -148,7 +148,7 @@
                 <!-- Botón guardar solución solo para admin o responsable -->
                 <button @click="incidencia.id && actualizarSolucionIncidenciaFunc(incidencia.id, incidencia.solucion)"
                   class="actualizarSolucion"
-                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.categoria)">
+                  v-if="puedeEditarIncidencia(incidencia.emailResponsable, incidencia.resolutor)">
                   Actualizar solución
                 </button>
 
@@ -205,7 +205,7 @@ import {
   borrarIncidencia,
   listarResolutores,
   listarUsuariosResolutor,
-  actualizarCategoriaIncidencia,
+  actualizarResolutorIncidencia,
   actualizarEstadoIncidencia,
   actualizarSolucionIncidencia,
   actualizarResponsableIncidencia,
@@ -227,7 +227,7 @@ import { obtenerDatosUsuarioSesion } from "@/services/adminService";
 
 // ------------ Estado global de la vista ------------
 
-const categorias = ref<Resolutor[]>([]);
+const resolutores = ref<Resolutor[]>([]);
 
 // Ubicaciones e incidencias.
 // El `value` de cada ubicación coincide con la `label` visible (nombre + curso/etapa/grupo
@@ -252,15 +252,15 @@ const toastColor = ref("success");
 // Estados posibles de incidencia
 const estados = ref<string[]>([]);
 
-// Usuarios responsables por categoría
-const usuariosCategoria = ref<UsuarioResolutor[]>([]);
+// Usuarios responsables por resolutor
+const usuariosResolutor = ref<UsuarioResolutor[]>([]);
 
 // Usuario actual
 const emailUsuario = ref<string>("");
 
 // Datos para nueva incidencia
 const nuevaIncidenciaUbicacion = ref<string | "">("");
-const nuevaIncidenciaCategoria = ref<string | "">("");
+const nuevaIncidenciaResolutor = ref<string | "">("");
 const nuevaIncidenciaProblema = ref<string>("");
 
 const filtroTexto = ref<string>("");
@@ -272,7 +272,7 @@ const esAdmin = ref<boolean>(false);
 /*************************************************/
 
 /**
- * Cargar los datos del usuario, ubicaciones, categorías, estados y usuarios de categoría.
+ * Cargar los datos del usuario, ubicaciones, resolutores, estados y usuarios de resolutor.
  * @returns void
  */
 onMounted(async () => {
@@ -282,14 +282,14 @@ onMounted(async () => {
   // Cargamos las ubicaciones
   await cargarUbicaciones();
 
-  // Cargamos las categorías
-  await cargarCategorias();
+  // Cargamos los resolutores
+  await cargarResolutores();
 
   // Cargamos los estados
   await cargarEstados();
 
-  // Cargamos los usuarios de categoría
-  await cargarUsuariosCategoria();
+  // Cargamos los usuarios de resolutor
+  await cargarUsuariosResolutor();
 
   // Cargamos las incidencias con paginación
   await cargarIncidencias();
@@ -443,19 +443,19 @@ async function cargarUbicaciones() {
 }
 
 /**
- * Cargar las categorías.
+ * Cargar los resolutores.
  */
-async function cargarCategorias() {
+async function cargarResolutores() {
   try {
-    // Obtenemos las categorías
-    categorias.value = await listarResolutores(toastMessage, toastColor, isToastOpen);
+    // Obtenemos los resolutores
+    resolutores.value = await listarResolutores(toastMessage, toastColor, isToastOpen);
   }
   catch (e: any) {
     // Mostramos el mensaje de error en la consola
     console.error(e);
 
     // Mostramos un toast de error
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al cargar las categorías");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al cargar los resolutores");
   }
 }
 
@@ -477,19 +477,19 @@ async function cargarEstados() {
 }
 
 /**
- * Cargar los usuarios de categoría.
+ * Cargar los usuarios de resolutor.
  */
-async function cargarUsuariosCategoria() {
+async function cargarUsuariosResolutor() {
   try {
-    // Obtenemos los usuarios de categoría
-    usuariosCategoria.value = await listarUsuariosResolutor(toastMessage, toastColor, isToastOpen);
+    // Obtenemos los usuarios de resolutor
+    usuariosResolutor.value = await listarUsuariosResolutor(toastMessage, toastColor, isToastOpen);
   }
   catch (e: any) {
     // Mostramos el mensaje de error en la consola
     console.error(e);
 
     // Mostramos un toast de error
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al cargar los usuarios de categoría");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al cargar los usuarios de resolutor");
   }
 }
 
@@ -498,20 +498,20 @@ async function cargarUsuariosCategoria() {
 /*************************************************/
 
 /**
- * Verificar si el usuario es responsable de una categoría.
- * @param emailResponsable - El email del responsable de la categoría a verificar.
- * @param categoria - La categoría a verificar.
- * @returns true si el usuario es responsable de la categoría, false en caso contrario.
+ * Verificar si el usuario es responsable de un resolutor.
+ * @param emailResponsable - El email del responsable del resolutor a verificar.
+ * @param resolutor - El resolutor a verificar.
+ * @returns true si el usuario es responsable del resolutor, false en caso contrario.
  */
-function esResponsableDeCategoria(emailResponsable: string, categoria: string): boolean {
+function esResponsableDeResolutor(emailResponsable: string, resolutor: string): boolean {
   // Creamos una variable para el resultado
   let resultado: boolean = false;
 
-  // Si no hay nombre de categoría o no hay correo del usuario, se devuelve false
+  // Si no hay nombre de resolutor o no hay correo del usuario, se devuelve false
   if (emailResponsable && emailUsuario.value) {
-    // Se verifica si el usuario es responsable de la categoría
-    resultado = usuariosCategoria.value.some(
-      (u) => u.nombreCategoria === categoria && emailUsuario.value.toLowerCase() === emailResponsable.toLowerCase()
+    // Se verifica si el usuario es responsable del resolutor
+    resultado = usuariosResolutor.value.some(
+      (u) => u.nombreResolutor === resolutor && emailUsuario.value.toLowerCase() === emailResponsable.toLowerCase()
     );
   }
 
@@ -522,12 +522,12 @@ function esResponsableDeCategoria(emailResponsable: string, categoria: string): 
 /**
  * Verificar si el usuario puede editar una incidencia.
  * @param emailResponsable - El email del responsable de la incidencia a verificar.
- * @param categoria - La categoría de la incidencia a verificar.
+ * @param resolutor - El resolutor de la incidencia a verificar.
  * @returns true si el usuario puede editar la incidencia, false en caso contrario.
  */
-function puedeEditarIncidencia(emailResponsable: string, categoria: string): boolean {
-  // Validamos si el usuario es administrador o es responsable de la categoría
-  return esAdmin.value || esResponsableDeCategoria(emailResponsable, categoria);
+function puedeEditarIncidencia(emailResponsable: string, resolutor: string): boolean {
+  // Validamos si el usuario es administrador o es responsable del resolutor
+  return esAdmin.value || esResponsableDeResolutor(emailResponsable, resolutor);
 }
 
 /*************************************************/
@@ -554,11 +554,11 @@ const incidenciasFiltradas = computed(() => {
       // Buscamos el responsable para obtener su nombre
       let nombreResponsable = "";
 
-      // Si hay nombre de categoría y email del responsable, se obtiene el nombre del responsable
-      if (i.categoria && i.emailResponsable) {
-        // Se obtiene el responsable de la categoría
-        const responsable = usuariosCategoria.value.find(
-          (u) => u.nombreCategoria === i.categoria && u.emailResponsable.toLowerCase() === i.emailResponsable.toLowerCase()
+      // Si hay nombre de resolutor y email del responsable, se obtiene el nombre del responsable
+      if (i.resolutor && i.emailResponsable) {
+        // Se obtiene el responsable del resolutor
+        const responsable = usuariosResolutor.value.find(
+          (u) => u.nombreResolutor === i.resolutor && u.emailResponsable.toLowerCase() === i.emailResponsable.toLowerCase()
         );
 
         // Si hay responsable, se obtiene el nombre del responsable
@@ -573,7 +573,7 @@ const incidenciasFiltradas = computed(() => {
         i.problema + " " +
         i.estado + " " +
         i.solucion + " " +
-        i.categoria + " " +
+        i.resolutor + " " +
         nombreResponsable
       ).toLowerCase();
 
@@ -597,10 +597,10 @@ async function crearIncidenciaFunc() {
     // Inicializamos el mensaje de error
     let mensaje = "";
 
-    // Si no se ha seleccionado una categoría, no se puede crear la incidencia
-    if (!nuevaIncidenciaCategoria.value) {
+    // Si no se ha seleccionado un resolutor, no se puede crear la incidencia
+    if (!nuevaIncidenciaResolutor.value) {
       // Creamos el mensaje de error
-      mensaje = "Selecciona una categoría";
+      mensaje = "Selecciona un resolutor";
     }
     // Si no se ha seleccionado una ubicación, no se puede crear la incidencia
     else if (!nuevaIncidenciaUbicacion.value) {
@@ -624,14 +624,14 @@ async function crearIncidenciaFunc() {
     else // Si no hay mensaje de error, se crea la incidencia
     {
       // Creamos la incidencia
-      await crearIncidencia(toastMessage, toastColor, isToastOpen, nuevaIncidenciaUbicacion.value, nuevaIncidenciaProblema.value, nuevaIncidenciaCategoria.value);
+      await crearIncidencia(toastMessage, toastColor, isToastOpen, nuevaIncidenciaUbicacion.value, nuevaIncidenciaProblema.value, nuevaIncidenciaResolutor.value);
 
       // Si se crea correctamente, mostramos un toast de éxito
       crearToast(toastMessage, toastColor, isToastOpen, "success", "Incidencia creada correctamente");
 
       // Reseteamos el formulario de nueva incidencia
       nuevaIncidenciaUbicacion.value = "";
-      nuevaIncidenciaCategoria.value = "";
+      nuevaIncidenciaResolutor.value = "";
       nuevaIncidenciaProblema.value = "";
 
       // Recargamos las incidencias (vuelve a página 1)
@@ -684,30 +684,30 @@ async function borrarIncidenciaFunc(id: number) {
 }
 
 /**
- * Actualizar la categoría de una incidencia por parte del responsable.
+ * Actualizar el resolutor de una incidencia por parte del responsable.
  * @param id - El ID de la incidencia a actualizar.
- * @param nombreCategoria - El nombre de la categoría a actualizar.
+ * @param nombreResolutor - El nombre del resolutor a actualizar.
  */
-async function actualizarCategoriaIncidenciaFunc(id: number, nombreCategoria: string) {
+async function actualizarResolutorIncidenciaFunc(id: number, nombreResolutor: string) {
   // Muestra un indicador de carga
   isLoading.value = true;
 
   try {
     // Si puede editar la incidencia, tratamos de actualizarla
-    await actualizarCategoriaIncidencia(toastMessage, toastColor, isToastOpen, id, nombreCategoria);
+    await actualizarResolutorIncidencia(toastMessage, toastColor, isToastOpen, id, nombreResolutor);
 
     // Recargamos las incidencias
     await cargarIncidencias();
 
     // Si se actualiza correctamente, mostramos un toast de éxito
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría de la incidencia actualizada");
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Resolutor de la incidencia actualizado");
   }
   catch (e: any) {
     // Creamos el mensaje de error
     console.error(e);
 
     // Mostramos un toast de error
-    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al actualizar la categoría de la incidencia");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", e.message || "Error al actualizar el resolutor de la incidencia");
   }
   finally {
     // Oculta el indicador de carga
@@ -776,16 +776,16 @@ async function actualizarSolucionIncidenciaFunc(id: number, solucion: string) {
 /**
  * Actualizar el responsable de una incidencia por parte del responsable.
  * @param id - El ID de la incidencia a actualizar.
- * @param nombreCategoria - El nombre de la categoría a actualizar.
+ * @param nombreResolutor - El nombre del resolutor a actualizar.
  * @param emailResponsable - El email del responsable a actualizar.
  */
-async function actualizarResponsableIncidenciaFunc(id: number, nombreCategoria: string, emailResponsable: string) {
+async function actualizarResponsableIncidenciaFunc(id: number, nombreResolutor: string, emailResponsable: string) {
   // Muestra un indicador de carga
   isLoading.value = true;
 
   try {
     // Si puede editar la incidencia, tratamos de actualizarla
-    await actualizarResponsableIncidencia(toastMessage, toastColor, isToastOpen, id, nombreCategoria, emailResponsable);
+    await actualizarResponsableIncidencia(toastMessage, toastColor, isToastOpen, id, nombreResolutor, emailResponsable);
 
     // Si se actualiza correctamente, mostramos un toast de éxito
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Responsable de la incidencia actualizado");
@@ -808,26 +808,26 @@ async function actualizarResponsableIncidenciaFunc(id: number, nombreCategoria: 
 /*************************************************/
 
 /**
- * Obtener los responsables de una categoría.
- * @param nombreCategoria - El nombre de la categoría.
- * @return Los responsables de la categoría.
+ * Obtener los responsables de un resolutor.
+ * @param nombreResolutor - El nombre del resolutor.
+ * @return Los responsables del resolutor.
  */
-function responsablesDeCategoria(nombreCategoria?: string): UsuarioResolutor[] {
+function responsablesDeResolutor(nombreResolutor?: string): UsuarioResolutor[] {
   // Creamos un array de responsables
   let responsables: UsuarioResolutor[] = [];
 
-  // Si hay nombre de categoría, se obtienen los responsables de la categoría
-  if (nombreCategoria) {
-    // Se obtienen los responsables de la categoría
-    responsables = usuariosCategoria.value.filter((u) => u.nombreCategoria === nombreCategoria);
+  // Si hay nombre de resolutor, se obtienen los responsables del resolutor
+  if (nombreResolutor) {
+    // Se obtienen los responsables del resolutor
+    responsables = usuariosResolutor.value.filter((u) => u.nombreResolutor === nombreResolutor);
   }
 
-  // Se devuelve los responsables de la categoría
+  // Se devuelve los responsables del resolutor
   return responsables;
 }
 
 // Watch para recargar si cambian catálogos
-watch([categorias, ubicaciones, usuariosCategoria], () => {
+watch([resolutores, ubicaciones, usuariosResolutor], () => {
   cargarIncidencias();
 }, { deep: true });
 

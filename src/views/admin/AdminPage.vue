@@ -678,6 +678,7 @@
   import {
     listarResolutores,
     guardarResolutor,
+    importarResolutores,
     borrarResolutor,
     borrarTodosLosResolutores,
     listarUsuariosResolutor,
@@ -1161,8 +1162,6 @@
     }
   };
 
-  // La importación de resolutores se resuelve en el cliente: IssuesServer no expone un endpoint de importación,
-  // así que se lee el CSV y se da de alta cada resolutor con el mismo POST que usa el botón GUARDAR de la fila.
   const onArchivoResolutoresSeleccionado = async (archivo) => {
     archivoResolutores.value = archivo || null;
     if (archivoResolutores.value) {
@@ -1178,26 +1177,9 @@
 
     cargandoTablaResolutores.value = true;
     try {
-      const contenido = await archivoResolutores.value.text();
-      const filas = parsearCsvResolutores(contenido);
+      const importados = await importarResolutores(toastMessage, toastColor, isToastOpen, archivoResolutores.value);
 
-      if (filas.length === 0) {
-        crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El fichero no contiene resolutores');
-        return;
-      }
-
-      let importados = 0;
-      for (const fila of filas) {
-        try {
-          await guardarResolutor(toastMessage, toastColor, isToastOpen, fila.nombre, fila.imprimirInforme);
-          importados++;
-        } catch (error) {
-          console.error(error);
-        }
-      }
-
-      const color = importados === filas.length ? 'success' : 'danger';
-      crearToast(toastMessage, toastColor, isToastOpen, color, `Resolutores importados: ${importados} de ${filas.length}`);
+      crearToast(toastMessage, toastColor, isToastOpen, 'success', `Resolutores importados: ${importados}`);
     } catch (error) {
       console.error(error);
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message || 'No se pudo importar el fichero de resolutores');
@@ -1254,7 +1236,7 @@
         if (!mapa[email]) {
           mapa[email] = [];
         }
-        mapa[email].push(asignacion.nombreCategoria);
+        mapa[email].push(asignacion.nombreResolutor);
       });
       asignacionesResolutorPorEmail.value = mapa;
     } catch (error) {
@@ -1784,57 +1766,6 @@
     }
 
     descargarCsv('resolutores.csv', cabeceras, filas);
-  };
-
-  // Trocea una línea CSV en campos, respetando los campos entrecomillados y las comillas escapadas ("")
-  const parsearLineaCsv = (linea) => {
-    const campos = [];
-    let campoActual = '';
-    let entreComillas = false;
-
-    for (let i = 0; i < linea.length; i++) {
-      const caracter = linea[i];
-
-      if (entreComillas) {
-        if (caracter === '"') {
-          if (linea[i + 1] === '"') {
-            campoActual += '"';
-            i++;
-          } else {
-            entreComillas = false;
-          }
-        } else {
-          campoActual += caracter;
-        }
-      } else if (caracter === '"') {
-        entreComillas = true;
-      } else if (caracter === ',' || caracter === ';') {
-        campos.push(campoActual);
-        campoActual = '';
-      } else {
-        campoActual += caracter;
-      }
-    }
-
-    campos.push(campoActual);
-
-    return campos.map((campo) => campo.trim());
-  };
-
-  // Interpreta el valor de la columna imprimirInforme del CSV, aceptando las formas más habituales
-  const booleanoDesdeCsv = (valor) =>
-    ['true', '1', 'si', 'sí', 'x', 'y', 'yes'].includes(String(valor ?? '').trim().toLowerCase());
-
-  // Lee el CSV de resolutores, saltando SIEMPRE la primera línea (cabecera) igual que los importadores del backend
-  const parsearCsvResolutores = (contenido) => {
-    const lineas = String(contenido).replace(/^\uFEFF/, '').split(/\r?\n/);
-
-    return lineas
-      .slice(1)
-      .filter((linea) => linea.trim() !== '')
-      .map((linea) => parsearLineaCsv(linea))
-      .map((campos) => ({ nombre: campos[0], imprimirInforme: booleanoDesdeCsv(campos[1]) }))
-      .filter((fila) => fila.nombre !== '');
   };
 
   /**

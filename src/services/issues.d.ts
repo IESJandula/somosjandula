@@ -13,11 +13,10 @@ export interface Resolutor {
 }
 
 /**
- * Tipo que representa un usuario responsable de un resolutor. El campo `nombreCategoria` es el nombre
- * del resolutor: el microservicio sigue modelando el resolutor como "categoría".
+ * Tipo que representa un usuario responsable de un resolutor.
  */
 export interface UsuarioResolutor {
-  nombreCategoria: string;
+  nombreResolutor: string;
   nombreResponsable: string;
   emailResponsable: string;
 }
@@ -34,7 +33,7 @@ export interface Incidencia {
   solucion: string;
   emailResponsable: string;
   nombreResponsable: string;
-  categoria: string;
+  resolutor: string;
 }
 
 export interface PageResponse<T> {
@@ -60,6 +59,10 @@ export declare function listarResolutores(
 /** Crear un resolutor o actualizarlo si ya existiese */
 export declare function guardarResolutor(
   toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, nombre: string, imprimirInforme: boolean): Promise<any>;
+
+/** Importar un CSV de resolutores, devolviendo cuántos se importaron */
+export declare function importarResolutores(
+  toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, file: any): Promise<number>;
 
 /** Borrar resolutor */
 export declare function borrarResolutor(
@@ -90,10 +93,10 @@ export declare function borrarUsuarioResolutor(
 /*************************************************/
 
 /** Crear incidencia */
-export declare function crearIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, ubicacion: string, descripcion: string, nombreCategoria: string): Promise<any>;
+export declare function crearIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, ubicacion: string, descripcion: string, nombreResolutor: string): Promise<any>;
 
-/** Actualizar categoría de incidencia */
-export declare function actualizarCategoriaIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, nombreCategoria: string): Promise<any>;
+/** Actualizar resolutor de incidencia */
+export declare function actualizarResolutorIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, nombreResolutor: string): Promise<any>;
 
 /** Actualizar estado de incidencia */
 export declare function actualizarEstadoIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, estado: string): Promise<any>;
@@ -102,7 +105,7 @@ export declare function actualizarEstadoIncidencia(toastMessage: Ref<string>, to
 export declare function actualizarSolucionIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, solucion: string): Promise<any>;
 
 /** Actualizar responsable de incidencia */
-export declare function actualizarResponsableIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, nombreCategoria: string, emailResponsable: string): Promise<any>;
+export declare function actualizarResponsableIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number, nombreResolutor: string, emailResponsable: string): Promise<any>;
 
 /** Borrar incidencia */
 export declare function borrarIncidencia(toastMessage: Ref<string>, toastColor: Ref<string>, isToastOpen: Ref<boolean>, id: number): Promise<any>;
@@ -118,10 +121,10 @@ export declare function listarIncidencias(toastMessage: Ref<string>, toastColor:
 /*************************************************/
 
 /**
- * Representa una estadística agrupada por categoría
+ * Representa una estadística agrupada por resolutor
  */
-export interface EstadisticasCategoriaDto {
-  nombreCategoria: string;
+export interface EstadisticasResolutorDto {
+  nombreResolutor: string;
   cantidad: number;
 }
 
@@ -142,18 +145,18 @@ export interface EstadisticasUbicacionDto {
 }
 
 /**
- * Obtiene las estadísticas de incidencias agrupadas por categoría.
- * Endpoint: GET /issues/estadisticas/por-categoria
+ * Obtiene las estadísticas de incidencias agrupadas por resolutor.
+ * Endpoint: GET /issues/estadisticas/por-resolutor
  * @param toastMessage - Ref para el mensaje del toast
  * @param toastColor - Ref para el color del toast
  * @param isToastOpen - Ref para controlar la visibilidad del toast
- * @returns Promise con array de EstadisticasCategoriaDto
+ * @returns Promise con array de EstadisticasResolutorDto
  */
-export declare function obtenerEstadisticasPorCategoria(
+export declare function obtenerEstadisticasPorResolutor(
   toastMessage: Ref<string>,
   toastColor: Ref<string>,
   isToastOpen: Ref<boolean>
-): Promise<EstadisticasCategoriaDto[]>;
+): Promise<EstadisticasResolutorDto[]>;
 
 /**
  * Obtiene las estadísticas de incidencias agrupadas por estado.

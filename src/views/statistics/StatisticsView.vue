@@ -18,7 +18,7 @@
       <h2 class="section-title">Incidencias</h2>
       <div class="stats-row mb-20">
         <div class="chart-container">
-          <PieChart :title="'Por categoría'" :data="datosIncidCategoria" />
+          <PieChart :title="'Por resolutor'" :data="datosIncidResolutor" />
         </div>
         <div class="chart-container">
           <PieChart :title="'Por estado'" :data="datosIncidEstado" />
@@ -68,7 +68,7 @@ import { crearToast } from "@/utils/toast";
 
 // Importar servicios de incidencias y recursos
 import {
-  obtenerEstadisticasPorCategoria,
+  obtenerEstadisticasPorResolutor,
   obtenerEstadisticasPorEstado,
   obtenerEstadisticasPorUbicacion
 } from "@/services/issues";
@@ -91,7 +91,7 @@ const toastMessage = ref("");
 const toastColor = ref<"success" | "danger" | "warning" | "primary" | string>("success");
 
 // ====== DATOS DE INCIDENCIAS ======
-const incidCat = ref<Array<{ nombreCategoria: string; cantidad: number }>>([]);
+const incidCat = ref<Array<{ nombreResolutor: string; cantidad: number }>>([]);
 const incidEst = ref<Array<{ estado: string; cantidad: number }>>([]);
 const incidUbi = ref<Array<{ nombreUbicacion: string; cantidad: number }>>([]);
 
@@ -106,8 +106,8 @@ const impresionesPorEstado = ref<Array<{ estado: string; totalImpresiones: numbe
 
 // ====== COMPUTED: Mapeo a formato ECharts ======
 // Incidencias
-const datosIncidCategoria = computed(() =>
-  incidCat.value.map(item => ({ name: item.nombreCategoria, value: item.cantidad }))
+const datosIncidResolutor = computed(() =>
+  incidCat.value.map(item => ({ name: item.nombreResolutor, value: item.cantidad }))
 );
 const datosIncidEstado = computed(() =>
   incidEst.value.map(item => ({ name: item.estado, value: item.cantidad }))
@@ -137,7 +137,7 @@ const datosImpresionesPorEstado = computed(() =>
 
 // Verificar si hay algún dato para mostrar
 const hayDatosGlobales = computed(() =>
-  datosIncidCategoria.value.length > 0 ||
+  datosIncidResolutor.value.length > 0 ||
   datosIncidEstado.value.length > 0 ||
   datosIncidUbicacion.value.length > 0 ||
   datosPorRecurso.value.length > 0 ||
@@ -154,7 +154,7 @@ async function cargarTodo() {
 
     // Cargamos estadísticas de incidencias, reservas e impresiones en paralelo
     const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol, pEst] = await Promise.all([
-      obtenerEstadisticasPorCategoria(toastMessage, toastColor, isToastOpen),
+      obtenerEstadisticasPorResolutor(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorEstado(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorUbicacion(toastMessage, toastColor, isToastOpen),
       obtenerRecursoMasReservado(toastMessage, toastColor, isToastOpen),

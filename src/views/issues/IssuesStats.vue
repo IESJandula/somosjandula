@@ -16,9 +16,9 @@
     <!-- Gráficos -->
     <div v-else class="stats-column">
       <PieChart
-        v-if="datosPorCategoria.length"
-        :title="'Incidencias por categoría'"
-        :data="datosPorCategoria"
+        v-if="datosPorResolutor.length"
+        :title="'Incidencias por resolutor'"
+        :data="datosPorResolutor"
       />
 
       <PieChart
@@ -53,10 +53,10 @@ import PieChart from "@/components/issues/PieChart.vue";
 import { crearToast } from "@/utils/toast";
 // Importamos los servicios de estadísticas
 import {
-  obtenerEstadisticasPorCategoria,
+  obtenerEstadisticasPorResolutor,
   obtenerEstadisticasPorEstado,
   obtenerEstadisticasPorUbicacion,
-  EstadisticasCategoriaDto,
+  EstadisticasResolutorDto,
   EstadisticasEstadoDto,
   EstadisticasUbicacionDto
 } from "@/services/issues";
@@ -68,13 +68,13 @@ const toastMessage = ref("");
 const toastColor = ref<"success" | "danger" | "warning" | "primary" | string>("success");
 
 // Datos recibidos del backend
-const statsCategoria = ref<EstadisticasCategoriaDto[]>([]);
+const statsResolutor = ref<EstadisticasResolutorDto[]>([]);
 const statsEstado = ref<EstadisticasEstadoDto[]>([]);
 const statsUbicacion = ref<EstadisticasUbicacionDto[]>([]);
 
 // Mapeo a formato ECharts { name, value }
-const datosPorCategoria = computed(() =>
-  statsCategoria.value.map(item => ({ name: item.nombreCategoria, value: item.cantidad }))
+const datosPorResolutor = computed(() =>
+  statsResolutor.value.map(item => ({ name: item.nombreResolutor, value: item.cantidad }))
 );
 
 const datosPorEstado = computed(() =>
@@ -87,7 +87,7 @@ const datosPorUbicacion = computed(() =>
 
 // Verificar si hay datos para mostrar
 const hayDatos = computed(() =>
-  datosPorCategoria.value.length > 0 ||
+  datosPorResolutor.value.length > 0 ||
   datosPorEstado.value.length > 0 ||
   datosPorUbicacion.value.length > 0
 );
@@ -99,12 +99,12 @@ async function cargarEstadisticas() {
     
     // Llamadas paralelas a los 3 endpoints
     const [cat, est, ubi] = await Promise.all([
-      obtenerEstadisticasPorCategoria(toastMessage, toastColor, isToastOpen),
+      obtenerEstadisticasPorResolutor(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorEstado(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorUbicacion(toastMessage, toastColor, isToastOpen)
     ]);
 
-    statsCategoria.value = cat;
+    statsResolutor.value = cat;
     statsEstado.value = est;
     statsUbicacion.value = ubi;
     

@@ -5,12 +5,6 @@ import { obtenerTokenJWTValido } from '@/services/adminService';
 /**************** Resolutores ********************/
 /*************************************************/
 
-/*
- * NOTA: el microservicio Reaktor_IssuesServer sigue modelando el resolutor como "categoría"
- * (rutas /issues/categorias y cabecera nombreCategoria), por lo que las rutas y las cabeceras
- * conservan ese nombre aunque el concepto de la aplicación sea el resolutor.
- */
-
 /**
  * Listar resolutores.
  * @param toastMessage - El mensaje de toast.
@@ -22,7 +16,7 @@ export const listarResolutores = async (toastMessage, toastColor, isToastOpen) =
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/categorias/`, {
+  const response = await fetch(`${issuesApiUrl}/issues/resolutores/`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -53,7 +47,7 @@ export const guardarResolutor = async (toastMessage, toastColor, isToastOpen, no
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/categorias/`, {
+  const response = await fetch(`${issuesApiUrl}/issues/resolutores/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -74,6 +68,41 @@ export const guardarResolutor = async (toastMessage, toastColor, isToastOpen, no
 };
 
 /**
+ * Importar un CSV de resolutores (dos columnas: nombre e imprimirInforme). El microservicio salta
+ * siempre la primera línea del fichero, por lo que debe llevar cabecera.
+ * @param toastMessage - El mensaje de toast.
+ * @param toastColor - El color de toast.
+ * @param isToastOpen - Indica si el toast está abierto.
+ * @param file - El fichero CSV con los resolutores a importar.
+ * @returns El número de resolutores importados.
+ */
+export const importarResolutores = async (toastMessage, toastColor, isToastOpen, file) =>
+{
+  const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${issuesApiUrl}/issues/resolutores/imports`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok)
+  {
+    const errorData = await response.json().catch(() => ({}));
+    const text = errorData.message || await response.text();
+    console.error('Error al importar los resolutores:', response.status, text);
+    throw new Error(text || 'Error al importar los resolutores');
+  }
+
+  return await response.json();
+};
+
+/**
  * Borrar un resolutor.
  * @param toastMessage - El mensaje de toast.
  * @param toastColor - El color de toast.
@@ -85,7 +114,7 @@ export const borrarResolutor = async (toastMessage, toastColor, isToastOpen, nom
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/categorias/`,
+  const response = await fetch(`${issuesApiUrl}/issues/resolutores/`,
     {
       method: 'DELETE',
       headers: {
@@ -117,7 +146,7 @@ export const borrarTodosLosResolutores = async (toastMessage, toastColor, isToas
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/categorias/all`, {
+  const response = await fetch(`${issuesApiUrl}/issues/resolutores/all`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -151,7 +180,7 @@ export const listarUsuariosResolutor = async (toastMessage, toastColor, isToastO
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria/`, {
+  const response = await fetch(`${issuesApiUrl}/issues/usuarios_resolutor/`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -183,11 +212,11 @@ export const crearUsuarioResolutor = async (toastMessage, toastColor, isToastOpe
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria/`, {
+  const response = await fetch(`${issuesApiUrl}/issues/usuarios_resolutor/`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'nombreCategoria': nombreResolutor,
+      'nombreResolutor': nombreResolutor,
       'nombreResponsable': nombreResponsable,
       'emailResponsable': emailResponsable,
     },
@@ -218,11 +247,11 @@ export const borrarUsuarioResolutor = async (toastMessage, toastColor, isToastOp
 {
   const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-  const response = await fetch(`${issuesApiUrl}/issues/usuarios_categoria/`, {
+  const response = await fetch(`${issuesApiUrl}/issues/usuarios_resolutor/`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
-      'nombreCategoria': nombreResolutor,
+      'nombreResolutor': nombreResolutor,
       'nombreResponsable': nombreResponsable,
       'emailResponsable': emailResponsable,
     },
@@ -250,10 +279,10 @@ export const borrarUsuarioResolutor = async (toastMessage, toastColor, isToastOp
  * @param isToastOpen - Indica si el toast está abierto.
  * @param nombreUbicacion - El nombre de la ubicación de la incidencia.
  * @param problema - El problema de la incidencia.
- * @param nombreCategoria - El nombre de la categoría de la incidencia.
+ * @param nombreResolutor - El nombre del resolutor de la incidencia.
  * @returns La respuesta de la API con el ID de la incidencia creada.
  */
-export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nombreUbicacion, problema, nombreCategoria) =>
+export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nombreUbicacion, problema, nombreResolutor) =>
   {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
@@ -263,7 +292,7 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
         'Authorization': `Bearer ${token}`,
         'nombreUbicacion': nombreUbicacion,
         'problema': problema,
-        'nombreCategoria': nombreCategoria,
+        'nombreResolutor': nombreResolutor,
       },
     });
   
@@ -289,16 +318,16 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
    * @param emailResponsable - El email del responsable de la incidencia.
    * @returns La respuesta de la API con la incidencia modificada.
    */
-  export const actualizarCategoriaIncidencia = async (toastMessage, toastColor, isToastOpen, id, nombreCategoria) =>
+  export const actualizarResolutorIncidencia = async (toastMessage, toastColor, isToastOpen, id, nombreResolutor) =>
   {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
   
-    const response = await fetch(`${issuesApiUrl}/issues/incidencias/categoria/`, {
+    const response = await fetch(`${issuesApiUrl}/issues/incidencias/resolutor/`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'id': id,
-        'nombreCategoria': nombreCategoria,
+        'nombreResolutor': nombreResolutor,
       },
     });
   
@@ -306,8 +335,8 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
     {
       const errorData = await response.json().catch(() => ({}));
       const text = errorData.message || await response.text();
-      console.error("Error al actualizar la categoría de la incidencia:", response.status, text);
-      throw new Error(text || "Error al actualizar la categoría de la incidencia");
+      console.error("Error al actualizar el resolutor de la incidencia:", response.status, text);
+      throw new Error(text || "Error al actualizar el resolutor de la incidencia");
     }
   
     return response;
@@ -361,7 +390,7 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
     return response;
   };
 
-  export const actualizarResponsableIncidencia = async (toastMessage, toastColor, isToastOpen, id, nombreCategoria, emailResponsable) =>
+  export const actualizarResponsableIncidencia = async (toastMessage, toastColor, isToastOpen, id, nombreResolutor, emailResponsable) =>
   {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
@@ -370,7 +399,7 @@ export const crearIncidencia = async (toastMessage, toastColor, isToastOpen, nom
       headers: {
         'Authorization': `Bearer ${token}`,
         'id': id,
-        'nombreCategoria': nombreCategoria,
+        'nombreResolutor': nombreResolutor,
         'emailResponsable': emailResponsable,
       },
     });
@@ -499,13 +528,13 @@ export const listarIncidencias = async (
 /*************************************************/
 
 /**
- * Obtiene estadísticas de incidencias por categoría.
- * @returns Promise<EstadisticasCategoriaDto[]>
+ * Obtiene estadísticas de incidencias por resolutor.
+ * @returns Promise<EstadisticasResolutorDto[]>
  */
-export const obtenerEstadisticasPorCategoria = async (toastMessage, toastColor, isToastOpen) => {
+export const obtenerEstadisticasPorResolutor = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${issuesApiUrl}/issues/estadisticas/por-categoria`, {
+    const response = await fetch(`${issuesApiUrl}/issues/estadisticas/por-resolutor`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -515,8 +544,8 @@ export const obtenerEstadisticasPorCategoria = async (toastMessage, toastColor, 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const text = errorData.message || await response.text();
-        console.error("Error al obtener estadísticas por categoría:", response.status, text);
-        throw new Error(text || 'Error al obtener estadísticas por categoría');
+        console.error("Error al obtener estadísticas por resolutor:", response.status, text);
+        throw new Error(text || 'Error al obtener estadísticas por resolutor');
     }
 
     return await response.json();

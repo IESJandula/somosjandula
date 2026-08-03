@@ -548,13 +548,15 @@ ion-toolbar {
   }
 
   ion-button {
-    --background: #4c8dff;
+    --background: #1565c0;
     --color: white;
   }
 
+  /* Sobre la barra oscura, el azul claro del modo claro resulta brillante: se usa un azul oscuro
+     que mantiene el contraste del icono blanco. */
   .home-button,
   .profile-button {
-    --background: #4c8dff;
+    --background: #1565c0;
     --color: #ffffff;
     color: #ffffff;
   }
