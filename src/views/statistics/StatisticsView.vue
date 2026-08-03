@@ -63,7 +63,10 @@
           <PieChart :title="'Peticiones por tramo horario'" :data="datosPeticionesPorTramoHorario" />
         </div>
         <div class="chart-container">
-          <PieChart :title="'Microservicio más usado'" :data="datosPeticionesPorMicroservicio" />
+          <PieChart :title="'Microservicio más usado (internas)'" :data="datosPeticionesPorMicroservicioInternas" />
+        </div>
+        <div class="chart-container">
+          <PieChart :title="'Microservicio más usado (externas)'" :data="datosPeticionesPorMicroservicioExternas" />
         </div>
       </div>
     </div>
@@ -101,7 +104,8 @@ import {
 import {
   obtenerPeticionesPorDiaSemana,
   obtenerPeticionesPorTramoHorario,
-  obtenerPeticionesPorMicroservicio
+  obtenerPeticionesPorMicroservicioInternas,
+  obtenerPeticionesPorMicroservicioExternas
 } from "@/services/auditStatistics";
 
 // ====== ESTADO GENERAL ======
@@ -127,7 +131,8 @@ const impresionesPorEstado = ref<Array<{ estado: string; totalImpresiones: numbe
 // ====== DATOS DE AUDITORÍA ======
 const peticionesPorDiaSemana = ref<Array<{ diaSemana: string; totalPeticiones: number }>>([]);
 const peticionesPorTramoHorario = ref<Array<{ tramoHorario: string; totalPeticiones: number }>>([]);
-const peticionesPorMicroservicio = ref<Array<{ microservicio: string; totalPeticiones: number }>>([]);
+const peticionesPorMicroservicioInternas = ref<Array<{ microservicio: string; totalPeticiones: number }>>([]);
+const peticionesPorMicroservicioExternas = ref<Array<{ microservicio: string; totalPeticiones: number }>>([]);
 
 // ====== COMPUTED: Mapeo a formato ECharts ======
 // Incidencias
@@ -167,8 +172,11 @@ const datosPeticionesPorDiaSemana = computed(() =>
 const datosPeticionesPorTramoHorario = computed(() =>
   peticionesPorTramoHorario.value.map(item => ({ name: item.tramoHorario, value: item.totalPeticiones }))
 );
-const datosPeticionesPorMicroservicio = computed(() =>
-  peticionesPorMicroservicio.value.map(item => ({ name: item.microservicio, value: item.totalPeticiones }))
+const datosPeticionesPorMicroservicioInternas = computed(() =>
+  peticionesPorMicroservicioInternas.value.map(item => ({ name: item.microservicio, value: item.totalPeticiones }))
+);
+const datosPeticionesPorMicroservicioExternas = computed(() =>
+  peticionesPorMicroservicioExternas.value.map(item => ({ name: item.microservicio, value: item.totalPeticiones }))
 );
 
 // Verificar si hay algún dato para mostrar
@@ -183,7 +191,8 @@ const hayDatosGlobales = computed(() =>
   datosImpresionesPorEstado.value.length > 0 ||
   datosPeticionesPorDiaSemana.value.length > 0 ||
   datosPeticionesPorTramoHorario.value.length > 0 ||
-  datosPeticionesPorMicroservicio.value.length > 0
+  datosPeticionesPorMicroservicioInternas.value.length > 0 ||
+  datosPeticionesPorMicroservicioExternas.value.length > 0
 );
 
 // ====== CARGA DE DATOS ======
@@ -192,7 +201,7 @@ async function cargarTodo() {
     isLoading.value = true;
 
     // Cargamos estadísticas de incidencias, reservas, impresiones y auditoría en paralelo
-    const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol, pEst, aDia, aTra, aMic] = await Promise.all([
+    const [iCat, iEst, iUbi, rRec, rTra, rDia, pCol, pEst, aDia, aTra, aMicI, aMicE] = await Promise.all([
       obtenerEstadisticasPorCategoria(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorEstado(toastMessage, toastColor, isToastOpen),
       obtenerEstadisticasPorUbicacion(toastMessage, toastColor, isToastOpen),
@@ -203,7 +212,8 @@ async function cargarTodo() {
       obtenerImpresionesPorEstado(toastMessage, toastColor, isToastOpen),
       obtenerPeticionesPorDiaSemana(toastMessage, toastColor, isToastOpen),
       obtenerPeticionesPorTramoHorario(toastMessage, toastColor, isToastOpen),
-      obtenerPeticionesPorMicroservicio(toastMessage, toastColor, isToastOpen)
+      obtenerPeticionesPorMicroservicioInternas(toastMessage, toastColor, isToastOpen),
+      obtenerPeticionesPorMicroservicioExternas(toastMessage, toastColor, isToastOpen)
     ]);
 
     // Asignar datos de incidencias
@@ -223,7 +233,8 @@ async function cargarTodo() {
     // Asignar datos de auditoría
     peticionesPorDiaSemana.value = aDia;
     peticionesPorTramoHorario.value = aTra;
-    peticionesPorMicroservicio.value = aMic;
+    peticionesPorMicroservicioInternas.value = aMicI;
+    peticionesPorMicroservicioExternas.value = aMicE;
 
   } catch (error: any) {
     console.error("Error al cargar estadísticas:", error);

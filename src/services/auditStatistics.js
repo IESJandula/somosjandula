@@ -48,12 +48,12 @@ export const obtenerPeticionesPorTramoHorario = async (toastMessage, toastColor,
 };
 
 /**
- * Obtiene las peticiones agrupadas por microservicio.
+ * Obtiene las peticiones agrupadas por microservicio de llamadas internas.
  */
-export const obtenerPeticionesPorMicroservicio = async (toastMessage, toastColor, isToastOpen) => {
+export const obtenerPeticionesPorMicroservicioInternas = async (toastMessage, toastColor, isToastOpen) => {
     const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(`${auditApiUrl}/audit/estadisticas/microservicio`, {
+    const response = await fetch(`${auditApiUrl}/audit/estadisticas/microservicio/internas`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`,
@@ -63,8 +63,31 @@ export const obtenerPeticionesPorMicroservicio = async (toastMessage, toastColor
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const text = errorData.message || await response.text();
-        console.error("Error al obtener las peticiones por microservicio:", response.status, text);
-        throw new Error(text || 'Error al obtener las peticiones por microservicio');
+        console.error("Error al obtener las peticiones por microservicio de llamadas internas:", response.status, text);
+        throw new Error(text || 'Error al obtener las peticiones por microservicio de llamadas internas');
+    }
+
+    return await response.json();
+};
+
+/**
+ * Obtiene las peticiones agrupadas por microservicio de llamadas externas.
+ */
+export const obtenerPeticionesPorMicroservicioExternas = async (toastMessage, toastColor, isToastOpen) => {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${auditApiUrl}/audit/estadisticas/microservicio/externas`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`, 
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const text = errorData.message || await response.text();
+        console.error("Error al obtener las peticiones por microservicio de llamadas externas:", response.status, text);
+        throw new Error(text || 'Error al obtener las peticiones por microservicio de llamadas externas');
     }
 
     return await response.json();
