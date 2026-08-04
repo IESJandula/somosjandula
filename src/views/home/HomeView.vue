@@ -62,7 +62,6 @@ import {
   megaphoneOutline,
   calendarNumberOutline,
   shieldCheckmarkOutline,
-  logoFirebase,
   videocamOutline,
   peopleOutline,
   briefcaseOutline,
@@ -223,12 +222,13 @@ const seccionAdministracion = computed(() => ({
   titulo: "Administración",
   icono: shieldCheckmarkOutline,
   items: [
-    { label: "Sistema", icono: logoFirebase, to: "/admin" },
-    { label: "Impresión", icono: printOutline, to: "/printers/admin" },
-    { label: "Reservas", icono: calendarOutline, to: "/bookings/admin" },
-    { label: "Eventos", icono: calendarNumberOutline, to: "/eventsSchool/admin" },
-    { label: "Huelgas", icono: peopleOutline, to: "/strikesSchool/admin" },
-    { label: "Métricas", icono: analyticsOutline, to: "/metrics/admin" },
+    { label: "Usuarios y apps", icono: peopleOutline, to: "/admin" },
+    { label: "Infraestructura", icono: serverOutline, to: "/admin/infrastructure" },
+    { label: "Reservas", icono: calendarOutline, to: "/admin/bookings" },
+    { label: "Eventos", icono: calendarNumberOutline, to: "/admin/events" },
+    // Huelgas cede peopleOutline a "Usuarios y apps" para no repetir icono dentro de la sección
+    { label: "Huelgas", icono: megaphoneOutline, to: "/admin/strikes" },
+    { label: "Métricas", icono: analyticsOutline, to: "/admin/metrics" },
   ],
 }));
 

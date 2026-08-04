@@ -21,8 +21,12 @@
                      <ion-item>
                        <ion-label position="stacked">Destino</ion-label>
                        <ion-select v-model="seleccionImpresora">
-                         <ion-select-option v-for="impresora in impresorasDisponibles" :key="impresora.name" :value="impresora.name">
-                           {{ impresora.name }}
+                         <ion-select-option
+                           v-for="impresora in impresorasDisponibles"
+                           :key="impresora.name"
+                           :value="impresora.name"
+                           :disabled="impresora.bloqueada === true">
+                           {{ impresora.bloqueada ? `${impresora.name} (bloqueada)` : impresora.name }}
                          </ion-select-option>
                        </ion-select>
                      </ion-item>
@@ -136,6 +140,10 @@
                      <ion-button type="submit" color="primary" expand="block" :disabled="botonImpresionDeshabilitado">
                        {{ botonImpresionTexto }}
                      </ion-button>
+                     <!-- Gasto acumulado en el curso actual; al pasar el ratón se ve el desglose por impresora -->
+                     <div v-if="gastoImpresion" class="gasto-impresion" :title="desgloseGastoImpresion">
+                       {{ textoGastoImpresion }}
+                     </div>
                      <!-- Mensaje de incidencias -->
                      <div class="incidence-message">
                        ¿Algún problema? Crea una incidencia <a @click.prevent="navigateToIssues">aquí</a>
@@ -205,9 +213,10 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, filtrarDatosPaginado, prevalidacionesImpresion, imprimir } from '@/services/printers';
+import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, filtrarDatosPaginado, prevalidacionesImpresion, imprimir, obtenerCosteImpresion } from '@/services/printers';
+import { formatearEuros } from '@/utils/currency';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
@@ -292,6 +301,22 @@ const maximoHojasImpresion = ref(null);
 const historialImpresiones = ref([]);
 const paginaActual = ref(0);
 const disablePaginated = ref(true);
+
+/*****************************/
+/**** Gasto de impresión *****/
+/*****************************/
+// Gasto acumulado del usuario en el curso actual: null mientras no se haya podido consultar
+const gastoImpresion = ref(null);
+
+const textoGastoImpresion = computed(() =>
+  `Llevas ${formatearEuros(gastoImpresion.value?.total ?? 0, '0,00 €')} en gasto de impresión`
+);
+
+const desgloseGastoImpresion = computed(() =>
+  (gastoImpresion.value?.detalle || [])
+    .map((linea) => `${linea.printer}: ${formatearEuros(linea.coste, '0,00 €')} (${linea.hojas} ${linea.hojas === 1 ? 'hoja' : 'hojas'})`)
+    .join('\n')
+);
 
 /*****************************/
 /*** Routing - incidencias ***/
@@ -616,6 +641,9 @@ const enviarPDFAImprimir = async () =>
       // Actualizamos la tabla de impresiones
       await actualizarTablaHistorialImpresiones(0);
 
+      // Actualizamos el gasto de impresión, que acaba de aumentar con esta impresión
+      await cargarGastoImpresion();
+
       // Iniciamos la cuenta atrás para bloquear el botón de impresión
       comenzarCuentaAtrasBloqueoBotonImpresion();
       
@@ -698,14 +726,18 @@ onMounted(async () =>
   // Actualizamos el historial de impresiones
   await actualizarTablaHistorialImpresiones(0);
 
+  // Obtenemos el gasto de impresión acumulado
+  await cargarGastoImpresion();
+
   // Prevalidamos el sistema de forma global y obtenemos las impresoras
   await prevalidacionGlobalObteniendoImpresoras();
 
   // Si hay impresoras disponibles ...
   if (impresorasDisponibles.value.length > 0)
   {
-    // ... seleccionamos la primera impresora
-    seleccionImpresora.value = impresorasDisponibles.value[0].name;
+    // ... seleccionamos la primera impresora no bloqueada, ya que las bloqueadas no permiten imprimir
+    const impresoraInicial = impresorasDisponibles.value.find(impresora => !impresora.bloqueada) || impresorasDisponibles.value[0];
+    seleccionImpresora.value = impresoraInicial.name;
 
     // Verificamos el estado de la impresora inicial
     comprobarEstadoImpresoraSeleccionada();
@@ -791,6 +823,22 @@ const actualizarTablaHistorialImpresiones = async (pagina = 0) =>
   }
 };
 
+/**
+ * Carga el gasto de impresión acumulado del usuario. Si la consulta falla no se avisa al usuario:
+ * simplemente no se pinta el gasto, ya que es información complementaria al formulario de impresión.
+ */
+const cargarGastoImpresion = async () =>
+{
+  try
+  {
+    gastoImpresion.value = await obtenerCosteImpresion(toastMessage, toastColor, isToastOpen);
+  }
+  catch (error)
+  {
+    gastoImpresion.value = null;
+  }
+};
+
 function irPaginaAnterior()
 {
   if (paginaActual.value > 0)
@@ -853,7 +901,12 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
   const impresoraSeleccionada = impresorasDisponibles.value.find(impresora => impresora.name === seleccionImpresora.value);
   if (impresoraSeleccionada)
   {
-    if (impresoraSeleccionada.statusId !== 0)
+    if (impresoraSeleccionada.bloqueada)
+    {
+      errorImpresora.value = "La impresora está bloqueada";
+      manejarError(errorImpresora.value);
+    }
+    else if (impresoraSeleccionada.statusId !== 0)
     {
       errorImpresora.value = impresoraSeleccionada.status;
       manejarError(errorImpresora.value);
@@ -1270,7 +1323,8 @@ ion-input {
     box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
   }
 
-  .title {
+  .title,
+  .gasto-impresion {
     color: var(--text-color-dark);
   }
 
@@ -1301,6 +1355,15 @@ ion-input {
     background-color: #3e4a3e;
     color: #8fd19e;
   }
+}
+
+.gasto-impresion {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: help;
+  color: var(--text-color-light);
 }
 
 .incidence-message {

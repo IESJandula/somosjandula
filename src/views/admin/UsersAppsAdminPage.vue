@@ -72,6 +72,7 @@
                   <th class="sortable" @click="ordenarUsuarios('resolutores')">Resolutor<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'resolutores') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
+                  <th class="sortable" @click="ordenarUsuarios('costeImpresion')">Gasto en euros<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'costeImpresion') }}</span></th>
                   <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
@@ -138,6 +139,8 @@
                   <td class="col-conexion">
                     <span class="conexion-text" :title="formatearFechaExacta(usuario.ultimaConexion)">{{ formatearUltimaConexion(usuario.ultimaConexion) }}</span>
                   </td>
+                  <!-- Solo lectura: lo calcula el backend, por lo que la fila de alta lo deja vacío -->
+                  <td class="col-gasto">{{ usuario._persistido ? formatearEuros(usuario.costeImpresion, '0,00 €') : '' }}</td>
                   <td class="col-accion">
                     <button type="button" class="btn-primary btn-mini" @click="guardarUsuarioFila(usuario)">Guardar</button>
                   </td>
@@ -725,6 +728,7 @@
     obtenerEspaciosSinDocencia,
   } from '@/services/schoolManager';
   import { crearToast } from '@/utils/toast.js';
+  import { formatearEuros } from '@/utils/currency';
 
   const toastMessage = ref('');
   const toastColor = ref('success');
@@ -833,6 +837,8 @@
     estado: 'ACTIVO',
     cursoAcademico: '',
     ultimaConexion: null,
+    // Gasto de impresión del curso: solo lectura, lo calcula el backend
+    costeImpresion: null,
     // Borrador de los resolutores asignados al usuario (0, 1 o varios). Solo se persiste al pulsar GUARDAR,
     // comparándolo con _resolutoresOriginales para saber qué asignaciones crear y cuáles borrar.
     resolutores: [],
@@ -1020,6 +1026,12 @@
       return dir === 'desc' ? mb - ma : ma - mb;
     }
 
+    // El gasto de impresión se ordena por su valor numérico; sin gasto equivale a 0
+    if (campo === 'costeImpresion') {
+      const res = (Number(a[campo]) || 0) - (Number(b[campo]) || 0);
+      return dir === 'desc' ? -res : res;
+    }
+
     let res;
     if (campo === 'fechaNacimiento') {
       const fa = parsearFecha(a[campo]);
@@ -1039,6 +1051,7 @@
   const valorBusqueda = (fila, campo) => {
     if (campo === 'ultimaConexion') return formatearUltimaConexion(fila[campo]);
     if (campo === 'estado') return etiquetaEstado(fila[campo]);
+    if (campo === 'costeImpresion') return formatearEuros(fila[campo], '0,00 €');
     if (campo === 'resolutores') return (fila[campo] || []).join(', ');
     if (campo === 'imprimirInforme') return fila[campo] ? 'Sí' : 'No';
     return fila[campo];
@@ -1062,7 +1075,7 @@
     return [...visibles, ...noPersistidos];
   };
 
-  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles', 'resolutores', 'estado', 'ultimaConexion'];
+  const CAMPOS_USUARIOS = ['email', 'nombre', 'apellidos', 'departamento', 'fechaNacimiento', 'roles', 'resolutores', 'estado', 'ultimaConexion', 'costeImpresion'];
   const CAMPOS_APPS = ['clientId', 'nombre', 'roles', 'ultimaConexion'];
   const CAMPOS_RESOLUTORES = ['nombre', 'imprimirInforme'];
 
@@ -1265,6 +1278,7 @@
           estado: normalizarEstado(u.estado),
           cursoAcademico: u.cursoAcademico || '',
           ultimaConexion: u.ultimaConexion || null,
+          costeImpresion: u.costeImpresion ?? null,
           resolutores: [...asignados],
           _resolutoresOriginales: [...asignados],
           _resolutoresAbierto: false,
@@ -2672,6 +2686,12 @@ table.tabla-datos {
 .col-conexion {
   white-space: nowrap;
   min-width: 120px;
+}
+
+.col-gasto {
+  white-space: nowrap;
+  min-width: 90px;
+  text-align: right;
 }
 
 /* ---- Cabecera agrupada "Notificaciones" (dos filas de <thead> en la tabla de aplicaciones) ---- */

@@ -24,7 +24,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const irAGestionConstantes = () => {
-  router.push({ name: "AdminPage" });
+  router.push({ name: "UsersAppsAdmin" });
 };
 </script>
 

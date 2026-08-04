@@ -15,6 +15,41 @@ export const obtenerImpresoras = async (toastMessage, toastColor, isToastOpen) =
     }).then(res => res.json());
 };
 
+/**
+ * Actualiza la configuración de una impresora: si está bloqueada y el precio de cada hoja impresa.
+ * La impresora se identifica por su nombre, que viaja como parámetro porque puede llevar tildes.
+ */
+export const actualizarConfiguracionImpresora = async (toastMessage, toastColor, isToastOpen, nombre, bloqueada, precioHoja) =>
+{
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
+
+    // El backend espera el precio con punto decimal, que es como lo serializa toString de un número
+    const precio = Number(precioHoja);
+
+    const parametros = new URLSearchParams({
+        name: nombre,
+        bloqueada: bloqueada ? 'true' : 'false',
+        precioHoja: Number.isFinite(precio) ? precio.toString() : '0'
+    });
+
+    const response = await fetch(`${printersApiUrl}/printers/web/printers/config?${parametros}`,
+    {
+        method: 'POST',
+        headers:
+        {
+            'Authorization': `Bearer ${tokenPropio}` // Agrega el JWT al encabezado
+        }
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error al actualizar la configuración de la impresora:", response.status, errorData);
+        throw new Error(errorData.message || 'Error al actualizar la configuración de la impresora');
+    }
+
+    return response;
+};
+
 export const obtenerColores = async (toastMessage, toastColor, isToastOpen) =>
 {
     let tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen) ;
@@ -148,6 +183,29 @@ export const cancelarImpresion = async (toastMessage, toastColor, isToastOpen, i
             'Authorization': `Bearer ${tokenPropio}`, // Agrega el JWT al encabezado
         },
     });
+};
+
+/**
+ * Obtiene el gasto de impresión acumulado por el usuario autenticado en el curso académico actual,
+ * con su desglose por impresora.
+ */
+export const obtenerCosteImpresion = async (toastMessage, toastColor, isToastOpen) => {
+    const token = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    const response = await fetch(`${printersApiUrl}/printers/web/print/coste`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error al obtener el coste de impresión:", response.status, errorData);
+        throw new Error(errorData.message || 'Error al obtener el coste de impresión');
+    }
+
+    return await response.json();
 };
 
 /**

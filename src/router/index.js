@@ -10,12 +10,16 @@ import HomeView from '@/views/home/HomeView.vue';
 
 import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
 
-import AdminPage from '@/views/admin/AdminPage.vue';
+// Vistas de administración: todas viven en @/views/admin y se sirven bajo la ruta /admin
+import UsersAppsAdminPage from '@/views/admin/UsersAppsAdminPage.vue';
+import InfrastructureAdminPage from '@/views/admin/InfrastructureAdminPage.vue';
+import MetricsAdminPage from '@/views/admin/MetricsAdminPage.vue';
+import BookingsAdminPage from '@/views/admin/BookingsAdminPage.vue';
+import EventsSchoolAdminPage from '@/views/admin/EventsSchoolAdminPage.vue';
+import StrikesSchoolAdminPage from '@/views/admin/StrikesSchoolAdminPage.vue';
 
-import PrintersAdminPage from '@/views/printers/PrintersAdminPage.vue';
 import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
 
-import BookingsAdminPage from '@/views/bookings/BookingsAdminPage.vue';
 import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
 import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
 
@@ -40,8 +44,6 @@ import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
 import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';
 import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
 
-import EventsSchoolAdminPage from '@/views/events/EventsSchoolAdminPage.vue';
-
 import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
 
 import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
@@ -50,13 +52,10 @@ import ClonezillaImagesAdminPage from '@/views/clonezilla/ClonezillaImagesAdminP
 
 import StatisticsView from '@/views/statistics/StatisticsView.vue';
 
-import MetricsAdminPage from '@/views/metrics/MetricsAdminPage.vue';
-
 import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
 
 import IAView from '@/views/ia/IAView.vue';
 
-import StrikesSchoolAdminPage from '@/views/strikes/StrikesSchoolAdminPage.vue';
 import StrikesSchoolPage from '@/views/strikes/StrikesSchoolPage.vue';
 
 const routes = [
@@ -94,16 +93,16 @@ const routes = [
       },
       {
         path: 'admin',
-        component: AdminPage,
-        name: 'AdminPage',
+        component: UsersAppsAdminPage,
+        name: 'UsersAppsAdmin',
         meta: {
           role: 'ADMINISTRADOR'
         },
       },
       {
-        path: 'printers/admin',
-        component: PrintersAdminPage,
-        name: 'PrintersAdmin',
+        path: 'admin/infrastructure',
+        component: InfrastructureAdminPage,
+        name: 'InfrastructureAdmin',
         meta: {
           role: 'DIRECCION'
         },
@@ -117,7 +116,7 @@ const routes = [
         },
       },
       {
-        path: 'bookings/admin',
+        path: 'admin/bookings',
         component: BookingsAdminPage,
         name: 'BookingsAdmin',
         meta: {
@@ -269,7 +268,7 @@ const routes = [
         },
       },
       {
-        path: 'eventsSchool/admin',
+        path: 'admin/events',
         component: EventsSchoolAdminPage,
         name: 'EventsSchoolAdmin',
         meta: {
@@ -315,7 +314,7 @@ const routes = [
         },
       },
       {
-        path: 'metrics/admin',
+        path: 'admin/metrics',
         component: MetricsAdminPage,
         name: 'MetricsAdmin',
         meta: {
@@ -331,23 +330,7 @@ const routes = [
         },
       },
       {
-        path: 'statistics',
-        component: StatisticsView,
-        name: 'Statistics',
-        meta: {
-          role: 'PROFESOR'
-        },
-      },
-      {
-        path: 'ia',
-        component: IAView,
-        name: 'IAView',
-        meta: {
-          role: 'PROFESOR'
-        },  
-      },
-      {
-        path: 'strikesSchool/admin',
+        path: 'admin/strikes',
         component: StrikesSchoolAdminPage,
         name: 'StrikesSchoolAdmin',
         meta: {

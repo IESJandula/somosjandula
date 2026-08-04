@@ -4,17 +4,18 @@
       <thead>
         <tr class="py-5">
           <th class="w-[10%] text-left pb-3 text-lg">Fecha</th>
-          <th v-if="adminRole" class="w-[12%] text-left pb-3 text-lg">Usuario</th>
-          <th class="w-[12%] text-left pb-3 text-lg">Fichero</th>
+          <th v-if="adminRole" class="w-[11%] text-left pb-3 text-lg">Usuario</th>
+          <th class="w-[11%] text-left pb-3 text-lg">Fichero</th>
           <th class="w-[7%] text-left pb-3 text-lg">Estado</th>
-          <th class="w-[12%] text-left pb-3 text-lg">Impresora</th>
+          <th class="w-[11%] text-left pb-3 text-lg">Impresora</th>
           <th class="w-[5%] text-left pb-3 text-lg">Copias</th>
-          <th class="w-[7%] text-left pb-3 text-lg">Color</th>
-          <th class="w-[9%] text-left pb-3 text-lg">Orientación</th>
+          <th class="w-[6%] text-left pb-3 text-lg">Color</th>
+          <th class="w-[8%] text-left pb-3 text-lg">Orientación</th>
           <th class="w-[5%] text-left pb-3 text-lg">Caras</th>
-          <th class="w-[9%] text-left pb-3 text-lg">Tamaño (KB)</th>
+          <th class="w-[8%] text-left pb-3 text-lg">Tamaño (KB)</th>
           <th class="w-[6%] text-left pb-3 text-lg">Páginas PDF</th>
           <th class="w-[6%] text-left pb-3 text-lg">Hojas totales</th>
+          <th class="w-[6%] text-left pb-3 text-lg">Coste</th>
         </tr>
       </thead>
       <tbody>
@@ -38,6 +39,7 @@
           <td class="truncate text-left pl-1">{{ print.fileSizeInKB }}</td>
           <td class="truncate text-left pl-1">{{ print.numeroPaginasPdf }}</td>
           <td class="truncate text-left pl-1">{{ print.hojasTotales }}</td>
+          <td class="truncate text-left pl-1">{{ formatearEuros(print.coste) }}</td>
         </tr>
       </tbody>
     </table>
@@ -47,6 +49,7 @@
 <script>
 import { defineComponent } from 'vue';
 import { cancelarImpresion } from '@/services/printers';
+import { formatearEuros } from '@/utils/currency';
 import { IonIcon } from '@ionic/vue';
 
 export default defineComponent({
@@ -99,6 +102,7 @@ export default defineComponent({
 
     return {
       formatDate,
+      formatearEuros,
       cancelarImpresionTabla,
     };
   }
