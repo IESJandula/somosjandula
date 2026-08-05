@@ -86,7 +86,7 @@
 
               <div class="form-row">
                 <label class="form-label">CATEGORIA:</label>
-                <select v-model="evento.nombre" class="form-select" required>
+                <select v-model="evento.nombreCategoria" class="form-select" required>
                   <option value="">Seleccione</option>
                   <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
                     {{ categoria.nombre }}
@@ -183,14 +183,14 @@ interface Evento {
   titulo: string;
   fechaInicio: number;
   fechaFin: number;
-  nombre: string;
+  nombreCategoria: string;
 }
 
 interface EventoForm {
   titulo: string;
   fechaInicio: string;
   fechaFin: string;
-  nombre: string;
+  nombreCategoria: string;
 }
 
 interface Categoria {
@@ -209,7 +209,7 @@ const eventoMismoDia = ref(true);
 // Formulario evento
 const evento = ref<EventoForm>({
   titulo: "",
-  nombre: "",
+  nombreCategoria: "",
   fechaInicio: "",
   fechaFin: "",
 });
@@ -247,7 +247,7 @@ async function crearEventoFn() {
 
   try {
 
-    if (!evento.value.titulo || !evento.value.nombre || !evento.value.fechaInicio) {
+    if (!evento.value.titulo || !evento.value.nombreCategoria || !evento.value.fechaInicio) {
       console.error("Faltan campos obligatorios", evento.value);
       return;
     }
@@ -273,7 +273,7 @@ async function crearEventoFn() {
       titulo: evento.value.titulo,
       fechaInicio: fechaInicioLong,
       fechaFin: fechaFinLong,
-      nombre: evento.value.nombre,
+      nombreCategoria: evento.value.nombreCategoria,
     });
 
     await crearEvento(
@@ -283,7 +283,7 @@ async function crearEventoFn() {
       evento.value.titulo,
       fechaInicioLong,
       fechaFinLong,
-      evento.value.nombre,
+      evento.value.nombreCategoria,
     );
 
     console.log("Evento creado, recargando lista");
@@ -291,14 +291,14 @@ async function crearEventoFn() {
     // Reset formulario
     evento.value = {
       titulo: "",
-      nombre: "",
+      nombreCategoria: "",
       fechaInicio: "",
       fechaFin: "",
     };
 
 
     // Limpiar formulario
-    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombre: "" };
+    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombreCategoria: "" };
     eventoMismoDia.value = true;
 
     // Recargar lista de eventos
