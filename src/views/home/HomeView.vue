@@ -1,54 +1,60 @@
 <template>
   <div class="page-home">
-    <section
+    <div
       v-for="seccion in secciones"
       :key="seccion.titulo"
-      class="panel-section"
+      class="home-section-layout"
+      :class="{ 'favorites-events-row': seccion.tipo === 'favoritos' }"
     >
-      <div class="section-header">
-        <span class="section-icon-wrap" aria-hidden="true">
-          <ion-icon :icon="seccion.icono" class="section-icon" />
-        </span>
-        <h2 class="section-title">{{ seccion.titulo }}</h2>
-      </div>
+      <section class="panel-section">
+        <div class="section-header">
+          <span class="section-icon-wrap" aria-hidden="true">
+            <ion-icon :icon="seccion.icono" class="section-icon" />
+          </span>
+          <h2 class="section-title">{{ seccion.titulo }}</h2>
+        </div>
 
-      <div class="cards-grid">
-        <template v-for="item in seccion.items" :key="item.label">
-          <!-- Tarjeta especial informativa "SABÍAS QUÉ ...": ocupa 2 columnas y no navega. -->
-          <div v-if="item.tipo === 'tip'" class="tip-card">
-            <span class="tip-title">SABÍAS QUÉ ...</span>
-            <transition name="fade" mode="out-in">
-              <span :key="tipKey(item)" class="tip-text">{{ tipTexto(item) }}</span>
-            </transition>
-          </div>
+        <div class="cards-grid">
+          <template v-for="item in seccion.items" :key="item.label">
+            <!-- Tarjeta especial informativa "SABÍAS QUÉ ...": ocupa 2 columnas y no navega. -->
+            <div v-if="item.tipo === 'tip'" class="tip-card">
+              <span class="tip-title">SABÍAS QUÉ ...</span>
+              <transition name="fade" mode="out-in">
+                <span :key="tipKey(item)" class="tip-text">{{ tipTexto(item) }}</span>
+              </transition>
+            </div>
 
-          <!-- Tarjetas normales de acceso directo. -->
-          <component
-            v-else
-            :is="item.disabled ? 'div' : item.external ? 'a' : item.to ? 'router-link' : 'div'"
-            :to="!item.disabled && !item.external ? item.to : undefined"
-            :href="!item.disabled && item.external ? item.href : undefined"
-            :target="!item.disabled && item.external ? '_blank' : undefined"
-            :rel="!item.disabled && item.external ? 'noopener noreferrer' : undefined"
-            class="shortcut-card"
-            :class="{ 'is-disabled': item.disabled || (!item.to && !item.external) }"
-            :aria-disabled="item.disabled || (!item.to && !item.external) ? 'true' : undefined"
-            :title="!item.disabled && (item.to || item.external) ? item.label : `${item.label} (próximamente)`"
-          >
-            <span class="card-icon-wrap">
-              <ion-icon :icon="item.icono" class="card-icon" />
-            </span>
-            <span class="card-label">{{ item.label }}</span>
-          </component>
-        </template>
-      </div>
-    </section>
+            <!-- Tarjetas normales de acceso directo. -->
+            <component
+              v-else
+              :is="item.disabled ? 'div' : item.external ? 'a' : item.to ? 'router-link' : 'div'"
+              :to="!item.disabled && !item.external ? item.to : undefined"
+              :href="!item.disabled && item.external ? item.href : undefined"
+              :target="!item.disabled && item.external ? '_blank' : undefined"
+              :rel="!item.disabled && item.external ? 'noopener noreferrer' : undefined"
+              class="shortcut-card"
+              :class="{ 'is-disabled': item.disabled || (!item.to && !item.external) }"
+              :aria-disabled="item.disabled || (!item.to && !item.external) ? 'true' : undefined"
+              :title="!item.disabled && (item.to || item.external) ? item.label : `${item.label} (próximamente)`"
+            >
+              <span class="card-icon-wrap">
+                <ion-icon :icon="item.icono" class="card-icon" />
+              </span>
+              <span class="card-label">{{ item.label }}</span>
+            </component>
+          </template>
+        </div>
+      </section>
+
+      <WeeklyEventsCard v-if="seccion.tipo === 'favoritos'" />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { IonIcon } from "@ionic/vue";
 import { ref, computed, onMounted, onUnmounted } from "vue";
+import WeeklyEventsCard from "@/components/home/WeeklyEventsCard.vue";
 import { obtenerRolesUsuario, obtenerConstantes } from "@/services/adminService";
 import { obtenerRolSeleccionado, EVENTO_ROL_CAMBIADO, fuerzaRol } from "@/utils/roles";
 import {
@@ -62,7 +68,6 @@ import {
   megaphoneOutline,
   calendarNumberOutline,
   shieldCheckmarkOutline,
-  videocamOutline,
   peopleOutline,
   briefcaseOutline,
   heartOutline,
@@ -72,7 +77,6 @@ import {
   documentTextOutline,
   businessOutline,
   timeOutline,
-  bookOutline,
   listOutline,
   checkmarkDoneOutline,
   optionsOutline,
@@ -146,7 +150,7 @@ const resolverDestinoReserva = async () => {
 
 // Listas de tips independientes por sección. No comparten textos.
 // Favoritos: tips sobre los servicios de esa sección (imprimir, reservar, incidencias,
-// vista de pájaro, guardias, guía del profesorado, horarios...).
+// vista de pájaro, guardias, horarios...).
 const tipsFavoritos = [
   "Imprime tus documentos PDF desde cualquier lugar y dispositivo con la sección «Imprime».",
   "Reserva un aula, carrito u otro recurso con la sección de «Reserva».",
@@ -154,7 +158,6 @@ const tipsFavoritos = [
   "Imprime documentos con y sin grapa en la impresora Blanco y Negro.",
   "¿Buscas un profe o aula? Usa la «Vista de pájaro» para encontrarlos fácilmente.",
   "¿Falta algún profe? En «Guardias» podrás ver si tienes hacer alguna sustitución.",
-  "Visita la «Guía del profesorado» para saber cualquier detalle del centro.",
   "Puedes realizar reservas periódicas durante varias semanas consecutivas."
 ];
 
@@ -222,8 +225,8 @@ const seccionAdministracion = computed(() => ({
   titulo: "Administración",
   icono: shieldCheckmarkOutline,
   items: [
-    { label: "Usuarios y apps", icono: peopleOutline, to: "/admin" },
     { label: "Corazón", icono: heartOutline, to: "/admin/corazon" },
+    { label: "Usuarios y apps", icono: peopleOutline, to: "/admin" },
     { label: "Infraestructura", icono: serverOutline, to: "/admin/infrastructure" },
     { label: "Reservas", icono: calendarOutline, to: "/admin/bookings" },
     { label: "Eventos", icono: calendarNumberOutline, to: "/admin/events" },
@@ -251,6 +254,7 @@ const seccionDireccion = computed(() => ({
 
 const seccionFavoritos = computed(() => ({
   titulo: "Favoritos",
+  tipo: "favoritos",
   icono: starOutline,
   items: [
     { label: "sabiasQue-favoritos", tipo: "tip", fuente: "favoritos" },
@@ -258,7 +262,6 @@ const seccionFavoritos = computed(() => ({
     { label: "Reserva", icono: calendarOutline, to: reservaTo.value },
     { label: "Incidencias", icono: alertCircleOutline, to: { name: "Issues" } },
     { label: "Vista de pájaro", icono: eyeOutline, to: { name: "AutomationsMapView" } },
-    { label: "Guía del profesorado", icono: bookOutline, to: "/documents/teacherGuide" },
     { label: "Guardias", icono: shieldOutline, href: "https://guardias.iesjandula.es/", external: true },
   ],
 }));
@@ -314,6 +317,26 @@ const secciones = computed(() => {
   margin: 0 auto;
   padding: 1rem 1rem 1.5rem;
   font-family: "Roboto", sans-serif;
+}
+
+.home-section-layout {
+  min-width: 0;
+}
+
+.favorites-events-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(310px, 1fr);
+  align-items: stretch;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.favorites-events-row > .panel-section {
+  margin-bottom: 0;
+}
+
+.favorites-events-row .cards-grid {
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
 }
 
 .page-header {
@@ -503,6 +526,12 @@ const secciones = computed(() => {
   }
 
   .tip-text { color: #d8dee4; }
+}
+
+@media (max-width: 900px) {
+  .favorites-events-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
