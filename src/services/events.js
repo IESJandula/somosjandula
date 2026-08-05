@@ -83,11 +83,18 @@ export const borrarEvento = async (toastMessage, toastColor, isToastOpen, titulo
   }
 };
 
-export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nombre, color) => {
+export const crearCategoria = async (
+  toastMessage,
+  toastColor,
+  isToastOpen,
+  nombre,
+  color,
+  descripcion,
+) => {
   try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const payload = { nombre, color };
+    const payload = { nombre, color, descripcion };
 
     const response = await fetch(`${eventsApiUrl}/events/categorias/`, {
       method: 'POST',

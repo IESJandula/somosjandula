@@ -26,9 +26,26 @@
           <div class="weekly-event-copy">
             <p class="weekly-event-date">{{ etiquetaFecha(eventoActual) }}</p>
             <h3 class="weekly-event-name">{{ eventoActual.titulo }}</h3>
-            <p v-if="eventoActual.categoria" class="weekly-event-category">
-              {{ eventoActual.categoria }}
-            </p>
+            <div v-if="eventoActual.categoria" class="weekly-event-category-wrap">
+              <span
+                class="weekly-event-category"
+                :class="{ 'weekly-event-category--described': eventoActual.descripcionCategoria }"
+                :tabindex="eventoActual.descripcionCategoria ? 0 : undefined"
+                :aria-describedby="eventoActual.descripcionCategoria
+                  ? 'weekly-event-category-description'
+                  : undefined"
+              >
+                {{ eventoActual.categoria }}
+              </span>
+              <span
+                v-if="eventoActual.descripcionCategoria"
+                id="weekly-event-category-description"
+                class="weekly-event-category-tooltip"
+                role="tooltip"
+              >
+                {{ eventoActual.descripcionCategoria }}
+              </span>
+            </div>
           </div>
         </article>
       </transition>
@@ -168,6 +185,7 @@ const normalizarEventosSemana = (eventos) => {
         clave: `${evento.titulo ?? "evento"}-${inicio ?? index}-${index}`,
         titulo: evento.titulo?.trim() || "Evento escolar",
         categoria: evento.nombreCategoria ?? evento.nombre ?? "",
+        descripcionCategoria: evento.descripcionCategoria?.trim() || "",
         inicio,
         fin,
       };
@@ -334,13 +352,74 @@ onUnmounted(detenerRotacion);
   color: #243447;
 }
 
+.weekly-event-category-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.35rem;
+}
+
 .weekly-event-category {
-  margin: 0.35rem 0 0;
+  display: block;
+  max-width: 100%;
+  margin: 0;
   overflow: hidden;
   font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #64748b;
+}
+
+.weekly-event-category--described {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.weekly-event-category--described:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid rgba(33, 150, 243, 0.45);
+  outline-offset: 3px;
+}
+
+.weekly-event-category-tooltip {
+  position: absolute;
+  bottom: calc(100% + 0.55rem);
+  left: 50%;
+  z-index: 5;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 3rem));
+  padding: 0.6rem 0.7rem;
+  color: #fff;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  background-color: #243447;
+  border-radius: 7px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0 5px 16px;
+  transform: translate(-50%, 5px);
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+}
+
+.weekly-event-category-tooltip::after {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  border: 6px solid transparent;
+  border-top-color: #243447;
+  content: "";
+  transform: translateX(-50%);
+}
+
+.weekly-event-category-wrap:hover .weekly-event-category-tooltip,
+.weekly-event-category-wrap:focus-within .weekly-event-category-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .weekly-events-controls {
@@ -440,6 +519,15 @@ onUnmounted(detenerRotacion);
 
   .weekly-event-image {
     border-color: #555;
+  }
+
+  .weekly-event-category-tooltip {
+    color: #1f2937;
+    background-color: #f8fafc;
+  }
+
+  .weekly-event-category-tooltip::after {
+    border-top-color: #f8fafc;
   }
 }
 

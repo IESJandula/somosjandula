@@ -23,7 +23,8 @@ export declare function crearCategoria( toastMessage: Ref<string>,
                                         toastColor: Ref<string>,
                                         isToastOpen: Ref<boolean>,
                                         nombre: string,
-                                        color: string
+                                        color: string,
+                                        descripcion: string
                                       ): Promise<string>;
 
 

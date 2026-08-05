@@ -43,6 +43,7 @@
                 <tr>
                   <th class="col-accion">Acciones</th>
                   <th>Nombre</th>
+                  <th>Descripción</th>
                   <th>Color</th>
                 </tr>
               </thead>
@@ -79,6 +80,16 @@
                       class="cell-input"
                       :disabled="categoria._persistido || categoria._procesando"
                       placeholder="Nombre de la categoría">
+                  </td>
+                  <td>
+                    <textarea
+                      v-model="categoria.descripcion"
+                      class="cell-input cell-description"
+                      :disabled="categoria._procesando"
+                      rows="2"
+                      maxlength="500"
+                      placeholder="Eventos incluidos en la categoría"
+                      aria-label="Descripción de la categoría"></textarea>
                   </td>
                   <td>
                     <div class="color-editor">
@@ -253,6 +264,7 @@ import { crearToast } from '@/utils/toast.js';
 interface CategoriaApi {
   nombre: string;
   color: string;
+  descripcion: string;
 }
 
 interface EventoApi {
@@ -302,6 +314,7 @@ const nextUid = () => ++uidCounter;
 const filaCategoriaVacia = (): FilaCategoria => ({
   nombre: '',
   color: '',
+  descripcion: '',
   _persistido: false,
   _procesando: false,
   _uid: nextUid(),
@@ -319,7 +332,7 @@ const filaEventoVacia = (): FilaEvento => ({
 });
 
 const categoriaEstaVacia = (categoria: FilaCategoria) =>
-  !categoria.nombre.trim() && !categoria.color;
+  !categoria.nombre.trim() && !categoria.color && !categoria.descripcion.trim();
 
 const eventoEstaVacio = (evento: FilaEvento) =>
   !evento.titulo.trim()
@@ -367,7 +380,11 @@ const filtrarConBorradores = <T extends { _persistido: boolean }>(
 };
 
 const categoriasMostradas = computed(() =>
-  filtrarConBorradores(categorias.value, busquedaCategorias.value, ['nombre', 'color']));
+  filtrarConBorradores(
+    categorias.value,
+    busquedaCategorias.value,
+    ['nombre', 'descripcion', 'color'],
+  ));
 
 const eventosMostrados = computed(() =>
   filtrarConBorradores(
@@ -427,6 +444,7 @@ const cargarCategorias = async () => {
     categorias.value = datos.map((categoria) => ({
       nombre: categoria.nombre,
       color: categoria.color,
+      descripcion: categoria.descripcion ?? '',
       _persistido: true,
       _procesando: false,
       _uid: nextUid(),
@@ -482,7 +500,14 @@ const guardarCategoriaFila = async (categoria: FilaCategoria) => {
 
   categoria._procesando = true;
   try {
-    await crearCategoria(toastMessage, toastColor, isToastOpen, nombre, categoria.color);
+    await crearCategoria(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      nombre,
+      categoria.color,
+      categoria.descripcion.trim(),
+    );
     await cargarCategorias();
   } catch (error) {
     console.error(error);
@@ -749,7 +774,7 @@ table.tabla-datos {
 }
 
 .tabla-categorias {
-  min-width: 560px;
+  min-width: 900px;
 }
 
 .tabla-eventos {
@@ -814,6 +839,14 @@ table.tabla-datos {
 
 .cell-title {
   min-width: 190px;
+}
+
+.cell-description {
+  min-width: 300px;
+  min-height: 54px;
+  line-height: 1.35;
+  resize: vertical;
+  text-align: left;
 }
 
 .cell-category {
