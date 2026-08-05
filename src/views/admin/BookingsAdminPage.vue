@@ -49,24 +49,35 @@
             <table class="tabla-datos">
               <thead>
                 <tr>
-                  <th class="col-accion">Eliminar</th>
+                  <th class="col-accion">Acciones</th>
                   <th class="sortable" @click="ordenarRecursos('recurso')">Recurso<span class="sort-ind">{{ indicadorOrden(ordenRecursos, 'recurso') }}</span></th>
                   <th class="sortable" @click="ordenarRecursos('cantidad')">Cantidad<span class="sort-ind">{{ indicadorOrden(ordenRecursos, 'cantidad') }}</span></th>
                   <th class="sortable" @click="ordenarRecursos('esCompartible')">Compartido<span class="sort-ind">{{ indicadorOrden(ordenRecursos, 'esCompartible') }}</span></th>
                   <th class="sortable" @click="ordenarRecursos('bloqueado')">Bloqueado<span class="sort-ind">{{ indicadorOrden(ordenRecursos, 'bloqueado') }}</span></th>
                   <th class="col-reservas">Reservas</th>
-                  <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="fila in recursosMostrados" :key="fila._uid">
                   <td class="col-accion">
-                    <button
-                      v-if="fila._persistido"
-                      type="button"
-                      class="btn-delete"
-                      title="Borrar recurso"
-                      @click="borrarRecursoFila(fila)">X</button>
+                    <div class="action-buttons">
+                      <button
+                        type="button"
+                        class="btn-save-icon"
+                        title="Guardar recurso"
+                        aria-label="Guardar recurso"
+                        @click="guardarRecursoFila(fila)">
+                        <ion-icon :icon="saveOutline" />
+                      </button>
+                      <button
+                        v-if="fila._persistido"
+                        type="button"
+                        class="btn-delete"
+                        title="Borrar recurso"
+                        aria-label="Borrar recurso"
+                        @click="borrarRecursoFila(fila)">X</button>
+                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                    </div>
                   </td>
                   <td>
                     <input
@@ -102,9 +113,6 @@
                       @click="borrarReservasDeRecurso(fila)">
                       Borrar reservas
                     </button>
-                  </td>
-                  <td class="col-accion">
-                    <button type="button" class="btn-primary btn-mini" @click="guardarRecursoFila(fila)">Guardar</button>
                   </td>
                 </tr>
               </tbody>
@@ -212,7 +220,7 @@
 <script setup>
   import { ref, computed, watch, onMounted } from 'vue';
   import { IonToast, IonIcon } from '@ionic/vue';
-  import { refreshOutline } from 'ionicons/icons';
+  import { refreshOutline, saveOutline } from 'ionicons/icons';
   import { crearToast } from '@/utils/toast.js';
   import {
     postRecurso,
@@ -857,6 +865,58 @@
 
 .btn-delete:disabled:hover {
   background-color: #dc3545;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 30px 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-save-icon,
+.action-buttons .btn-delete,
+.action-placeholder {
+  width: 30px;
+  height: 30px;
+}
+
+.btn-save-icon,
+.action-buttons .btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-save-icon {
+  background-color: #2196f3;
+}
+
+.btn-save-icon:hover {
+  background-color: #1565c0;
+}
+
+.btn-save-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-save-icon ion-icon {
+  font-size: 17px;
+}
+
+.action-buttons .btn-delete {
+  font-weight: 700;
+}
+
+.action-placeholder {
+  display: block;
 }
 
 /* ---- Tablas de datos (mismo estilo que /admin), a ancho completo ---- */

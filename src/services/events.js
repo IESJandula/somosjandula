@@ -1,4 +1,4 @@
-import { eventsApiUrl, adminApiUrl } from '@/environment/apiUrls';
+import { eventsApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/adminService';
 import { crearToast } from "@/utils/toast.js";
 
@@ -23,7 +23,7 @@ export const obtenerEventos = async (toastMessage, toastColor, isToastOpen) => {
     return await response.json();
 
   } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al obtener eventos");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message || "Error al obtener eventos");
   }
 };
 
@@ -47,10 +47,10 @@ try {
       throw new Error(errorData.message || 'Error al crear evento');
     }
 
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Evento creado correctamente");
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Evento guardado correctamente");
 
   } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al crear evento");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message || "Error al guardar evento");
     throw error;
   }
 
@@ -78,7 +78,7 @@ export const borrarEvento = async (toastMessage, toastColor, isToastOpen, titulo
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Evento borrado correctamente");
 
   } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al borrar evento");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message || "Error al borrar evento");
     throw error;
   }
 };
@@ -104,10 +104,10 @@ export const crearCategoria = async (toastMessage, toastColor, isToastOpen, nomb
       throw new Error(errorData.message || 'Error al crear categoría');
     }
 
-    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría creada correctamente");
+    crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría guardada correctamente");
 
   } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al crear categoría");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message || "Error al guardar categoría");
     throw error;
   }
 };
@@ -135,7 +135,7 @@ export const obtenerCategorias = async (toastMessage, toastColor, isToastOpen) =
     return await response.json();
 
   } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al obtener categorías");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message || "Error al obtener categorías");
   }
 };
 
@@ -143,15 +143,13 @@ export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nom
  try {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    const response = await fetch(
-      `${eventsApiUrl}/events/categorias/${encodeURIComponent(nombre)}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${tokenPropio}`,
-        },
-      }
-    );
+    const response = await fetch(`${eventsApiUrl}/events/categorias/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${tokenPropio}`,
+        'nombre': nombre,
+      },
+    });
       if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
       throw new Error(errorData.message);
@@ -159,7 +157,7 @@ export const borrarCategoria = async (toastMessage, toastColor, isToastOpen, nom
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Categoría eliminada correctamente");
 
   } catch (error) {
-    crearToast(toastMessage, toastColor, isToastOpen, "error", error.message || "Error al obtener categorías");
+    crearToast(toastMessage, toastColor, isToastOpen, "danger", error.message || "Error al borrar categoría");
     throw error;
   }
 };

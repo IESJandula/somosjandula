@@ -62,7 +62,7 @@
             <table class="tabla-datos">
               <thead>
                 <tr>
-                  <th class="col-accion">Eliminar</th>
+                  <th class="col-accion">Acciones</th>
                   <th class="sortable" @click="ordenarUsuarios('email')">Email<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'email') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'nombre') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('apellidos')">Apellidos<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'apellidos') }}</span></th>
@@ -73,18 +73,29 @@
                   <th class="sortable" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('costeImpresion')">Gasto en euros<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'costeImpresion') }}</span></th>
-                  <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="usuario in usuariosMostrados" :key="usuario._uid">
                   <td class="col-accion">
-                    <button
-                      v-if="usuario._persistido"
-                      type="button"
-                      class="btn-delete"
-                      title="Borrar usuario"
-                      @click="borrarUsuarioFila(usuario)">X</button>
+                    <div class="action-buttons">
+                      <button
+                        type="button"
+                        class="btn-save-icon"
+                        title="Guardar usuario"
+                        aria-label="Guardar usuario"
+                        @click="guardarUsuarioFila(usuario)">
+                        <ion-icon :icon="saveOutline" />
+                      </button>
+                      <button
+                        v-if="usuario._persistido"
+                        type="button"
+                        class="btn-delete"
+                        title="Borrar usuario"
+                        aria-label="Borrar usuario"
+                        @click="borrarUsuarioFila(usuario)">X</button>
+                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                    </div>
                   </td>
                   <td>
                     <input
@@ -141,9 +152,6 @@
                   </td>
                   <!-- Solo lectura: lo calcula el backend, por lo que la fila de alta lo deja vacío -->
                   <td class="col-gasto">{{ usuario._persistido ? formatearEuros(usuario.costeImpresion, '0,00 €') : '' }}</td>
-                  <td class="col-accion">
-                    <button type="button" class="btn-primary btn-mini" @click="guardarUsuarioFila(usuario)">Guardar</button>
-                  </td>
                 </tr>
               </tbody>
             </table>
@@ -204,21 +212,32 @@
             <table class="tabla-datos">
               <thead>
                 <tr>
-                  <th class="col-accion">Eliminar</th>
+                  <th class="col-accion">Acciones</th>
                   <th class="sortable" @click="ordenarResolutores('nombre')">Resolutor<span class="sort-ind">{{ indicadorOrden(ordenResolutores, 'nombre') }}</span></th>
                   <th class="sortable" @click="ordenarResolutores('imprimirInforme')">Imprimir informe<span class="sort-ind">{{ indicadorOrden(ordenResolutores, 'imprimirInforme') }}</span></th>
-                  <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="resolutor in resolutoresMostrados" :key="resolutor._uid">
                   <td class="col-accion">
-                    <button
-                      v-if="resolutor._persistido"
-                      type="button"
-                      class="btn-delete"
-                      title="Borrar resolutor"
-                      @click="borrarResolutorFila(resolutor)">X</button>
+                    <div class="action-buttons">
+                      <button
+                        type="button"
+                        class="btn-save-icon"
+                        title="Guardar resolutor"
+                        aria-label="Guardar resolutor"
+                        @click="guardarResolutorFila(resolutor)">
+                        <ion-icon :icon="saveOutline" />
+                      </button>
+                      <button
+                        v-if="resolutor._persistido"
+                        type="button"
+                        class="btn-delete"
+                        title="Borrar resolutor"
+                        aria-label="Borrar resolutor"
+                        @click="borrarResolutorFila(resolutor)">X</button>
+                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                    </div>
                   </td>
                   <td>
                     <input
@@ -230,9 +249,6 @@
                   </td>
                   <td>
                     <input type="checkbox" v-model="resolutor.imprimirInforme" class="cell-checkbox">
-                  </td>
-                  <td class="col-accion">
-                    <button type="button" class="btn-primary btn-mini" @click="guardarResolutorFila(resolutor)">Guardar</button>
                   </td>
                 </tr>
               </tbody>
@@ -302,13 +318,12 @@
             <table class="tabla-datos">
               <thead class="thead-apps">
                 <tr class="fila-grupo">
-                  <th class="col-accion" rowspan="2">Eliminar</th>
+                  <th class="col-accion" rowspan="2">Acciones</th>
                   <th class="sortable" rowspan="2" @click="ordenarApps('clientId')">Client ID<span class="sort-ind">{{ indicadorOrden(ordenApps, 'clientId') }}</span></th>
                   <th class="sortable" rowspan="2" @click="ordenarApps('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
                   <th class="sortable" rowspan="2" @click="ordenarApps('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
                   <th class="col-notif-grupo" colspan="3">Notificaciones</th>
                   <th class="sortable" rowspan="2" @click="ordenarApps('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenApps, 'ultimaConexion') }}</span></th>
-                  <th class="col-accion" rowspan="2">Guardar</th>
                 </tr>
                 <tr class="fila-subcabecera">
                   <th class="col-notif">Calendar (hoy/max)</th>
@@ -319,12 +334,24 @@
               <tbody>
                 <tr v-for="app in appsMostradas" :key="app._uid">
                   <td class="col-accion">
-                    <button
-                      v-if="app._persistido"
-                      type="button"
-                      class="btn-delete"
-                      title="Borrar aplicación"
-                      @click="borrarAppFila(app)">X</button>
+                    <div class="action-buttons">
+                      <button
+                        type="button"
+                        class="btn-save-icon"
+                        title="Guardar aplicación"
+                        aria-label="Guardar aplicación"
+                        @click="guardarAppFila(app)">
+                        <ion-icon :icon="saveOutline" />
+                      </button>
+                      <button
+                        v-if="app._persistido"
+                        type="button"
+                        class="btn-delete"
+                        title="Borrar aplicación"
+                        aria-label="Borrar aplicación"
+                        @click="borrarAppFila(app)">X</button>
+                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                    </div>
                   </td>
                   <td>
                     <input
@@ -380,9 +407,6 @@
                   </td>
                   <td class="col-conexion">
                     <span class="conexion-text" :title="formatearFechaExacta(app.ultimaConexion)">{{ formatearUltimaConexion(app.ultimaConexion) }}</span>
-                  </td>
-                  <td class="col-accion">
-                    <button type="button" class="btn-primary btn-mini" @click="guardarAppFila(app)">Guardar</button>
                   </td>
                 </tr>
               </tbody>
@@ -449,13 +473,12 @@
               <thead>
                 <tr>
                   <th class="col-accion">Detalles</th>
-                  <th class="col-accion">Eliminar</th>
+                  <th class="col-accion">Acciones</th>
                   <th class="sortable" @click="ordenarDispositivos('mac')">MAC<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'mac') }}</span></th>
                   <th class="sortable" @click="ordenarDispositivos('nombreUbicacion')">Ubicación<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'nombreUbicacion') }}</span></th>
                   <th class="sortable" @click="ordenarDispositivos('clase')">Clase<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'clase') }}</span></th>
                   <th class="sortable" @click="ordenarDispositivos('tipo')">Tipo<span class="sort-ind">{{ indicadorOrden(ordenDispositivos, 'tipo') }}</span></th>
                   <th>Configuración</th>
-                  <th class="col-accion">Guardar</th>
                 </tr>
               </thead>
               <tbody>
@@ -470,12 +493,24 @@
                         @click="alternarDetalles(dispositivo)">{{ dispositivo._detallesAbiertos ? '−' : '+' }}</button>
                     </td>
                     <td class="col-accion">
-                      <button
-                        v-if="dispositivo._persistido"
-                        type="button"
-                        class="btn-delete"
-                        title="Borrar dispositivo"
-                        @click="borrarDispositivoFila(dispositivo)">X</button>
+                      <div class="action-buttons">
+                        <button
+                          type="button"
+                          class="btn-save-icon"
+                          title="Guardar dispositivo"
+                          aria-label="Guardar dispositivo"
+                          @click="guardarDispositivoFila(dispositivo)">
+                          <ion-icon :icon="saveOutline" />
+                        </button>
+                        <button
+                          v-if="dispositivo._persistido"
+                          type="button"
+                          class="btn-delete"
+                          title="Borrar dispositivo"
+                          aria-label="Borrar dispositivo"
+                          @click="borrarDispositivoFila(dispositivo)">X</button>
+                        <span v-else class="action-placeholder" aria-hidden="true"></span>
+                      </div>
                     </td>
                     <td>
                       <input
@@ -526,9 +561,6 @@
                       </div>
                       <span v-else class="config-empty">—</span>
                     </td>
-                    <td class="col-accion">
-                      <button type="button" class="btn-primary btn-mini" @click="guardarDispositivoFila(dispositivo)">Guardar</button>
-                    </td>
                   </tr>
 
                   <tr
@@ -552,23 +584,34 @@
                           <table class="tabla-datos tabla-sub">
                             <thead>
                               <tr>
-                                <th class="col-accion">Eliminar</th>
+                                <th class="col-accion">Acciones</th>
                                 <th>Keyword</th>
                                 <th>Comando</th>
                                 <th>Texto OK</th>
                                 <th v-if="esTipoPuertaVal(dispositivo.tipo)">Relé</th>
-                                <th class="col-accion">Guardar</th>
                               </tr>
                             </thead>
                             <tbody>
                               <tr v-for="cmd in dispositivo._comandos" :key="cmd._uid">
                                 <td class="col-accion">
-                                  <button
-                                    v-if="cmd._persistido"
-                                    type="button"
-                                    class="btn-delete"
-                                    title="Borrar comando"
-                                    @click="borrarComandoFila(dispositivo, cmd)">X</button>
+                                  <div class="action-buttons">
+                                    <button
+                                      type="button"
+                                      class="btn-save-icon"
+                                      title="Guardar comando"
+                                      aria-label="Guardar comando"
+                                      @click="guardarComandoFila(dispositivo, cmd)">
+                                      <ion-icon :icon="saveOutline" />
+                                    </button>
+                                    <button
+                                      v-if="cmd._persistido"
+                                      type="button"
+                                      class="btn-delete"
+                                      title="Borrar comando"
+                                      aria-label="Borrar comando"
+                                      @click="borrarComandoFila(dispositivo, cmd)">X</button>
+                                    <span v-else class="action-placeholder" aria-hidden="true"></span>
+                                  </div>
                                 </td>
                                 <td>
                                   <input type="text" v-model="cmd.keyword" class="cell-input" :disabled="cmd._persistido" placeholder="keyword">
@@ -580,9 +623,6 @@
                                     <option :value="null">—</option>
                                     <option v-for="r in relesDisponiblesComando(dispositivo, cmd)" :key="r" :value="r">{{ r }}</option>
                                   </select>
-                                </td>
-                                <td class="col-accion">
-                                  <button type="button" class="btn-primary btn-mini" @click="guardarComandoFila(dispositivo, cmd)">Guardar</button>
                                 </td>
                               </tr>
                             </tbody>
@@ -613,7 +653,7 @@
 
 <script setup>
   import { IonToast, IonIcon } from '@ionic/vue';
-  import { refreshOutline, mailOutline } from 'ionicons/icons';
+  import { refreshOutline, mailOutline, saveOutline } from 'ionicons/icons';
   import { ref, computed, onMounted, watch } from 'vue';
   import FileUpload from '@/components/printers/FileUpload.vue';
   import {
@@ -2487,6 +2527,58 @@
 .btn-delete:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 30px 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-save-icon,
+.action-buttons .btn-delete,
+.action-placeholder {
+  width: 30px;
+  height: 30px;
+}
+
+.btn-save-icon,
+.action-buttons .btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-save-icon {
+  background-color: #2196f3;
+}
+
+.btn-save-icon:hover {
+  background-color: #1565c0;
+}
+
+.btn-save-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-save-icon ion-icon {
+  font-size: 17px;
+}
+
+.action-buttons .btn-delete {
+  font-weight: 700;
+}
+
+.action-placeholder {
+  display: block;
 }
 
 /* ---- Tablas de datos (estilo /school_manager/cargaMatriculas), a ancho completo ---- */

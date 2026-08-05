@@ -1,1125 +1,1065 @@
 <template>
-  <div class="main-container">
-    <div class="top-row">
-      <div class="left-top-container">
-        <div class="form-container">
-          <h2 class="window-title">CREAR CATEGORÍA</h2>
-          <div class="form-content">
-            <div class="form-grid">
-              <div class="form-row">
-                <label class="form-label">NOMBRE:</label>
-                <input type="text" v-model="nuevaCategoria.nombre" class="form-input" placeholder="" />
-              </div>
+  <div class="page-admin-events">
+    <header class="page-header">
+      <h1 class="t-1">Administración de eventos</h1>
+      <p class="page-subtitle">
+        Gestión de las categorías y de los eventos del calendario escolar.
+      </p>
+    </header>
 
-              <div class="form-row">
-                <label class="form-label">COLOR:</label>
-                <div class="color-selection">
-                  <select v-model="nuevaCategoria.color" class="form-select">
-                    <option value="">Seleccione color</option>
-                    <option v-for="color in coloresDisponibles" :key="color.value" :value="color.value">
-                      {{ color.nombre }}
-                    </option>
-                  </select>
-                  <div v-if="nuevaCategoria.color" class="color-preview"
-                    :style="{ backgroundColor: nuevaCategoria.color }"></div>
-                </div>
-              </div>
-              <div class="button">
-                <button type="button" @click="agregarCategoriaFn" class="btn-enviar">
-                  ENVIAR
-                </button>
-              </div>
+    <main class="main-panel">
+      <section class="panel-section">
+        <article class="action-card table-card">
+          <div class="table-card-header">
+            <div class="title-with-refresh">
+              <h2 class="card-title card-title-inline">Categorías</h2>
+              <button
+                type="button"
+                class="btn-refresh"
+                :disabled="cargandoCategorias"
+                title="Refrescar categorías"
+                aria-label="Refrescar categorías"
+                @click="cargarCategorias">
+                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoCategorias }" />
+              </button>
+            </div>
+            <div class="table-actions">
+              <input
+                v-model="busquedaCategorias"
+                type="search"
+                class="search-input"
+                placeholder="Buscar..."
+                aria-label="Buscar categorías">
             </div>
           </div>
-        </div>
-      </div>
-      <div class="right-top-container">
-        <div class="form-container">
-          <h2 class="window-title">LISTA DE CATEGORÍAS</h2>
 
-          <div class="categorias-table-container">
-            <div class="table-wrapper">
-              <table class="categorias-table">
-                <thead>
-                  <tr>
-                    <th>NOMBRE</th>
-                    <th>COLOR</th>
-                    <th>ACCIONES</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="categoria in categorias" :key="categoria.nombre">
-                    <td>{{ categoria.nombre }}</td>
-                    <td>
-                      <div class="color-cell">
-                        <span class="color-display" :style="{ backgroundColor: categoria.color }"></span>
-                        <span class="color-name">{{ getColorName(categoria.color) }}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <button @click="eliminarCategoriaFn(categoria)" class="btn-eliminar-cat">
-                        X
-                      </button>
-
-                    </td>
-                  </tr>
-                  <tr v-if="categorias.length === 0">
-                    <td colspan="3" class="no-data">No hay categorías creadas</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <div v-if="cargandoCategorias" class="table-loading" aria-label="Cargando categorías">
+            <div class="circulo"></div>
           </div>
-        </div>
-      </div>
-    </div>
-    <div class="bottom-row">
-      <div class="left-bottom-container">
-        <div class="form-container usuario-container">
-          <h2 class="window-title">CREAR EVENTO</h2>
-          <div class="form-content">
-            <div class="form-grid">
-              <div class="form-row">
-                <label class="form-label">TÍTULO:</label>
-                <input type="text" v-model="evento.titulo" class="form-input" required />
-              </div>
 
-              <div class="form-row">
-                <label class="form-label">CATEGORIA:</label>
-                <select v-model="evento.nombreCategoria" class="form-select" required>
-                  <option value="">Seleccione</option>
-                  <option v-for="categoria in categorias" :key="categoria.nombre" :value="categoria.nombre">
-                    {{ categoria.nombre }}
-                  </option>
-                </select>
-              </div>
-
-              <div class="form-row">
-                <label class="form-label">FECHA INICIO:</label>
-                <input type="date" v-model="evento.fechaInicio" class="form-input" required />
-              </div>
-
-              <div class="form-row combined-row">
-                <div class="checkbox-wrapper">
-                  <input type="checkbox" id="eventoMismoDia" v-model="eventoMismoDia" @change="toggleMismoDia"
-                    class="form-checkbox" />
-                  <label for="eventoMismoDia" class="checkbox-label">
-                    EVENTO FINALIZA ESE DIA
-                  </label>
-                </div>
-
-                <div v-if="!eventoMismoDia" class="fecha-fin-wrapper">
-                  <label class="form-label">FECHA FIN:</label>
-                  <input type="date" v-model="evento.fechaFin" class="form-input" :required="!eventoMismoDia" />
-                </div>
-              </div>
-
-              <div class="button">
-                <button type="button" @click="crearEventoFn" class="btn-enviar">
-                  ENVIAR
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="right-bottom-container">
-        <div class="form-container-table table-container">
-          <h2 class="window-title">CALENDARIO DE EVENTOS</h2>
-
-          <div class="table-wrapper">
-            <table class="events-table">
+          <div class="table-scroll">
+            <table class="tabla-datos tabla-categorias">
               <thead>
                 <tr>
-                  <th>TÍTULO</th>
-                  <th>CATEGORIA</th>
-                  <th>FECHA INICIO</th>
-                  <th>FECHA FIN</th>
-                  <th>ACCIONES</th>
+                  <th class="col-accion">Acciones</th>
+                  <th>Nombre</th>
+                  <th>Color</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="eventoItem in eventos" :key="`${eventoItem.titulo}-${eventoItem.fechaInicio}`">
-                  <td>{{ eventoItem.titulo }}</td>
-                  <td>{{ eventoItem.nombreCategoria }}</td>
-                  <td>{{ formatFecha(eventoItem.fechaInicio) }}</td>
-                  <td>{{ formatFecha(eventoItem.fechaFin) }}</td>
-                  <td>
-                    <button @click="borrarEventoFn(eventoItem)" class="btn-eliminar">
-                      X
-                    </button>
+                <tr v-for="categoria in categoriasMostradas" :key="categoria._uid">
+                  <td class="col-accion">
+                    <div class="action-buttons">
+                      <button
+                        type="button"
+                        class="btn-save-icon"
+                        :disabled="categoria._procesando"
+                        :aria-label="`Guardar categoría ${categoria.nombre || 'nueva'}`"
+                        title="Guardar categoría"
+                        @click="guardarCategoriaFila(categoria)">
+                        <ion-icon :icon="saveOutline" />
+                      </button>
+                      <button
+                        v-if="categoria._persistido"
+                        type="button"
+                        class="btn-delete"
+                        :disabled="categoria._procesando"
+                        :aria-label="`Eliminar categoría ${categoria.nombre}`"
+                        title="Borrar categoría"
+                        @click="borrarCategoriaFila(categoria)">
+                        X
+                      </button>
+                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                    </div>
                   </td>
-                </tr>
-                <tr v-if="eventos.length === 0">
-                  <td colspan="8" class="no-data">No hay eventos registrados</td>
+                  <td>
+                    <input
+                      v-model="categoria.nombre"
+                      type="text"
+                      class="cell-input"
+                      :disabled="categoria._persistido || categoria._procesando"
+                      placeholder="Nombre de la categoría">
+                  </td>
+                  <td>
+                    <div class="color-editor">
+                      <span
+                        v-if="categoria.color"
+                        class="color-preview"
+                        :style="{ backgroundColor: categoria.color }"
+                        aria-hidden="true"></span>
+                      <select
+                        v-model="categoria.color"
+                        class="cell-input color-select"
+                        :disabled="categoria._procesando"
+                        aria-label="Color de la categoría">
+                        <option value="">Selecciona un color</option>
+                        <option
+                          v-for="color in opcionesColor(categoria.color)"
+                          :key="color.value"
+                          :value="color.value">
+                          {{ color.nombre }}
+                        </option>
+                      </select>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
+
+          <p v-if="!hayCategorias && !cargandoCategorias" class="empty-state">
+            No hay categorías cargadas. Usa la última fila para añadir una nueva.
+          </p>
+        </article>
+
+        <article class="action-card table-card">
+          <div class="table-card-header">
+            <div class="title-with-refresh">
+              <h2 class="card-title card-title-inline">Eventos</h2>
+              <button
+                type="button"
+                class="btn-refresh"
+                :disabled="cargandoEventos"
+                title="Refrescar eventos"
+                aria-label="Refrescar eventos"
+                @click="cargarEventos">
+                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoEventos }" />
+              </button>
+            </div>
+            <div class="table-actions">
+              <input
+                v-model="busquedaEventos"
+                type="search"
+                class="search-input"
+                placeholder="Buscar..."
+                aria-label="Buscar eventos">
+            </div>
+          </div>
+
+          <div v-if="cargandoEventos" class="table-loading" aria-label="Cargando eventos">
+            <div class="circulo"></div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="tabla-datos tabla-eventos">
+              <thead>
+                <tr>
+                  <th class="col-accion">Acciones</th>
+                  <th>Título</th>
+                  <th>Categoría</th>
+                  <th>Fecha inicio</th>
+                  <th>Fecha fin</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="evento in eventosMostrados" :key="evento._uid">
+                  <td class="col-accion">
+                    <div class="action-buttons">
+                      <button
+                        type="button"
+                        class="btn-save-icon"
+                        :disabled="evento._procesando"
+                        :aria-label="`Guardar evento ${evento.titulo || 'nuevo'}`"
+                        title="Guardar evento"
+                        @click="guardarEventoFila(evento)">
+                        <ion-icon :icon="saveOutline" />
+                      </button>
+                      <button
+                        v-if="evento._persistido"
+                        type="button"
+                        class="btn-delete"
+                        :disabled="evento._procesando"
+                        :aria-label="`Eliminar evento ${evento.titulo}`"
+                        title="Borrar evento"
+                        @click="borrarEventoFila(evento)">
+                        X
+                      </button>
+                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                    </div>
+                  </td>
+                  <td>
+                    <input
+                      v-model="evento.titulo"
+                      type="text"
+                      class="cell-input cell-title"
+                      :disabled="evento._persistido || evento._procesando"
+                      placeholder="Título del evento">
+                  </td>
+                  <td>
+                    <select
+                      v-model="evento.nombreCategoria"
+                      class="cell-input cell-category"
+                      :disabled="evento._procesando"
+                      aria-label="Categoría del evento">
+                      <option value="">Selecciona una categoría</option>
+                      <option
+                        v-for="nombre in opcionesCategoria(evento.nombreCategoria)"
+                        :key="nombre"
+                        :value="nombre">
+                        {{ nombre }}
+                      </option>
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      v-model="evento.fechaInicio"
+                      type="date"
+                      class="cell-input cell-date"
+                      :disabled="evento._persistido || evento._procesando">
+                  </td>
+                  <td>
+                    <input
+                      v-model="evento.fechaFin"
+                      type="date"
+                      class="cell-input cell-date"
+                      :disabled="evento._procesando">
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p v-if="!hayEventos && !cargandoEventos" class="empty-state">
+            No hay eventos cargados. Usa la última fila para añadir uno nuevo.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <ion-toast
+      :is-open="isToastOpen"
+      :message="toastMessage"
+      :color="toastColor"
+      duration="2500"
+      position="top"
+      @did-dismiss="isToastOpen = false" />
   </div>
-  <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
-    @did-dismiss="() => (isToastOpen = false)" position="top"></ion-toast>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { crearToast } from "@/utils/toast.js";
-import { IonToast } from "@ionic/vue";
-
+import { computed, onMounted, ref, watch } from 'vue';
+import { IonIcon, IonToast } from '@ionic/vue';
+import { refreshOutline, saveOutline } from 'ionicons/icons';
 import {
-  obtenerEventos,
-  crearEvento,
+  borrarCategoria,
   borrarEvento,
   crearCategoria,
-  borrarCategoria,
+  crearEvento,
   obtenerCategorias,
-} from "@/services/events.js";
+  obtenerEventos,
+} from '@/services/events.js';
+import { crearToast } from '@/utils/toast.js';
 
-// Interfaces
-interface Evento {
+interface CategoriaApi {
+  nombre: string;
+  color: string;
+}
+
+interface EventoApi {
   titulo: string;
   fechaInicio: number;
   fechaFin: number;
   nombreCategoria: string;
 }
 
-interface EventoForm {
+interface FilaCategoria extends CategoriaApi {
+  _persistido: boolean;
+  _procesando: boolean;
+  _uid: number;
+}
+
+interface FilaEvento {
   titulo: string;
   fechaInicio: string;
   fechaFin: string;
   nombreCategoria: string;
+  _fechaInicioOriginal: number | null;
+  _persistido: boolean;
+  _procesando: boolean;
+  _uid: number;
 }
 
-interface Categoria {
-  nombre: string;
-  color: string;
-}
-
-const isToastOpen = ref(false);
-const toastMessage = ref("");
-const toastColor = ref("success");
-
-const eventos = ref<Evento[]>([]);
-const categorias = ref<Categoria[]>([]);
-const eventoMismoDia = ref(true);
-
-// Formulario evento
-const evento = ref<EventoForm>({
-  titulo: "",
-  nombreCategoria: "",
-  fechaInicio: "",
-  fechaFin: "",
-});
-
-// Nueva categoría
-const nuevaCategoria = ref({
-  nombre: "",
-  color: ""
-});
-// Colores disponibles para seleccionar
-const coloresDisponibles = ref([
+const COLORES_DISPONIBLES = [
   { value: '#008000', nombre: 'VERDE' },
   { value: '#4682B4', nombre: 'AZUL' },
   { value: '#F4D03F', nombre: 'AMARILLO' },
-  { value: '#B9484E', nombre: 'ROJO' }
-]);
+  { value: '#B9484E', nombre: 'ROJO' },
+];
 
+const isToastOpen = ref(false);
+const toastMessage = ref('');
+const toastColor = ref('success');
+const categorias = ref<FilaCategoria[]>([]);
+const eventos = ref<FilaEvento[]>([]);
+const busquedaCategorias = ref('');
+const busquedaEventos = ref('');
+const cargandoCategorias = ref(false);
+const cargandoEventos = ref(false);
 
-function dateToTimestamp(dateStr: string): number {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day).getTime();
-}
-// Cargar todos los eventos
-async function cargarEventos() {
-  eventos.value = await obtenerEventos(toastMessage, toastColor, isToastOpen);
-}
+let uidCounter = 0;
+const nextUid = () => ++uidCounter;
 
-// Cargar todas las categorías
-async function cargarCategorias() {
-  categorias.value = await obtenerCategorias(toastMessage, toastColor, isToastOpen);
-}
+const filaCategoriaVacia = (): FilaCategoria => ({
+  nombre: '',
+  color: '',
+  _persistido: false,
+  _procesando: false,
+  _uid: nextUid(),
+});
 
-// Crear evento
-async function crearEventoFn() {
+const filaEventoVacia = (): FilaEvento => ({
+  titulo: '',
+  nombreCategoria: '',
+  fechaInicio: '',
+  fechaFin: '',
+  _fechaInicioOriginal: null,
+  _persistido: false,
+  _procesando: false,
+  _uid: nextUid(),
+});
 
+const categoriaEstaVacia = (categoria: FilaCategoria) =>
+  !categoria.nombre.trim() && !categoria.color;
+
+const eventoEstaVacio = (evento: FilaEvento) =>
+  !evento.titulo.trim()
+  && !evento.nombreCategoria
+  && !evento.fechaInicio
+  && !evento.fechaFin;
+
+const asegurarFilaVaciaCategorias = () => {
+  const ultima = categorias.value[categorias.value.length - 1];
+  if (!ultima || ultima._persistido || !categoriaEstaVacia(ultima)) {
+    categorias.value.push(filaCategoriaVacia());
+  }
+};
+
+const asegurarFilaVaciaEventos = () => {
+  const ultimo = eventos.value[eventos.value.length - 1];
+  if (!ultimo || ultimo._persistido || !eventoEstaVacio(ultimo)) {
+    eventos.value.push(filaEventoVacia());
+  }
+};
+
+watch(categorias, asegurarFilaVaciaCategorias, { deep: true });
+watch(eventos, asegurarFilaVaciaEventos, { deep: true });
+
+const normalizarTexto = (valor: unknown) =>
+  String(valor ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const filtrarConBorradores = <T extends { _persistido: boolean }>(
+  filas: T[],
+  busqueda: string,
+  campos: Array<keyof T>,
+) => {
+  const consulta = normalizarTexto(busqueda).trim();
+  const persistidas = filas.filter((fila) => fila._persistido);
+  const borradores = filas.filter((fila) => !fila._persistido);
+  const visibles = consulta
+    ? persistidas.filter((fila) =>
+        campos.some((campo) => normalizarTexto(fila[campo]).includes(consulta)))
+    : persistidas;
+
+  return [...visibles, ...borradores];
+};
+
+const categoriasMostradas = computed(() =>
+  filtrarConBorradores(categorias.value, busquedaCategorias.value, ['nombre', 'color']));
+
+const eventosMostrados = computed(() =>
+  filtrarConBorradores(
+    eventos.value,
+    busquedaEventos.value,
+    ['titulo', 'nombreCategoria', 'fechaInicio', 'fechaFin'],
+  ));
+
+const hayCategorias = computed(() => categorias.value.some((categoria) => categoria._persistido));
+const hayEventos = computed(() => eventos.value.some((evento) => evento._persistido));
+
+const opcionesColor = (colorActual: string) => {
+  if (!colorActual || COLORES_DISPONIBLES.some((color) => color.value === colorActual)) {
+    return COLORES_DISPONIBLES;
+  }
+  return [{ value: colorActual, nombre: colorActual }, ...COLORES_DISPONIBLES];
+};
+
+const opcionesCategoria = (categoriaActual: string) => {
+  const nombres = categorias.value
+    .filter((categoria) => categoria._persistido)
+    .map((categoria) => categoria.nombre);
+
+  if (categoriaActual && !nombres.includes(categoriaActual)) {
+    nombres.unshift(categoriaActual);
+  }
+  return nombres;
+};
+
+const timestampAFechaInput = (timestamp: number) => {
+  const fecha = new Date(timestamp);
+  if (Number.isNaN(fecha.getTime())) return '';
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${anio}-${mes}-${dia}`;
+};
+
+const fechaInputATimestamp = (fechaInput: string) => {
+  const partes = fechaInput.split('-').map(Number);
+  if (partes.length !== 3 || partes.some((parte) => !Number.isFinite(parte))) return NaN;
+  const [anio, mes, dia] = partes;
+  const fecha = new Date(anio, mes - 1, dia);
+  if (
+    fecha.getFullYear() !== anio
+    || fecha.getMonth() !== mes - 1
+    || fecha.getDate() !== dia
+  ) return NaN;
+  return fecha.getTime();
+};
+
+const cargarCategorias = async () => {
+  cargandoCategorias.value = true;
   try {
+    const respuesta = await obtenerCategorias(toastMessage, toastColor, isToastOpen);
+    const datos = Array.isArray(respuesta) ? respuesta as CategoriaApi[] : [];
+    categorias.value = datos.map((categoria) => ({
+      nombre: categoria.nombre,
+      color: categoria.color,
+      _persistido: true,
+      _procesando: false,
+      _uid: nextUid(),
+    }));
+    asegurarFilaVaciaCategorias();
+  } finally {
+    cargandoCategorias.value = false;
+  }
+};
 
-    if (!evento.value.titulo || !evento.value.nombreCategoria || !evento.value.fechaInicio) {
-      console.error("Faltan campos obligatorios", evento.value);
-      return;
-    }
+const cargarEventos = async () => {
+  cargandoEventos.value = true;
+  try {
+    const respuesta = await obtenerEventos(toastMessage, toastColor, isToastOpen);
+    const datos = Array.isArray(respuesta) ? respuesta as EventoApi[] : [];
+    eventos.value = datos.map((evento) => ({
+      titulo: evento.titulo,
+      nombreCategoria: evento.nombreCategoria,
+      fechaInicio: timestampAFechaInput(evento.fechaInicio),
+      fechaFin: timestampAFechaInput(evento.fechaFin),
+      _fechaInicioOriginal: evento.fechaInicio,
+      _persistido: true,
+      _procesando: false,
+      _uid: nextUid(),
+    }));
+    asegurarFilaVaciaEventos();
+  } finally {
+    cargandoEventos.value = false;
+  }
+};
 
-    if (!eventoMismoDia.value && !evento.value.fechaFin) {
-      console.error("Falta fecha fin");
-      return;
-    }
+const guardarCategoriaFila = async (categoria: FilaCategoria) => {
+  const nombre = categoria.nombre.trim();
+  if (!nombre || !categoria.color) {
+    crearToast(
+      toastMessage,
+      toastColor,
+      isToastOpen,
+      'danger',
+      'Debes indicar el nombre y el color de la categoría',
+    );
+    return;
+  }
 
-    // Conversión segura de fechas
-    const fechaInicioLong = dateToTimestamp(evento.value.fechaInicio);
-    const fechaFinLong = eventoMismoDia.value
-      ? fechaInicioLong
-      : dateToTimestamp(evento.value.fechaFin);
+  const duplicada = categorias.value.some((otra) =>
+    otra !== categoria
+    && otra._persistido
+    && normalizarTexto(otra.nombre) === normalizarTexto(nombre));
+  if (!categoria._persistido && duplicada) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Ya existe la categoría "${nombre}"`);
+    return;
+  }
 
-    if (fechaFinLong < fechaInicioLong) {
-      console.error("Fecha fin menor que fecha inicio");
-      return;
-    }
+  categoria._procesando = true;
+  try {
+    await crearCategoria(toastMessage, toastColor, isToastOpen, nombre, categoria.color);
+    await cargarCategorias();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    categoria._procesando = false;
+  }
+};
 
-    // Log de datos que van al backend
-    console.log("DATOS A ENVIAR:", {
-      titulo: evento.value.titulo,
-      fechaInicio: fechaInicioLong,
-      fechaFin: fechaFinLong,
-      nombreCategoria: evento.value.nombreCategoria,
-    });
+const guardarEventoFila = async (evento: FilaEvento) => {
+  const titulo = evento.titulo.trim();
+  const fechaInicio = fechaInputATimestamp(evento.fechaInicio);
+  const fechaFin = fechaInputATimestamp(evento.fechaFin);
 
+  if (!titulo || !evento.nombreCategoria || !evento.fechaInicio || !evento.fechaFin) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Debes completar todos los campos del evento');
+    return;
+  }
+  if (!Number.isFinite(fechaInicio) || !Number.isFinite(fechaFin)) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Las fechas del evento no son válidas');
+    return;
+  }
+  if (fechaFin < fechaInicio) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'La fecha fin no puede ser anterior a la fecha de inicio');
+    return;
+  }
+
+  const duplicado = eventos.value.some((otro) =>
+    otro !== evento
+    && otro._persistido
+    && normalizarTexto(otro.titulo) === normalizarTexto(titulo)
+    && otro._fechaInicioOriginal === fechaInicio);
+  if (!evento._persistido && duplicado) {
+    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Ya existe un evento con ese título y fecha de inicio');
+    return;
+  }
+
+  evento._procesando = true;
+  try {
     await crearEvento(
       toastMessage,
       toastColor,
       isToastOpen,
-      evento.value.titulo,
-      fechaInicioLong,
-      fechaFinLong,
-      evento.value.nombreCategoria,
+      titulo,
+      fechaInicio,
+      fechaFin,
+      evento.nombreCategoria,
     );
-
-    console.log("Evento creado, recargando lista");
-
-    // Reset formulario
-    evento.value = {
-      titulo: "",
-      nombreCategoria: "",
-      fechaInicio: "",
-      fechaFin: "",
-    };
-
-
-    // Limpiar formulario
-    evento.value = { titulo: "", fechaInicio: "", fechaFin: "", nombreCategoria: "" };
-    eventoMismoDia.value = true;
-
-    // Recargar lista de eventos
     await cargarEventos();
-
   } catch (error) {
-    console.error("🔥ERROR EN CREAR EVENTO:", error);
-
+    console.error(error);
+  } finally {
+    evento._procesando = false;
   }
-}
+};
 
-// Borrar evento
-async function borrarEventoFn(e: Evento) {
+const borrarCategoriaFila = async (categoria: FilaCategoria) => {
+  if (!categoria._persistido) return;
+  if (!window.confirm(`¿Borrar la categoría "${categoria.nombre}"? Esta acción no se puede deshacer.`)) return;
+
+  categoria._procesando = true;
+  try {
+    await borrarCategoria(toastMessage, toastColor, isToastOpen, categoria.nombre);
+    await Promise.all([cargarCategorias(), cargarEventos()]);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    categoria._procesando = false;
+  }
+};
+
+const borrarEventoFila = async (evento: FilaEvento) => {
+  if (!evento._persistido || evento._fechaInicioOriginal === null) return;
+  if (!window.confirm(`¿Borrar el evento "${evento.titulo}"? Esta acción no se puede deshacer.`)) return;
+
+  evento._procesando = true;
   try {
     await borrarEvento(
       toastMessage,
       toastColor,
       isToastOpen,
-      e.titulo,
-      e.fechaInicio
+      evento.titulo,
+      evento._fechaInicioOriginal,
     );
     await cargarEventos();
   } catch (error) {
-    console.error("🔥 ERROR AL BORRAR EVENTO:", error);
+    console.error(error);
+  } finally {
+    evento._procesando = false;
   }
-}
+};
 
-// Check evento mismo día
-function toggleMismoDia() {
-  if (eventoMismoDia.value) evento.value.fechaFin = "";
-}
-
-// Crear categoría
-
-async function agregarCategoriaFn() {
-  if (!nuevaCategoria.value.nombre || !nuevaCategoria.value.color) {
-    crearToast(toastMessage, toastColor, isToastOpen, "error", "Debes indicar un nombre y un color para la categoría");
-    return;
-  }
-  try {
-    await crearCategoria(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      nuevaCategoria.value.nombre,
-      nuevaCategoria.value.color
-    );
-
-    nuevaCategoria.value = { nombre: "", color: "" };
-    await cargarCategorias();
-  } catch (error) {
-    console.error("🔥 ERROR AL CREAR CATEGORÍA:", error);
-  }
-
-}
-
-// Eliminar categoría
-async function eliminarCategoriaFn(categoria: Categoria) {
-  try {
-    await borrarCategoria(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      categoria.nombre
-    );
-    await cargarCategorias();
-  } catch (error) {
-    console.error("Error al eliminar categoría:", error);
-  }
-
-}
-
-function formatFecha(timestamp: number): string {
-  const fecha = new Date(timestamp);
-  return fecha.toLocaleDateString('es-ES', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-}
-
-function getColorName(colorValue: string): string {
-  const colorObj = coloresDisponibles.value.find(c => c.value === colorValue);
-  return colorObj ? colorObj.nombre : colorValue;
-}
-// Montaje inicial
 onMounted(async () => {
-  await cargarCategorias();
-  await cargarEventos();
+  await Promise.all([cargarCategorias(), cargarEventos()]);
 });
 </script>
 
 <style scoped>
-/* CONTENEDOR PRINCIPAL */
-.main-container {
-  height: 100%;
-  padding: 20px;
-  background-color: var(--background-color, #f0f2f5);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  align-content: center;
-  gap: 20px;
-  overflow: hidden;
+.page-admin-events {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2.5rem;
+  font-family: "Roboto", sans-serif;
 }
 
-/* FILAS */
-.top-row,
-.bottom-row {
-  display: flex;
-  gap: 20px;
-  flex: 1;
-  min-height: 0;
-}
-
-/* CONTENEDORES */
-.left-top-container,
-.left-bottom-container {
-  flex: 1;
-  min-height: 0;
-  align-content: center;
-}
-
-.right-top-container {
-  flex: 1;
-  min-height: 0;
-  align-content: center;
-}
-.right-bottom-container {
-  flex: 1;
-  min-height: 0;
-  align-content: center;
-  overflow-y: auto;
-  overflow-x: auto;
-}
-
-
-/* ESTILOS COMUNES DE FORMULARIO */
-.form-container {
-  background-color: var(--form-bg-light);
-  border: 1px solid #444;
-  border-radius: 10px;
-  padding: 20px;
-  height: 100%;
+.page-header {
   width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-content: center;
-  min-height: 0;
+  margin-bottom: 1.75rem;
 }
 
-.form-container-table {
-  background-color: var(--form-bg-light);
-  border: 1px solid #444;
-  border-radius: 10px;
-  padding: 25px;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  align-content: center;
-}
-
-.window-title {
-  color: var(--text-color);
-  font-size: 16px;
-  font-weight: bold;
+.t-1 {
+  margin: 0 0 0.75rem;
+  font-size: 2.2rem;
+  font-weight: 700;
   text-align: center;
-  margin: 0 0 10px 0;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #007bff;
-  text-transform: uppercase;
-  font-size: 16px;
 }
 
-.form-content {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-  padding-right: 6px;
+.page-subtitle {
+  margin: 0;
+  text-align: center;
 }
 
-/* FORMULARIO EN GRID */
-.form-grid {
+.main-panel {
+  padding: 1.5rem;
+  background-color: var(--form-bg-light);
+  border: 1px solid #444;
+  border-radius: 12px;
+  box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
+}
+
+.panel-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 0;
+  gap: 1.25rem;
+  width: 100%;
 }
 
-.form-row {
+.action-card {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  min-width: 0;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 1.25rem 1rem 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
 }
 
-.combined-row {
+.table-card {
+  width: 100%;
+}
+
+.table-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 15px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
 }
 
-.form-label {
-  min-width: 100px;
-  font-weight: 600;
-  color: var(--text-color);
-  font-size: 16px;
-  text-align: right;
-}
-
-.form-input {
-  flex: 1;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-  background-color: white;
-}
-
-.form-select {
-  flex: 1;
-  padding: 8px 10px;
-  border: 2px solid #007bff;
-  border-radius: 4px;
-  background-color: white;
-  color: #007bff;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.checkbox-wrapper {
+.title-with-refresh,
+.table-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
-.form-checkbox {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.checkbox-label {
-  font-weight: 500;
-  color: var(--text-color);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.fecha-fin-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.button {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: auto;
-
-}
-
-.btn-enviar {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 11px 28px;
-  border-radius: 4px;
-  font-size: 16px;
+.card-title {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 1.05rem;
   font-weight: 600;
+  line-height: 1.35;
+}
+
+.card-title-inline {
+  text-align: left;
+}
+
+.btn-refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: #1a3c6e;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
+  background-color: #e2e8f0;
+  border: 1px solid #b6c2d4;
+  border-radius: 6px;
 }
 
-.btn-enviar:hover {
-  background-color: #0056b3;
+.btn-refresh:hover {
+  background-color: #cbd5e1;
 }
 
-/* SECCIÓN EXTRAORDINARIA */
-.extraordinary-section {
-  margin-top: auto;
-  border-top: 1px solid #eee;
-  padding-top: 15px;
+.btn-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.section-title {
+.btn-refresh ion-icon {
+  font-size: 18px;
+}
+
+.girando {
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+.search-input {
+  box-sizing: border-box;
+  max-width: 220px;
+  padding: 7px 10px;
+  color: #000;
   font-size: 13px;
-  color: #2c3e50;
-  margin-bottom: 10px;
-  font-weight: 600;
+  background-color: #fff;
+  border: 2px solid #007bff;
+  border-radius: 6px;
+  outline: none;
 }
 
-.date-section {
+.search-input:hover,
+.search-input:focus {
+  border-color: #0056b3;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.35);
+}
+
+.table-loading {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  justify-content: center;
+  padding: 0.75rem 0;
 }
 
-.date-label {
-  min-width: 100px;
-  font-weight: 600;
-  color: var(--text-color);
-  font-size: 23px;
-  text-align: right;
+.circulo {
+  width: 32px;
+  height: 32px;
+  border: 4px solid #f3f3f3;
+  border-top-color: #2196f3;
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
 }
 
-.date-input {
-  flex: 1;
-}
-
-/* TABLAS */
-.table-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: auto;
-  min-height: 0;
-}
-
-.events-table,
-.categorias-table {
+.table-scroll {
   width: 100%;
-  border-collapse: collapse;
-  border: 2px solid #007bff;
-  font-size: 16px;
+  max-height: 420px;
+  overflow: auto;
 }
 
-.events-table th,
-.categorias-table th {
-  background-color: #007bff;
-  color: white;
-  padding: 6px 8px;
+table.tabla-datos {
+  width: 100%;
+  color: #1a1a1a;
+  font-size: 13px;
   text-align: center;
-  font-weight: bold;
+  background-color: #f8f9fa;
   border: 2px solid #007bff;
-  font-size: 16px;
+  border-collapse: collapse;
+}
+
+.tabla-categorias {
+  min-width: 560px;
+}
+
+.tabla-eventos {
+  min-width: 900px;
+}
+
+.tabla-datos th,
+.tabla-datos td {
+  padding: 8px 6px;
+  border: 2px solid #007bff;
+}
+
+.tabla-datos th {
   position: sticky;
   top: 0;
-  z-index: 10;
-}
-
-.events-table td,
-.categorias-table td {
-  padding: 6px 8px;
-  border: 2px solid #007bff;
-  background-color: #e9f5ff;
-  height: 40px;
-  text-overflow: ellipsis;
-  overflow: hidden;
+  z-index: 2;
+  color: #fff;
+  font-weight: 700;
   white-space: nowrap;
-  text-align: center;
+  background-color: #007bff;
+  box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
 }
 
-.events-table tr:hover td,
-.categorias-table tr:hover td {
+.tabla-datos td {
+  height: 38px;
+  background-color: #e9f5ff;
+}
+
+.tabla-datos tr:hover td {
   background-color: #d0eaff;
 }
 
-.categorias-table-container {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
+.col-accion {
+  width: 90px;
+  min-width: 80px;
 }
 
-.no-data {
+.cell-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 90px;
+  padding: 4px 6px;
+  color: #000;
+  font: inherit;
   text-align: center;
-  color: #666;
-  font-style: italic;
-  padding: 25px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
 }
 
-.btn-eliminar,
-.btn-eliminar-cat {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 3px;
-  font-size: 11px;
-  cursor: pointer;
-  white-space: nowrap;
+.cell-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
 }
 
-.btn-eliminar:hover,
-.btn-eliminar-cat:hover {
-  background-color: #c82333;
+.cell-input:disabled {
+  color: #555;
+  cursor: not-allowed;
+  background: #eef1f4;
 }
 
-/* COLORES */
-.color-selection {
+.cell-title {
+  min-width: 190px;
+}
+
+.cell-category {
+  min-width: 160px;
+}
+
+.cell-date {
+  min-width: 135px;
+}
+
+.color-editor {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 1;
+  justify-content: center;
+  gap: 8px;
 }
 
 .color-preview {
-  width: 25px;
-  height: 25px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-
-}
-
-.color-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-
-}
-
-.color-display {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  border: 1px solid #9ca3af;
   border-radius: 50%;
-  border: 1px solid #ddd;
-  display: inline-block;
-
 }
 
-.color-name {
-  font-size: 12px;
-  font-weight: 600;
-
+.color-select {
+  min-width: 170px;
 }
-/* RESPONSIVE */
-@media (max-width: 1024px) {
 
-  .top-row,
-  .bottom-row {
-    flex-direction: column;
+.action-buttons {
+  display: grid;
+  grid-template-columns: 30px 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-save-icon,
+.action-buttons .btn-delete,
+.action-placeholder {
+  width: 30px;
+  height: 30px;
+}
+
+.btn-save-icon,
+.action-buttons .btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn-save-icon {
+  background-color: #2196f3;
+}
+
+.btn-save-icon:hover {
+  background-color: #1565c0;
+}
+
+.btn-save-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-save-icon ion-icon {
+  font-size: 17px;
+}
+
+.action-buttons .btn-delete {
+  font-weight: 700;
+}
+
+.action-placeholder {
+  display: block;
+}
+
+.btn-primary,
+.btn-delete {
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn-primary {
+  width: auto;
+  margin: 0;
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 13px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  background-color: #2196f3;
+}
+
+.btn-primary:hover {
+  background-color: #1565c0;
+}
+
+.btn-delete {
+  padding: 5px 10px;
+  color: #fff;
+  background-color: #dc3545;
+}
+
+.btn-delete:hover {
+  background-color: #b02a37;
+}
+
+.btn-primary:disabled,
+.btn-delete:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.empty-state {
+  margin: 0.75rem 0 0;
+  padding: 0.85rem;
+  color: #666;
+  font-size: 0.85rem;
+  text-align: center;
+  background-color: #f8f9fa;
+  border: 1px dashed #cfd8e3;
+  border-radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .main-panel {
+    background-color: var(--form-bg-dark);
+    border-color: #444;
+    box-shadow: rgba(255, 255, 255, 0.08) 0 8px 24px;
   }
 
-
-  .right-bottom-container,
-  .right-top-container {
-    flex: 1;
+  .page-subtitle {
+    color: #c8c8c8;
   }
 
-  .window-title {
-    font-size: 14px;
-    margin-bottom: 6px;
-    padding-bottom: 4px;
+  .action-card {
+    background-color: #2a302b;
+    border-color: #555;
   }
 
-  .form-label {
-    font-size: 14px;
+  .card-title {
+    color: var(--text-color-dark);
   }
 
-  .form-input,
-  .form-select {
-    font-size: 14px;
-    padding: 5px 7px;
+  .btn-refresh {
+    color: #e6ebf1;
+    background-color: #3a4048;
+    border-color: #5a616b;
   }
 
-
-  .btn-enviar {
-    font-size: 14px;
-    padding: 8px 20px;
+  .btn-refresh:hover {
+    background-color: #474e57;
   }
 
-
-  .events-table,
-  .categorias-table {
-    font-size: 14px;
+  .search-input,
+  .cell-input {
+    color: #e6ebf1;
+    background-color: #1f2937;
   }
 
-  .events-table th,
-  .categorias-table th,
-  .events-table td,
-  .categorias-table td {
-    padding: 5px 6px;
+  .search-input {
+    border-color: #3b82f6;
+  }
+
+  .cell-input:disabled {
+    color: #b8c0ca;
+    background-color: #343b45;
+  }
+
+  .tabla-datos td {
+    color: var(--text-color-dark);
+    background-color: #34495e;
+  }
+
+  .tabla-datos tr:hover td {
+    background-color: #3a506b;
+  }
+
+  .empty-state {
+    color: #c8c8c8;
+    background-color: #2a302b;
+    border-color: #555;
   }
 }
 
 @media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+  .page-admin-events {
+    padding: 1rem 0.75rem 2rem;
   }
 
-  .form-label {
-    text-align: left;
-    min-width: auto;
+  .page-header {
+    margin-bottom: 1.25rem;
   }
 
-  .combined-row {
-    flex-direction: column;
-    align-items: flex-start;
+  .t-1 {
+    font-size: 1.75rem;
   }
 
-  
+  .main-panel {
+    padding: 1rem;
+  }
 
-  .form-input,
-  .form-select {
+  .action-card {
+    padding: 1rem 0.75rem 0.75rem;
+  }
+
+  .table-card-header,
+  .table-actions {
+    align-items: stretch;
     width: 100%;
   }
 
-  .table-wrapper {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: auto;
+  .table-actions,
+  .search-input {
+    max-width: none;
+    flex: 1 1 100%;
   }
 
-  .events-table,
-  .categorias-table {
-    font-size: 14px;
-  }
-
-  .toast {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    padding: 12px 18px;
-    border-radius: 8px;
-    color: white;
-    font-weight: 600;
-    z-index: 9999;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
-    opacity: 1;
-    transition: opacity .3s ease;
-  }
-
-  .success {
-    background: #28a745;
-  }
-
-  .error {
-    background: #dc3545;
-  }
-
-  .warning {
-    background: #ffc107;
-    color: black;
-  }
-
-  .info {
-    background: #17a2b8;
-  }
-
-  @media (max-width: 480px) {
-    .window-title {
-      font-size: 13px;
-    }
-
-    .form-label {
-      font-size: 13px;
-    }
-
-    .btn-enviar {
-      padding: 7px 16px;
-    }
-  }
-
-  @media (max-width: 360px) {
-
-    .form-container,
-    .form-container-table {
-      padding: 10px;
-      border-radius: 8px;
-    }
-
-    .window-title {
-      font-size: 12px;
-      margin-bottom: 4px;
-      padding-bottom: 3px;
-    }
-
-    .form-label {
-      font-size: 12px;
-    }
-
-    .form-input,
-    .form-select {
-      font-size: 12px;
-      padding: 4px 6px;
-    }
-
-    .checkbox-label {
-      font-size: 11px;
-    }
-
-    .btn-enviar {
-      font-size: 12px;
-      padding: 6px 14px;
-    }
-
-    .events-table,
-    .categorias-table {
-      font-size: 12px;
-    }
-
-    .events-table th,
-    .categorias-table th {
-      padding: 4px 5px;
-    }
-
-    .events-table td,
-    .categorias-table td {
-      padding: 4px 5px;
-      height: 28px;
-    }
-
-    .btn-eliminar,
-    .btn-eliminar-cat {
-      padding: 6px 10px;
-      font-size: 10px;
-    }
-
-    .color-display {
-      width: 14px;
-      height: 14px;
-    }
-
-    .color-name {
-      font-size: 11px;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, .3);
-      border-radius: 3px;
-    }
-  }
-
-  .events-table th,
-  .categorias-table th {
-    font-size: 11px;
-    padding: 4px 5px;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-
-  .events-table th {
-    height: 30px;
-  }
-/* CONTENEDORES */
-  .form-container,
-  .form-container-table {
-    padding: 6px;
-    border-radius: 5px;
-  }
-
-  /* SEPARACIÓN GENERAL */
-  .top-row,
-  .bottom-row,
-  .right-top-container,
-  .right-bottom-container {
-    gap: 6px;
-  }
-
-  /* TÍTULOS */
-  .window-title {
-    font-size: 10.5px;
-    margin-bottom: 2px;
-    padding-bottom: 1px;
-    line-height: 1;
-    letter-spacing: .2px;
-  }
-
-  /* LABELS */
-  .form-label {
-    font-size: 10.5px;
-    margin-bottom: 1px;
-    line-height: 1;
-  }
-
-  /* FORM ROWS */
-  .form-row {
-    gap: 3px;
-  }
-
-  /* INPUTS / SELECT */
-  .form-input,
-  .form-select {
-    font-size: 11px;
-    padding: 3px 5px;
-    height: 26px;
-  }
-
-  /* BOTONES */
-  .btn-enviar {
-    font-size: 11px;
-    padding: 5px 10px;
-    height: 28px;
-  }
-
-  .btn-eliminar,
-  .btn-eliminar-cat {
-    font-size: 9px;
-    padding: 4px 6px;
-    height: 24px;
-  }
-
-  /* TABLAS */
-  .events-table,
-  .categorias-table {
-    font-size: 10px;
-  }
-
-  /* HEADERS */
-  .events-table th,
-  .categorias-table th {
-    font-size: 9.5px;
-    padding: 2px 3px;
-    height: 22px;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  /* CELDAS */
-  .events-table td,
-  .categorias-table td {
-    font-size: 10px;
-    padding: 2px 3px;
-    height: 22px;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  /* COLUMNA ACCIONES MÁS ESTRECHA */
-  .categorias-table th:last-child,
-  .categorias-table td:last-child,
-  .events-table th:last-child,
-  .events-table td:last-child {
-    width: 1%;
-    padding-left: 2px;
-    padding-right: 2px;
-  }
-
-  /* COLOR */
-  .color-display {
-    width: 10px;
-    height: 10px;
-  }
-
-  .color-name {
-    font-size: 9.5px;
-  }
-
-  /* TABLAS SCROLL */
-  .table-wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-  }
-
-  /* SCROLLBAR ULTRA FINO */
-  ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: rgba(0,0,0,.35);
-    border-radius: 2px;
-  }
-
-  /* TOAST */
-  .toast {
-    font-size: 10.5px;
-    padding: 8px 10px;
-    right: 8px;
-    bottom: 8px;
+  .tabla-datos {
+    font-size: 12px;
   }
 }
 
-
-/* MODO OSCURO */
-@media (prefers-color-scheme: dark) {
-
-  .form-container,
-  .form-container-table {
-    background-color: var(--form-bg-dark);
-    box-shadow: rgba(255, 255, 255, 0.1) 0px 5px 15px;
+@media (max-width: 420px) {
+  .page-admin-events {
+    padding-inline: 0.5rem;
   }
 
-  .window-title,
-  .form-label,
-  .checkbox-label,
-  .section-title,
-  .date-label {
-    color: var(--text-color-dark);
+  .main-panel {
+    padding: 0.65rem;
+    border-radius: 9px;
   }
 
-  .events-table td,
-  .categorias-table td {
-    background-color: #34495e;
-    color: var(--text-color-dark);
+  .action-card {
+    padding-inline: 0.55rem;
   }
 
-  .events-table tr:hover td,
-  .categorias-table tr:hover td {
-    background-color: #3a506b;
-  }
-
-  .form-input,
-  .form-select {
-    background-color: #2c3e50;
-    color: #b4cdd3;
-    border: 1px solid #555;
-  }
-
-  .form-input::placeholder {
-    color: #aaa;
-  }
-
-  .form-select option {
-    background-color: #2c3e50;
-    color: #ecf0f1;
+  .page-subtitle {
+    font-size: 0.9rem;
   }
 }
 </style>
