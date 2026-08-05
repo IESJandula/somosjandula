@@ -42,7 +42,7 @@
                 </table>
               </div>
               <p class="field-hint">
-                Las reducciones se crean y se cargan por CSV desde «Configuración básica → Crear → Reducciones».
+                Las reducciones se crean y se cargan por CSV desde «Corazón → Crear → Reducciones».
               </p>
             </div>
           </article>

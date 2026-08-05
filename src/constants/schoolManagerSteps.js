@@ -1,10 +1,5 @@
 export const SCHOOL_MANAGER_STEPS = [
   {
-    path: '/school_manager/cursosEtapasEspacios',
-    name: 'A_CursosEtapasEspacios',
-    label: 'Configuración básica',
-  },
-  {
     path: '/school_manager/cargaMatriculas',
     name: 'B_CargaMatriculas',
     label: 'Carga de Matriculas',

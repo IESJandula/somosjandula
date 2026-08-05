@@ -1,10 +1,8 @@
 <template>
   <div class="page-cursos-espacios">
     <header class="page-header">
-      <h1 class="t-1">Configuración básica</h1>
-      <SchoolManagerNav>
-        <p class="page-subtitle">Añade espacios, departamentos y cursos y etapas</p>
-      </SchoolManagerNav>
+      <h1 class="t-1">Corazón</h1>
+      <p class="page-subtitle">Añade espacios, departamentos y cursos y etapas</p>
     </header>
 
     <div class="main-panel">
@@ -447,7 +445,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, nextTick, computed } from "vue";
 import { IonToast } from "@ionic/vue";
-import SchoolManagerNav from "@/components/school_manager/SchoolManagerNav.vue";
 import FileUpload from "@/components/printers/FileUpload.vue";
 import {
   obtenerCursosAcademicos,
@@ -1192,6 +1189,7 @@ onUnmounted(() => {
 
 .page-subtitle {
   margin: 0;
+  text-align: center;
 }
 
 .main-panel {

@@ -148,11 +148,11 @@ const routes = [
         },
       },
       {
-        path: 'school_manager/cursosEtapasEspacios',
+        path: 'admin/corazon',
         component: A_CursosEtapasEspacios,
-        name: 'A_CursosEtapasEspacios',
+        name: 'CorazonAdmin',
         meta: {
-          role: 'DIRECCION'
+          role: 'ADMINISTRADOR'
         },
       },
       {

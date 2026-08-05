@@ -359,7 +359,11 @@ export default defineComponent({
   padding-left: 20px;
 }
 
-.home-button {
+/* Ionic aplica a los botones solid dentro de <ion-buttons> una regla tardia
+   (.sc-ion-buttons-*-s .button-solid) que redefine --background y --color.
+   Incluir el contenedor da a este selector mas especificidad y mantiene el
+   mismo color explicito que el boton de perfil en ambos temas. */
+ion-buttons .home-button {
   --background: #3880ff;
   --color: #ffffff;
   --padding-start: 0;
@@ -554,7 +558,7 @@ ion-toolbar {
 
   /* Sobre la barra oscura, el azul claro del modo claro resulta brillante: se usa un azul oscuro
      que mantiene el contraste del icono blanco. */
-  .home-button,
+  ion-buttons .home-button,
   .profile-button {
     --background: #1565c0;
     --color: #ffffff;
