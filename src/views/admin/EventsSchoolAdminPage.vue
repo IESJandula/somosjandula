@@ -135,16 +135,13 @@
                   <th>CATEGORIA</th>
                   <th>FECHA INICIO</th>
                   <th>FECHA FIN</th>
-                  <th>NOMBRE</th>
-                  <th>APELLIDOS</th>
-                  <th>EMAIL</th>
                   <th>ACCIONES</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="eventoItem in eventos" :key="`${eventoItem.titulo}-${eventoItem.fechaInicio}`">
                   <td>{{ eventoItem.titulo }}</td>
-                  <td>{{ eventoItem.nombre }}</td>
+                  <td>{{ eventoItem.nombreCategoria }}</td>
                   <td>{{ formatFecha(eventoItem.fechaInicio) }}</td>
                   <td>{{ formatFecha(eventoItem.fechaFin) }}</td>
                   <td>
