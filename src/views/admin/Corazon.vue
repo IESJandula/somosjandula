@@ -1,5 +1,5 @@
 <template>
-  <div class="page-cursos-espacios">
+  <div class="page-corazon">
     <header class="page-header">
       <h1 class="t-1">Corazón</h1>
       <p class="page-subtitle">Añade espacios, departamentos y cursos y etapas</p>
@@ -7,11 +7,64 @@
 
     <div class="main-panel">
       <section class="panel-section">
+        <h2 class="section-title">Gestión de constantes</h2>
+
+        <div class="constantes-card">
+          <div class="constantes-grid">
+            <div class="field">
+              <label for="proyecto-select">Proyecto</label>
+              <select
+                id="proyecto-select"
+                v-model="proyectoSeleccionado"
+                class="custom-select"
+                @change="filtrarPorProyecto"
+              >
+                <option :value="''">Todos</option>
+                <option v-for="proyecto in proyectos" :key="proyecto" :value="proyecto">
+                  {{ proyecto }}
+                </option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="clave-select">Clave de la constante</label>
+              <select id="clave-select" v-model="selectedConstante" class="custom-select">
+                <option disabled :value="null">Selecciona una constante</option>
+                <option
+                  v-for="constante in constantesFiltradas"
+                  :key="constante.proyecto + '::' + constante.clave"
+                  :value="constante"
+                >
+                  {{ constante.clave }}
+                </option>
+              </select>
+            </div>
+
+            <div v-if="selectedConstante" class="field">
+              <label for="valor-input">Valor</label>
+              <input id="valor-input" v-model="selectedConstante.valor" type="text" />
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="!selectedConstante"
+            @click="actualizarConstanteSeleccionada"
+          >
+            Actualizar constante
+          </button>
+        </div>
+      </section>
+
+      <div class="panel-divider" aria-hidden="true"></div>
+
+      <section class="panel-section">
         <h2 class="section-title">Acciones</h2>
 
         <div class="actions-grid">
-          <!-- El curso académico actual es ahora una constante gestionada en la página de administración
-               ("Gestión de constantes"), por lo que ya no se selecciona aquí. -->
+          <!-- El curso académico actual se gestiona en la primera tarjeta de esta página,
+               por lo que ya no se selecciona en las acciones de configuración. -->
 
           <!-- Creador (modo dual)-->
           <article class="action-card">
@@ -446,6 +499,7 @@
 import { ref, onMounted, onUnmounted, watch, nextTick, computed } from "vue";
 import { IonToast } from "@ionic/vue";
 import FileUpload from "@/components/printers/FileUpload.vue";
+import { obtenerConstantes, actualizarConstante } from "@/services/adminService";
 import {
   obtenerCursosAcademicos,
   obtenerCursoAcademicoSeleccionado,
@@ -539,6 +593,21 @@ const isToastOpen = ref(false);
 const toastMessage = ref("");
 const toastColor = ref("success");
 
+// Gestión de constantes: catálogo completo y selección filtrada por proyecto.
+const constantes = ref([]);
+const selectedConstante = ref(null);
+const proyectoSeleccionado = ref("");
+
+const proyectos = computed(() =>
+  [...new Set(constantes.value.map((constante) => constante.proyecto))].sort()
+);
+
+const constantesFiltradas = computed(() =>
+  proyectoSeleccionado.value
+    ? constantes.value.filter((constante) => constante.proyecto === proyectoSeleccionado.value)
+    : constantes.value
+);
+
 const fileUploadCsvRef = ref(null);
 const cargandoCsv = ref(false);
 
@@ -574,6 +643,54 @@ const lanzarToast = (color, mensaje) => {
     toastMessage.value = mensaje;
     isToastOpen.value = true;
   }, 10);
+};
+
+const cargarConstantes = async () => {
+  try {
+    constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen);
+  } catch (error) {
+    lanzarToast("danger", error.message);
+  }
+};
+
+const filtrarPorProyecto = () => {
+  if (
+    selectedConstante.value &&
+    proyectoSeleccionado.value &&
+    selectedConstante.value.proyecto !== proyectoSeleccionado.value
+  ) {
+    selectedConstante.value = null;
+  }
+};
+
+const actualizarConstanteSeleccionada = async () => {
+  if (!selectedConstante.value) return;
+
+  const constanteActualizada = {
+    proyecto: selectedConstante.value.proyecto,
+    clave: selectedConstante.value.clave,
+    valor: selectedConstante.value.valor,
+  };
+
+  try {
+    await actualizarConstante(toastMessage, toastColor, isToastOpen, constanteActualizada);
+    lanzarToast("success", "Constante actualizada con éxito");
+
+    if (constanteActualizada.clave === "CURSO_ACADEMICO_ACTUAL") {
+      window.dispatchEvent(new CustomEvent("curso-academico-cambiado", {
+        detail: { cursoAcademico: constanteActualizada.valor },
+      }));
+    }
+
+    await cargarConstantes();
+    selectedConstante.value = constantes.value.find(
+      (constante) =>
+        constante.proyecto === constanteActualizada.proyecto &&
+        constante.clave === constanteActualizada.clave
+    ) ?? null;
+  } catch (error) {
+    lanzarToast("danger", error.message);
+  }
 };
 
 const espaciosOrdenados = computed(() => {
@@ -1156,7 +1273,10 @@ const borrarTodos = async () => {
 };
 
 onMounted(async () => {
-  await obtenerCursosAcademicosVista();
+  await Promise.all([
+    cargarConstantes(),
+    obtenerCursosAcademicosVista(),
+  ]);
   await cargarListado();
   inicializandoCurso = false;
   window.addEventListener("curso-academico-cambiado", onCursoAcademicoCambiado);
@@ -1168,7 +1288,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.page-cursos-espacios {
+.page-corazon {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem 1rem 2.5rem;
@@ -1215,6 +1335,24 @@ onUnmounted(() => {
 .section-title-inline {
   text-align: left;
   margin-bottom: 0.35rem;
+}
+
+.constantes-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: #f8f9fa;
+  border: 1px solid #cfd8e3;
+  border-radius: 10px;
+  padding: 1.25rem 1rem 1rem;
+  box-sizing: border-box;
+}
+
+.constantes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: end;
 }
 
 .actions-grid {
@@ -1527,7 +1665,7 @@ tr:hover td {
   .page-subtitle, .listado-context, .empty-state, .field-hint { color: #c8c8c8; }
   .separador-o { color: #c8c8c8; }
   .separador-o::before, .separador-o::after { border-bottom-color: #555; }
-  .action-card { background-color: #2a302b; border-color: #555; }
+  .action-card, .constantes-card { background-color: #2a302b; border-color: #555; }
   .card-title, .field label { color: var(--text-color-dark); }
   .checkbox-field { color: var(--text-color-dark); }
   .empty-state { background-color: #2a302b; border-color: #555; }
@@ -1537,6 +1675,9 @@ tr:hover td {
 }
 
 @media (max-width: 1024px) {
+  .constantes-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .actions-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1546,9 +1687,10 @@ tr:hover td {
 }
 
 @media (max-width: 768px) {
-  .page-cursos-espacios { padding-inline: 0.75rem; }
+  .page-corazon { padding-inline: 0.75rem; }
   .main-panel { padding: 1rem; }
   .t-1 { font-size: 1.75rem; }
+  .constantes-grid { grid-template-columns: 1fr; }
   .actions-grid { grid-template-columns: 1fr; }
   .action-card:last-child { grid-column: auto; }
   .listado-header { flex-direction: column; align-items: stretch; }

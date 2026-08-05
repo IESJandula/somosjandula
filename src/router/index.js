@@ -25,7 +25,7 @@ import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
 
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 
-import A_CursosEtapasEspacios from '@/views/school_manager/A_CursosEtapasEspacios.vue';
+import Corazon from '@/views/admin/Corazon.vue';
 import B_CargaMatriculas from '@/views/school_manager/B_CargaMatriculas.vue';
 import C_AsignaturaYBloque from '@/views/school_manager/C_AsignaturaYBloque.vue';
 import D_CrearGrupos from '@/views/school_manager/D_CrearGrupos.vue';
@@ -149,7 +149,7 @@ const routes = [
       },
       {
         path: 'admin/corazon',
-        component: A_CursosEtapasEspacios,
+        component: Corazon,
         name: 'CorazonAdmin',
         meta: {
           role: 'ADMINISTRADOR'

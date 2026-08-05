@@ -3,7 +3,7 @@
     <header class="page-header">
       <h1 class="t-1">Administración del sistema</h1>
       <p class="page-subtitle">
-        Gestión de usuarios, resolutores, aplicaciones y dispositivos domóticos, junto con la consulta y edición de constantes.
+        Gestión de usuarios, resolutores, aplicaciones y dispositivos domóticos.
       </p>
     </header>
 
@@ -604,53 +604,6 @@
         </article>
       </section>
 
-      <div class="panel-divider" aria-hidden="true"></div>
-
-      <!-- 4) Al final: gestión de constantes -->
-      <section class="panel-section">
-        <h2 class="section-title">Gestión de constantes</h2>
-
-        <div class="constantes-card">
-          <div class="constantes-grid">
-            <div class="field">
-              <label for="proyecto-select">Proyecto</label>
-              <select
-                id="proyecto-select"
-                v-model="proyectoSeleccionado"
-                class="custom-select"
-                @change="filtrarPorProyecto">
-                <option :value="''">Todos</option>
-                <option v-for="proyecto in proyectos" :key="proyecto" :value="proyecto">
-                  {{ proyecto }}
-                </option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="clave-select">Clave de la constante</label>
-              <select id="clave-select" v-model="selectedConstante" class="custom-select">
-                <option disabled :value="null">Selecciona una constante</option>
-                <option v-for="constante in constantesFiltradas" :key="constante.proyecto + '::' + constante.clave" :value="constante">
-                  {{ constante.clave }}
-                </option>
-              </select>
-            </div>
-
-            <div class="field" v-if="selectedConstante">
-              <label for="valor-input">Valor</label>
-              <input id="valor-input" type="text" v-model="selectedConstante.valor" />
-            </div>
-          </div>
-
-          <button
-            type="button"
-            class="btn-primary"
-            :disabled="!selectedConstante"
-            @click="actualizarConstanteSeleccionada">
-            Actualizar constante
-          </button>
-        </div>
-      </section>
     </div>
 
     <ion-toast :is-open="isToastOpen" :message="toastMessage" :color="toastColor" duration="2000"
@@ -666,8 +619,6 @@
   import {
     importarUsuarios,
     importarAplicaciones,
-    obtenerConstantes,
-    actualizarConstante,
     obtenerInfoUsuarios,
     obtenerInfoApps,
     guardarUsuario,
@@ -780,21 +731,6 @@
   // Identificador estable por fila (para :key), de modo que la ordenación/filtrado no reutilice inputs por error
   let uidCounter = 0;
   const nextUid = () => ++uidCounter;
-
-  // Gestión de constantes: todas las constantes (todos los proyectos) y filtrado por proyecto
-  const constantes = ref([]);
-  const selectedConstante = ref(null);
-  const proyectoSeleccionado = ref('');
-
-  // Lista única de proyectos disponibles a partir de las constantes cargadas
-  const proyectos = computed(() => [...new Set(constantes.value.map((c) => c.proyecto))].sort());
-
-  // Constantes visibles según el proyecto seleccionado (o todas si no hay filtro)
-  const constantesFiltradas = computed(() =>
-    proyectoSeleccionado.value
-      ? constantes.value.filter((c) => c.proyecto === proyectoSeleccionado.value)
-      : constantes.value
-  );
 
   // Hay datos reales (excluyendo la fila vacía final) si alguna fila está persistida
   const hayUsuarios = computed(() => usuarios.value.some((u) => u._persistido));
@@ -1782,51 +1718,6 @@
     descargarCsv('resolutores.csv', cabeceras, filas);
   };
 
-  /**
-   * Carga TODAS las constantes de TODOS los proyectos (GET sin cabeceras).
-   */
-  const cargarConstantes = async () => {
-    try {
-      constantes.value = await obtenerConstantes(toastMessage, toastColor, isToastOpen);
-    } catch (error) {
-      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
-    }
-  };
-
-  /**
-   * Al cambiar de proyecto, si la constante seleccionada ya no pertenece al filtro, se deselecciona.
-   */
-  const filtrarPorProyecto = () => {
-    if (selectedConstante.value && proyectoSeleccionado.value &&
-        selectedConstante.value.proyecto !== proyectoSeleccionado.value) {
-      selectedConstante.value = null;
-    }
-  };
-
-  /**
-   * Actualiza (POST) la constante seleccionada de una en una. El backend recibe un ÚNICO objeto
-   * { proyecto, clave, valor } y hace upsert por proyecto + clave.
-   */
-  const actualizarConstanteSeleccionada = async () => {
-    if (!selectedConstante.value) {
-      return;
-    }
-
-    try {
-      await actualizarConstante(toastMessage, toastColor, isToastOpen, {
-        proyecto: selectedConstante.value.proyecto,
-        clave: selectedConstante.value.clave,
-        valor: selectedConstante.value.valor,
-      });
-      crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Constante actualizada con éxito');
-
-      // Recargamos para reflejar el valor persistido
-      await cargarConstantes();
-    } catch (error) {
-      crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
-    }
-  };
-
   // ===================== DOMÓTICA (migrada desde /automations/admin) =====================
   // Tabla unificada de dispositivos (actuadores y sensores) con alta/edición inline y una subtabla de
   // comandos por actuador. Reutiliza los servicios de @/services/automations y las ubicaciones de
@@ -2315,7 +2206,6 @@
       cargarUsuarios(),
       cargarApps(),
       cargarResolutores(),
-      cargarConstantes(),
       cargarTiposDispositivos(),
       cargarUbicaciones(),
       cargarDispositivos(),
@@ -2522,24 +2412,6 @@
 .field input:hover {
   border-color: #0056b3;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.35);
-}
-
-.constantes-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  background-color: #f8f9fa;
-  border: 1px solid #cfd8e3;
-  border-radius: 10px;
-  padding: 1.25rem 1rem 1rem;
-  box-sizing: border-box;
-}
-
-.constantes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
-  align-items: end;
 }
 
 .btn-primary {
@@ -3083,7 +2955,7 @@ table.tabla-datos {
 
   .section-title { color: var(--text-color-dark); }
   .page-subtitle, .field-hint { color: #c8c8c8; }
-  .action-card, .constantes-card { background-color: #2a302b; border-color: #555; }
+  .action-card { background-color: #2a302b; border-color: #555; }
   .card-title, .field label { color: var(--text-color-dark); }
   .empty-state { background-color: #2a302b; border-color: #555; color: #c8c8c8; }
   .import-inline :deep(.file-drop-area) {
@@ -3133,16 +3005,12 @@ table.tabla-datos {
   .import-grid {
     grid-template-columns: 1fr;
   }
-  .constantes-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 768px) {
   .page-admin-firebase { padding-inline: 0.75rem; }
   .main-panel { padding: 1rem; }
   .t-1 { font-size: 1.75rem; }
-  .constantes-grid { grid-template-columns: 1fr; }
   .tabla-datos { font-size: 14px; }
   .search-input { max-width: 100%; flex: 1 1 100%; }
 }
