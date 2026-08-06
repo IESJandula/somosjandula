@@ -66,16 +66,26 @@
             <table class="tabla-datos user-summary-table">
               <thead>
                 <tr>
+                  <th class="col-accion user-col-actions">Acciones</th>
                   <th class="sortable user-col-identity" @click="ordenarUsuarios('nombre')">Usuario<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'nombre') }}</span></th>
                   <th class="sortable user-col-department" @click="ordenarUsuarios('departamento')">Departamento<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'departamento') }}</span></th>
-                  <th class="sortable user-col-access" @click="ordenarUsuarios('roles')">Acceso<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
+                  <th class="sortable user-col-access" @click="ordenarUsuarios('roles')">Roles y permisos<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
                   <th class="sortable user-col-status" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
                   <th class="sortable user-col-activity" @click="ordenarUsuarios('ultimaConexion')">Actividad<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
-                  <th class="col-accion user-col-actions">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="usuario in usuariosResumen" :key="usuario._uid" class="user-summary-row">
+                  <td class="col-accion user-col-actions">
+                    <div class="action-buttons user-summary-actions">
+                      <button type="button" class="btn-save-icon" title="Ver o editar usuario" aria-label="Ver o editar usuario" @click="abrirEditorUsuario(usuario)">
+                        <ion-icon :icon="createOutline" />
+                      </button>
+                      <button type="button" class="btn-delete btn-delete-icon" title="Borrar usuario" aria-label="Borrar usuario" @click="borrarUsuarioFila(usuario)">
+                        <ion-icon :icon="trashOutline" />
+                      </button>
+                    </div>
+                  </td>
                   <td class="user-col-identity">
                     <div class="user-identity">
                       <strong>{{ nombreCompletoUsuario(usuario) }}</strong>
@@ -86,11 +96,15 @@
                   <td class="user-col-access">
                     <div class="user-access-summary">
                       <div class="user-role-list">
-                        <span v-for="rol in rolesUsuario(usuario).slice(0, 2)" :key="rol" class="user-role-chip">{{ rol }}</span>
-                        <span v-if="rolesUsuario(usuario).length > 2" class="user-role-more">+{{ rolesUsuario(usuario).length - 2 }}</span>
-                        <span v-if="!rolesUsuario(usuario).length" class="user-muted">Sin roles</span>
+                        <span v-for="rol in rolesUsuario(usuario)" :key="`rol-${rol}`" class="user-role-chip">{{ rol }}</span>
+                        <span
+                          v-for="resolutor in usuario.resolutores"
+                          :key="`resolutor-${resolutor}`"
+                          class="user-permission-chip">
+                          Resolutor: {{ resolutor }}
+                        </span>
+                        <span v-if="!rolesUsuario(usuario).length && !usuario.resolutores.length" class="user-muted">Sin roles ni permisos</span>
                       </div>
-                      <small>{{ textoResolutoresUsuario(usuario) }}</small>
                     </div>
                   </td>
                   <td class="user-col-status">
@@ -100,16 +114,6 @@
                     <div class="user-activity">
                       <span :title="formatearFechaExacta(usuario.ultimaConexion)">{{ formatearUltimaConexion(usuario.ultimaConexion) }}</span>
                       <small>{{ formatearEuros(usuario.costeImpresion, '0,00 €') }} gastados</small>
-                    </div>
-                  </td>
-                  <td class="col-accion user-col-actions">
-                    <div class="action-buttons user-summary-actions">
-                      <button type="button" class="btn-save-icon" title="Ver o editar usuario" aria-label="Ver o editar usuario" @click="abrirEditorUsuario(usuario)">
-                        <ion-icon :icon="createOutline" />
-                      </button>
-                      <button type="button" class="btn-delete btn-delete-icon" title="Borrar usuario" aria-label="Borrar usuario" @click="borrarUsuarioFila(usuario)">
-                        <ion-icon :icon="trashOutline" />
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -388,6 +392,10 @@
                   idleText="Importar apps"
                   @file-selected="onArchivoAppsSeleccionado" />
               </div>
+              <button type="button" class="btn-secondary btn-mini btn-with-icon" @click="abrirNuevaApp">
+                <ion-icon :icon="addOutline" aria-hidden="true" />
+                Nueva aplicación
+              </button>
               <button
                 type="button"
                 class="btn-delete btn-mini"
@@ -409,109 +417,163 @@
             <div class="circulo"></div>
           </div>
 
-          <div class="table-scroll">
-            <table class="tabla-datos">
-              <thead class="thead-apps">
-                <tr class="fila-grupo">
-                  <th class="col-accion" rowspan="2">Acciones</th>
-                  <th class="sortable" rowspan="2" @click="ordenarApps('clientId')">Client ID<span class="sort-ind">{{ indicadorOrden(ordenApps, 'clientId') }}</span></th>
-                  <th class="sortable" rowspan="2" @click="ordenarApps('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
-                  <th class="sortable" rowspan="2" @click="ordenarApps('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
-                  <th class="col-notif-grupo" colspan="3">Notificaciones</th>
-                  <th class="sortable" rowspan="2" @click="ordenarApps('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenApps, 'ultimaConexion') }}</span></th>
-                </tr>
-                <tr class="fila-subcabecera">
-                  <th class="col-notif">Calendar (hoy/max)</th>
-                  <th class="col-notif">Email (hoy/max)</th>
-                  <th class="col-notif">Web (hoy/max)</th>
+          <div class="table-scroll app-summary-scroll">
+            <table class="tabla-datos app-summary-table">
+              <thead>
+                <tr>
+                  <th class="col-accion app-col-actions">Acciones</th>
+                  <th class="sortable app-col-identity" @click="ordenarApps('nombre')">Aplicación<span class="sort-ind">{{ indicadorOrden(ordenApps, 'nombre') }}</span></th>
+                  <th class="sortable app-col-access" @click="ordenarApps('roles')">Roles y permisos<span class="sort-ind">{{ indicadorOrden(ordenApps, 'roles') }}</span></th>
+                  <th class="app-col-notifications">Notificaciones (hoy / máximo)</th>
+                  <th class="sortable app-col-activity" @click="ordenarApps('ultimaConexion')">Actividad<span class="sort-ind">{{ indicadorOrden(ordenApps, 'ultimaConexion') }}</span></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="app in appsMostradas" :key="app._uid">
-                  <td class="col-accion">
-                    <div class="action-buttons">
-                      <button
-                        type="button"
-                        class="btn-save-icon"
-                        title="Guardar aplicación"
-                        aria-label="Guardar aplicación"
-                        @click="guardarAppFila(app)">
-                        <ion-icon :icon="saveOutline" />
+                <tr v-for="app in appsResumen" :key="app._uid" class="app-summary-row">
+                  <td class="col-accion app-col-actions">
+                    <div class="action-buttons user-summary-actions">
+                      <button type="button" class="btn-save-icon" title="Ver o editar aplicación" aria-label="Ver o editar aplicación" @click="abrirEditorApp(app)">
+                        <ion-icon :icon="createOutline" />
                       </button>
-                      <button
-                        v-if="app._persistido"
-                        type="button"
-                        class="btn-delete"
-                        title="Borrar aplicación"
-                        aria-label="Borrar aplicación"
-                        @click="borrarAppFila(app)">X</button>
-                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                      <button type="button" class="btn-delete btn-delete-icon" title="Borrar aplicación" aria-label="Borrar aplicación" @click="borrarAppFila(app)">
+                        <ion-icon :icon="trashOutline" />
+                      </button>
                     </div>
                   </td>
-                  <td>
-                    <input
-                      :type="mostrarClientIds ? 'text' : 'password'"
-                      v-model="app.clientId"
-                      class="cell-input"
-                      :disabled="app._persistido"
-                      autocomplete="off"
-                      placeholder="clientId">
+                  <td class="app-col-identity">
+                    <div class="app-identity">
+                      <strong>{{ app.nombre || 'Aplicación sin nombre' }}</strong>
+                      <span class="app-client-id" :class="{ 'is-masked': !mostrarClientIds }">{{ textoClientId(app) }}</span>
+                    </div>
                   </td>
-                  <td><input type="text" v-model="app.nombre" class="cell-input"></td>
-                  <td><input type="text" v-model="app.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
-                  <td class="col-notif">
-                    <div
-                      class="notif-cell"
-                      :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionCalendar ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionCalendar) : ''">
-                      <span class="notif-hoy">{{ notifHoyTexto(app, 'Calendar') }}</span>
-                      <span class="notif-sep">/</span>
-                      <span class="notif-stepper" v-if="puedeEditarNotificaciones(app)">
-                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Calendar', -1)">−</button>
-                        <span class="stepper-val">{{ app._maxCalendar }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Calendar', 1)">+</button>
+                  <td class="app-col-access">
+                    <div class="app-role-list">
+                      <span v-for="rol in rolesUsuario(app)" :key="rol" class="user-role-chip">{{ rol }}</span>
+                      <span v-if="!rolesUsuario(app).length" class="user-muted">Sin roles ni permisos</span>
+                    </div>
+                  </td>
+                  <td class="app-col-notifications">
+                    <div class="app-notification-list">
+                      <span v-for="tipo in TIPOS_NOTIFICACION" :key="tipo.valor" class="app-notification-chip">
+                        <strong>{{ tipo.etiqueta }}</strong>
+                        {{ notifHoyTexto(app, tipo.valor) }} / {{ app[`_max${tipo.valor}`] }}
                       </span>
-                      <span class="notif-max-ro" v-else>{{ app._maxCalendar }}</span>
                     </div>
                   </td>
-                  <td class="col-notif">
-                    <div
-                      class="notif-cell"
-                      :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionEmail ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionEmail) : ''">
-                      <span class="notif-hoy">{{ notifHoyTexto(app, 'Email') }}</span>
-                      <span class="notif-sep">/</span>
-                      <span class="notif-stepper" v-if="puedeEditarNotificaciones(app)">
-                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Email', -1)">−</button>
-                        <span class="stepper-val">{{ app._maxEmail }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Email', 1)">+</button>
-                      </span>
-                      <span class="notif-max-ro" v-else>{{ app._maxEmail }}</span>
+                  <td class="app-col-activity">
+                    <div class="user-activity">
+                      <span :title="formatearFechaExacta(app.ultimaConexion)">{{ formatearUltimaConexion(app.ultimaConexion) }}</span>
+                      <small>{{ app.cursoAcademico || 'Sin curso' }}</small>
                     </div>
-                  </td>
-                  <td class="col-notif">
-                    <div
-                      class="notif-cell"
-                      :title="notifsDe(app) && notifsDe(app).fechaUltimaNotificacionWeb ? ('Última notificación: ' + notifsDe(app).fechaUltimaNotificacionWeb) : ''">
-                      <span class="notif-hoy">{{ notifHoyTexto(app, 'Web') }}</span>
-                      <span class="notif-sep">/</span>
-                      <span class="notif-stepper" v-if="puedeEditarNotificaciones(app)">
-                        <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(app, 'Web', -1)">−</button>
-                        <span class="stepper-val">{{ app._maxWeb }}</span>
-                        <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(app, 'Web', 1)">+</button>
-                      </span>
-                      <span class="notif-max-ro" v-else>{{ app._maxWeb }}</span>
-                    </div>
-                  </td>
-                  <td class="col-conexion">
-                    <span class="conexion-text" :title="formatearFechaExacta(app.ultimaConexion)">{{ formatearUltimaConexion(app.ultimaConexion) }}</span>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p v-if="!hayApps && !cargandoTablaApps" class="empty-state">
-            No hay aplicaciones cargadas. Usa la última fila para añadir una nueva.
+            No hay aplicaciones cargadas. Pulsa «Nueva aplicación» para añadir una.
           </p>
         </article>
+
+        <teleport to="body">
+          <div v-if="appEditor" class="user-drawer-backdrop" @click.self="cerrarEditorApp">
+            <aside class="user-drawer" role="dialog" aria-modal="true" aria-labelledby="app-drawer-title">
+              <header class="user-drawer-header">
+                <div>
+                  <p>{{ appEditor._persistido ? 'Ficha de aplicación' : 'Nueva aplicación' }}</p>
+                  <h3 id="app-drawer-title">{{ appEditor._persistido ? (appEditor.nombre || 'Aplicación sin nombre') : 'Alta de aplicación' }}</h3>
+                  <span v-if="appEditor._persistido" class="app-client-id" :class="{ 'is-masked': !mostrarClientIds }">{{ textoClientId(appEditor) }}</span>
+                </div>
+                <button class="user-drawer-close" type="button" aria-label="Cerrar panel" title="Cerrar" @click="cerrarEditorApp">
+                  <ion-icon :icon="closeOutline" />
+                </button>
+              </header>
+
+              <form class="user-drawer-form" @submit.prevent="guardarAppEditor">
+                <div class="user-drawer-content">
+                  <section class="user-form-section">
+                    <div class="user-form-section-heading">
+                      <h4>Datos de la aplicación</h4>
+                      <span>Identidad y acceso</span>
+                    </div>
+                    <div class="user-form-grid">
+                      <label class="user-form-field user-form-field-wide">
+                        <span>Client ID</span>
+                        <input
+                          v-model.trim="appEditor.clientId"
+                          :type="mostrarClientIds ? 'text' : 'password'"
+                          :disabled="appEditor._persistido"
+                          autocomplete="off"
+                          required>
+                      </label>
+                      <label class="user-form-field user-form-field-wide">
+                        <span>Nombre</span>
+                        <input v-model="appEditor.nombre" type="text">
+                      </label>
+                      <label class="user-form-field user-form-field-wide">
+                        <span>Roles y permisos</span>
+                        <input v-model="appEditor.roles" type="text" placeholder="ROL1, ROL2">
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="user-form-section">
+                    <div class="user-form-section-heading">
+                      <h4>Notificaciones</h4>
+                      <span>Uso de hoy y máximo permitido</span>
+                    </div>
+                    <div class="app-notification-editor">
+                      <div v-for="tipo in TIPOS_NOTIFICACION" :key="tipo.valor" class="app-notification-editor-row">
+                        <div>
+                          <strong>{{ tipo.etiqueta }}</strong>
+                          <span>Hoy: {{ notifHoyTexto(appEditor, tipo.valor) }}</span>
+                        </div>
+                        <div v-if="puedeEditarNotificaciones(appEditor)" class="notif-stepper">
+                          <button type="button" class="stepper-btn" title="Disminuir" @click="cambiarMax(appEditor, tipo.valor, -1)">−</button>
+                          <span class="stepper-val">{{ appEditor[`_max${tipo.valor}`] }}</span>
+                          <button type="button" class="stepper-btn" title="Incrementar" @click="cambiarMax(appEditor, tipo.valor, 1)">+</button>
+                        </div>
+                        <span v-else class="app-notification-max">Máximo: {{ appEditor[`_max${tipo.valor}`] }}</span>
+                      </div>
+                    </div>
+                    <p v-if="!puedeEditarNotificaciones(appEditor)" class="app-notification-hint">
+                      Para modificar los máximos, la aplicación debe tener el rol APLICACION_NOTIFICACIONES.
+                    </p>
+                  </section>
+
+                  <section v-if="appEditor._persistido" class="user-form-section">
+                    <div class="user-form-section-heading">
+                      <h4>Actividad</h4>
+                      <span>Información de solo lectura</span>
+                    </div>
+                    <dl class="user-metrics app-metrics">
+                      <div>
+                        <dt>Última conexión</dt>
+                        <dd>{{ formatearUltimaConexion(appEditor.ultimaConexion) }}</dd>
+                      </div>
+                      <div>
+                        <dt>Curso académico</dt>
+                        <dd>{{ appEditor.cursoAcademico || '—' }}</dd>
+                      </div>
+                    </dl>
+                  </section>
+                </div>
+
+                <footer class="user-drawer-footer">
+                  <button v-if="appEditor._persistido" class="btn-delete user-drawer-delete" type="button" :disabled="guardandoAppEditor" @click="borrarAppDesdeEditor">
+                    Borrar aplicación
+                  </button>
+                  <span class="user-drawer-footer-spacer"></span>
+                  <button class="btn-secondary" type="button" :disabled="guardandoAppEditor" @click="cerrarEditorApp">Cancelar</button>
+                  <button class="btn-primary user-drawer-save" type="submit" :disabled="guardandoAppEditor">
+                    <ion-icon :icon="saveOutline" aria-hidden="true" />
+                    {{ guardandoAppEditor ? 'Guardando…' : 'Guardar cambios' }}
+                  </button>
+                </footer>
+              </form>
+            </aside>
+          </div>
+        </teleport>
 
         <div v-if="cargandoUsuarios || cargandoApps" class="fondo-gris">
           <div class="circulo"></div>
@@ -847,6 +909,8 @@
   const mostrarClientIds = ref(false);
   const usuarioEditor = ref(null);
   const guardandoUsuarioEditor = ref(false);
+  const appEditor = ref(null);
+  const guardandoAppEditor = ref(false);
 
   // Tabla editable de resolutores (IssuesServer) y su importación masiva
   const resolutores = ref([]);
@@ -896,6 +960,12 @@
     { valor: 'ACTIVO', etiqueta: 'Activo' },
     { valor: 'PENDIENTE', etiqueta: 'Pendiente' },
     { valor: 'INACTIVO', etiqueta: 'Inactivo' },
+  ];
+
+  const TIPOS_NOTIFICACION = [
+    { valor: 'Calendar', etiqueta: 'Calendar' },
+    { valor: 'Email', etiqueta: 'Email' },
+    { valor: 'Web', etiqueta: 'Web' },
   ];
 
   // Normaliza el estado recibido del backend: null/vacío se trata como ACTIVO (usuarios existentes sin estado)
@@ -970,6 +1040,11 @@
   };
 
   const claseEstadoUsuario = (estado) => `user-status--${normalizarEstado(estado).toLowerCase()}`;
+
+  const textoClientId = (app) => {
+    const clientId = (app && app.clientId) || '';
+    return mostrarClientIds.value ? clientId : '••••••••••••';
+  };
 
   // Convierte un array de roles del backend en texto editable
   const rolesATexto = (roles) => (Array.isArray(roles) ? roles.join(', ') : (roles || ''));
@@ -1184,6 +1259,8 @@
   const appsMostradas = computed(() =>
     construirFilasMostradas(apps.value, CAMPOS_APPS, busquedaApps.value, ordenApps.value)
   );
+
+  const appsResumen = computed(() => appsMostradas.value.filter((app) => app._persistido));
 
   const resolutoresMostrados = computed(() =>
     construirFilasMostradas(resolutores.value, CAMPOS_RESOLUTORES, busquedaResolutores.value, ordenResolutores.value)
@@ -1493,20 +1570,7 @@
     }
   };
 
-  // ---- Columna "Resolutor" de la tabla de usuarios ----
-  // Texto resumido que muestra el desplegable cerrado: el nombre si solo hay uno y el recuento si hay varios.
-  const textoResolutoresUsuario = (usuario) => {
-    const asignados = usuario.resolutores || [];
-    if (asignados.length === 0) {
-      return '—';
-    }
-    if (asignados.length === 1) {
-      return asignados[0];
-    }
-    return `${asignados.length} resolutores`;
-  };
-
-  // Marca o desmarca un resolutor en el borrador de la fila. NO persiste: el guardado real ocurre al pulsar GUARDAR.
+  // Marca o desmarca un resolutor en el borrador del usuario. NO persiste hasta guardar la ficha lateral.
   const alternarResolutorDeUsuario = (usuario, nombreResolutor) => {
     const asignados = usuario.resolutores || [];
     const indice = asignados.indexOf(nombreResolutor);
@@ -1574,7 +1638,7 @@
   const guardarAppFila = async (app) => {
     if (!app.clientId || app.clientId.trim() === '') {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El clientId es obligatorio para guardar la aplicación');
-      return;
+      return false;
     }
 
     try {
@@ -1591,8 +1655,10 @@
 
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Aplicación guardada con éxito');
       await cargarApps();
+      return true;
     } catch (error) {
       console.error(error);
+      return false;
     }
   };
 
@@ -1707,11 +1773,11 @@
 
   const borrarAppFila = async (app) => {
     if (!app._persistido) {
-      return;
+      return false;
     }
 
     if (!window.confirm(`¿Borrar la aplicación "${app.clientId}"? Esta acción no se puede deshacer.`)) {
-      return;
+      return false;
     }
 
     try {
@@ -1727,8 +1793,56 @@
       }
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Aplicación borrada con éxito');
       await cargarApps();
+      return true;
     } catch (error) {
       console.error(error);
+      return false;
+    }
+  };
+
+  const abrirEditorApp = (app) => {
+    appEditor.value = { ...app };
+  };
+
+  const abrirNuevaApp = () => {
+    appEditor.value = filaAppVacia();
+  };
+
+  const cerrarEditorApp = () => {
+    if (!guardandoAppEditor.value) {
+      appEditor.value = null;
+    }
+  };
+
+  const guardarAppEditor = async () => {
+    if (!appEditor.value || guardandoAppEditor.value) {
+      return;
+    }
+
+    guardandoAppEditor.value = true;
+    try {
+      const guardada = await guardarAppFila(appEditor.value);
+      if (guardada) {
+        appEditor.value = null;
+      }
+    } finally {
+      guardandoAppEditor.value = false;
+    }
+  };
+
+  const borrarAppDesdeEditor = async () => {
+    if (!appEditor.value || guardandoAppEditor.value) {
+      return;
+    }
+
+    guardandoAppEditor.value = true;
+    try {
+      const borrada = await borrarAppFila(appEditor.value);
+      if (borrada) {
+        appEditor.value = null;
+      }
+    } finally {
+      guardandoAppEditor.value = false;
     }
   };
 
@@ -2857,41 +2971,42 @@ table.tabla-datos {
 }
 
 table.user-summary-table {
-  min-width: 820px;
+  min-width: 900px;
   table-layout: fixed;
 }
 
+.user-summary-table th,
+.user-summary-table td {
+  text-align: center;
+}
+
 .user-summary-table .user-col-identity {
-  width: 25%;
-  min-width: 210px;
-  text-align: left;
+  width: 235px;
+  min-width: 235px;
 }
 
 .user-summary-table .user-col-department {
-  width: 16%;
-  min-width: 130px;
-  text-align: left;
-}
-
-.user-summary-table .user-col-access {
-  width: 23%;
-  min-width: 180px;
-  text-align: left;
-}
-
-.user-summary-table .user-col-status {
-  width: 12%;
-  min-width: 100px;
-}
-
-.user-summary-table .user-col-activity {
-  width: 17%;
+  width: 145px;
   min-width: 145px;
 }
 
+.user-summary-table .user-col-access {
+  min-width: 260px;
+}
+
+.user-summary-table .user-col-status {
+  width: 94px;
+  min-width: 94px;
+}
+
+.user-summary-table .user-col-activity {
+  width: 190px;
+  min-width: 190px;
+}
+
 .user-summary-table .user-col-actions {
-  width: 90px;
-  min-width: 90px;
+  width: 82px;
+  min-width: 82px;
 }
 
 .user-summary-table td {
@@ -2906,6 +3021,7 @@ table.user-summary-table {
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  align-items: center;
 }
 
 .user-identity strong,
@@ -2931,15 +3047,15 @@ table.user-summary-table {
 .user-role-list {
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 5px;
   min-width: 0;
 }
 
 .user-role-chip,
-.user-role-more {
+.user-permission-chip {
   display: inline-block;
-  max-width: 105px;
-  overflow: hidden;
   padding: 3px 7px;
   border: 1px solid #9ac8f1;
   border-radius: 999px;
@@ -2948,13 +3064,13 @@ table.user-summary-table {
   font-size: 0.69rem;
   font-weight: 700;
   line-height: 1.2;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.user-role-more {
-  flex: none;
-  background: #fff;
+.user-permission-chip {
+  border-color: #b7a1e6;
+  background: #eee8ff;
+  color: #573b8f;
 }
 
 .user-status {
@@ -2989,6 +3105,105 @@ table.user-summary-table {
 
 .user-summary-actions .btn-delete-icon ion-icon {
   font-size: 16px;
+}
+
+.app-summary-scroll {
+  max-height: 520px;
+}
+
+table.app-summary-table {
+  min-width: 900px;
+  table-layout: fixed;
+}
+
+.app-summary-table th,
+.app-summary-table td {
+  text-align: center;
+}
+
+.app-summary-table .app-col-actions {
+  width: 82px;
+  min-width: 82px;
+}
+
+.app-summary-table .app-col-identity {
+  width: 245px;
+  min-width: 245px;
+}
+
+.app-summary-table .app-col-access {
+  min-width: 255px;
+}
+
+.app-summary-table .app-col-notifications {
+  width: 315px;
+  min-width: 315px;
+}
+
+.app-summary-table .app-col-activity {
+  width: 190px;
+  min-width: 190px;
+}
+
+.app-summary-table td {
+  padding-block: 11px;
+  vertical-align: middle;
+}
+
+.app-identity {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.app-identity strong,
+.app-client-id {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-identity strong {
+  font-size: 0.92rem;
+}
+
+.app-client-id {
+  color: #5c6773;
+  font-size: 0.76rem;
+}
+
+.app-client-id.is-masked {
+  letter-spacing: 0.12em;
+}
+
+.app-role-list,
+.app-notification-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.app-notification-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border: 1px solid #9bc7ae;
+  border-radius: 6px;
+  background: #e5f5eb;
+  color: #225c39;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.app-notification-chip strong {
+  font-weight: 800;
 }
 
 .user-drawer-backdrop {
@@ -3255,6 +3470,51 @@ table.user-summary-table {
   margin-top: 0;
   padding: 9px 14px;
   font-size: 12px;
+}
+
+.app-notification-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.app-notification-editor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 9px 10px;
+  border: 1px solid #d8e0ea;
+  border-radius: 7px;
+  background: #f8fafc;
+}
+
+.app-notification-editor-row > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-notification-editor-row strong {
+  color: #26364a;
+  font-size: 0.8rem;
+}
+
+.app-notification-editor-row span,
+.app-notification-max {
+  color: #667085;
+  font-size: 0.74rem;
+}
+
+.app-notification-hint {
+  margin: 9px 0 0;
+  color: #667085;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.app-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 /* ---- Cabecera agrupada "Notificaciones" (dos filas de <thead> en la tabla de aplicaciones) ---- */
@@ -3711,7 +3971,9 @@ table.user-summary-table {
   .user-activity small,
   .user-muted { color: #aeb8c6; }
   .user-role-chip { background: #173f63; border-color: #2f6692; color: #d9efff; }
-  .user-role-more { background: #2a302b; border-color: #5a6878; color: #dbe6f2; }
+  .user-permission-chip { background: #3d315c; border-color: #75649e; color: #eee8ff; }
+  .app-client-id { color: #aeb8c6; }
+  .app-notification-chip { background: #1e4831; border-color: #397252; color: #d8f3e2; }
   .user-status--activo { background: #174b31; color: #baf2d1; }
   .user-status--pendiente { background: #5e470e; color: #ffe29a; }
   .user-status--inactivo { background: #454b54; color: #e1e5ea; }
@@ -3731,6 +3993,11 @@ table.user-summary-table {
   .user-form-field select { background: #171c24; border-color: #596779; color: #f1f5f9; }
   .user-form-field input:disabled { background: #303946; color: #abb6c4; }
   .user-resolver-option { background: #1b222c; border-color: #465364; color: #e0e6ed; }
+  .app-notification-editor-row { background: #1b222c; border-color: #465364; }
+  .app-notification-editor-row strong { color: #e0e6ed; }
+  .app-notification-editor-row span,
+  .app-notification-max,
+  .app-notification-hint { color: #aab5c3; }
   .user-metrics > div { background: #1b222c; }
   .user-metrics dt { color: #aab5c3; }
   .user-metrics dd { color: #f1f5f9; }
@@ -3748,7 +4015,8 @@ table.user-summary-table {
   .t-1 { font-size: 1.75rem; }
   .tabla-datos { font-size: 14px; }
   .search-input { max-width: 100%; flex: 1 1 100%; }
-  table.user-summary-table { min-width: 760px; font-size: 13px; }
+  table.user-summary-table,
+  table.app-summary-table { min-width: 950px; font-size: 13px; }
   .user-drawer-header { padding: 1.1rem; }
   .user-drawer-content { padding: 1rem; }
   .user-drawer-footer { padding: 0.85rem 1rem; }
