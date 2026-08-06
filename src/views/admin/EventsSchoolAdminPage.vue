@@ -3,126 +3,12 @@
     <header class="page-header">
       <h1 class="t-1">Administración de eventos</h1>
       <p class="page-subtitle">
-        Gestión de las categorías y de los eventos del calendario escolar.
+        Gestión de los eventos del calendario escolar.
       </p>
     </header>
 
     <main class="main-panel">
       <section class="panel-section">
-        <article class="action-card table-card">
-          <div class="table-card-header">
-            <div class="title-with-refresh">
-              <h2 class="card-title card-title-inline">Categorías</h2>
-              <button
-                type="button"
-                class="btn-refresh"
-                :disabled="cargandoCategorias"
-                title="Refrescar categorías"
-                aria-label="Refrescar categorías"
-                @click="cargarCategorias">
-                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoCategorias }" />
-              </button>
-            </div>
-            <div class="table-actions">
-              <input
-                v-model="busquedaCategorias"
-                type="search"
-                class="search-input"
-                placeholder="Buscar..."
-                aria-label="Buscar categorías">
-            </div>
-          </div>
-
-          <div v-if="cargandoCategorias" class="table-loading" aria-label="Cargando categorías">
-            <div class="circulo"></div>
-          </div>
-
-          <div class="table-scroll">
-            <table class="tabla-datos tabla-categorias">
-              <thead>
-                <tr>
-                  <th class="col-accion">Acciones</th>
-                  <th>Nombre</th>
-                  <th>Descripción</th>
-                  <th>Color</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="categoria in categoriasMostradas" :key="categoria._uid">
-                  <td class="col-accion">
-                    <div class="action-buttons">
-                      <button
-                        type="button"
-                        class="btn-save-icon"
-                        :disabled="categoria._procesando"
-                        :aria-label="`Guardar categoría ${categoria.nombre || 'nueva'}`"
-                        title="Guardar categoría"
-                        @click="guardarCategoriaFila(categoria)">
-                        <ion-icon :icon="saveOutline" />
-                      </button>
-                      <button
-                        v-if="categoria._persistido"
-                        type="button"
-                        class="btn-delete"
-                        :disabled="categoria._procesando"
-                        :aria-label="`Eliminar categoría ${categoria.nombre}`"
-                        title="Borrar categoría"
-                        @click="borrarCategoriaFila(categoria)">
-                        X
-                      </button>
-                      <span v-else class="action-placeholder" aria-hidden="true"></span>
-                    </div>
-                  </td>
-                  <td>
-                    <input
-                      v-model="categoria.nombre"
-                      type="text"
-                      class="cell-input"
-                      :disabled="categoria._persistido || categoria._procesando"
-                      placeholder="Nombre de la categoría">
-                  </td>
-                  <td>
-                    <textarea
-                      v-model="categoria.descripcion"
-                      class="cell-input cell-description"
-                      :disabled="categoria._procesando"
-                      rows="2"
-                      maxlength="500"
-                      placeholder="Eventos incluidos en la categoría"
-                      aria-label="Descripción de la categoría"></textarea>
-                  </td>
-                  <td>
-                    <div class="color-editor">
-                      <span
-                        v-if="categoria.color"
-                        class="color-preview"
-                        :style="{ backgroundColor: categoria.color }"
-                        aria-hidden="true"></span>
-                      <select
-                        v-model="categoria.color"
-                        class="cell-input color-select"
-                        :disabled="categoria._procesando"
-                        aria-label="Color de la categoría">
-                        <option value="">Selecciona un color</option>
-                        <option
-                          v-for="color in opcionesColor(categoria.color)"
-                          :key="color.value"
-                          :value="color.value">
-                          {{ color.nombre }}
-                        </option>
-                      </select>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p v-if="!hayCategorias && !cargandoCategorias" class="empty-state">
-            No hay categorías cargadas. Usa la última fila para añadir una nueva.
-          </p>
-        </article>
-
         <article class="action-card table-card">
           <div class="table-card-header">
             <div class="title-with-refresh">
@@ -157,9 +43,11 @@
                 <tr>
                   <th class="col-accion">Acciones</th>
                   <th>Título</th>
+                  <th>Creado por</th>
                   <th>Categoría</th>
                   <th>Fecha inicio</th>
                   <th>Fecha fin</th>
+                  <th>Estado</th>
                 </tr>
               </thead>
               <tbody>
@@ -196,11 +84,14 @@
                       :disabled="evento._persistido || evento._procesando"
                       placeholder="Título del evento">
                   </td>
+                  <td class="cell-requester">
+                    {{ nombreCompletoSolicitante(evento) }}
+                  </td>
                   <td>
                     <select
                       v-model="evento.nombreCategoria"
                       class="cell-input cell-category"
-                      :disabled="evento._procesando"
+                      :disabled="evento._persistido || evento._procesando"
                       aria-label="Categoría del evento">
                       <option value="">Selecciona una categoría</option>
                       <option
@@ -223,7 +114,18 @@
                       v-model="evento.fechaFin"
                       type="date"
                       class="cell-input cell-date"
-                      :disabled="evento._procesando">
+                      :disabled="evento._persistido || evento._procesando">
+                  </td>
+                  <td>
+                    <select
+                      v-model="evento.estado"
+                      class="cell-input cell-state"
+                      :disabled="evento._procesando"
+                      aria-label="Estado del evento">
+                      <option value="ACTIVO">ACTIVO</option>
+                      <option value="PENDIENTE">PENDIENTE</option>
+                      <option value="INACTIVO">INACTIVO</option>
+                    </select>
                   </td>
                 </tr>
               </tbody>
@@ -252,12 +154,11 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { IonIcon, IonToast } from '@ionic/vue';
 import { refreshOutline, saveOutline } from 'ionicons/icons';
 import {
-  borrarCategoria,
+  actualizarEstadoEvento,
   borrarEvento,
-  crearCategoria,
   crearEvento,
   obtenerCategorias,
-  obtenerEventos,
+  obtenerEventosAdministracion,
 } from '@/services/events.js';
 import { crearToast } from '@/utils/toast.js';
 
@@ -272,57 +173,44 @@ interface EventoApi {
   fechaInicio: number;
   fechaFin: number;
   nombreCategoria: string;
+  nombreUsuario?: string;
+  apellidosUsuario?: string;
+  estadoEvento?: EstadoEvento;
 }
 
-interface FilaCategoria extends CategoriaApi {
-  _persistido: boolean;
-  _procesando: boolean;
-  _uid: number;
-}
+type EstadoEvento = 'ACTIVO' | 'PENDIENTE' | 'INACTIVO';
 
 interface FilaEvento {
   titulo: string;
   fechaInicio: string;
   fechaFin: string;
   nombreCategoria: string;
+  nombreUsuario: string;
+  apellidosUsuario: string;
+  estado: EstadoEvento;
   _fechaInicioOriginal: number | null;
   _persistido: boolean;
   _procesando: boolean;
   _uid: number;
 }
 
-const COLORES_DISPONIBLES = [
-  { value: '#008000', nombre: 'VERDE' },
-  { value: '#4682B4', nombre: 'AZUL' },
-  { value: '#F4D03F', nombre: 'AMARILLO' },
-  { value: '#B9484E', nombre: 'ROJO' },
-];
-
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
-const categorias = ref<FilaCategoria[]>([]);
+const categorias = ref<CategoriaApi[]>([]);
 const eventos = ref<FilaEvento[]>([]);
-const busquedaCategorias = ref('');
 const busquedaEventos = ref('');
-const cargandoCategorias = ref(false);
 const cargandoEventos = ref(false);
 
 let uidCounter = 0;
 const nextUid = () => ++uidCounter;
 
-const filaCategoriaVacia = (): FilaCategoria => ({
-  nombre: '',
-  color: '',
-  descripcion: '',
-  _persistido: false,
-  _procesando: false,
-  _uid: nextUid(),
-});
-
 const filaEventoVacia = (): FilaEvento => ({
   titulo: '',
   nombreCategoria: '',
+  nombreUsuario: '',
+  apellidosUsuario: '',
+  estado: 'ACTIVO',
   fechaInicio: '',
   fechaFin: '',
   _fechaInicioOriginal: null,
@@ -331,21 +219,11 @@ const filaEventoVacia = (): FilaEvento => ({
   _uid: nextUid(),
 });
 
-const categoriaEstaVacia = (categoria: FilaCategoria) =>
-  !categoria.nombre.trim() && !categoria.color && !categoria.descripcion.trim();
-
 const eventoEstaVacio = (evento: FilaEvento) =>
   !evento.titulo.trim()
   && !evento.nombreCategoria
   && !evento.fechaInicio
   && !evento.fechaFin;
-
-const asegurarFilaVaciaCategorias = () => {
-  const ultima = categorias.value[categorias.value.length - 1];
-  if (!ultima || ultima._persistido || !categoriaEstaVacia(ultima)) {
-    categorias.value.push(filaCategoriaVacia());
-  }
-};
 
 const asegurarFilaVaciaEventos = () => {
   const ultimo = eventos.value[eventos.value.length - 1];
@@ -354,7 +232,6 @@ const asegurarFilaVaciaEventos = () => {
   }
 };
 
-watch(categorias, asegurarFilaVaciaCategorias, { deep: true });
 watch(eventos, asegurarFilaVaciaEventos, { deep: true });
 
 const normalizarTexto = (valor: unknown) =>
@@ -379,33 +256,22 @@ const filtrarConBorradores = <T extends { _persistido: boolean }>(
   return [...visibles, ...borradores];
 };
 
-const categoriasMostradas = computed(() =>
-  filtrarConBorradores(
-    categorias.value,
-    busquedaCategorias.value,
-    ['nombre', 'descripcion', 'color'],
-  ));
-
 const eventosMostrados = computed(() =>
   filtrarConBorradores(
     eventos.value,
     busquedaEventos.value,
-    ['titulo', 'nombreCategoria', 'fechaInicio', 'fechaFin'],
+    ['titulo', 'nombreCategoria', 'nombreUsuario', 'apellidosUsuario', 'estado', 'fechaInicio', 'fechaFin'],
   ));
 
-const hayCategorias = computed(() => categorias.value.some((categoria) => categoria._persistido));
 const hayEventos = computed(() => eventos.value.some((evento) => evento._persistido));
 
-const opcionesColor = (colorActual: string) => {
-  if (!colorActual || COLORES_DISPONIBLES.some((color) => color.value === colorActual)) {
-    return COLORES_DISPONIBLES;
-  }
-  return [{ value: colorActual, nombre: colorActual }, ...COLORES_DISPONIBLES];
+const nombreCompletoSolicitante = (evento: FilaEvento) => {
+  if (!evento._persistido) return 'Administrador';
+  return [evento.nombreUsuario, evento.apellidosUsuario].filter(Boolean).join(' ') || 'Sin datos';
 };
 
 const opcionesCategoria = (categoriaActual: string) => {
   const nombres = categorias.value
-    .filter((categoria) => categoria._persistido)
     .map((categoria) => categoria.nombre);
 
   if (categoriaActual && !nombres.includes(categoriaActual)) {
@@ -437,32 +303,21 @@ const fechaInputATimestamp = (fechaInput: string) => {
 };
 
 const cargarCategorias = async () => {
-  cargandoCategorias.value = true;
-  try {
-    const respuesta = await obtenerCategorias(toastMessage, toastColor, isToastOpen);
-    const datos = Array.isArray(respuesta) ? respuesta as CategoriaApi[] : [];
-    categorias.value = datos.map((categoria) => ({
-      nombre: categoria.nombre,
-      color: categoria.color,
-      descripcion: categoria.descripcion ?? '',
-      _persistido: true,
-      _procesando: false,
-      _uid: nextUid(),
-    }));
-    asegurarFilaVaciaCategorias();
-  } finally {
-    cargandoCategorias.value = false;
-  }
+  const respuesta = await obtenerCategorias(toastMessage, toastColor, isToastOpen);
+  categorias.value = Array.isArray(respuesta) ? respuesta as CategoriaApi[] : [];
 };
 
 const cargarEventos = async () => {
   cargandoEventos.value = true;
   try {
-    const respuesta = await obtenerEventos(toastMessage, toastColor, isToastOpen);
+    const respuesta = await obtenerEventosAdministracion(toastMessage, toastColor, isToastOpen);
     const datos = Array.isArray(respuesta) ? respuesta as EventoApi[] : [];
     eventos.value = datos.map((evento) => ({
       titulo: evento.titulo,
       nombreCategoria: evento.nombreCategoria,
+      nombreUsuario: evento.nombreUsuario ?? '',
+      apellidosUsuario: evento.apellidosUsuario ?? '',
+      estado: evento.estadoEvento ?? 'ACTIVO',
       fechaInicio: timestampAFechaInput(evento.fechaInicio),
       fechaFin: timestampAFechaInput(evento.fechaFin),
       _fechaInicioOriginal: evento.fechaInicio,
@@ -476,47 +331,29 @@ const cargarEventos = async () => {
   }
 };
 
-const guardarCategoriaFila = async (categoria: FilaCategoria) => {
-  const nombre = categoria.nombre.trim();
-  if (!nombre || !categoria.color) {
-    crearToast(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      'danger',
-      'Debes indicar el nombre y el color de la categoría',
-    );
-    return;
-  }
-
-  const duplicada = categorias.value.some((otra) =>
-    otra !== categoria
-    && otra._persistido
-    && normalizarTexto(otra.nombre) === normalizarTexto(nombre));
-  if (!categoria._persistido && duplicada) {
-    crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Ya existe la categoría "${nombre}"`);
-    return;
-  }
-
-  categoria._procesando = true;
-  try {
-    await crearCategoria(
-      toastMessage,
-      toastColor,
-      isToastOpen,
-      nombre,
-      categoria.color,
-      categoria.descripcion.trim(),
-    );
-    await cargarCategorias();
-  } catch (error) {
-    console.error(error);
-  } finally {
-    categoria._procesando = false;
-  }
-};
-
 const guardarEventoFila = async (evento: FilaEvento) => {
+  if (evento._persistido) {
+    if (evento._fechaInicioOriginal === null) return;
+
+    evento._procesando = true;
+    try {
+      await actualizarEstadoEvento(
+        toastMessage,
+        toastColor,
+        isToastOpen,
+        evento.titulo,
+        evento._fechaInicioOriginal,
+        evento.estado,
+      );
+      await cargarEventos();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      evento._procesando = false;
+    }
+    return;
+  }
+
   const titulo = evento.titulo.trim();
   const fechaInicio = fechaInputATimestamp(evento.fechaInicio);
   const fechaFin = fechaInputATimestamp(evento.fechaFin);
@@ -560,21 +397,6 @@ const guardarEventoFila = async (evento: FilaEvento) => {
     console.error(error);
   } finally {
     evento._procesando = false;
-  }
-};
-
-const borrarCategoriaFila = async (categoria: FilaCategoria) => {
-  if (!categoria._persistido) return;
-  if (!window.confirm(`¿Borrar la categoría "${categoria.nombre}"? Esta acción no se puede deshacer.`)) return;
-
-  categoria._procesando = true;
-  try {
-    await borrarCategoria(toastMessage, toastColor, isToastOpen, categoria.nombre);
-    await Promise.all([cargarCategorias(), cargarEventos()]);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    categoria._procesando = false;
   }
 };
 
@@ -773,12 +595,8 @@ table.tabla-datos {
   border-collapse: collapse;
 }
 
-.tabla-categorias {
-  min-width: 900px;
-}
-
 .tabla-eventos {
-  min-width: 900px;
+  min-width: 1120px;
 }
 
 .tabla-datos th,
@@ -841,14 +659,6 @@ table.tabla-datos {
   min-width: 190px;
 }
 
-.cell-description {
-  min-width: 300px;
-  min-height: 54px;
-  line-height: 1.35;
-  resize: vertical;
-  text-align: left;
-}
-
 .cell-category {
   min-width: 160px;
 }
@@ -857,23 +667,14 @@ table.tabla-datos {
   min-width: 135px;
 }
 
-.color-editor {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.color-preview {
-  width: 20px;
-  height: 20px;
-  flex: 0 0 20px;
-  border: 1px solid #9ca3af;
-  border-radius: 50%;
-}
-
-.color-select {
+.cell-requester {
   min-width: 170px;
+  font-weight: 600;
+}
+
+.cell-state {
+  min-width: 120px;
+  font-weight: 700;
 }
 
 .action-buttons {

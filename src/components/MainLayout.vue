@@ -80,7 +80,11 @@
         </ion-toolbar>
       </ion-header>
 
-      <ion-content class="ion-padding" fullscreen>
+      <ion-content
+        class="ion-padding"
+        :class="{ 'home-content': $route.name === 'Home' }"
+        fullscreen
+      >
         <router-view></router-view>
       </ion-content>
     </ion-page>
@@ -90,9 +94,6 @@
 <script>
 import {
   IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
   IonPage,
   IonHeader,
   IonToolbar,
@@ -121,10 +122,7 @@ export default defineComponent({
   name: "MainLayout",
   components: {
     IonContent,
-    IonList,
-    IonItem,
     IonPage,
-    IonLabel,
     IonHeader,
     IonToolbar,
     IonButtons,
@@ -538,6 +536,17 @@ ion-toolbar {
 
   ion-icon {
     font-size: 28px;
+  }
+}
+
+/* En el modo de monitor informativo, /home utiliza toda el area disponible
+   bajo la cabecera. El resto de rutas conserva el padding habitual. */
+@media (min-width: 1600px) and (min-height: 900px) {
+  ion-content.home-content {
+    --padding-top: 0;
+    --padding-end: 0;
+    --padding-bottom: 0;
+    --padding-start: 0;
   }
 }
 

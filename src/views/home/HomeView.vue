@@ -227,7 +227,7 @@ const seccionAdministracion = computed(() => ({
   items: [
     { label: "Corazón", icono: heartOutline, to: "/admin/corazon" },
     { label: "Usuarios y apps", icono: peopleOutline, to: "/admin" },
-    { label: "Infraestructura", icono: serverOutline, to: "/admin/infrastructure" },
+    { label: "Infra", icono: serverOutline, to: "/admin/infrastructure" },
     { label: "Reservas", icono: calendarOutline, to: "/admin/bookings" },
     { label: "Eventos", icono: calendarNumberOutline, to: "/admin/events" },
     // Huelgas cede peopleOutline a "Usuarios y apps" para no repetir icono dentro de la sección
@@ -542,5 +542,37 @@ const secciones = computed(() => {
   .card-icon { font-size: 28px; }
   /* En pantallas estrechas, la tarjeta de tips ocupa toda la fila de forma elegante. */
   .tip-card { grid-column: 1 / -1; }
+}
+
+/* Modo informativo para monitores grandes: se conserva la cabecera global y
+   el componente de eventos semanales pasa a ocupar todo el espacio restante. */
+@media (min-width: 1600px) and (min-height: 900px) {
+  .page-home {
+    max-width: none;
+    min-height: calc(100dvh - 56px);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .home-section-layout {
+    display: none;
+  }
+
+  .home-section-layout.favorites-events-row {
+    display: block;
+    min-height: calc(100dvh - 56px);
+    margin: 0;
+  }
+
+  .favorites-events-row > .panel-section {
+    display: none;
+  }
+
+  .favorites-events-row :deep(.weekly-events-card) {
+    min-height: calc(100dvh - 56px);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 </style>

@@ -29,7 +29,7 @@
   </div>
   <!-- GRID DE MESES -->
   <div class="months-grid">
-    <template v-for="(month, index) in months" :key="month.name">
+    <template v-for="month in months" :key="month.name">
       <div class="month-card">
         <h2 class="month-title">{{ month.name }}</h2>
 
@@ -132,12 +132,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { IonToast } from "@ionic/vue";
-import { obtenerEventos, obtenerCategorias } from "@/services/events";
+import { EVENT_CATEGORIES } from "@/constants/eventCategories";
+import { obtenerEventos } from "@/services/events";
 
 /* ===== TIPOS ===== */
 interface Evento {
   titulo: string;
-  nombre: string;
+  nombreCategoria: string;
   fechaInicio: number;
   fechaFin: number;
 }
@@ -162,7 +163,7 @@ const isToastOpen = ref(false);
 
 /* ===== ESTADO ===== */
 const eventos = ref<Evento[]>([]);
-const categorias = ref<Categoria[]>([]);
+const categorias = ref<Categoria[]>([...EVENT_CATEGORIES]);
 const eventosCalendario = ref<EventoCalendario[]>([]);
 
 /* ===== AÑO ESCOLAR ===== */
@@ -226,25 +227,6 @@ const getEventLayerStyle = (color: string, index: number) => {
     bottom: `${offset}px`,
   };
 };
-function formatDate(timestamp: number): string {
-  const d = new Date(timestamp);
-  return d.toLocaleDateString("es-ES");
-}
-
-function getEventDateLabel(event: EventoCalendario): string {
- const inicio = formatDate(event.fechaInicio);
-
-  // No hay fecha fin
-  if (!event.fechaFin) {
-    return ` ${inicio}`;
-  }
-
-  const fin = formatDate(event.fechaFin);
-
-  // Rango de fechas
-  return ` ${inicio} – ${fin}`;
-}
-
 /* ===== MODAL ===== */
 const selectedDayEvents = ref<EventoCalendario[]>([]);
 const selectedDayLabel = ref("");
@@ -259,14 +241,6 @@ const onDayClick = (m: number, y: number, d: number) => {
 };
 
 /* ===== DATOS ===== */
-const cargarCategorias = async () => {
-  categorias.value = (await obtenerCategorias(
-    toastMessage,
-    toastColor,
-    isToastOpen
-  )) || [];
-};
-
 const cargarEventos = async () => {
   eventos.value = (await obtenerEventos(
     toastMessage,
@@ -280,8 +254,8 @@ const mapearEventos = () => {
   categorias.value.forEach(c => (map[c.nombre] = c.color));
   eventosCalendario.value = eventos.value.map(e => ({
     titulo: e.titulo,
-    categoria: e.nombre,
-    color: map[e.nombre] ?? "#666",
+    categoria: e.nombreCategoria,
+    color: map[e.nombreCategoria] ?? "#666",
     fechaInicio: e.fechaInicio,
     fechaFin: e.fechaFin,
   }));
@@ -318,7 +292,6 @@ const categoriasPorColor = computed(() => {
 });
 
 onMounted(async () => {
-  await cargarCategorias();
   await cargarEventos();
   mapearEventos();
 });
