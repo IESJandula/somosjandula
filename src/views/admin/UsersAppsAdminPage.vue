@@ -37,6 +37,10 @@
                   idleText="Importar usuarios"
                   @file-selected="onArchivoUsuariosSeleccionado" />
               </div>
+              <button type="button" class="btn-secondary btn-mini btn-with-icon" @click="abrirNuevoUsuario">
+                <ion-icon :icon="addOutline" aria-hidden="true" />
+                Nuevo usuario
+              </button>
               <button
                 type="button"
                 class="btn-delete btn-mini"
@@ -58,108 +62,189 @@
             <div class="circulo"></div>
           </div>
 
-          <div class="table-scroll">
-            <table class="tabla-datos">
+          <div class="table-scroll user-summary-scroll">
+            <table class="tabla-datos user-summary-table">
               <thead>
                 <tr>
-                  <th class="col-accion">Acciones</th>
-                  <th class="sortable" @click="ordenarUsuarios('email')">Email<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'email') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('nombre')">Nombre<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'nombre') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('apellidos')">Apellidos<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'apellidos') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('departamento')">Departamento<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'departamento') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('fechaNacimiento')">Fecha nac.<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'fechaNacimiento') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('roles')">Roles<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('resolutores')">Resolutor<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'resolutores') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
-                  <th class="sortable col-gasto" @click="ordenarUsuarios('costeImpresion')">Gasto en euros<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'costeImpresion') }}</span></th>
+                  <th class="sortable user-col-identity" @click="ordenarUsuarios('nombre')">Usuario<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'nombre') }}</span></th>
+                  <th class="sortable user-col-department" @click="ordenarUsuarios('departamento')">Departamento<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'departamento') }}</span></th>
+                  <th class="sortable user-col-access" @click="ordenarUsuarios('roles')">Acceso<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'roles') }}</span></th>
+                  <th class="sortable user-col-status" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
+                  <th class="sortable user-col-activity" @click="ordenarUsuarios('ultimaConexion')">Actividad<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
+                  <th class="col-accion user-col-actions">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="usuario in usuariosMostrados" :key="usuario._uid">
-                  <td class="col-accion">
-                    <div class="action-buttons">
-                      <button
-                        type="button"
-                        class="btn-save-icon"
-                        title="Guardar usuario"
-                        aria-label="Guardar usuario"
-                        @click="guardarUsuarioFila(usuario)">
-                        <ion-icon :icon="saveOutline" />
-                      </button>
-                      <button
-                        v-if="usuario._persistido"
-                        type="button"
-                        class="btn-delete"
-                        title="Borrar usuario"
-                        aria-label="Borrar usuario"
-                        @click="borrarUsuarioFila(usuario)">X</button>
-                      <span v-else class="action-placeholder" aria-hidden="true"></span>
+                <tr v-for="usuario in usuariosResumen" :key="usuario._uid" class="user-summary-row">
+                  <td class="user-col-identity">
+                    <div class="user-identity">
+                      <strong>{{ nombreCompletoUsuario(usuario) }}</strong>
+                      <span>{{ usuario.email }}</span>
                     </div>
                   </td>
-                  <td>
-                    <input
-                      type="text"
-                      v-model="usuario.email"
-                      class="cell-input"
-                      :disabled="usuario._persistido"
-                      placeholder="email@dominio">
-                  </td>
-                  <td><input type="text" v-model="usuario.nombre" class="cell-input"></td>
-                  <td><input type="text" v-model="usuario.apellidos" class="cell-input"></td>
-                  <td>
-                    <select v-model="usuario.departamento" class="cell-input">
-                      <option value="">—</option>
-                      <option v-for="dep in opcionesDepartamento(usuario.departamento)" :key="dep" :value="dep">{{ dep }}</option>
-                    </select>
-                  </td>
-                  <td><input type="text" v-model="usuario.fechaNacimiento" class="cell-input" placeholder="dd/mm/aaaa"></td>
-                  <td><input type="text" v-model="usuario.roles" class="cell-input" placeholder="ROL1, ROL2"></td>
-                  <td class="col-resolutores">
-                    <div class="multi-select">
-                      <button
-                        type="button"
-                        class="multi-select-toggle"
-                        :title="textoResolutoresUsuario(usuario)"
-                        @click="usuario._resolutoresAbierto = !usuario._resolutoresAbierto">
-                        <span class="multi-select-texto">{{ textoResolutoresUsuario(usuario) }}</span>
-                        <span class="multi-select-flecha">{{ usuario._resolutoresAbierto ? '▴' : '▾' }}</span>
-                      </button>
-                      <div v-if="usuario._resolutoresAbierto" class="multi-select-panel">
-                        <p v-if="resolutoresDisponibles.length === 0" class="multi-select-vacio">
-                          No hay resolutores dados de alta
-                        </p>
-                        <label
-                          v-for="nombreResolutor in resolutoresDisponibles"
-                          :key="nombreResolutor"
-                          class="multi-select-opcion">
-                          <input
-                            type="checkbox"
-                            :checked="usuario.resolutores.includes(nombreResolutor)"
-                            @change="alternarResolutorDeUsuario(usuario, nombreResolutor)">
-                          <span>{{ nombreResolutor }}</span>
-                        </label>
+                  <td class="user-col-department">{{ usuario.departamento || 'Sin departamento' }}</td>
+                  <td class="user-col-access">
+                    <div class="user-access-summary">
+                      <div class="user-role-list">
+                        <span v-for="rol in rolesUsuario(usuario).slice(0, 2)" :key="rol" class="user-role-chip">{{ rol }}</span>
+                        <span v-if="rolesUsuario(usuario).length > 2" class="user-role-more">+{{ rolesUsuario(usuario).length - 2 }}</span>
+                        <span v-if="!rolesUsuario(usuario).length" class="user-muted">Sin roles</span>
                       </div>
+                      <small>{{ textoResolutoresUsuario(usuario) }}</small>
                     </div>
                   </td>
-                  <td>
-                    <select v-model="usuario.estado" class="cell-input">
-                      <option v-for="opcion in ESTADOS_USUARIO" :key="opcion.valor" :value="opcion.valor">{{ opcion.etiqueta }}</option>
-                    </select>
+                  <td class="user-col-status">
+                    <span class="user-status" :class="claseEstadoUsuario(usuario.estado)">{{ etiquetaEstado(usuario.estado) }}</span>
                   </td>
-                  <td class="col-conexion">
-                    <span class="conexion-text" :title="formatearFechaExacta(usuario.ultimaConexion)">{{ formatearUltimaConexion(usuario.ultimaConexion) }}</span>
+                  <td class="user-col-activity">
+                    <div class="user-activity">
+                      <span :title="formatearFechaExacta(usuario.ultimaConexion)">{{ formatearUltimaConexion(usuario.ultimaConexion) }}</span>
+                      <small>{{ formatearEuros(usuario.costeImpresion, '0,00 €') }} gastados</small>
+                    </div>
                   </td>
-                  <!-- Solo lectura: lo calcula el backend, por lo que la fila de alta lo deja vacío -->
-                  <td class="col-gasto">{{ usuario._persistido ? formatearEuros(usuario.costeImpresion, '0,00 €') : '' }}</td>
+                  <td class="col-accion user-col-actions">
+                    <div class="action-buttons user-summary-actions">
+                      <button type="button" class="btn-save-icon" title="Ver o editar usuario" aria-label="Ver o editar usuario" @click="abrirEditorUsuario(usuario)">
+                        <ion-icon :icon="createOutline" />
+                      </button>
+                      <button type="button" class="btn-delete btn-delete-icon" title="Borrar usuario" aria-label="Borrar usuario" @click="borrarUsuarioFila(usuario)">
+                        <ion-icon :icon="trashOutline" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
           <p v-if="!hayUsuarios && !cargandoTablaUsuarios" class="empty-state">
-            No hay usuarios cargados. Usa la última fila para añadir uno nuevo.
+            No hay usuarios cargados. Pulsa «Nuevo usuario» para añadir uno.
           </p>
         </article>
+
+        <teleport to="body">
+          <div v-if="usuarioEditor" class="user-drawer-backdrop" @click.self="cerrarEditorUsuario">
+            <aside class="user-drawer" role="dialog" aria-modal="true" aria-labelledby="user-drawer-title">
+              <header class="user-drawer-header">
+                <div>
+                  <p>{{ usuarioEditor._persistido ? 'Ficha de usuario' : 'Nuevo usuario' }}</p>
+                  <h3 id="user-drawer-title">
+                    {{ usuarioEditor._persistido ? nombreCompletoUsuario(usuarioEditor) : 'Alta de usuario' }}
+                  </h3>
+                  <span v-if="usuarioEditor._persistido">{{ usuarioEditor.email }}</span>
+                </div>
+                <button class="user-drawer-close" type="button" aria-label="Cerrar panel" title="Cerrar" @click="cerrarEditorUsuario">
+                  <ion-icon :icon="closeOutline" />
+                </button>
+              </header>
+
+              <form class="user-drawer-form" @submit.prevent="guardarUsuarioEditor">
+                <div class="user-drawer-content">
+                  <section class="user-form-section">
+                    <div class="user-form-section-heading">
+                      <h4>Datos personales</h4>
+                      <span>Identidad y contacto</span>
+                    </div>
+                    <div class="user-form-grid">
+                      <label class="user-form-field user-form-field-wide">
+                        <span>Email</span>
+                        <input v-model.trim="usuarioEditor.email" type="email" :disabled="usuarioEditor._persistido" required>
+                      </label>
+                      <label class="user-form-field">
+                        <span>Nombre</span>
+                        <input v-model="usuarioEditor.nombre" type="text">
+                      </label>
+                      <label class="user-form-field">
+                        <span>Apellidos</span>
+                        <input v-model="usuarioEditor.apellidos" type="text">
+                      </label>
+                      <label class="user-form-field">
+                        <span>Departamento</span>
+                        <select v-model="usuarioEditor.departamento">
+                          <option value="">Sin departamento</option>
+                          <option v-for="dep in opcionesDepartamento(usuarioEditor.departamento)" :key="dep" :value="dep">{{ dep }}</option>
+                        </select>
+                      </label>
+                      <label class="user-form-field">
+                        <span>Fecha de nacimiento</span>
+                        <input v-model="usuarioEditor.fechaNacimiento" type="text" placeholder="dd/mm/aaaa">
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="user-form-section">
+                    <div class="user-form-section-heading">
+                      <h4>Acceso y permisos</h4>
+                      <span>Roles, estado y resolución</span>
+                    </div>
+                    <div class="user-form-grid">
+                      <label class="user-form-field">
+                        <span>Roles</span>
+                        <input v-model="usuarioEditor.roles" type="text" placeholder="ADMIN, USER">
+                      </label>
+                      <label class="user-form-field">
+                        <span>Estado</span>
+                        <select v-model="usuarioEditor.estado">
+                          <option v-for="opcion in ESTADOS_USUARIO" :key="opcion.valor" :value="opcion.valor">{{ opcion.etiqueta }}</option>
+                        </select>
+                      </label>
+                    </div>
+                    <div class="user-resolvers-editor">
+                      <span class="user-resolvers-label">Resolutores asignados</span>
+                      <div v-if="resolutoresDisponibles.length" class="user-resolvers-grid">
+                        <label v-for="nombreResolutor in resolutoresDisponibles" :key="nombreResolutor" class="user-resolver-option">
+                          <input
+                            type="checkbox"
+                            :checked="usuarioEditor.resolutores.includes(nombreResolutor)"
+                            @change="alternarResolutorDeUsuario(usuarioEditor, nombreResolutor)">
+                          <span>{{ nombreResolutor }}</span>
+                        </label>
+                      </div>
+                      <span v-else class="resolver-empty">No hay resolutores disponibles.</span>
+                    </div>
+                  </section>
+
+                  <section v-if="usuarioEditor._persistido" class="user-form-section">
+                    <div class="user-form-section-heading">
+                      <h4>Actividad</h4>
+                      <span>Información de solo lectura</span>
+                    </div>
+                    <dl class="user-metrics">
+                      <div>
+                        <dt>Última conexión</dt>
+                        <dd>{{ formatearUltimaConexion(usuarioEditor.ultimaConexion) }}</dd>
+                      </div>
+                      <div>
+                        <dt>Gasto en euros</dt>
+                        <dd>{{ formatearEuros(usuarioEditor.costeImpresion, '0,00 €') }}</dd>
+                      </div>
+                      <div>
+                        <dt>Curso académico</dt>
+                        <dd>{{ usuarioEditor.cursoAcademico || '—' }}</dd>
+                      </div>
+                    </dl>
+                  </section>
+                </div>
+
+                <footer class="user-drawer-footer">
+                  <button
+                    v-if="usuarioEditor._persistido"
+                    class="btn-delete user-drawer-delete"
+                    type="button"
+                    :disabled="guardandoUsuarioEditor"
+                    @click="borrarUsuarioDesdeEditor">
+                    Borrar usuario
+                  </button>
+                  <span class="user-drawer-footer-spacer"></span>
+                  <button class="btn-secondary" type="button" :disabled="guardandoUsuarioEditor" @click="cerrarEditorUsuario">Cancelar</button>
+                  <button class="btn-primary user-drawer-save" type="submit" :disabled="guardandoUsuarioEditor">
+                    <ion-icon :icon="saveOutline" aria-hidden="true" />
+                    {{ guardandoUsuarioEditor ? 'Guardando…' : 'Guardar cambios' }}
+                  </button>
+                </footer>
+              </form>
+            </aside>
+          </div>
+        </teleport>
 
         <!-- 2) Resolutores: catálogo de resolutores de incidencias, migrado desde /issues/admin -->
         <article class="action-card table-card">
@@ -664,7 +749,17 @@
 
 <script setup>
   import { IonToast, IonIcon } from '@ionic/vue';
-  import { eyeOffOutline, eyeOutline, refreshOutline, mailOutline, saveOutline } from 'ionicons/icons';
+  import {
+    addOutline,
+    closeOutline,
+    createOutline,
+    eyeOffOutline,
+    eyeOutline,
+    mailOutline,
+    refreshOutline,
+    saveOutline,
+    trashOutline,
+  } from 'ionicons/icons';
   import { ref, computed, onMounted, watch } from 'vue';
   import FileUpload from '@/components/printers/FileUpload.vue';
   import {
@@ -750,6 +845,8 @@
   const cargandoTablaUsuarios = ref(false);
   const cargandoTablaApps = ref(false);
   const mostrarClientIds = ref(false);
+  const usuarioEditor = ref(null);
+  const guardandoUsuarioEditor = ref(false);
 
   // Tabla editable de resolutores (IssuesServer) y su importación masiva
   const resolutores = ref([]);
@@ -864,6 +961,15 @@
       .split(/[|,]/)
       .map((r) => r.trim())
       .filter(Boolean);
+
+  const rolesUsuario = (usuario) => parsearRoles(usuario && usuario.roles);
+
+  const nombreCompletoUsuario = (usuario) => {
+    const nombreCompleto = `${usuario.nombre || ''} ${usuario.apellidos || ''}`.trim();
+    return nombreCompleto || usuario.email || 'Usuario sin nombre';
+  };
+
+  const claseEstadoUsuario = (estado) => `user-status--${normalizarEstado(estado).toLowerCase()}`;
 
   // Convierte un array de roles del backend en texto editable
   const rolesATexto = (roles) => (Array.isArray(roles) ? roles.join(', ') : (roles || ''));
@@ -1070,6 +1176,10 @@
   const usuariosMostrados = computed(() =>
     construirFilasMostradas(usuarios.value, CAMPOS_USUARIOS, busquedaUsuarios.value, ordenUsuarios.value)
   );
+
+  // La tabla resumen solo representa usuarios reales. La fila vacía se conserva internamente para no alterar
+  // el flujo de carga/importación existente, pero las altas se realizan desde el panel lateral.
+  const usuariosResumen = computed(() => usuariosMostrados.value.filter((usuario) => usuario._persistido));
 
   const appsMostradas = computed(() =>
     construirFilasMostradas(apps.value, CAMPOS_APPS, busquedaApps.value, ordenApps.value)
@@ -1434,7 +1544,7 @@
   const guardarUsuarioFila = async (usuario) => {
     if (!usuario.email || usuario.email.trim() === '') {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'El email es obligatorio para guardar el usuario');
-      return;
+      return false;
     }
 
     try {
@@ -1454,8 +1564,10 @@
 
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Usuario guardado con éxito');
       await cargarUsuarios();
+      return true;
     } catch (error) {
       console.error(error);
+      return false;
     }
   };
 
@@ -1510,11 +1622,11 @@
   // ---- Borrado por fila ----
   const borrarUsuarioFila = async (usuario) => {
     if (!usuario._persistido) {
-      return;
+      return false;
     }
 
     if (!window.confirm(`¿Borrar el usuario "${usuario.email}"? Esta acción no se puede deshacer.`)) {
-      return;
+      return false;
     }
 
     try {
@@ -1532,8 +1644,64 @@
 
       crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Usuario borrado con éxito');
       await cargarUsuarios();
+      return true;
     } catch (error) {
       console.error(error);
+      return false;
+    }
+  };
+
+  // El editor trabaja sobre una copia para que cerrar o cancelar nunca deje cambios parciales en la tabla.
+  const clonarUsuarioParaEditor = (usuario) => ({
+    ...usuario,
+    resolutores: [...(usuario.resolutores || [])],
+    _resolutoresOriginales: [...(usuario._resolutoresOriginales || [])],
+    _resolutoresAbierto: false,
+  });
+
+  const abrirEditorUsuario = (usuario) => {
+    usuarioEditor.value = clonarUsuarioParaEditor(usuario);
+  };
+
+  const abrirNuevoUsuario = () => {
+    usuarioEditor.value = filaUsuarioVacia();
+  };
+
+  const cerrarEditorUsuario = () => {
+    if (!guardandoUsuarioEditor.value) {
+      usuarioEditor.value = null;
+    }
+  };
+
+  const guardarUsuarioEditor = async () => {
+    if (!usuarioEditor.value || guardandoUsuarioEditor.value) {
+      return;
+    }
+
+    guardandoUsuarioEditor.value = true;
+    try {
+      const guardado = await guardarUsuarioFila(usuarioEditor.value);
+      if (guardado) {
+        usuarioEditor.value = null;
+      }
+    } finally {
+      guardandoUsuarioEditor.value = false;
+    }
+  };
+
+  const borrarUsuarioDesdeEditor = async () => {
+    if (!usuarioEditor.value || guardandoUsuarioEditor.value) {
+      return;
+    }
+
+    guardandoUsuarioEditor.value = true;
+    try {
+      const borrado = await borrarUsuarioFila(usuarioEditor.value);
+      if (borrado) {
+        usuarioEditor.value = null;
+      }
+    } finally {
+      guardandoUsuarioEditor.value = false;
     }
   };
 
@@ -2670,6 +2838,425 @@ table.tabla-datos {
   text-align: center;
 }
 
+/* ---- Usuarios: tabla de resumen + ficha lateral de edición ---- */
+.btn-with-icon,
+.user-drawer-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-with-icon ion-icon,
+.user-drawer-save ion-icon {
+  font-size: 17px;
+}
+
+.user-summary-scroll {
+  max-height: 520px;
+}
+
+table.user-summary-table {
+  min-width: 820px;
+  table-layout: fixed;
+}
+
+.user-summary-table .user-col-identity {
+  width: 25%;
+  min-width: 210px;
+  text-align: left;
+}
+
+.user-summary-table .user-col-department {
+  width: 16%;
+  min-width: 130px;
+  text-align: left;
+}
+
+.user-summary-table .user-col-access {
+  width: 23%;
+  min-width: 180px;
+  text-align: left;
+}
+
+.user-summary-table .user-col-status {
+  width: 12%;
+  min-width: 100px;
+}
+
+.user-summary-table .user-col-activity {
+  width: 17%;
+  min-width: 145px;
+}
+
+.user-summary-table .user-col-actions {
+  width: 90px;
+  min-width: 90px;
+}
+
+.user-summary-table td {
+  padding-block: 11px;
+  vertical-align: middle;
+}
+
+.user-identity,
+.user-access-summary,
+.user-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.user-identity strong,
+.user-identity span,
+.user-activity span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-identity strong {
+  font-size: 0.92rem;
+}
+
+.user-identity span,
+.user-access-summary small,
+.user-activity small,
+.user-muted {
+  color: #5c6773;
+  font-size: 0.76rem;
+}
+
+.user-role-list {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.user-role-chip,
+.user-role-more {
+  display: inline-block;
+  max-width: 105px;
+  overflow: hidden;
+  padding: 3px 7px;
+  border: 1px solid #9ac8f1;
+  border-radius: 999px;
+  background: #dceeff;
+  color: #164f82;
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-role-more {
+  flex: none;
+  background: #fff;
+}
+
+.user-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.user-status--activo {
+  background: #d9f5e5;
+  color: #17653a;
+}
+
+.user-status--pendiente {
+  background: #fff0ca;
+  color: #805b00;
+}
+
+.user-status--inactivo {
+  background: #e4e7eb;
+  color: #4b5563;
+}
+
+.user-summary-actions {
+  grid-template-columns: repeat(2, 32px);
+}
+
+.user-summary-actions .btn-delete-icon ion-icon {
+  font-size: 16px;
+}
+
+.user-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.46);
+  backdrop-filter: blur(2px);
+}
+
+.user-drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(570px, 100%);
+  height: 100vh;
+  height: 100dvh;
+  background: #f7f9fc;
+  color: #1f2937;
+  box-shadow: -18px 0 40px rgba(15, 23, 42, 0.24);
+}
+
+.user-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.4rem 1.5rem 1.2rem;
+  border-bottom: 1px solid #d8e0ea;
+  background: #fff;
+}
+
+.user-drawer-header p,
+.user-drawer-header h3,
+.user-drawer-header span {
+  margin: 0;
+}
+
+.user-drawer-header p {
+  margin-bottom: 4px;
+  color: #1976c9;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.user-drawer-header h3 {
+  color: #172033;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.user-drawer-header span {
+  display: block;
+  margin-top: 5px;
+  color: #667085;
+  font-size: 0.84rem;
+}
+
+.user-drawer-close {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #334155;
+  cursor: pointer;
+}
+
+.user-drawer-close:hover {
+  background: #e2e8f0;
+}
+
+.user-drawer-close ion-icon {
+  font-size: 21px;
+}
+
+.user-drawer-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.user-drawer-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+  padding: 1.15rem 1.5rem 1.5rem;
+  overflow-y: auto;
+}
+
+.user-form-section {
+  padding: 1rem;
+  border: 1px solid #d8e0ea;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.user-form-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.user-form-section-heading h4 {
+  margin: 0;
+  color: #172033;
+  font-size: 0.95rem;
+}
+
+.user-form-section-heading span {
+  color: #7a8494;
+  font-size: 0.72rem;
+}
+
+.user-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.user-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.user-form-field-wide {
+  grid-column: 1 / -1;
+}
+
+.user-form-field > span,
+.user-resolvers-label {
+  color: #475467;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.user-form-field input,
+.user-form-field select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid #aebccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  font: inherit;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.user-form-field input:focus,
+.user-form-field select:focus {
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.14);
+}
+
+.user-form-field input:disabled {
+  background: #eef2f6;
+  color: #64748b;
+}
+
+.user-resolvers-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 0.9rem;
+}
+
+.user-resolvers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.user-resolver-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #d8e0ea;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #344054;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.user-resolver-option input {
+  flex: none;
+  accent-color: #1976d2;
+}
+
+.user-resolver-option span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.user-metrics > div {
+  min-width: 0;
+  padding: 9px;
+  border-radius: 7px;
+  background: #f2f6fa;
+}
+
+.user-metrics dt {
+  color: #667085;
+  font-size: 0.68rem;
+}
+
+.user-metrics dd {
+  margin: 4px 0 0;
+  overflow: hidden;
+  color: #1d2939;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-drawer-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.9rem 1.5rem;
+  border-top: 1px solid #d8e0ea;
+  background: #fff;
+}
+
+.user-drawer-footer-spacer {
+  flex: 1;
+}
+
+.user-drawer-delete {
+  padding: 8px 12px;
+}
+
+.user-drawer-save {
+  width: auto;
+  margin-top: 0;
+  padding: 9px 14px;
+  font-size: 12px;
+}
+
 /* ---- Cabecera agrupada "Notificaciones" (dos filas de <thead> en la tabla de aplicaciones) ---- */
 /* La primera fila de cabecera queda pegada arriba (top: 0) y la segunda (subcabeceras Calendar/Email/Web)
    se pega justo debajo. Al ser todas las celdas de cabecera del mismo azul, un desfase mínimo del offset
@@ -3119,6 +3706,34 @@ table.tabla-datos {
   .panel-divider {
     background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
   }
+  .user-identity span,
+  .user-access-summary small,
+  .user-activity small,
+  .user-muted { color: #aeb8c6; }
+  .user-role-chip { background: #173f63; border-color: #2f6692; color: #d9efff; }
+  .user-role-more { background: #2a302b; border-color: #5a6878; color: #dbe6f2; }
+  .user-status--activo { background: #174b31; color: #baf2d1; }
+  .user-status--pendiente { background: #5e470e; color: #ffe29a; }
+  .user-status--inactivo { background: #454b54; color: #e1e5ea; }
+  .user-drawer { background: #171c24; color: #e5eaf0; }
+  .user-drawer-header,
+  .user-form-section,
+  .user-drawer-footer { background: #232a34; border-color: #3f4a58; }
+  .user-drawer-header h3,
+  .user-form-section-heading h4 { color: #f2f5f8; }
+  .user-drawer-header span,
+  .user-form-section-heading span { color: #aab5c3; }
+  .user-drawer-close { background: #303946; border-color: #526071; color: #e5eaf0; }
+  .user-drawer-close:hover { background: #3c4654; }
+  .user-form-field > span,
+  .user-resolvers-label { color: #c4ceda; }
+  .user-form-field input,
+  .user-form-field select { background: #171c24; border-color: #596779; color: #f1f5f9; }
+  .user-form-field input:disabled { background: #303946; color: #abb6c4; }
+  .user-resolver-option { background: #1b222c; border-color: #465364; color: #e0e6ed; }
+  .user-metrics > div { background: #1b222c; }
+  .user-metrics dt { color: #aab5c3; }
+  .user-metrics dd { color: #f1f5f9; }
 }
 
 @media (max-width: 1024px) {
@@ -3133,5 +3748,22 @@ table.tabla-datos {
   .t-1 { font-size: 1.75rem; }
   .tabla-datos { font-size: 14px; }
   .search-input { max-width: 100%; flex: 1 1 100%; }
+  table.user-summary-table { min-width: 760px; font-size: 13px; }
+  .user-drawer-header { padding: 1.1rem; }
+  .user-drawer-content { padding: 1rem; }
+  .user-drawer-footer { padding: 0.85rem 1rem; }
+}
+
+@media (max-width: 540px) {
+  .user-form-grid,
+  .user-resolvers-grid,
+  .user-metrics { grid-template-columns: 1fr; }
+  .user-form-field-wide { grid-column: auto; }
+  .user-form-section-heading { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .user-drawer-footer { flex-wrap: wrap; }
+  .user-drawer-delete { order: 3; width: 100%; }
+  .user-drawer-footer-spacer { display: none; }
+  .user-drawer-footer .btn-secondary,
+  .user-drawer-save { flex: 1; }
 }
 </style>
