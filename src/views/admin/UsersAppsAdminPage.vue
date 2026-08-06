@@ -9,13 +9,15 @@
 
     <div class="main-panel">
       <section class="panel-section">
-        <h2 class="section-title">Usuarios</h2>
-
         <!-- 1) Tabla de usuarios a ancho completo (importación masiva compactada en su barra de acciones) -->
-        <article class="action-card table-card">
+        <details class="action-card table-card admin-accordion" open>
+          <summary class="admin-accordion-summary">
+            <span>Usuarios del sistema</span>
+            <ion-icon :icon="chevronDownOutline" class="admin-accordion-chevron" aria-hidden="true" />
+          </summary>
+          <div class="admin-accordion-body">
           <div class="table-card-header">
             <div class="title-with-refresh">
-              <h3 class="card-title card-title-inline">Usuarios del sistema</h3>
               <button
                 type="button"
                 class="btn-refresh"
@@ -123,7 +125,8 @@
           <p v-if="!hayUsuarios && !cargandoTablaUsuarios" class="empty-state">
             No hay usuarios cargados. Pulsa «Nuevo usuario» para añadir uno.
           </p>
-        </article>
+          </div>
+        </details>
 
         <teleport to="body">
           <div v-if="usuarioEditor" class="user-drawer-backdrop" @click.self="cerrarEditorUsuario">
@@ -251,10 +254,14 @@
         </teleport>
 
         <!-- 2) Resolutores: catálogo de resolutores de incidencias, migrado desde /issues/admin -->
-        <article class="action-card table-card">
+        <details class="action-card table-card admin-accordion">
+          <summary class="admin-accordion-summary">
+            <span>Resolutor</span>
+            <ion-icon :icon="chevronDownOutline" class="admin-accordion-chevron" aria-hidden="true" />
+          </summary>
+          <div class="admin-accordion-body">
           <div class="table-card-header">
             <div class="title-with-refresh">
-              <h3 class="card-title card-title-inline">Resolutor</h3>
               <button
                 type="button"
                 class="btn-refresh"
@@ -346,13 +353,18 @@
           <p v-if="!hayResolutores && !cargandoTablaResolutores" class="empty-state">
             No hay resolutores cargados. Usa la última fila para añadir uno nuevo.
           </p>
-        </article>
+          </div>
+        </details>
 
         <!-- 3) Debajo: tabla de aplicaciones a ancho completo -->
-        <article class="action-card table-card">
+        <details class="action-card table-card admin-accordion">
+          <summary class="admin-accordion-summary">
+            <span>Aplicaciones</span>
+            <ion-icon :icon="chevronDownOutline" class="admin-accordion-chevron" aria-hidden="true" />
+          </summary>
+          <div class="admin-accordion-body">
           <div class="table-card-header">
             <div class="title-with-refresh">
-              <h3 class="card-title card-title-inline">Aplicaciones</h3>
               <button
                 type="button"
                 class="btn-refresh"
@@ -473,7 +485,8 @@
           <p v-if="!hayApps && !cargandoTablaApps" class="empty-state">
             No hay aplicaciones cargadas. Pulsa «Nueva aplicación» para añadir una.
           </p>
-        </article>
+          </div>
+        </details>
 
         <teleport to="body">
           <div v-if="appEditor" class="user-drawer-backdrop" @click.self="cerrarEditorApp">
@@ -580,16 +593,16 @@
         </div>
       </section>
 
-      <div class="panel-divider" aria-hidden="true"></div>
-
       <!-- 3) Domótica: dispositivos (actuadores/sensores) y sus comandos, migrados desde /automations/admin -->
       <section class="panel-section">
-        <h2 class="section-title">Domótica</h2>
-
-        <article class="action-card table-card">
+        <details class="action-card table-card admin-accordion">
+          <summary class="admin-accordion-summary">
+            <span>Domótica</span>
+            <ion-icon :icon="chevronDownOutline" class="admin-accordion-chevron" aria-hidden="true" />
+          </summary>
+          <div class="admin-accordion-body">
           <div class="table-card-header">
             <div class="title-with-refresh">
-              <h3 class="card-title card-title-inline">Dispositivos</h3>
               <button
                 type="button"
                 class="btn-refresh"
@@ -799,7 +812,8 @@
           <p v-if="!hayDispositivos && !cargandoTablaDispositivos" class="empty-state">
             No hay dispositivos cargados. Usa la última fila para añadir uno nuevo.
           </p>
-        </article>
+          </div>
+        </details>
       </section>
 
     </div>
@@ -813,6 +827,7 @@
   import { IonToast, IonIcon } from '@ionic/vue';
   import {
     addOutline,
+    chevronDownOutline,
     closeOutline,
     createOutline,
     eyeOffOutline,
@@ -2610,6 +2625,60 @@
   box-sizing: border-box;
 }
 
+.admin-accordion {
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-accordion-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 54px;
+  box-sizing: border-box;
+  padding: 0.9rem 1rem;
+  background: #eef3f8;
+  color: #172033;
+  cursor: pointer;
+  font-size: 1.02rem;
+  font-weight: 700;
+  list-style: none;
+  user-select: none;
+}
+
+.admin-accordion-summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-accordion-summary:hover {
+  background: #e2eaf3;
+}
+
+.admin-accordion-summary:focus-visible {
+  outline: 3px solid rgba(0, 123, 255, 0.35);
+  outline-offset: -3px;
+}
+
+.admin-accordion[open] > .admin-accordion-summary {
+  border-bottom: 1px solid #cfd8e3;
+}
+
+.admin-accordion-chevron {
+  flex: none;
+  font-size: 20px;
+  transition: transform 0.2s ease;
+}
+
+.admin-accordion[open] > .admin-accordion-summary .admin-accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.admin-accordion-body {
+  min-width: 0;
+  padding: 1rem;
+}
+
 .card-title {
   margin: 0 0 1rem;
   font-size: 1.05rem;
@@ -3917,6 +3986,9 @@ table.app-summary-table {
   .section-title { color: var(--text-color-dark); }
   .page-subtitle, .field-hint { color: #c8c8c8; }
   .action-card { background-color: #2a302b; border-color: #555; }
+  .admin-accordion-summary { background: #333b45; color: #f0f4f8; }
+  .admin-accordion-summary:hover { background: #3d4651; }
+  .admin-accordion[open] > .admin-accordion-summary { border-color: #555f6b; }
   .card-title, .field label { color: var(--text-color-dark); }
   .empty-state { background-color: #2a302b; border-color: #555; color: #c8c8c8; }
   .import-inline :deep(.file-drop-area) {
