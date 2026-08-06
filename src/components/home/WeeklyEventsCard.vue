@@ -513,7 +513,8 @@ onUnmounted(() => {
   width: 100%;
   aspect-ratio: 3 / 2;
   max-height: 205px;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   border: 1px solid #dbe4ee;
   border-radius: 9px;
   background-color: #eaf4ff;

@@ -323,11 +323,6 @@ const secciones = computed(() => {
   min-width: 0;
 }
 
-.home-section-layout:not(.favorites-events-row) {
-  max-width: 1200px;
-  margin-inline: auto;
-}
-
 .favorites-events-row {
   display: grid;
   grid-template-columns: minmax(440px, 5fr) minmax(620px, 8fr);
