@@ -72,7 +72,7 @@
                   <th class="sortable" @click="ordenarUsuarios('resolutores')">Resolutor<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'resolutores') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('estado')">Estado<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'estado') }}</span></th>
                   <th class="sortable" @click="ordenarUsuarios('ultimaConexion')">Última conexión<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'ultimaConexion') }}</span></th>
-                  <th class="sortable" @click="ordenarUsuarios('costeImpresion')">Gasto en euros<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'costeImpresion') }}</span></th>
+                  <th class="sortable col-gasto" @click="ordenarUsuarios('costeImpresion')">Gasto en euros<span class="sort-ind">{{ indicadorOrden(ordenUsuarios, 'costeImpresion') }}</span></th>
                 </tr>
               </thead>
               <tbody>
@@ -280,6 +280,16 @@
                 @click="autorizarGmailOAuthHandler">
                 <ion-icon :icon="mailOutline" />
               </button>
+              <button
+                type="button"
+                class="btn-refresh btn-client-id-visibility"
+                :class="{ 'is-active': mostrarClientIds }"
+                :title="mostrarClientIds ? 'Ocultar Client ID' : 'Mostrar Client ID'"
+                :aria-label="mostrarClientIds ? 'Ocultar todos los Client ID' : 'Mostrar todos los Client ID'"
+                :aria-pressed="mostrarClientIds"
+                @click="mostrarClientIds = !mostrarClientIds">
+                <ion-icon :icon="mostrarClientIds ? eyeOutline : eyeOffOutline" />
+              </button>
             </div>
             <div class="table-actions">
               <input
@@ -355,10 +365,11 @@
                   </td>
                   <td>
                     <input
-                      type="text"
+                      :type="mostrarClientIds ? 'text' : 'password'"
                       v-model="app.clientId"
                       class="cell-input"
                       :disabled="app._persistido"
+                      autocomplete="off"
                       placeholder="clientId">
                   </td>
                   <td><input type="text" v-model="app.nombre" class="cell-input"></td>
@@ -653,7 +664,7 @@
 
 <script setup>
   import { IonToast, IonIcon } from '@ionic/vue';
-  import { refreshOutline, mailOutline, saveOutline } from 'ionicons/icons';
+  import { eyeOffOutline, eyeOutline, refreshOutline, mailOutline, saveOutline } from 'ionicons/icons';
   import { ref, computed, onMounted, watch } from 'vue';
   import FileUpload from '@/components/printers/FileUpload.vue';
   import {
@@ -738,6 +749,7 @@
   const apps = ref([]);
   const cargandoTablaUsuarios = ref(false);
   const cargandoTablaApps = ref(false);
+  const mostrarClientIds = ref(false);
 
   // Tabla editable de resolutores (IssuesServer) y su importación masiva
   const resolutores = ref([]);
@@ -2255,7 +2267,7 @@
 
 <style scoped>
 .page-admin-firebase {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1.5rem 1rem 2.5rem;
   font-family: "Roboto", sans-serif;
@@ -2655,7 +2667,7 @@ table.tabla-datos {
 .col-gasto {
   white-space: nowrap;
   min-width: 90px;
-  text-align: right;
+  text-align: center;
 }
 
 /* ---- Cabecera agrupada "Notificaciones" (dos filas de <thead> en la tabla de aplicaciones) ---- */
@@ -2764,6 +2776,16 @@ table.tabla-datos {
 
 .btn-gmail-oauth ion-icon {
   font-size: 18px;
+}
+
+.btn-client-id-visibility {
+  color: #475569;
+}
+
+.btn-client-id-visibility.is-active {
+  color: #075985;
+  border-color: #60a5fa;
+  background-color: #dbeafe;
 }
 
 .conexion-text {
@@ -3075,6 +3097,12 @@ table.tabla-datos {
   }
   .btn-refresh:hover { background-color: #474e57; }
   .btn-gmail-oauth { color: #f28b82; }
+  .btn-client-id-visibility { color: #cbd5e1; }
+  .btn-client-id-visibility.is-active {
+    color: #bae6fd;
+    border-color: #0284c7;
+    background-color: #0c4a6e;
+  }
   .search-input {
     background-color: #1f2937;
     color: #e6ebf1;
