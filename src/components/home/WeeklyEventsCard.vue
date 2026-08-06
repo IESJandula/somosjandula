@@ -17,13 +17,18 @@
     <div v-else-if="eventoActual" class="weekly-events-slideshow">
       <transition name="event-slide" mode="out-in">
         <article :key="eventoActual.clave" class="weekly-event-slide" aria-live="polite">
-          <img
-            class="weekly-event-image"
-            :src="eventoActual.imagenCategoria || IMAGEN_EVENTO_FALLBACK"
-            :alt="eventoActual.categoria
-              ? `Ilustración de la categoría ${eventoActual.categoria}`
-              : `Ilustración del evento ${eventoActual.titulo}`"
-          />
+          <div
+            class="weekly-event-image-frame"
+            :style="estiloMarcoImagen(eventoActual.imagenCategoria || IMAGEN_EVENTO_FALLBACK)"
+          >
+            <img
+              class="weekly-event-image"
+              :src="eventoActual.imagenCategoria || IMAGEN_EVENTO_FALLBACK"
+              :alt="eventoActual.categoria
+                ? `Ilustración de la categoría ${eventoActual.categoria}`
+                : `Ilustración del evento ${eventoActual.titulo}`"
+            />
+          </div>
 
           <div class="weekly-event-copy">
             <div class="weekly-event-date-row">
@@ -56,11 +61,16 @@
     </div>
 
     <div v-else class="weekly-events-empty" aria-live="polite">
-      <img
-        class="weekly-event-image"
-        src="/img/home/eventos-semana-placeholder.webp"
-        alt="Ilustración temporal del calendario semanal"
-      />
+      <div
+        class="weekly-event-image-frame"
+        :style="estiloMarcoImagen(IMAGEN_EVENTO_FALLBACK)"
+      >
+        <img
+          class="weekly-event-image"
+          :src="IMAGEN_EVENTO_FALLBACK"
+          alt="Ilustración temporal del calendario semanal"
+        />
+      </div>
       <p>No hay eventos desde hoy hasta el domingo.</p>
     </div>
 
@@ -163,6 +173,7 @@ import { crearToast } from "@/utils/toast";
 
 const ROTACION_MS = 6500;
 const IMAGEN_EVENTO_FALLBACK = "/img/home/eventos-semana-placeholder.webp";
+const estiloMarcoImagen = (url) => ({ "--weekly-event-image": `url(${url})` });
 
 const cargando = ref(true);
 const eventosSemana = ref([]);
@@ -508,16 +519,46 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-.weekly-event-image {
-  display: block;
+.weekly-event-image-frame {
+  position: relative;
+  isolation: isolate;
   width: 100%;
-  aspect-ratio: 3 / 2;
-  max-height: 205px;
-  object-fit: contain;
-  object-position: center;
+  height: clamp(205px, 22vw, 300px);
+  overflow: hidden;
   border: 1px solid #dbe4ee;
   border-radius: 9px;
   background-color: #eaf4ff;
+}
+
+.weekly-event-image-frame::before {
+  position: absolute;
+  z-index: 0;
+  inset: -20px;
+  content: "";
+  background-image: var(--weekly-event-image);
+  background-position: center;
+  background-size: cover;
+  filter: blur(16px) saturate(0.9);
+  opacity: 0.78;
+  transform: scale(1.08);
+}
+
+.weekly-event-image-frame::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: "";
+  background: rgba(15, 23, 42, 0.14);
+}
+
+.weekly-event-image {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .weekly-event-copy {
@@ -719,8 +760,12 @@ onUnmounted(() => {
     color: #c8c8c8;
   }
 
-  .weekly-event-image {
+  .weekly-event-image-frame {
     border-color: #555;
+  }
+
+  .weekly-event-image-frame::after {
+    background: rgba(15, 23, 42, 0.28);
   }
 
   .weekly-event-request-input {
@@ -737,9 +782,9 @@ onUnmounted(() => {
 
 }
 
-@media (max-width: 900px) {
-  .weekly-event-image {
-    max-height: none;
+@media (max-width: 1120px) {
+  .weekly-event-image-frame {
+    height: clamp(220px, 45vw, 420px);
   }
 }
 
@@ -762,6 +807,10 @@ onUnmounted(() => {
 @media (max-width: 480px) {
   .weekly-events-card {
     padding: 0.85rem;
+  }
+
+  .weekly-event-image-frame {
+    height: clamp(190px, 58vw, 280px);
   }
 
   .weekly-event-request-form {
@@ -827,11 +876,10 @@ onUnmounted(() => {
     overflow: hidden;
   }
 
-  .weekly-event-image {
+  .weekly-event-image-frame {
     height: 100%;
     min-height: 0;
     max-height: none;
-    aspect-ratio: auto;
     border-radius: 18px;
   }
 
@@ -877,7 +925,7 @@ onUnmounted(() => {
     gap: 1.5rem;
   }
 
-  .weekly-events-empty .weekly-event-image {
+  .weekly-events-empty .weekly-event-image-frame {
     width: min(72vw, 1100px);
   }
 

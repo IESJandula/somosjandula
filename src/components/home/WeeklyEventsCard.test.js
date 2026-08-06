@@ -159,6 +159,8 @@ describe("WeeklyEventsCard", () => {
     expect(crearUrl).toHaveBeenCalledWith(imagen);
     expect(wrapper.get(".weekly-event-image").attributes("src"))
       .toBe("blob:categoria-evento");
+    expect(wrapper.get(".weekly-event-image-frame").attributes("style"))
+      .toContain("blob:categoria-evento");
 
     wrapper.unmount();
     expect(revocarUrl).toHaveBeenCalledWith("blob:categoria-evento");
