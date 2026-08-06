@@ -10,7 +10,6 @@ import '@ionic/vue/css/core.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
-
 /* Tema básico de Ionic */
 import '@ionic/vue/css/normalize.css';
 import '@ionic/vue/css/structure.css';
