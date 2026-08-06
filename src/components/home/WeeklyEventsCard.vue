@@ -633,9 +633,9 @@ onUnmounted(() => {
 
 .weekly-event-request-form {
   display: grid;
-  grid-template-columns: minmax(180px, 1.5fr) minmax(190px, 1.25fr) minmax(135px, 0.8fr) minmax(135px, 0.8fr) auto;
+  grid-template-columns: minmax(120px, 1.5fr) minmax(140px, 1.25fr) minmax(95px, 0.8fr) minmax(95px, 0.8fr) auto;
   gap: 0.45rem;
-  min-width: 760px;
+  min-width: 560px;
 }
 
 .weekly-event-request {
@@ -645,6 +645,7 @@ onUnmounted(() => {
 .weekly-event-request-input {
   box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   min-height: 38px;
   padding: 0.45rem 0.6rem;
   color: #243447;
@@ -741,9 +742,29 @@ onUnmounted(() => {
   }
 }
 
+@media (max-width: 768px) {
+  .weekly-event-request {
+    overflow-x: visible;
+  }
+
+  .weekly-event-request-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  .weekly-event-request-submit {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
 @media (max-width: 480px) {
   .weekly-events-card {
     padding: 0.85rem;
+  }
+
+  .weekly-event-request-form {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .weekly-events-title {

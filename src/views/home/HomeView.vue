@@ -313,7 +313,7 @@ const secciones = computed(() => {
 
 <style scoped>
 .page-home {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1rem 1rem 1.5rem;
   font-family: "Roboto", sans-serif;
@@ -323,9 +323,14 @@ const secciones = computed(() => {
   min-width: 0;
 }
 
+.home-section-layout:not(.favorites-events-row) {
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
 .favorites-events-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(310px, 1fr);
+  grid-template-columns: minmax(440px, 5fr) minmax(620px, 8fr);
   align-items: stretch;
   gap: 1rem;
   margin-bottom: 1rem;
@@ -528,7 +533,7 @@ const secciones = computed(() => {
   .tip-text { color: #d8dee4; }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1120px) {
   .favorites-events-row {
     grid-template-columns: minmax(0, 1fr);
   }
