@@ -1,4 +1,4 @@
-import { automationsApiUrl, adminApiUrl } from '@/environment/apiUrls';
+import { automationsApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/adminService';
 
 export const crearSensorBooleano = async (toastMessage, toastColor, isToastOpen, mac, estado, nombreUbicacion, tipo, umbralMinimo, umbralMaximo) => {

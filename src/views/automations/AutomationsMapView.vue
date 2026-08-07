@@ -140,7 +140,7 @@
             <span
               v-if="projectorDotState(id)"
               class="projector-dot"
-              :class="[projectorDotState(id), projectorDotCornerClass(id)]"
+              :class="[projectorDotState(id), projectorDotCornerClass()]"
             ></span>
           </div>
         </div>
@@ -168,7 +168,7 @@
             <span
               v-if="projectorDotState(id)"
               class="projector-dot"
-              :class="[projectorDotState(id), projectorDotCornerClass(id)]"
+              :class="[projectorDotState(id), projectorDotCornerClass()]"
             ></span>
           </div>
         </div>
@@ -196,7 +196,7 @@
             <span
               v-if="projectorDotState(id)"
               class="projector-dot"
-              :class="[projectorDotState(id), projectorDotCornerClass(id)]"
+              :class="[projectorDotState(id), projectorDotCornerClass()]"
             ></span>
           </div>
         </div>
@@ -410,7 +410,7 @@ const doorDotCornerClass = (zoneId: string): string =>
   return DOOR_DOT_BOTTOM_RIGHT.has(zoneId) ? 'door-dot-br' : ''
 }
 
-const projectorDotCornerClass = (_zoneId: string): string =>
+const projectorDotCornerClass = (): string =>
 {
   return 'projector-dot-bl'
 }
@@ -694,41 +694,6 @@ const cargarCursosYEspaciosFijos = async () => {
     loadingEspacios.value = false
   }
 }
-
-const recargarEspacios = async () => {
-  if (!cursoAcademicoSeleccionado.value) return
-
-  loadingEspacios.value = true
-  try {
-    ;[espaciosFijos.value, espaciosDesdoble.value, espaciosSinDocencia.value] = (await Promise.all([
-      obtenerEspaciosFijo(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        cursoAcademicoSeleccionado.value
-      ),
-      obtenerEspaciosDesdoble(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        cursoAcademicoSeleccionado.value
-      ),
-      obtenerEspaciosSinDocencia(
-        toastMessage,
-        toastColor,
-        isToastOpen,
-        cursoAcademicoSeleccionado.value
-      )
-    ])) as any
-  } catch (e: any) {
-    toastMessage.value = e?.message ?? 'Error recargando espacios'
-    toastColor.value = 'danger'
-    isToastOpen.value = true
-  } finally {
-    loadingEspacios.value = false
-  }
-}
-
 
 // init
 applyDimensions()

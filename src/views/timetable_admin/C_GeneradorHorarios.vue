@@ -9,9 +9,11 @@
             <th class="estado-header">Estado</th>
             <th class="acciones-header">Acciones</th>
             <th class="soluciones-header">Puntuación</th>
-            <th v-if="soluciones.length > 0" v-for="columna in columnasGeneradas" :key="columna.key" class="sub-header">
-              {{ columna.titulo }}
-            </th>
+            <template v-if="soluciones.length > 0">
+              <th v-for="columna in columnasGeneradas" :key="columna.key" class="sub-header">
+                {{ columna.titulo }}
+              </th>
+            </template>
           </tr>
         </thead>
         <tbody>
@@ -128,7 +130,9 @@
             <th>Preferencias diarias</th>
             <th>Preferencias concretas</th>
             <th>Observaciones</th>
-            <th v-if="soluciones.length > 0" v-for="col in columnasProfesor" :key="col.key">{{ col.titulo }}</th>
+            <template v-if="soluciones.length > 0">
+              <th v-for="col in columnasProfesor" :key="col.key">{{ col.titulo }}</th>
+            </template>
           </tr>
         </thead>
         <tbody>
@@ -303,7 +307,6 @@ import {
   actualizarRestriccionesImpartir,
   obtenerRestriccionesImpartir,
   actualizarRestriccionesReduccion,
-  obtenerRestriccionesReduccion,
   obtenerListaDias,
   obtenerListaTramos,
   seleccionarSolucion,
@@ -687,7 +690,7 @@ const guardarConciliacion = async (email, conciliacion) => {
       const errorData = await response.json();
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', `Error: ${errorData.message}`);
     }
-  } catch (error) {
+  } catch {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al actualizar la conciliación');
   }
 };
@@ -962,7 +965,7 @@ const generarHorarios = async () => {
       
       crearToast(toastMessage, toastColor, isToastOpen, "danger", mensajeError);
     }
-  } catch (error) {
+  } catch {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al lanzar el generador de horarios.');
   }
 };
@@ -979,7 +982,7 @@ const forzarDetencion = async () => {
       const errorData = await response.json();
       crearToast(toastMessage, toastColor, isToastOpen, "danger", errorData.message);
     }
-  } catch (error) {
+  } catch {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al forzar la detención del generador.');
   }
 };
@@ -1271,7 +1274,7 @@ const procesarSoluciones = async (infoGenerador) => {
   // Convertir infoGenerador a array de soluciones
   soluciones.value  = [];
   if (infoGenerador && Array.isArray(infoGenerador)) {
-    infoGenerador.forEach((instancia, index) => {
+    infoGenerador.forEach((instancia) => {
       const id = instancia.idGeneradorInstancia || instancia.id;
       const puntuacion = instancia.puntuacion;
       const solucionElegida = instancia.solucionElegida || false;
@@ -1290,9 +1293,6 @@ const procesarSoluciones = async (infoGenerador) => {
 
   // Actualizar las soluciones (sin activar "Nueva solución encontrada")
   if (soluciones.value.length > 0) {
-    // Guardar la solución elegida actual antes de actualizar
-    const solucionElegidaAnterior = soluciones.value.find(s => s.solucionElegida);
-
     nuevaSolucionEncontrada.value = soluciones.value.length > solucionesAnteriores.value.length;
     if (nuevaSolucionEncontrada.value)
     {
@@ -1458,7 +1458,7 @@ const borrarSolucionSeleccionada = async () => {
       // Si la solución borrada era la elegida, seleccionar la siguiente con mayor puntuación
       if (esSolucionElegida && soluciones.value.length > 0) {
         // Ordenar por puntuación de mayor a menor
-        const siguienteSolucion = soluciones[0];
+        const siguienteSolucion = soluciones.value[0];
         
         if (siguienteSolucion) {
           try {
@@ -1490,7 +1490,7 @@ const borrarSolucionSeleccionada = async () => {
     } else {
       crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al eliminar la solución');
     }
-  } catch (error) {
+  } catch {
     crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'Error al eliminar la solución');
   }
 };

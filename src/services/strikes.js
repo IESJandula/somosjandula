@@ -1,4 +1,4 @@
-import { strikesApiUrl, adminApiUrl } from '@/environment/apiUrls';
+import { strikesApiUrl } from '@/environment/apiUrls';
 import { obtenerTokenJWTValido } from '@/services/adminService';
 import { crearToast } from "@/utils/toast.js";
 
@@ -127,13 +127,12 @@ export const obtenerAlumnosHuelga = async (toastMessage, toastColor, isToastOpen
 
     if (!response.ok) 
     {
-      const errorData = await response.json().catch(() => ({}));
       throw new Error("Error al consultar alumnos");
     }
 
     return await response.json();
 
-  } catch (error) 
+  } catch
   {
     crearToast(toastMessage, toastColor, isToastOpen, "error", "Error al obtener alumnos");
     return [];
@@ -164,7 +163,7 @@ export const obtenerCursos = async (toastMessage, toastColor, isToastOpen ) =>
 
     return await response.json();
   }
-  catch (error)
+  catch
   {
     crearToast(toastMessage, toastColor, isToastOpen, "error", "Error al obtener cursos");
     return [];

@@ -1,7 +1,7 @@
 <template>
-  <div class="page-corazon">
+  <div class="page-core">
     <header class="page-header">
-      <h1 class="t-1">Corazón</h1>
+      <h1 class="t-1">Core</h1>
       <p class="page-subtitle">Añade espacios, departamentos y cursos y etapas</p>
     </header>
 
@@ -496,6 +496,8 @@
 </template>
 
 <script setup>
+defineOptions({ name: "AdminCore" });
+
 import { ref, onMounted, onUnmounted, watch, nextTick, computed } from "vue";
 import { IonToast } from "@ionic/vue";
 import FileUpload from "@/components/printers/FileUpload.vue";
@@ -1288,7 +1290,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.page-corazon {
+.page-core {
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem 1rem 2.5rem;
@@ -1687,7 +1689,7 @@ tr:hover td {
 }
 
 @media (max-width: 768px) {
-  .page-corazon { padding-inline: 0.75rem; }
+  .page-core { padding-inline: 0.75rem; }
   .main-panel { padding: 1rem; }
   .t-1 { font-size: 1.75rem; }
   .constantes-grid { grid-template-columns: 1fr; }

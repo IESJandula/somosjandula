@@ -527,7 +527,7 @@ function crearWav(buffers) {
 
   for (let i = 0; i < pcmData.length; i++, index += 2) {
 
-    let sample = Math.max(-1, Math.min(1, pcmData[i]))
+    const sample = Math.max(-1, Math.min(1, pcmData[i]))
 
     view.setInt16(
       index,

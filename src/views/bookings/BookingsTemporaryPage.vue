@@ -263,7 +263,6 @@ const fechaRepeticion = ref(fechaSeleccionada.value);
 const fechaInicioCurso = ref('');
 const fechaFinCurso = ref('');
 const semana = ref('');
-let semanas = [];
 const semanaLimite = ref('');
 const mes = ref('');
 const day = ref('');

@@ -44,7 +44,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { IonContent, IonIcon, IonToast, IonPage } from '@ionic/vue';
 import { logoGoogle as googleIcon, car as carIcon } from 'ionicons/icons';
-import { signInWithPopup, signOut } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
 import { crearToast } from '@/utils/toast.js';
 import { obtenerRolesUsuario } from '@/services/adminService.js';
 import { initializeApp } from "firebase/app";
@@ -75,7 +75,7 @@ const loginWithGoogle = async () =>
     setLoggingInStatus(true);
 
     // Login con Google
-    const result = await signInWithPopup(auth, googleProvider);
+    await signInWithPopup(auth, googleProvider);
 
     // Validar usuario
     await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);

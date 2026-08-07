@@ -215,7 +215,7 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatos, filtrarDatosPaginado, prevalidacionesImpresion, imprimir, obtenerCosteImpresion } from '@/services/printers';
+import { obtenerColores, obtenerOrientaciones, obtenerCaras, filtrarDatosPaginado, prevalidacionesImpresion, imprimir, obtenerCosteImpresion } from '@/services/printers';
 import { formatearEuros } from '@/utils/currency';
 import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue';
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue';
@@ -242,7 +242,6 @@ let observadorCambioTamanioFormulario = null;
 /*****************************/
 const MODO_SELECCION_PAGINAS_TODAS       = 'TODAS';
 const MODO_SELECCION_PAGINAS_RANGO       = 'RANGO';
-const MODO_SELECCION_PAGINAS_ESPECIFICAS = 'ESPECÍFICAS';
 
 /*******************************************/
 /***** Lista de valores del formulario *****/
@@ -651,7 +650,7 @@ const enviarPDFAImprimir = async () =>
       cerrarVistaPreviaPdf();
     }
   } 
-  catch (error)
+  catch
   {
     manejarError('Error al enviar el PDF');
   }
@@ -774,7 +773,7 @@ const obtenerDatosDelFormulario = async () =>
     orientacionesDisponibles.value = await obtenerOrientaciones(toastMessage, toastColor, isToastOpen);
     carasDisponibles.value         = await obtenerCaras(toastMessage, toastColor, isToastOpen);
   }
-  catch (error)
+  catch
   {
     manejarError('Error al obtener datos del formulario');
   }
@@ -817,7 +816,7 @@ const actualizarTablaHistorialImpresiones = async (pagina = 0) =>
       manejarError('Error al obtener los datos del historial de impresiones');
     }
   }
-  catch (error)
+  catch
   {
     manejarError('Error al obtener datos del historial de impresiones');
   }
@@ -833,7 +832,7 @@ const cargarGastoImpresion = async () =>
   {
     gastoImpresion.value = await obtenerCosteImpresion(toastMessage, toastColor, isToastOpen);
   }
-  catch (error)
+  catch
   {
     gastoImpresion.value = null;
   }
@@ -887,7 +886,7 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
       }
     }
   }
-  catch (error)
+  catch
   {
     manejarError('Error en la prevalidación de impresión');
   }
@@ -943,7 +942,7 @@ const prevalidacionGlobalObteniendoImpresoras = async () =>
       maximoHojasImpresion.value = parseInt(maxHojasImpresionConstante.valor, 10) ;
     }
   }
-  catch (error)
+  catch
   {
     manejarError('Error al obtener las constantes');
   }
@@ -1067,7 +1066,7 @@ watch(
 /**
  * Watcher para monitorear cambios en pdfPreviewUrl
  */
-watch(urlVistaPreviaPdf, (newValue, oldValue) =>
+watch(urlVistaPreviaPdf, () =>
 {
   nextTick(() => sincronizarAlturaVistaPreviaPdf());
 });

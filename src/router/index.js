@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { ref } from 'vue';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/adminService';
 
 import LoginPage from '@/views/LoginPage.vue';
@@ -25,7 +25,7 @@ import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
 
 import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
 
-import Corazon from '@/views/admin/Corazon.vue';
+import Core from '@/views/admin/Core.vue';
 import B_CargaMatriculas from '@/views/school_manager/B_CargaMatriculas.vue';
 import C_AsignaturaYBloque from '@/views/school_manager/C_AsignaturaYBloque.vue';
 import D_CrearGrupos from '@/views/school_manager/D_CrearGrupos.vue';
@@ -148,9 +148,9 @@ const routes = [
         },
       },
       {
-        path: 'admin/corazon',
-        component: Corazon,
-        name: 'CorazonAdmin',
+        path: 'admin/core',
+        component: Core,
+        name: 'CoreAdmin',
         meta: {
           role: 'ADMINISTRADOR'
         },
@@ -391,16 +391,6 @@ router.beforeEach(async (to, from, next) => {
     return next(); // Si no requiere autenticación, continúa normalmente
   }
 });
-
-
-function waitForAuthReady(auth) {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe(); // Nos desuscribimos después de obtener el usuario
-      resolve(user);
-    });
-  });
-}
 
 
 export default router;

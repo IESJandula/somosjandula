@@ -222,12 +222,12 @@ const crearNotificacionValidacionesPrevias = async () =>
     try
     {
       // Si el error es un objeto, lo parseamos
-      let errorMessage = JSON.parse(err.message);
+      const errorMessage = JSON.parse(err.message);
 
       // Mostramos el mensaje de error
       crearToast(toastMessage, toastColor, isToastOpen, "danger", errorMessage["message"]);
     }
-    catch (err)
+    catch
     {
       // Si el error no es un objeto, mostramos el mensaje de error genérico
       crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al crear la notificación");
@@ -265,7 +265,7 @@ const cargarNotificaciones = async () => {
       tipo: n.tipo,
     }));
   } 
-  catch (err)
+  catch
   {
     crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al obtener notificaciones");
   }
@@ -280,7 +280,7 @@ const borrarNotificacion = async (n) => {
     await borrarNotificacionWeb(toastMessage, toastColor, isToastOpen, n.id);
     crearToast(toastMessage, toastColor, isToastOpen, "success", "Notificación borrada correctamente");
     await cargarNotificaciones();
-  } catch (err) {
+  } catch {
     crearToast(toastMessage, toastColor, isToastOpen, "danger", "Error al borrar la notificación");
   }
 };

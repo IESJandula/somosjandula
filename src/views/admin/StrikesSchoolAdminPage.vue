@@ -95,7 +95,6 @@
 <script setup lang="ts">
 
 import { ref, onMounted } from "vue";
-import { crearToast } from "@/utils/toast.js";
 import { IonToast } from "@ionic/vue";
 import { crearHuelga, obtenerHuelgas, borrarHuelga } from "@/services/strikes.js";
 
@@ -132,8 +131,6 @@ const huelga = ref<HuelgaForm>({
   fechaInicio: "",
   fechaFin: "",
 });
-
-const ultimaUrlForm = ref<string | null>(null);
 
 const isToastOpen = ref(false);
 const toastMessage = ref("");
@@ -309,7 +306,7 @@ async function copiarUrl(url: string)
   {
     await navigator.clipboard.writeText(url);
     mostrarToast("URL copiada al portapapeles", "success");
-  } catch (error) {
+  } catch {
     mostrarToast("No se pudo copiar la URL", "danger");
   }
 }

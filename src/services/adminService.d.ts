@@ -47,7 +47,7 @@ export async function obtenerJwtDecodificado(toastMessage: Ref<string>,
 
 export async function obtenerTokenJWTValido(toastMessage: Ref<string>,
                                             toastColor: Ref<string>,
-                                            isToastOpen: Ref<boolean>): Promise<Object>;
+                                            isToastOpen: Ref<boolean>): Promise<string | null>;
 
 export async function obtenerInfoUsuarios(toastMessage: Ref<string>,
                                           toastColor: Ref<string>,

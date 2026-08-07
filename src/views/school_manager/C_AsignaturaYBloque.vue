@@ -1302,7 +1302,7 @@ const asignaturaSinDocencia = async (asignatura) => {
 
     }
 
-  } catch (error) {
+  } catch {
 
     mensajeActualizacion = 'Error al actualizar el estado de sin docencia';
 

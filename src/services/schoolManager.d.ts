@@ -430,7 +430,7 @@ export interface CursoEtapaDto {
   esoBachillerato: boolean;
 }
 
-export interface CursoEtapaListadoItem extends CursoEtapaDto {}
+export type CursoEtapaListadoItem = CursoEtapaDto;
 
 export interface CursoEtapaApiDto {
   curso: number;

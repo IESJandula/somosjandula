@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import App from "@/App.vue";
 import router from "@/router";
-import { IonicVue, IonToast } from "@ionic/vue";
+import { IonicVue } from "@ionic/vue";
 import { ref } from 'vue';
 import { signOut } from "firebase/auth";
 
@@ -69,7 +69,7 @@ import { firebaseConfig } from '@/environment/firebaseConfig';
 import { APP_VERSION, SESSION_JWT_TOKEN } from '@/utils/constants';
 
 // Inicializar Firebase
-const firebaseApp = initializeApp(firebaseConfig);
+initializeApp(firebaseConfig);
 
 // Registrar iconos
 addIcons({
@@ -104,11 +104,6 @@ addIcons({
   "checkmark-outline": checkmarkOutline,
   "log-out-outline": logOutOutline,
 });
-
-// Variables para el toast
-const isToastOpen = ref(false);
-const toastMessage = ref('');
-const toastColor = ref('success');
 
 const app = createApp(App).use(IonicVue).use(router);
 

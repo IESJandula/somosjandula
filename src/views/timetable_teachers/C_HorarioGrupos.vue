@@ -59,7 +59,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { IonToast } from '@ionic/vue';
-import { obtenerRolesUsuario, obtenerEmailUsuario } from '@/services/adminService';
+import { obtenerRolesUsuario } from '@/services/adminService';
 import { crearToast } from '@/utils/toast.js';
 import { 
   obtenerCursosEtapasGrupos,
@@ -88,7 +88,7 @@ async function verificarRoles() {
   try {
     const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
     rolesUsuario.value = roles;
-  } catch (error) {
+  } catch {
     const mensajeActualizacion = 'Error al verificar roles';
     const mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -123,7 +123,7 @@ const obtenerDiasSemana = async () => {
         diaSemana: dia, 
         id: index 
       }));
-  } catch (error) {
+  } catch {
     const mensajeActualizacion = 'Error al cargar los días de la semana';
     const mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -142,7 +142,7 @@ const obtenerTramosHorarios = async () => {
         tramoHorario: tramo,
         id: index,
       }));
-  } catch (error) {
+  } catch {
     const mensajeActualizacion = 'Error al cargar los tramos horarios';
     const mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -421,4 +421,4 @@ td {
     background-color: var(--form-bg-dark);
   }
 }
-</style> 
+</style>

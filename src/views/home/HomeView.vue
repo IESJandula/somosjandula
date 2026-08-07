@@ -225,7 +225,7 @@ const seccionAdministracion = computed(() => ({
   titulo: "Administración",
   icono: shieldCheckmarkOutline,
   items: [
-    { label: "Corazón", icono: heartOutline, to: "/admin/corazon" },
+    { label: "Core", icono: heartOutline, to: "/admin/core" },
     { label: "Usuarios y apps", icono: peopleOutline, to: "/admin" },
     { label: "Infra", icono: serverOutline, to: "/admin/infrastructure" },
     { label: "Reservas", icono: calendarOutline, to: "/admin/bookings" },

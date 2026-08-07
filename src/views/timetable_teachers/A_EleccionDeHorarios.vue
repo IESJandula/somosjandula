@@ -293,7 +293,7 @@ async function verificarRoles() {
     const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
     rolesUsuario.value = roles; // Asigna los roles al array `rolesUsuario`
   }
-  catch (error) {
+  catch {
     mensajeActualizacion = 'Error al verificar roles'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -604,7 +604,7 @@ const actualizarConciliacionFamiliar = async () => {
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
     }
 
-  } catch (error) {
+  } catch {
     mensajeActualizacion = 'Error al actualizar la conciliación familiar'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -627,7 +627,7 @@ const actualizarPrimeraHora = async () => {
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
     }
 
-  } catch (error) {
+  } catch {
     mensajeActualizacion = 'Error al actualizar la preferencia de primera hora'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -649,7 +649,7 @@ const actualizarPreferenciaHorariaIndividual = async (idSeleccion, tramo) => {
       mensajeColor = 'danger';
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, errorData.message);
     }
-  } catch (error) {
+  } catch {
     mensajeActualizacion = `Error al actualizar el tramo horario ${idSeleccion + 1}`;
     mensajeColor = 'danger';
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
@@ -678,7 +678,7 @@ const actualizarOtrasObservacionesVista = async () => {
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion);
     }
 
-  } catch (error) {
+  } catch {
     mensajeActualizacion = 'Error al actualizar las otras observaciones'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -779,7 +779,7 @@ const eliminarSolicitud = async (index) => {
     }
 
   }
-  catch (error) {
+  catch {
     mensajeActualizacion = 'Error al eliminar solicitud'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -829,7 +829,7 @@ const guardarSolicitud = async (index) => {
     }
 
   }
-  catch (error) {
+  catch {
     mensajeActualizacion = 'Error al guardar solicitud'
     mensajeColor = 'danger'
     crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -885,7 +885,7 @@ const guardarTodo = async () => {
       }
 
     }
-    catch (error) {
+    catch {
       mensajeActualizacion = 'Error al guardar todas las solicitudes'
       mensajeColor = 'danger'
       crearToast(toastMessage, toastColor, isToastOpen, mensajeColor, mensajeActualizacion)
@@ -954,14 +954,14 @@ onMounted(async () => {
 });
 
 // Watcher para actualizar automáticamente la conciliación familiar
-watch(isOn, async (nuevoValor) => {
+watch(isOn, async () => {
   if (!isDesabilitado.value) {
     await actualizarConciliacionFamiliar();
   }
 });
 
 // Watcher para actualizar automáticamente la preferencia de primera hora
-watch(sinClasePrimeraHoraSeleccionado, async (nuevoValor) => {
+watch(sinClasePrimeraHoraSeleccionado, async () => {
   if (!isDesabilitado.value) {
     await actualizarPrimeraHora();
   }
