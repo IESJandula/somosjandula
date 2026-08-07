@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-// Importa las funciones necesarias de Vue y Axios
+// Importa las dependencias del componente
 import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { cargarCursosEtapas, obtenerCursoAcademicoSeleccionado } from '@/services/schoolManager.js'
 import { crearToast } from '@/utils/toast.js';

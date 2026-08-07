@@ -95,11 +95,10 @@ RUN set -e; \
       exit 1; \
     fi
 
-# Instalamos dependencias primero (mejor cacheo de capas). El repo NO versiona
-# package-lock.json (gitignored), por eso usamos `npm install` en lugar de
-# `npm ci`, que exige lockfile.
-COPY package.json ./
-RUN npm install --no-audit --no-fund
+# Instalamos exactamente el arbol validado y versionado en package-lock.json.
+# Copiar primero los manifiestos permite reutilizar la cache de esta capa.
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
 # Copiamos el resto del proyecto y compilamos la SPA de produccion.
 COPY . .

@@ -1,5 +1,6 @@
 {
   "recommendations": [
-    "Webnative.webnative"
+    "Vue.volar",
+    "dbaeumer.vscode-eslint"
   ]
 }

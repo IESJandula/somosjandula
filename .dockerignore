@@ -4,7 +4,7 @@ dist/
 www/
 coverage/
 
-# Plataformas nativas de Capacitor (no aplican al despliegue web)
+# Plataformas nativas (no aplican al despliegue web)
 android/
 ios/
 platforms/
@@ -34,10 +34,6 @@ npm-debug.log*
 *.tmp
 .DS_Store
 Thumbs.db
-
-# Tests e2e (no necesarios para construir la SPA)
-tests/
-cypress.config.ts
 
 # Documentacion de contenedorizacion (no necesaria dentro de la imagen)
 DOCKER.md

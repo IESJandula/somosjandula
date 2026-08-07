@@ -8,51 +8,53 @@
     "build:staging": "vue-tsc && vite build --mode staging",
     "build": "vue-tsc && vite build --mode production",
     "preview": "vite preview",
-    "test:e2e": "cypress run",
-    "test:unit": "vitest",
+    "test:unit": "vitest run",
     "lint": "eslint ."
   },
-  "dependencies": {    
-    "@capacitor/app": "6.0.0",
-    "@capacitor/core": "^6.2.1",
-    "@capacitor/haptics": "6.0.0",
-    "@capacitor/keyboard": "6.0.1",
-    "@capacitor/push-notifications": "^6.0.2",
-    "@capacitor/status-bar": "6.0.0",
-    "@ionic/vue": "^8.2.7",
-    "@ionic/vue-router": "^8.2.7",
+  "dependencies": {
+    "@ionic/vue": "^8.8.17",
+    "@ionic/vue-router": "^8.8.17",
     "@popperjs/core": "^2.11.8",
     "@stomp/stompjs": "^7.3.0",
-    "@vuepic/vue-datepicker": "^11.0.2",
-    "axios": "^1.3.1",
-    "bootstrap": "^5.3.3",
+    "@vuepic/vue-datepicker": "^11.0.3",
+    "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.11.3",
-    "date-fns": "^4.1.0",
-    "echarts": "^6.0.0",
-    "firebase": "^10.14.1",
+    "date-fns": "^4.4.0",
+    "echarts": "^6.1.0",
+    "firebase": "^11.10.0",
     "ionicons": "^7.4.0",
     "jwt-decode": "^4.0.0",
-    "pdfjs-dist": "^4.5.136",
-    "somosjandula": "file:",
-    "vue": "^3.3.0",
-    "vue-router": "^4.0.13",
-    "vuex": "^4.0.2"
+    "pdfjs-dist": "^4.10.38",
+    "vue": "^3.5.41",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@capacitor/cli": "6.1.0",
+    "@eslint/js": "^9.39.5",
     "@vitejs/plugin-legacy": "^6.1.1",
-    "@vitejs/plugin-vue": "^5.2.3",
-    "@vue/eslint-config-typescript": "^12.0.0",
-    "@vue/test-utils": "^2.3.0",
-    "cypress": "^13.5.0",
-    "eslint": "^8.35.0",
-    "eslint-plugin-vue": "^9.9.0",
-    "jsdom": "^22.1.0",
-    "terser": "^5.4.0",
-    "typescript": "^5.5.4",
-    "vite": "^6.3.4",
-    "vitest": "^3.1.2",
-    "vue-tsc": "^2.0.22"
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vue/eslint-config-typescript": "14.6.0",
+    "@vue/test-utils": "^2.4.11",
+    "eslint": "^9.39.5",
+    "eslint-plugin-vue": "10.9.0",
+    "globals": "^17.9.0",
+    "happy-dom": "^20.11.1",
+    "terser": "^5.49.2",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.3",
+    "vitest": "^3.2.7",
+    "vue-tsc": "^2.2.12"
+  },
+  "overrides": {
+    "@typescript-eslint/parser": "8.55.0",
+    "@typescript-eslint/utils": "8.55.0",
+    "typescript-eslint": "8.55.0",
+    "vue-eslint-parser": "10.2.0",
+    "js-beautify": {
+      "glob": "13.0.6"
+    }
+  },
+  "engines": {
+    "node": ">=20.10.0"
   },
   "description": "An Ionic project"
 }

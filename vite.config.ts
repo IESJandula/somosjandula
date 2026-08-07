@@ -19,6 +19,6 @@ export default defineConfig({
   base: process.env.VITE_BASE_URL || '/',
   test: {
     globals: true,
-    environment: 'jsdom'
+    environment: 'happy-dom'
   }
 })

@@ -67,8 +67,8 @@ git clone https://github.com/tuusuario/somosjandula.git
 # Navegar al directorio del proyecto
 cd somosjandula
 
-# Instalar dependencias
-npm install
+# Instalar exactamente las dependencias validadas
+npm ci
 
 # Ejecutar el proyecto en desarrollo
 npm run dev
