@@ -14,7 +14,38 @@
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch } from "vue";
-import * as echarts from "echarts";
+import { PieChart } from "echarts/charts";
+import type { PieSeriesOption } from "echarts/charts";
+import {
+  LegendComponent,
+  TitleComponent,
+  TooltipComponent,
+} from "echarts/components";
+import type {
+  LegendComponentOption,
+  TitleComponentOption,
+  TooltipComponentOption,
+} from "echarts/components";
+import { init, use } from "echarts/core";
+import type { ComposeOption, ECharts } from "echarts/core";
+import { LabelLayout } from "echarts/features";
+import { CanvasRenderer } from "echarts/renderers";
+
+use([
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  LabelLayout,
+  CanvasRenderer,
+]);
+
+type PieChartOption = ComposeOption<
+  | PieSeriesOption
+  | TitleComponentOption
+  | TooltipComponentOption
+  | LegendComponentOption
+>;
 
 interface PieDatum {
   name: string;
@@ -27,7 +58,7 @@ const props = defineProps<{
 }>();
 
 const chartRef = ref<HTMLDivElement | null>(null);
-let chartInstance: echarts.ECharts | null = null;
+let chartInstance: ECharts | null = null;
 
 // Colores de ECharts por defecto
 const colors = [
@@ -48,7 +79,7 @@ const prefersDark = (): boolean =>
   !!window.matchMedia &&
   window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-const buildOption = (): echarts.EChartsOption => {
+const buildOption = (): PieChartOption => {
   const textColor = prefersDark() ? "#ffffff" : "#333333";
   return {
   title: {
@@ -105,7 +136,7 @@ const buildOption = (): echarts.EChartsOption => {
 
 const initChart = () => {
   if (!chartRef.value) return;
-  chartInstance = echarts.init(chartRef.value);
+  chartInstance = init(chartRef.value);
   chartInstance.setOption(buildOption());
 };
 

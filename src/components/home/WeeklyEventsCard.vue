@@ -933,7 +933,10 @@ onUnmounted(() => {
     margin-top: clamp(1rem, 1.8vh, 1.75rem);
   }
 
-  .weekly-event-request-open,
+  .weekly-event-request-open {
+    display: none;
+  }
+
   .weekly-event-request-submit,
   .weekly-event-request-input,
   .weekly-event-request-status {

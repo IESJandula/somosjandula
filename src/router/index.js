@@ -3,60 +3,48 @@ import { ref } from 'vue';
 import { getAuth } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/adminService';
 
-import LoginPage from '@/views/LoginPage.vue';
-import MainLayout from '@/components/MainLayout.vue';
+const LoginPage = () => import('@/views/LoginPage.vue');
+const MainLayout = () => import('@/components/MainLayout.vue');
+const HomeView = () => import('@/views/home/HomeView.vue');
+const AccessDeniedPage = () => import('@/views/error/AccessDeniedPage.vue');
 
-import HomeView from '@/views/home/HomeView.vue';
+// Las vistas se cargan al entrar en su ruta para reducir el bundle inicial.
+const UsersAppsAdminPage = () => import('@/views/admin/UsersAppsAdminPage.vue');
+const InfrastructureAdminPage = () => import('@/views/admin/InfrastructureAdminPage.vue');
+const MetricsAdminPage = () => import('@/views/admin/MetricsAdminPage.vue');
+const BookingsAdminPage = () => import('@/views/admin/BookingsAdminPage.vue');
+const EventsSchoolAdminPage = () => import('@/views/admin/EventsSchoolAdminPage.vue');
+const StrikesSchoolAdminPage = () => import('@/views/admin/StrikesSchoolAdminPage.vue');
+const Core = () => import('@/views/admin/Core.vue');
 
-import AccessDeniedPage from '@/views/error/AccessDeniedPage.vue';
+const PrintersPrintPage = () => import('@/views/printers/PrintersPrintPage.vue');
+const BookingsFixedPage = () => import('@/views/bookings/BookingsFixedPage.vue');
+const BookingsTemporaryPage = () => import('@/views/bookings/BookingsTemporaryPage.vue');
+const TeacherGuidePage = () => import('@/views/documents/TeacherGuidePage.vue');
 
-// Vistas de administración: todas viven en @/views/admin y se sirven bajo la ruta /admin
-import UsersAppsAdminPage from '@/views/admin/UsersAppsAdminPage.vue';
-import InfrastructureAdminPage from '@/views/admin/InfrastructureAdminPage.vue';
-import MetricsAdminPage from '@/views/admin/MetricsAdminPage.vue';
-import BookingsAdminPage from '@/views/admin/BookingsAdminPage.vue';
-import EventsSchoolAdminPage from '@/views/admin/EventsSchoolAdminPage.vue';
-import StrikesSchoolAdminPage from '@/views/admin/StrikesSchoolAdminPage.vue';
+const B_CargaMatriculas = () => import('@/views/school_manager/B_CargaMatriculas.vue');
+const C_AsignaturaYBloque = () => import('@/views/school_manager/C_AsignaturaYBloque.vue');
+const D_CrearGrupos = () => import('@/views/school_manager/D_CrearGrupos.vue');
+const E_TablaResumen = () => import('@/views/school_manager/E_TablaResumen.vue');
+const F_DepartamentosYHoras = () => import('@/views/school_manager/F_DepartamentosYHoras.vue');
+const G_ReduccionesProfesores = () => import('@/views/school_manager/G_ReduccionesProfesores.vue');
 
-import PrintersPrintPage from '@/views/printers/PrintersPrintPage.vue';
+const A_Administracion = () => import('@/views/timetable_admin/A_Administracion.vue');
+const B_ValidadorDatos = () => import('@/views/timetable_admin/B_ValidadorDatos.vue');
+const C_GeneradorHorarios = () => import('@/views/timetable_admin/C_GeneradorHorarios.vue');
+const A_EleccionDeHorarios = () => import('@/views/timetable_teachers/A_EleccionDeHorarios.vue');
+const B_HorarioPersonal = () => import('@/views/timetable_teachers/B_HorarioPersonal.vue');
+const C_HorarioGrupos = () => import('@/views/timetable_teachers/C_HorarioGrupos.vue');
 
-import BookingsFixedPage from '@/views/bookings/BookingsFixedPage.vue';
-import BookingsTemporaryPage from '@/views/bookings/BookingsTemporaryPage.vue';
-
-import TeacherGuidePage from '@/views/documents/TeacherGuidePage.vue';
-
-import Core from '@/views/admin/Core.vue';
-import B_CargaMatriculas from '@/views/school_manager/B_CargaMatriculas.vue';
-import C_AsignaturaYBloque from '@/views/school_manager/C_AsignaturaYBloque.vue';
-import D_CrearGrupos from '@/views/school_manager/D_CrearGrupos.vue';
-import E_TablaResumen from '@/views/school_manager/E_TablaResumen.vue';
-import F_DepartamentosYHoras from '@/views/school_manager/F_DepartamentosYHoras.vue';
-import G_ReduccionesProfesores from '@/views/school_manager/G_ReduccionesProfesores.vue';
-
-import A_Administracion from '@/views/timetable_admin/A_Administracion.vue';
-import B_ValidadorDatos from '@/views/timetable_admin/B_ValidadorDatos.vue';
-import C_GeneradorHorarios from '@/views/timetable_admin/C_GeneradorHorarios.vue';
-
-import A_EleccionDeHorarios from '@/views/timetable_teachers/A_EleccionDeHorarios.vue';
-import B_HorarioPersonal from '@/views/timetable_teachers/B_HorarioPersonal.vue';
-import C_HorarioGrupos from '@/views/timetable_teachers/C_HorarioGrupos.vue';
-
-import LatestNewsPage from '@/views/notifications/LatestNewsPage.vue';
-import ManageNotificationsPage from '@/views/notifications/ManageNotificationsPage.vue';
-
-import IncidenciasTicPage from '@/views/issues/IssuesView.vue';
-
-import AutomationsMapView from '@/views/automations/AutomationsMapView.vue'
-
-import ClonezillaImagesAdminPage from '@/views/clonezilla/ClonezillaImagesAdminPage.vue'
-
-import StatisticsView from '@/views/statistics/StatisticsView.vue';
-
-import EventsSchoolPage from '@/views/events/EventsSchoolPage.vue';
-
-import IAView from '@/views/ia/IAView.vue';
-
-import StrikesSchoolPage from '@/views/strikes/StrikesSchoolPage.vue';
+const LatestNewsPage = () => import('@/views/notifications/LatestNewsPage.vue');
+const ManageNotificationsPage = () => import('@/views/notifications/ManageNotificationsPage.vue');
+const IncidenciasTicPage = () => import('@/views/issues/IssuesView.vue');
+const AutomationsMapView = () => import('@/views/automations/AutomationsMapView.vue');
+const ClonezillaImagesAdminPage = () => import('@/views/clonezilla/ClonezillaImagesAdminPage.vue');
+const StatisticsView = () => import('@/views/statistics/StatisticsView.vue');
+const EventsSchoolPage = () => import('@/views/events/EventsSchoolPage.vue');
+const IAView = () => import('@/views/ia/IAView.vue');
+const StrikesSchoolPage = () => import('@/views/strikes/StrikesSchoolPage.vue');
 
 const routes = [
   {
