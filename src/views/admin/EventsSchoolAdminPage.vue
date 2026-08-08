@@ -428,7 +428,7 @@ onMounted(async () => {
 
 <style scoped>
 .page-admin-events {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
   padding: 1.5rem 1rem 2.5rem;
   font-family: "Roboto", sans-serif;
@@ -587,6 +587,7 @@ onMounted(async () => {
 
 table.tabla-datos {
   width: 100%;
+  table-layout: fixed;
   color: #1a1a1a;
   font-size: 13px;
   text-align: center;
@@ -596,7 +597,7 @@ table.tabla-datos {
 }
 
 .tabla-eventos {
-  min-width: 1120px;
+  min-width: 0;
 }
 
 .tabla-datos th,
@@ -611,7 +612,7 @@ table.tabla-datos {
   z-index: 2;
   color: #fff;
   font-weight: 700;
-  white-space: nowrap;
+  white-space: normal;
   background-color: #007bff;
   box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
 }
@@ -626,14 +627,34 @@ table.tabla-datos {
 }
 
 .col-accion {
-  width: 90px;
-  min-width: 80px;
+  width: 8%;
+}
+
+.tabla-eventos th:nth-child(2) {
+  width: 21%;
+}
+
+.tabla-eventos th:nth-child(3) {
+  width: 16%;
+}
+
+.tabla-eventos th:nth-child(4) {
+  width: 15%;
+}
+
+.tabla-eventos th:nth-child(5),
+.tabla-eventos th:nth-child(6) {
+  width: 13%;
+}
+
+.tabla-eventos th:nth-child(7) {
+  width: 14%;
 }
 
 .cell-input {
   box-sizing: border-box;
   width: 100%;
-  min-width: 90px;
+  min-width: 0;
   padding: 4px 6px;
   color: #000;
   font: inherit;
@@ -656,24 +677,24 @@ table.tabla-datos {
 }
 
 .cell-title {
-  min-width: 190px;
+  min-width: 0;
 }
 
 .cell-category {
-  min-width: 160px;
+  min-width: 0;
 }
 
 .cell-date {
-  min-width: 135px;
+  min-width: 0;
 }
 
 .cell-requester {
-  min-width: 170px;
+  overflow-wrap: anywhere;
   font-weight: 600;
 }
 
 .cell-state {
-  min-width: 120px;
+  min-width: 0;
   font-weight: 700;
 }
 
