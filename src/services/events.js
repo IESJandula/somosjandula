@@ -122,7 +122,7 @@ export const actualizarEstadoEvento = async (
   try {
     const tokenPropio = await obtenerToken(toastMessage, toastColor, isToastOpen);
     const response = await fetch(`${eventosAdminUrl}/estado`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: {
         'Authorization': `Bearer ${tokenPropio}`,
         'Content-Type': 'application/json',

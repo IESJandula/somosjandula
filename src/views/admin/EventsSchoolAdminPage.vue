@@ -581,7 +581,7 @@ onMounted(async () => {
 
 .table-scroll {
   width: 100%;
-  max-height: 420px;
+  max-height: min(680px, calc(100dvh - 16rem));
   overflow: auto;
 }
 
@@ -875,6 +875,10 @@ table.tabla-datos {
 
   .tabla-datos {
     font-size: 12px;
+  }
+
+  .table-scroll {
+    max-height: 420px;
   }
 }
 
