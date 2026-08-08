@@ -597,7 +597,7 @@ table.tabla-datos {
 }
 
 .tabla-eventos {
-  min-width: 0;
+  min-width: 1000px;
 }
 
 .tabla-datos th,
