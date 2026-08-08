@@ -8,6 +8,7 @@ import {
   obtenerImagenCategoriaEvento,
   tieneSolicitudEventoPendiente,
 } from "@/services/events";
+import { obtenerRolesUsuario } from "@/services/adminService";
 
 vi.mock("@/services/events", () => ({
   crearSolicitudEvento: vi.fn(),
@@ -16,10 +17,15 @@ vi.mock("@/services/events", () => ({
   tieneSolicitudEventoPendiente: vi.fn(),
 }));
 
+vi.mock("@/services/adminService", () => ({
+  obtenerRolesUsuario: vi.fn(),
+}));
+
 describe("WeeklyEventsCard", () => {
   beforeEach(() => {
     tieneSolicitudEventoPendiente.mockResolvedValue(false);
     crearSolicitudEvento.mockResolvedValue(undefined);
+    obtenerRolesUsuario.mockResolvedValue(["PROFESOR"]);
   });
 
   afterEach(() => {
@@ -116,6 +122,30 @@ describe("WeeklyEventsCard", () => {
     expect(wrapper.text()).toContain("A la espera de validar el último evento por el administrador");
     wrapper.unmount();
   });
+
+  it.each([["ADMINISTRADOR"], ["DIRECCION"]])(
+    "permite crear otro evento con solicitud pendiente si tiene el rol %s",
+    async (rol) => {
+      vi.useFakeTimers();
+      obtenerEventos.mockResolvedValue([]);
+      tieneSolicitudEventoPendiente.mockResolvedValue(true);
+      obtenerRolesUsuario.mockResolvedValue([rol]);
+
+      const wrapper = mount(WeeklyEventsCard, {
+        global: {
+          stubs: {
+            IonIcon: true,
+            IonToast: true,
+          },
+        },
+      });
+      await flushPromises();
+
+      expect(wrapper.find(".weekly-event-request-status").exists()).toBe(false);
+      expect(wrapper.find(".weekly-event-request-open").exists()).toBe(true);
+      wrapper.unmount();
+    },
+  );
 
   it("muestra la imagen de categoría enviada por EventsServer", async () => {
     vi.useFakeTimers();

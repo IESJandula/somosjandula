@@ -75,7 +75,7 @@
     </div>
 
     <div class="weekly-event-request" aria-live="polite">
-      <p v-if="solicitudPendiente" class="weekly-event-request-status">
+      <p v-if="solicitudPendiente && !puedeCrearEventoConSolicitudPendiente" class="weekly-event-request-status">
         A la espera de validar el último evento por el administrador
       </p>
 
@@ -169,6 +169,7 @@ import {
   tieneSolicitudEventoPendiente,
 } from "@/services/events";
 import { EVENT_CATEGORIES } from "@/constants/eventCategories";
+import { obtenerRolesUsuario } from "@/services/adminService";
 import { crearToast } from "@/utils/toast";
 
 const ROTACION_MS = 6500;
@@ -184,6 +185,7 @@ const isToastOpen = ref(false);
 const categorias = ref([...EVENT_CATEGORIES]);
 const comprobandoSolicitud = ref(true);
 const solicitudPendiente = ref(false);
+const rolesUsuario = ref([]);
 const formularioVisible = ref(false);
 const creandoSolicitud = ref(false);
 const formulario = reactive({
@@ -242,6 +244,9 @@ const intervaloSemana = computed(() => {
 });
 
 const eventoActual = computed(() => eventosSemana.value[indiceActual.value] ?? null);
+const puedeCrearEventoConSolicitudPendiente = computed(() =>
+  rolesUsuario.value.includes("ADMINISTRADOR") || rolesUsuario.value.includes("DIRECCION")
+);
 
 const etiquetaFecha = (evento) => {
   if (new Date(evento.inicio).toDateString() === new Date(evento.fin).toDateString()) {
@@ -375,6 +380,15 @@ const cargarDatosSolicitud = async () => {
   }
 };
 
+const cargarRolesUsuario = async () => {
+  try {
+    const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
+    rolesUsuario.value = Array.isArray(roles) ? roles : [];
+  } catch {
+    rolesUsuario.value = [];
+  }
+};
+
 const enviarSolicitudEvento = async () => {
   const titulo = formulario.titulo.trim();
   const fechaInicio = fechaInputATimestamp(formulario.fechaInicio);
@@ -437,7 +451,7 @@ const programarRecargaMedianoche = () => {
 };
 
 onMounted(async () => {
-  await Promise.all([cargarEventosSemana(), cargarDatosSolicitud()]);
+  await Promise.all([cargarEventosSemana(), cargarDatosSolicitud(), cargarRolesUsuario()]);
   iniciarRotacion();
   programarRecargaMedianoche();
 });
