@@ -30,8 +30,9 @@ import { IonButton, IonIcon } from '@ionic/vue';
 import { chevronBackOutline, chevronForwardOutline, addOutline, 
          removeOutline } from 'ionicons/icons';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 // Props
 const props = defineProps({

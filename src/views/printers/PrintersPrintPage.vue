@@ -221,13 +221,14 @@ import { IonGrid, IonRow, IonCol, IonItem, IonLabel, IonCard } from '@ionic/vue'
 import { IonSelect, IonSelectOption, IonInput, IonButton, IonText, IonIcon, IonSegment, IonSegmentButton } from '@ionic/vue';
 import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import FileUpload from '@/components/printers/FileUpload.vue';
 import PdfViewer from '@/components/printers/PdfViewer.vue';
 import { obtenerNombreYApellidosUsuario, obtenerConstantes } from '@/services/adminService';
 import { closeOutline } from 'ionicons/icons';
 
-// Configuramos la URL del Worker
-GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+// El worker se empaqueta desde la misma versión de PDF.js que la API.
+GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 /*****************************/
 /*** Vista previa del PDF ****/
