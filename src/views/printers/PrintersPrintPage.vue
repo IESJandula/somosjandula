@@ -228,7 +228,7 @@ import { obtenerNombreYApellidosUsuario, obtenerConstantes } from '@/services/ad
 import { closeOutline } from 'ionicons/icons';
 
 // El worker se empaqueta desde la misma versión de PDF.js que la API.
-GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+GlobalWorkerOptions.workerSrc = `${pdfWorkerUrl}?v=4.10.38`;
 
 /*****************************/
 /*** Vista previa del PDF ****/

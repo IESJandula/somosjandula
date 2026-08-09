@@ -32,7 +32,7 @@ import { chevronBackOutline, chevronForwardOutline, addOutline,
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${pdfWorkerUrl}?v=4.10.38`;
 
 // Props
 const props = defineProps({
