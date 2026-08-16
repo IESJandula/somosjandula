@@ -25,7 +25,7 @@
           <td class="truncate text-left pl-1" :title="print.fileName">{{ print.fileName }}</td>
           <td :title="print.errorMessage" class="truncate text-left pl-1">
             {{ print.status }}
-            <ion-icon v-if="print.status === 'Pendiente'"
+            <ion-icon v-if="print.status === 'Pendiente de imprimir'"
                       name="close-circle-outline"
                       style="font-size: 24px; cursor: pointer;"
                       class="ml-2 text-red-500"
