@@ -67,6 +67,18 @@
                     <div class="perfil-dropdown-separator"></div>
                   </template>
 
+                  <template v-if="esPerfilProfesor">
+                    <div class="perfil-dropdown-header">Gastos</div>
+                    <div class="perfil-dropdown-gastos" aria-live="polite">
+                      <template v-if="gastosImpresion">
+                        Impresiones: {{ formatearEuros(gastosImpresion.usuario, '0,00 €') }}
+                        (media del instituto: {{ formatearEuros(gastosImpresion.mediaProfesorado, '0,00 €') }})
+                      </template>
+                      <span v-else>Cargando gastos de impresión…</span>
+                    </div>
+                    <div class="perfil-dropdown-separator"></div>
+                  </template>
+
                   <!-- Ítem "Desconectar": conserva la acción actual. -->
                   <button class="perfil-dropdown-item perfil-desconectar" type="button" role="menuitem"
                     @click="desconectarDesdeMenu">
@@ -107,8 +119,10 @@ import { homeOutline, personCircleOutline, checkmarkOutline, logOutOutline } fro
 import { useRouter } from "vue-router";
 import { menuController } from "@ionic/vue";
 import { getAuth, signOut } from "firebase/auth";
-import { obtenerNombreYApellidosUsuario, obtenerRolesUsuario } from "@/services/adminService";
+import { obtenerMediaGastoImpresionProfesorado, obtenerNombreYApellidosUsuario, obtenerRolesUsuario } from "@/services/adminService";
+import { obtenerCosteImpresion } from "@/services/printers";
 import { SESSION_JWT_TOKEN } from "@/utils/constants";
+import { formatearEuros } from "@/utils/currency";
 import {
   etiquetaRol,
   ordenarRolesPorPrioridad,
@@ -148,6 +162,8 @@ export default defineComponent({
     const rolUnico = computed(() => roles.value.length === 1);
     // Roles ordenados de más fuerte a menos fuerte para mostrarlos en el desplegable.
     const rolesOrdenados = computed(() => ordenarRolesPorPrioridad(roles.value));
+    const esPerfilProfesor = computed(() => rolSeleccionado.value === "PROFESOR");
+    const gastosImpresion = ref(null);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -222,7 +238,34 @@ export default defineComponent({
       }
       rolSeleccionado.value = rol;
       seleccionarRol(rol);
+      cargarGastosImpresion();
       closeDropdown();
+    };
+
+    const cargarGastosImpresion = async () => {
+      if (!esPerfilProfesor.value) {
+        gastosImpresion.value = null;
+        return;
+      }
+
+      try {
+        const [gastoUsuario, estadisticaProfesorado] = await Promise.all([
+          obtenerCosteImpresion(toastMessage, toastColor, isToastOpen),
+          obtenerMediaGastoImpresionProfesorado(toastMessage, toastColor, isToastOpen),
+        ]);
+
+        if (!esPerfilProfesor.value) {
+          return;
+        }
+
+        gastosImpresion.value = {
+          usuario: gastoUsuario?.total ?? 0,
+          mediaProfesorado: estadisticaProfesorado?.mediaProfesorado ?? 0,
+        };
+      } catch (error) {
+        console.error("Error al obtener los gastos de impresión:", error);
+        gastosImpresion.value = null;
+      }
     };
 
     const desconectarDesdeMenu = () => {
@@ -263,6 +306,7 @@ export default defineComponent({
         .then((rolesUsuario) => {
           roles.value = rolesUsuario || [];
           rolSeleccionado.value = obtenerRolSeleccionado(roles.value);
+          cargarGastosImpresion();
         })
         .catch((error) => {
           console.error("Error al obtener los roles del usuario:", error);
@@ -336,7 +380,10 @@ export default defineComponent({
       puedeSeleccionarRol,
       rolUnico,
       rolesOrdenados,
+      esPerfilProfesor,
+      gastosImpresion,
       etiquetaRol,
+      formatearEuros,
       toggleDropdown,
       closeDropdown,
       seleccionarRolEnMenu,
@@ -725,6 +772,13 @@ ion-toolbar {
   background-color: #e2e8f0;
 }
 
+.perfil-dropdown-gastos {
+  padding: 6px 12px 10px 38px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 @media (prefers-color-scheme: dark) {
   .notification-tooltip {
     background: #1a1a1a;
@@ -778,6 +832,10 @@ ion-toolbar {
 
   .perfil-dropdown-separator {
     background-color: #3a3f3b;
+  }
+
+  .perfil-dropdown-gastos {
+    color: #cbd5e1;
   }
 }
 </style>

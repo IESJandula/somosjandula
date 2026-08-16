@@ -256,6 +256,34 @@ export async function obtenerInfoUsuarios(toastMessage, toastColor, isToastOpen)
 }
 
 /**
+ * Obtiene la media de gasto de impresión del profesorado activo en el curso académico actual.
+ *
+ * @param {*} toastMessage mensaje emergente
+ * @param {*} toastColor color del mensaje emergente
+ * @param {*} isToastOpen si el mensaje emergente se mostrará
+ * @returns {Promise<{mediaProfesorado: number, numeroProfesores: number}>} media de gasto y profesorado incluido
+ */
+export async function obtenerMediaGastoImpresionProfesorado(toastMessage, toastColor, isToastOpen) {
+  const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+  const response = await fetch(adminApiUrl + '/admin/queries/users/coste-impresion/media-profesorado',
+    {
+      method: 'GET',
+      headers:
+      {
+        'Authorization': `Bearer ${tokenPropio}`
+      }
+    });
+
+  if (!response.ok) {
+    const errorMessage = await response.text();
+    throw new Error(errorMessage || 'Error al obtener la media de gasto de impresión');
+  }
+
+  return await response.json();
+}
+
+/**
  * Obtiene el listado de aplicaciones registradas desde Reaktor_AdminServer (GET /admin/queries/apps).
  * El curso académico se resuelve en el servidor si no se envía cabecera.
  *

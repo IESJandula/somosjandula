@@ -53,6 +53,17 @@ export async function obtenerInfoUsuarios(toastMessage: Ref<string>,
                                           toastColor: Ref<string>,
                                           isToastOpen: Ref<boolean>): Promise<[]>;
 
+export interface GastoMedioImpresionProfesorado {
+  mediaProfesorado: number;
+  numeroProfesores: number;
+}
+
+export async function obtenerMediaGastoImpresionProfesorado(
+  toastMessage: Ref<string>,
+  toastColor: Ref<string>,
+  isToastOpen: Ref<boolean>
+): Promise<GastoMedioImpresionProfesorado>;
+
 export declare function obtenerDatosUsuarioSesion(toastMessage: Ref<string>,
                                                   toastColor: Ref<string>,
                                                   isToastOpen: Ref<boolean>
