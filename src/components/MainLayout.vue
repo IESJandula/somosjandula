@@ -74,7 +74,8 @@
                         Impresiones: {{ formatearEuros(gastosImpresion.usuario, '0,00 €') }}
                         (media del instituto: {{ formatearEuros(gastosImpresion.mediaProfesorado, '0,00 €') }})
                       </template>
-                      <span v-else>Cargando gastos de impresión…</span>
+                      <span v-else-if="cargandoGastosImpresion">Cargando gastos de impresión…</span>
+                      <span v-else>No se han podido consultar los gastos de impresión.</span>
                     </div>
                     <div class="perfil-dropdown-separator"></div>
                   </template>
@@ -164,6 +165,7 @@ export default defineComponent({
     const rolesOrdenados = computed(() => ordenarRolesPorPrioridad(roles.value));
     const esPerfilProfesor = computed(() => rolSeleccionado.value === "PROFESOR");
     const gastosImpresion = ref(null);
+    const cargandoGastosImpresion = ref(false);
 
     // Variables para el toast
     const isToastOpen = ref(false);
@@ -245,9 +247,11 @@ export default defineComponent({
     const cargarGastosImpresion = async () => {
       if (!esPerfilProfesor.value) {
         gastosImpresion.value = null;
+        cargandoGastosImpresion.value = false;
         return;
       }
 
+      cargandoGastosImpresion.value = true;
       try {
         const [gastoUsuario, estadisticaProfesorado] = await Promise.all([
           obtenerCosteImpresion(toastMessage, toastColor, isToastOpen),
@@ -265,6 +269,8 @@ export default defineComponent({
       } catch (error) {
         console.error("Error al obtener los gastos de impresión:", error);
         gastosImpresion.value = null;
+      } finally {
+        cargandoGastosImpresion.value = false;
       }
     };
 
@@ -382,6 +388,7 @@ export default defineComponent({
       rolesOrdenados,
       esPerfilProfesor,
       gastosImpresion,
+      cargandoGastosImpresion,
       etiquetaRol,
       formatearEuros,
       toggleDropdown,
