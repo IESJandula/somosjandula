@@ -107,8 +107,8 @@ const routes = [
         component: PrintersManagementPage,
         name: 'PrintersManagement',
         meta: {
-          role: 'CONSERJERIA',
-          selectedRole: 'CONSERJERIA'
+          role: ['ADMINISTRADOR', 'CONSERJERIA'],
+          selectedRole: ['ADMINISTRADOR', 'CONSERJERIA']
         },
       },
       {
@@ -352,7 +352,9 @@ router.beforeEach(async (to, from, next) => {
       if (requiredRoles.length > 0 && !requiredRoles.some(role => userRoles.includes(role))) {
         return next({ name: 'AccessDenied' });
       }
-      if (to.meta.selectedRole && obtenerRolSeleccionado(userRoles) !== to.meta.selectedRole) {
+      const requiredSelectedRole = to.meta.selectedRole;
+      const requiredSelectedRoles = Array.isArray(requiredSelectedRole) ? requiredSelectedRole : [requiredSelectedRole];
+      if (requiredSelectedRole && !requiredSelectedRoles.includes(obtenerRolSeleccionado(userRoles))) {
         return next({ name: 'AccessDenied' });
       }
       else {

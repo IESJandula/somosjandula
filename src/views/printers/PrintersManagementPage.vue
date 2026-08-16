@@ -1,9 +1,9 @@
 <template>
   <div class="page-printers-management">
     <header class="page-header">
-      <h1 class="t-1">Impresiones</h1>
+      <h1 class="t-1">Reprografía</h1>
       <p class="page-subtitle">
-        Consulta y gestiona las impresiones del centro.
+        Consulta y gestiona los trabajos de reprografía del centro.
       </p>
     </header>
 

@@ -60,6 +60,7 @@ import { obtenerRolSeleccionado, EVENTO_ROL_CAMBIADO, fuerzaRol } from "@/utils/
 import {
   starOutline,
   printOutline,
+  copyOutline,
   calendarOutline,
   alertCircleOutline,
   eyeOutline,
@@ -106,8 +107,8 @@ const mostrarDireccion = computed(
 const mostrarDepartamentoInformatica = computed(
   () => fuerzaRol(rolSeleccionado.value) >= fuerzaRol("DEPARTAMENTO_INFORMATICA")
 );
-const mostrarConserjeria = computed(
-  () => rolSeleccionado.value === "CONSERJERIA"
+const mostrarReprografia = computed(
+  () => ["ADMINISTRADOR", "CONSERJERIA"].includes(rolSeleccionado.value)
 );
 
 const toastMessage = ref("");
@@ -259,12 +260,15 @@ const seccionFavoritos = computed(() => ({
   icono: starOutline,
   items: [
     { label: "sabiasQue-favoritos", tipo: "tip", fuente: "favoritos" },
-    ...(mostrarConserjeria.value
-      ? [{ label: "Impresiones", icono: printOutline, to: { name: "PrintersManagement" } }]
-      : [
-        { label: "Imprime", icono: printOutline, to: { name: "PrintersPrint" } },
-        { label: "Reserva", icono: calendarOutline, to: reservaTo.value },
-      ]),
+    ...(mostrarReprografia.value
+      ? [{ label: "Reprografía", icono: copyOutline, to: { name: "PrintersManagement" } }]
+      : []),
+    ...(rolSeleccionado.value !== "CONSERJERIA"
+      ? [
+          { label: "Imprime", icono: printOutline, to: { name: "PrintersPrint" } },
+          { label: "Reserva", icono: calendarOutline, to: reservaTo.value },
+        ]
+      : []),
     { label: "Incidencias", icono: alertCircleOutline, to: { name: "Issues" } },
     { label: "Vista de pájaro", icono: eyeOutline, to: { name: "AutomationsMapView" } },
     { label: "Guardias", icono: shieldOutline, href: "https://guardias.iesjandula.es/", external: true },

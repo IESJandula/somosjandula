@@ -184,10 +184,18 @@
                       <span>Roles, estado y resolución</span>
                     </div>
                     <div class="user-form-grid">
-                      <label class="user-form-field">
+                      <div class="user-form-field">
                         <span>Roles</span>
-                        <input v-model="usuarioEditor.roles" type="text" placeholder="ADMIN, USER">
-                      </label>
+                        <details class="user-roles-multiselect">
+                          <summary>{{ resumenRolesSeleccionados(usuarioEditor.roles) }}</summary>
+                          <div class="user-roles-menu" role="group" aria-label="Roles del usuario">
+                            <label v-for="rol in ROLES_USUARIO_DISPONIBLES" :key="rol.valor" class="user-role-option">
+                              <input v-model="usuarioEditor.roles" type="checkbox" :value="rol.valor">
+                              <span>{{ rol.etiqueta }}</span>
+                            </label>
+                          </div>
+                        </details>
+                      </div>
                       <label class="user-form-field">
                         <span>Estado</span>
                         <select v-model="usuarioEditor.estado">
@@ -903,6 +911,7 @@
   } from '@/services/schoolManager';
   import { crearToast } from '@/utils/toast.js';
   import { formatearEuros } from '@/utils/currency';
+  import { ORDEN_PRIORIDAD_ROLES, etiquetaRol } from '@/utils/roles';
 
   const toastMessage = ref('');
   const toastColor = ref('success');
@@ -977,6 +986,14 @@
     { valor: 'INACTIVO', etiqueta: 'Inactivo' },
   ];
 
+  // Roles de cuentas de usuario admitidos por el AdminServer. Se deriva del orden centralizado
+  // del selector de perfil, para que las opciones del editor y los roles utilizables por la app
+  // se mantengan sincronizados.
+  const ROLES_USUARIO_DISPONIBLES = ORDEN_PRIORIDAD_ROLES.map((valor) => ({
+    valor,
+    etiqueta: etiquetaRol(valor),
+  }));
+
   const TIPOS_NOTIFICACION = [
     { valor: 'Calendar', etiqueta: 'Calendar' },
     { valor: 'Email', etiqueta: 'Email' },
@@ -1040,14 +1057,22 @@
     _uid: nextUid(),
   });
 
-  // Convierte el texto de roles (separado por comas o barras) en un array limpio
-  const parsearRoles = (texto) =>
-    (texto || '')
-      .split(/[|,]/)
+  // Convierte roles de texto (separados por comas o barras) o de una selección múltiple en
+  // un array limpio. El editor usa directamente un array para poder enlazar los checkboxes.
+  const parsearRoles = (roles) =>
+    (Array.isArray(roles) ? roles : String(roles || '').split(/[|,]/))
       .map((r) => r.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((rol, indice, lista) => lista.indexOf(rol) === indice);
 
   const rolesUsuario = (usuario) => parsearRoles(usuario && usuario.roles);
+
+  const resumenRolesSeleccionados = (roles) => {
+    const seleccionados = parsearRoles(roles);
+    return seleccionados.length
+      ? seleccionados.map((rol) => etiquetaRol(rol)).join(', ')
+      : 'Selecciona uno o varios roles';
+  };
 
   const nombreCompletoUsuario = (usuario) => {
     const nombreCompleto = `${usuario.nombre || ''} ${usuario.apellidos || ''}`.trim();
@@ -1735,6 +1760,7 @@
   // El editor trabaja sobre una copia para que cerrar o cancelar nunca deje cambios parciales en la tabla.
   const clonarUsuarioParaEditor = (usuario) => ({
     ...usuario,
+    roles: parsearRoles(usuario.roles),
     resolutores: [...(usuario.resolutores || [])],
     _resolutoresOriginales: [...(usuario._resolutoresOriginales || [])],
     _resolutoresAbierto: false,
@@ -1745,7 +1771,7 @@
   };
 
   const abrirNuevoUsuario = () => {
-    usuarioEditor.value = filaUsuarioVacia();
+    usuarioEditor.value = { ...filaUsuarioVacia(), roles: [] };
   };
 
   const cerrarEditorUsuario = () => {
@@ -3450,6 +3476,87 @@ table.app-summary-table {
   color: #64748b;
 }
 
+.user-roles-multiselect {
+  position: relative;
+  width: 100%;
+}
+
+.user-roles-multiselect summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 39px;
+  box-sizing: border-box;
+  padding: 9px 10px;
+  border: 1px solid #aebccc;
+  border-radius: 6px;
+  background: #fff;
+  color: #111827;
+  cursor: pointer;
+  font-size: 0.85rem;
+  list-style: none;
+}
+
+.user-roles-multiselect summary::-webkit-details-marker {
+  display: none;
+}
+
+.user-roles-multiselect summary::after {
+  flex: none;
+  content: '⌄';
+  color: #475467;
+  font-size: 1rem;
+  transition: transform 0.15s ease;
+}
+
+.user-roles-multiselect[open] summary {
+  border-color: #1976d2;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.14);
+}
+
+.user-roles-multiselect[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.user-roles-menu {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px;
+  border: 1px solid #1976d2;
+  border-top: 0;
+  border-radius: 0 0 6px 6px;
+  background: #fff;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+}
+
+.user-role-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 7px;
+  border-radius: 4px;
+  color: #344054;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.user-role-option:hover {
+  background: #edf6ff;
+}
+
+.user-role-option input {
+  flex: none;
+  accent-color: #1976d2;
+}
+
 .user-resolvers-editor {
   display: flex;
   flex-direction: column;
@@ -4064,6 +4171,12 @@ table.app-summary-table {
   .user-form-field input,
   .user-form-field select { background: #171c24; border-color: #596779; color: #f1f5f9; }
   .user-form-field input:disabled { background: #303946; color: #abb6c4; }
+  .user-roles-multiselect summary { background: #171c24; border-color: #596779; color: #f1f5f9; }
+  .user-roles-multiselect summary::after { color: #c4ceda; }
+  .user-roles-multiselect[open] summary { border-color: #60a5fa; }
+  .user-roles-menu { border-color: #60a5fa; background: #171c24; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35); }
+  .user-role-option { color: #e0e6ed; }
+  .user-role-option:hover { background: #273444; }
   .user-resolver-option { background: #1b222c; border-color: #465364; color: #e0e6ed; }
   .app-notification-editor-row { background: #1b222c; border-color: #465364; }
   .app-notification-editor-row strong { color: #e0e6ed; }
