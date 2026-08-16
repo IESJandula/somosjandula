@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { ref } from 'vue';
 import { getAuth } from 'firebase/auth';
 import { obtenerRolesUsuario } from '@/services/adminService';
+import { obtenerRolSeleccionado } from '@/utils/roles';
 
 const LoginPage = () => import('@/views/LoginPage.vue');
 const MainLayout = () => import('@/components/MainLayout.vue');
@@ -18,6 +19,7 @@ const StrikesSchoolAdminPage = () => import('@/views/admin/StrikesSchoolAdminPag
 const Core = () => import('@/views/admin/Core.vue');
 
 const PrintersPrintPage = () => import('@/views/printers/PrintersPrintPage.vue');
+const PrintersManagementPage = () => import('@/views/printers/PrintersManagementPage.vue');
 const BookingsFixedPage = () => import('@/views/bookings/BookingsFixedPage.vue');
 const BookingsTemporaryPage = () => import('@/views/bookings/BookingsTemporaryPage.vue');
 const TeacherGuidePage = () => import('@/views/documents/TeacherGuidePage.vue');
@@ -76,7 +78,7 @@ const routes = [
         component: HomeView,
         name: 'Home',
         meta: {
-          role: 'PROFESOR'
+          role: ['PROFESOR', 'CONSERJERIA']
         },
       },
       {
@@ -101,6 +103,15 @@ const routes = [
         name: 'PrintersPrint',
         meta: {
           role: 'PROFESOR'
+        },
+      },
+      {
+        path: 'printers/management',
+        component: PrintersManagementPage,
+        name: 'PrintersManagement',
+        meta: {
+          role: 'CONSERJERIA',
+          selectedRole: 'CONSERJERIA'
         },
       },
       {
@@ -364,6 +375,9 @@ router.beforeEach(async (to, from, next) => {
       const requiredRoles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
 
       if (requiredRoles.length > 0 && !requiredRoles.some(role => userRoles.includes(role))) {
+        return next({ name: 'AccessDenied' });
+      }
+      if (to.meta.selectedRole && obtenerRolSeleccionado(userRoles) !== to.meta.selectedRole) {
         return next({ name: 'AccessDenied' });
       }
       else {

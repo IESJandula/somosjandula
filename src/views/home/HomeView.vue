@@ -106,6 +106,9 @@ const mostrarDireccion = computed(
 const mostrarDepartamentoInformatica = computed(
   () => fuerzaRol(rolSeleccionado.value) >= fuerzaRol("DEPARTAMENTO_INFORMATICA")
 );
+const mostrarConserjeria = computed(
+  () => rolSeleccionado.value === "CONSERJERIA"
+);
 
 const toastMessage = ref("");
 const toastColor = ref("");
@@ -259,6 +262,9 @@ const seccionFavoritos = computed(() => ({
   items: [
     { label: "sabiasQue-favoritos", tipo: "tip", fuente: "favoritos" },
     { label: "Imprime", icono: printOutline, to: { name: "PrintersPrint" } },
+    ...(mostrarConserjeria.value
+      ? [{ label: "Impresiones", icono: printOutline, to: { name: "PrintersManagement" } }]
+      : []),
     { label: "Reserva", icono: calendarOutline, to: reservaTo.value },
     { label: "Incidencias", icono: alertCircleOutline, to: { name: "Issues" } },
     { label: "Vista de pájaro", icono: eyeOutline, to: { name: "AutomationsMapView" } },

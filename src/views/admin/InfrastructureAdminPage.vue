@@ -3,93 +3,14 @@
     <header class="page-header">
       <h1 class="t-1">Infraestructura</h1>
       <p class="page-subtitle">
-        Consulta de las impresiones del centro y estado de las impresoras.
+        Consulta el estado y configura las impresoras del centro.
       </p>
     </header>
 
-    <div class="main-panel">
-      <section class="panel-section">
-        <h2 class="section-title">Impresión</h2>
-
-        <!-- Consulta de impresiones: filtros, resultados y paginación en una única tarjeta -->
-        <article class="action-card table-card">
-          <div class="table-card-header">
-            <div class="title-with-refresh">
-              <h3 class="card-title card-title-inline">Consultar impresión</h3>
-              <button
-                type="button"
-                class="btn-refresh"
-                :disabled="cargandoImpresiones"
-                title="Refrescar impresiones"
-                @click="consultar(paginaActual)">
-                <ion-icon :icon="refreshOutline" :class="{ girando: cargandoImpresiones }" />
-              </button>
-            </div>
-            <div class="table-actions">
-              <input
-                type="text"
-                v-model="busqueda"
-                class="search-input"
-                placeholder="Buscar..."
-                title="Busca el texto en cualquier campo de la impresión: usuario, impresora, estado, fichero, color...">
-              <label class="filtro-fecha">
-                <span>Desde</span>
-                <input type="date" v-model="fechaInicio" class="date-input">
-              </label>
-              <label class="filtro-fecha">
-                <span>Hasta</span>
-                <input type="date" v-model="fechaFin" class="date-input">
-              </label>
-              <button
-                type="button"
-                class="btn-secondary btn-mini"
-                :disabled="!hayFiltros"
-                @click="limpiarFiltros">
-                Limpiar
-              </button>
-            </div>
-          </div>
-
-          <div v-if="cargandoImpresiones" class="table-loading">
-            <div class="circulo"></div>
-          </div>
-
-          <div class="table-scroll">
-            <div class="table-scroll-inner">
-              <PrintInfoTable :info="impresiones" :adminRole="true" @actualizar-tabla="() => consultar(paginaActual)" />
-            </div>
-          </div>
-
-          <p v-if="impresiones.length === 0 && !cargandoImpresiones" class="empty-state">
-            {{ hayFiltros ? 'Ninguna impresión coincide con los filtros aplicados.' : 'Todavía no hay impresiones registradas.' }}
-          </p>
-
-          <div class="table-footer">
-            <button
-              type="button"
-              class="btn-secondary btn-mini"
-              :disabled="paginaActual === 0 || cargandoImpresiones"
-              @click="irPaginaAnterior">
-              Anterior
-            </button>
-            <span class="pagina-actual">Página {{ paginaActual + 1 }}</span>
-            <button
-              type="button"
-              class="btn-secondary btn-mini"
-              :disabled="!hayPaginaSiguiente || cargandoImpresiones"
-              @click="irPaginaSiguiente">
-              Siguiente
-            </button>
-          </div>
-        </article>
-      </section>
-
-      <div class="panel-divider"></div>
-
+    <main class="main-panel">
       <section class="panel-section">
         <h2 class="section-title">Impresoras</h2>
 
-        <!-- Estado de cada impresora tal y como lo reporta el servidor de impresión -->
         <article class="action-card table-card card-estrecha">
           <div class="table-card-header">
             <div class="title-with-refresh">
@@ -130,22 +51,24 @@
                   <td>{{ formatDate(printer.lastUpdate) }}</td>
                   <td>
                     <input
-                      type="checkbox"
                       v-model="printer.bloqueada"
+                      type="checkbox"
                       class="cell-checkbox"
                       title="Una impresora bloqueada no permite imprimir">
                   </td>
                   <td>
                     <input
+                      v-model.number="printer.precioHoja"
                       type="number"
                       min="0"
                       step="0.001"
-                      v-model.number="printer.precioHoja"
                       class="cell-input cell-input-num"
                       title="Precio en euros de cada hoja impresa">
                   </td>
                   <td class="col-accion">
-                    <button type="button" class="btn-primary btn-mini" @click="guardarConfiguracionImpresora(printer)">Guardar</button>
+                    <button type="button" class="btn-primary btn-mini" @click="guardarConfiguracionImpresora(printer)">
+                      Guardar
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -157,7 +80,7 @@
           </p>
         </article>
       </section>
-    </div>
+    </main>
 
     <ion-toast
       :is-open="isToastOpen"
@@ -165,46 +88,25 @@
       :color="toastColor"
       duration="2000"
       position="top"
-      @did-dismiss="() => (isToastOpen = false)"></ion-toast>
+      @did-dismiss="() => (isToastOpen = false)" />
   </div>
 </template>
-
 
 <script setup>
 import { IonIcon, IonToast } from '@ionic/vue';
 import { refreshOutline } from 'ionicons/icons';
-import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { onMounted, ref } from 'vue';
 import { crearToast } from '@/utils/toast.js';
-import PrintInfoTable from '@/components/printers/PrintInfoTable.vue';
-import { obtenerImpresoras, filtrarDatosPaginado, actualizarConfiguracionImpresora } from '@/services/printers';
-
-const TAMANIO_PAGINA = 20;
-const MS_ESPERA_BUSQUEDA = 400;
-
-// Filtros de la consulta: el texto libre lo resuelve el backend contra cualquier campo de la impresión,
-// y las fechas solo se envían cuando se informan (puede ser solo una de las dos, o ambas)
-const busqueda = ref('');
-const fechaInicio = ref('');
-const fechaFin = ref('');
-
-const impresiones = ref([]);
-const paginaActual = ref(0);
-const hayPaginaSiguiente = ref(false);
-const cargandoImpresiones = ref(false);
+import { actualizarConfiguracionImpresora, obtenerImpresoras } from '@/services/printers';
 
 const printers = ref([]);
 const cargandoImpresoras = ref(false);
 
-// Variables para el toast
 const isToastOpen = ref(false);
 const toastMessage = ref('');
 const toastColor = ref('success');
 
-const hayFiltros = computed(() =>
-  busqueda.value.trim() !== '' || fechaInicio.value !== '' || fechaFin.value !== ''
-);
-
-function formatDate(timestamp) {
+const formatDate = (timestamp) => {
   const date = new Date(timestamp);
   return date.toLocaleString('es-ES', {
     hour: '2-digit',
@@ -214,106 +116,6 @@ function formatDate(timestamp) {
     month: '2-digit',
     year: 'numeric',
   });
-}
-
-// El datepicker entrega aaaa-mm-dd y el backend espera dd/mm/aaaa
-const fechaParaConsulta = (valor) => {
-  if (!valor) {
-    return null;
-  }
-
-  const [anio, mes, dia] = valor.split('-');
-  return `${dia}/${mes}/${anio}`;
-};
-
-const consultar = async (pagina = 0) => {
-  if (fechaInicio.value && fechaFin.value && fechaInicio.value > fechaFin.value) {
-    crearToast(toastMessage, toastColor, isToastOpen, 'danger', 'La fecha de inicio no puede ser posterior a la de fin');
-    return;
-  }
-
-  cargandoImpresiones.value = true;
-  try {
-    const filtroBusquedaRequest = {
-      user: null,
-      printer: null,
-      status: null,
-      startDate: fechaParaConsulta(fechaInicio.value),
-      endDate: fechaParaConsulta(fechaFin.value),
-      busqueda: busqueda.value.trim() || null,
-    };
-
-    const response = await filtrarDatosPaginado(toastMessage, toastColor, isToastOpen, filtroBusquedaRequest, pagina, TAMANIO_PAGINA);
-
-    if (!response.ok) {
-      throw new Error('No se pudieron obtener las impresiones');
-    }
-
-    const pageData = await response.json();
-    const contenido = (pageData && pageData.content) || [];
-
-    impresiones.value = contenido;
-    paginaActual.value = pageData.number ?? pagina;
-    hayPaginaSiguiente.value = contenido.length > 0 && pageData.last !== true;
-  } catch (error) {
-    console.error(error);
-    impresiones.value = [];
-    hayPaginaSiguiente.value = false;
-    crearToast(toastMessage, toastColor, isToastOpen, 'danger', error.message);
-  } finally {
-    cargandoImpresiones.value = false;
-  }
-};
-
-// La búsqueda se envía al backend con una pequeña espera para no consultar en cada tecla. Cualquier cambio
-// de filtro vuelve a la primera página, ya que el número de resultados cambia.
-let temporizadorBusqueda = null;
-let filtrosSuspendidos = false;
-
-watch(busqueda, () => {
-  if (filtrosSuspendidos) {
-    return;
-  }
-
-  clearTimeout(temporizadorBusqueda);
-  temporizadorBusqueda = setTimeout(() => consultar(0), MS_ESPERA_BUSQUEDA);
-});
-
-watch([fechaInicio, fechaFin], () => {
-  if (filtrosSuspendidos) {
-    return;
-  }
-
-  consultar(0);
-});
-
-onBeforeUnmount(() => clearTimeout(temporizadorBusqueda));
-
-// Al limpiar se suspenden los watch para lanzar una única consulta en lugar de una por filtro
-const limpiarFiltros = async () => {
-  clearTimeout(temporizadorBusqueda);
-  filtrosSuspendidos = true;
-
-  busqueda.value = '';
-  fechaInicio.value = '';
-  fechaFin.value = '';
-
-  await nextTick();
-  filtrosSuspendidos = false;
-
-  await consultar(0);
-};
-
-const irPaginaAnterior = () => {
-  if (paginaActual.value > 0) {
-    consultar(paginaActual.value - 1);
-  }
-};
-
-const irPaginaSiguiente = () => {
-  if (hayPaginaSiguiente.value) {
-    consultar(paginaActual.value + 1);
-  }
 };
 
 const cargarImpresoras = async (avisar = false) => {
@@ -321,8 +123,6 @@ const cargarImpresoras = async (avisar = false) => {
   try {
     const data = (await obtenerImpresoras(toastMessage, toastColor, isToastOpen)) || [];
 
-    // El bloqueo y el precio por hoja son editables en la tabla, así que se normalizan para que los
-    // controles del formulario partan siempre de un valor válido aunque el backend los devuelva a null
     printers.value = data.map((printer) => ({
       ...printer,
       bloqueada: printer.bloqueada === true,
@@ -353,7 +153,6 @@ const guardarConfiguracionImpresora = async (printer) => {
 
   try {
     await actualizarConfiguracionImpresora(toastMessage, toastColor, isToastOpen, printer.name, printer.bloqueada, precioHoja);
-
     crearToast(toastMessage, toastColor, isToastOpen, 'success', 'Configuración de la impresora guardada con éxito');
     await cargarImpresoras();
   } catch (error) {
@@ -362,10 +161,7 @@ const guardarConfiguracionImpresora = async (printer) => {
   }
 };
 
-onMounted(async () => {
-  await cargarImpresoras();
-  await consultar(0);
-});
+onMounted(() => cargarImpresoras());
 </script>
 
 <style scoped>
@@ -377,14 +173,14 @@ onMounted(async () => {
 }
 
 .page-header {
-  margin-bottom: 1.75rem;
   width: 100%;
+  margin-bottom: 1.75rem;
 }
 
 .t-1 {
+  margin: 0 0 0.75rem;
   font-size: 2.2rem;
   font-weight: 700;
-  margin: 0 0 0.75rem;
   text-align: center;
 }
 
@@ -394,81 +190,67 @@ onMounted(async () => {
 }
 
 .main-panel {
+  padding: 1.5rem;
   background-color: var(--form-bg-light);
   border: 1px solid #444;
   border-radius: 12px;
   box-shadow: rgba(0, 0, 0, 0.2) 0 8px 24px;
-  padding: 1.5rem;
-}
-
-.panel-section {
-  width: 100%;
 }
 
 .section-title {
   margin: 0 0 1.25rem;
+  color: var(--text-color-light);
   font-size: 1.3rem;
   font-weight: 600;
   text-align: center;
-  color: var(--text-color-light);
 }
 
-.panel-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #cfd8e3 15%, #cfd8e3 85%, transparent);
-  margin: 1.75rem 0;
-}
-
-/* ---- Tarjetas con tabla (mismo formato que las de /admin) ---- */
 .action-card {
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 1.25rem 1rem 1rem;
   background-color: #f8f9fa;
   border: 1px solid #cfd8e3;
   border-radius: 10px;
-  padding: 1.25rem 1rem 1rem;
-  box-sizing: border-box;
 }
 
-.table-card {
-  min-width: 0;
-  width: 100%;
+.card-estrecha {
+  max-width: 980px;
+  margin: 0 auto;
 }
 
-.card-title {
-  margin: 0 0 1rem;
-  font-size: 1.05rem;
-  font-weight: 600;
-  text-align: center;
-  line-height: 1.35;
-  color: #1a1a1a;
-}
-
-.card-title-inline {
-  margin: 0;
-  text-align: left;
+.table-card-header,
+.title-with-refresh,
+.table-loading {
+  display: flex;
+  align-items: center;
 }
 
 .table-card-header {
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
   margin-bottom: 0.85rem;
 }
 
-.table-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+.title-with-refresh {
+  gap: 0.5rem;
 }
 
-.title-with-refresh {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.card-title {
+  margin: 0;
+  color: #1a1a1a;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.btn-refresh,
+.btn-primary {
+  cursor: pointer;
 }
 
 .btn-refresh {
@@ -478,13 +260,11 @@ onMounted(async () => {
   width: 32px;
   height: 32px;
   padding: 0;
+  color: #1a3c6e;
+  background-color: #e2e8f0;
   border: 1px solid #b6c2d4;
   border-radius: 6px;
-  background-color: #e2e8f0;
-  color: #1a3c6e;
-  cursor: pointer;
   font-size: 18px;
-  line-height: 1;
 }
 
 .btn-refresh:hover {
@@ -500,81 +280,17 @@ onMounted(async () => {
   font-size: 18px;
 }
 
-.girando {
-  animation: girar 0.8s linear infinite;
-}
-
-@keyframes girar {
-  to { transform: rotate(360deg); }
-}
-
-.search-input,
-.date-input {
-  box-sizing: border-box;
-  padding: 7px 10px;
-  font-size: 13px;
-  border: 2px solid #007bff;
-  border-radius: 6px;
-  background-color: #fff;
-  color: #000;
-  outline: none;
-}
-
-.search-input {
-  max-width: 240px;
-}
-
-.search-input:hover,
-.search-input:focus,
-.date-input:hover,
-.date-input:focus {
-  border-color: #0056b3;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.35);
-}
-
-/* Cada fecha filtra solo cuando se informa, por lo que basta con vaciarla para desactivarla */
-.filtro-fecha {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
-}
-
-.btn-secondary {
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: bold;
-  background-color: #e2e8f0;
-  color: #1a3c6e;
-  border: 1px solid #b6c2d4;
-  border-radius: 6px;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background-color: #cbd5e1;
-}
-
-.btn-secondary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
 .btn-primary {
   width: 100%;
   margin-top: auto;
   padding: 12px;
+  color: white;
+  background-color: #2196f3;
+  border: none;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: bold;
-  background-color: #2196f3;
-  border-radius: 6px;
   text-transform: uppercase;
-  border: none;
-  color: white;
-  cursor: pointer;
 }
 
 .btn-primary:hover {
@@ -588,29 +304,68 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-/* ---- Celdas editables de la tabla de impresoras (mismo estilo que las tablas de /admin) ---- */
+.table-scroll {
+  width: 100%;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.table-scroll table {
+  width: 100%;
+  color: #1a1a1a;
+  background-color: #f8f9fa;
+  border: 2px solid #007bff;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table-scroll th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 6px;
+  color: #fff;
+  background-color: #007bff;
+  border: 2px solid #007bff;
+  box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
+  font-size: 13px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.table-scroll td {
+  height: 38px;
+  padding: 8px 6px;
+  background-color: #e9f5ff;
+  border: 2px solid #007bff;
+}
+
+.table-scroll tr:hover td {
+  background-color: #d0eaff;
+}
+
 .col-accion {
   width: 90px;
   min-width: 80px;
 }
 
 .cell-input {
+  box-sizing: border-box;
   width: 100%;
   min-width: 90px;
-  box-sizing: border-box;
+  padding: 4px 6px;
+  color: #000;
   background: #fff;
   border: 1px solid #ccc;
   border-radius: 4px;
-  text-align: center;
-  padding: 4px 6px;
   outline: none;
-  color: #000;
+  text-align: center;
   font: inherit;
 }
 
 .cell-input-num {
-  max-width: 90px;
   min-width: 70px;
+  max-width: 90px;
 }
 
 .cell-checkbox {
@@ -620,58 +375,7 @@ onMounted(async () => {
   accent-color: #007bff;
 }
 
-.table-scroll {
-  width: 100%;
-  max-height: 420px;
-  overflow: auto;
-}
-
-/* Ancho mínimo para que las doce columnas de la tabla de impresiones no se apelotonen */
-.table-scroll-inner {
-  min-width: 1400px;
-  width: 100%;
-}
-
-/* La tabla la pinta PrintInfoTable, que se comparte con la vista del profesorado: se le da aquí el
-   aspecto de las tablas de /admin sin tocar el componente. */
-.table-scroll :deep(table) {
-  border-collapse: collapse;
-  width: 100%;
-  background-color: #f8f9fa;
-  color: #1a1a1a;
-  border: 2px solid #007bff;
-  font-size: 13px;
-}
-
-.table-scroll :deep(th) {
-  border: 2px solid #007bff;
-  padding: 8px 6px;
-  background-color: #007bff;
-  color: #fff;
-  font-size: 13px;
-  font-weight: bold;
-  white-space: nowrap;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  /* Con border-collapse el borde se desplaza al hacer scroll; el box-shadow
-     mantiene la línea de separación visible bajo la cabecera fija. */
-  box-shadow: inset 0 -2px 0 #007bff, inset 0 2px 0 #007bff;
-}
-
-.table-scroll :deep(td) {
-  border: 2px solid #007bff;
-  padding: 8px 6px;
-  background-color: #e9f5ff;
-  height: 38px;
-}
-
-.table-scroll :deep(tr:hover td) {
-  background-color: #d0eaff;
-}
-
 .table-loading {
-  display: flex;
   justify-content: center;
   padding: 0.75rem 0;
 }
@@ -679,109 +383,65 @@ onMounted(async () => {
 .empty-state {
   margin: 0.75rem 0 0;
   padding: 0.85rem;
-  text-align: center;
   color: #666;
   background-color: #f8f9fa;
   border: 1px dashed #cfd8e3;
   border-radius: 8px;
+  text-align: center;
   font-size: 0.85rem;
 }
 
-.table-footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
-  margin-top: 0.85rem;
-}
-
-.pagina-actual {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
 .circulo {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #2196f3;
-  border-radius: 50%;
   width: 40px;
   height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top-color: #2196f3;
+  border-radius: 50%;
   animation: spin 1s linear infinite;
 }
 
+.girando {
+  animation: girar 0.8s linear infinite;
+}
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Las impresoras son pocas y su tabla tiene siete columnas: no necesita todo el ancho del panel */
-.card-estrecha {
-  max-width: 980px;
-  margin: 0 auto;
-}
-
-@media (max-width: 768px) {
-  .search-input {
-    max-width: 100%;
-    flex: 1 1 100%;
-  }
-}
-
-/* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   .main-panel {
     background-color: var(--form-bg-dark);
     box-shadow: rgba(255, 255, 255, 0.08) 0 8px 24px;
-    border-color: #444;
   }
 
-  .panel-divider {
-    background: linear-gradient(90deg, transparent, #555 15%, #555 85%, transparent);
-  }
-
-  .section-title {
-    color: var(--text-color-dark);
-  }
-
-  .action-card {
-    background-color: #2a302b;
-    border-color: #555;
-  }
-
-  .card-title,
-  .pagina-actual {
+  .section-title,
+  .card-title {
     color: var(--text-color-dark);
   }
 
   .page-subtitle,
-  .filtro-fecha {
+  .empty-state {
     color: #c8c8c8;
   }
 
+  .action-card,
   .empty-state {
     background-color: #2a302b;
     border-color: #555;
-    color: #c8c8c8;
   }
 
-  .btn-secondary,
   .btn-refresh {
-    background-color: #3a4048;
     color: #e6ebf1;
+    background-color: #3a4048;
     border-color: #5a616b;
   }
 
-  .btn-secondary:hover,
   .btn-refresh:hover {
     background-color: #474e57;
-  }
-
-  .search-input,
-  .date-input {
-    background-color: #1f2937;
-    color: #e6ebf1;
-    border-color: #3b82f6;
   }
 }
 </style>

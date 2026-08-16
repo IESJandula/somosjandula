@@ -21,6 +21,7 @@ export const ORDEN_PRIORIDAD_ROLES: string[] = [
   "DIRECCION",
   "DEPARTAMENTO_INFORMATICA",
   "PROFESOR",
+  "CONSERJERIA",
 ];
 
 // Nombres visibles de cada rol para mostrarlos en el desplegable.
@@ -29,6 +30,7 @@ const ETIQUETAS_ROLES: Record<string, string> = {
   DIRECCION: "Dirección",
   DEPARTAMENTO_INFORMATICA: "Departamento de Informática",
   PROFESOR: "Profesor",
+  CONSERJERIA: "Conserjería",
 };
 
 // Devuelve el nombre visible de un rol; si es desconocido, devuelve el propio código.
