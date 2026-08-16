@@ -277,7 +277,7 @@ const seccionUtilidades = computed(() => ({
   items: [
     { label: "sabiasQue-utilidades", tipo: "tip", fuente: "utilidades" },
     { label: "Estadísticas", icono: barChartOutline, to: { name: "Statistics" } },
-    { label: "Alumnado en huelga", icono: peopleOutline, to: "/strikes/users" },
+    { label: "Alumnado en huelga", icono: peopleOutline, to: "/strikes/users", disabled: true },
     // Solo visible con rol DEPARTAMENTO_INFORMATICA (mismo texto que MainLayout.vue).
     ...(mostrarDepartamentoInformatica.value
       ? [{ label: "Imágenes Clonezilla", icono: serverOutline, to: "/clonezilla/admin" }]

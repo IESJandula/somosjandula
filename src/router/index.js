@@ -44,7 +44,6 @@ const AutomationsMapView = () => import('@/views/automations/AutomationsMapView.
 const ClonezillaImagesAdminPage = () => import('@/views/clonezilla/ClonezillaImagesAdminPage.vue');
 const StatisticsView = () => import('@/views/statistics/StatisticsView.vue');
 const IAView = () => import('@/views/ia/IAView.vue');
-const StrikesSchoolPage = () => import('@/views/strikes/StrikesSchoolPage.vue');
 
 const routes = [
   {
@@ -269,7 +268,7 @@ const routes = [
         component: IncidenciasTicPage,
         name: 'Issues',
         meta: {
-          role: 'PROFESOR'
+          role: ['PROFESOR', 'CONSERJERIA']
         },
       },
       {
@@ -277,7 +276,7 @@ const routes = [
         component: AutomationsMapView,
         name: 'AutomationsMapView',
         meta: {
-          role: 'PROFESOR'
+          role: ['PROFESOR', 'CONSERJERIA']
         },
       },
       {
@@ -320,14 +319,6 @@ const routes = [
           role: 'ADMINISTRADOR'
         },
       },
-	  {
-		path: '/strikes/users',
-		component: StrikesSchoolPage,
-		name: 'StrikesSchoolPage',
-		meta: {
-			role: 'PROFESOR'
-		},
-	  } 
       ],
     },
   ];
