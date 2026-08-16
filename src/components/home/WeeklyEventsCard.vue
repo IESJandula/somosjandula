@@ -74,7 +74,7 @@
       <p>No hay eventos desde hoy hasta el domingo.</p>
     </div>
 
-    <div class="weekly-event-request" aria-live="polite">
+    <div v-if="!esConserjeria" class="weekly-event-request" aria-live="polite">
       <p v-if="solicitudPendiente && !puedeCrearEventoConSolicitudPendiente" class="weekly-event-request-status">
         A la espera de validar el último evento por el administrador
       </p>
@@ -170,6 +170,7 @@ import {
 } from "@/services/events";
 import { EVENT_CATEGORIES } from "@/constants/eventCategories";
 import { obtenerRolesUsuario } from "@/services/adminService";
+import { EVENTO_ROL_CAMBIADO, obtenerRolSeleccionado } from "@/utils/roles";
 import { crearToast } from "@/utils/toast";
 
 const ROTACION_MS = 6500;
@@ -186,6 +187,7 @@ const categorias = ref([...EVENT_CATEGORIES]);
 const comprobandoSolicitud = ref(true);
 const solicitudPendiente = ref(false);
 const rolesUsuario = ref([]);
+const rolSeleccionado = ref("");
 const formularioVisible = ref(false);
 const creandoSolicitud = ref(false);
 const formulario = reactive({
@@ -247,6 +249,7 @@ const eventoActual = computed(() => eventosSemana.value[indiceActual.value] ?? n
 const puedeCrearEventoConSolicitudPendiente = computed(() =>
   rolesUsuario.value.includes("ADMINISTRADOR") || rolesUsuario.value.includes("DIRECCION")
 );
+const esConserjeria = computed(() => rolSeleccionado.value === "CONSERJERIA");
 
 const etiquetaFecha = (evento) => {
   if (new Date(evento.inicio).toDateString() === new Date(evento.fin).toDateString()) {
@@ -384,8 +387,18 @@ const cargarRolesUsuario = async () => {
   try {
     const roles = await obtenerRolesUsuario(toastMessage, toastColor, isToastOpen);
     rolesUsuario.value = Array.isArray(roles) ? roles : [];
+    rolSeleccionado.value = obtenerRolSeleccionado(rolesUsuario.value);
   } catch {
     rolesUsuario.value = [];
+    rolSeleccionado.value = "";
+  }
+};
+
+const actualizarRolSeleccionado = (event) => {
+  rolSeleccionado.value = event?.detail?.rol || rolSeleccionado.value;
+
+  if (esConserjeria.value) {
+    formularioVisible.value = false;
   }
 };
 
@@ -451,12 +464,14 @@ const programarRecargaMedianoche = () => {
 };
 
 onMounted(async () => {
+  window.addEventListener(EVENTO_ROL_CAMBIADO, actualizarRolSeleccionado);
   await Promise.all([cargarEventosSemana(), cargarDatosSolicitud(), cargarRolesUsuario()]);
   iniciarRotacion();
   programarRecargaMedianoche();
 });
 
 onUnmounted(() => {
+  window.removeEventListener(EVENTO_ROL_CAMBIADO, actualizarRolSeleccionado);
   detenerRotacion();
   detenerRecargaMedianoche();
   liberarImagenesCategorias();

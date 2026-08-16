@@ -167,8 +167,6 @@ const tipsFavoritos = [
 // Utilidades: tips sobre estadísticas, avisos, eventos, huelgas, Clonezilla...
 const tipsUtilidades = [
   "En «Estadísticas» puedes ver gráficos relacionados con la impresión, reservas e incidencias.",
-  "¿Tienes algo importante que decir al claustro? «Avisa algo importante» es tu herramienta.",
-  "¿Alguna novedad hoy? Revisa los «Eventos próximos» del centro para no perderte nada.",
   "«Alumnado en huelga» te indica los diferentes grupos de alumnos que están en huelga.",
 ];
 
@@ -261,11 +259,12 @@ const seccionFavoritos = computed(() => ({
   icono: starOutline,
   items: [
     { label: "sabiasQue-favoritos", tipo: "tip", fuente: "favoritos" },
-    { label: "Imprime", icono: printOutline, to: { name: "PrintersPrint" } },
     ...(mostrarConserjeria.value
       ? [{ label: "Impresiones", icono: printOutline, to: { name: "PrintersManagement" } }]
-      : []),
-    { label: "Reserva", icono: calendarOutline, to: reservaTo.value },
+      : [
+        { label: "Imprime", icono: printOutline, to: { name: "PrintersPrint" } },
+        { label: "Reserva", icono: calendarOutline, to: reservaTo.value },
+      ]),
     { label: "Incidencias", icono: alertCircleOutline, to: { name: "Issues" } },
     { label: "Vista de pájaro", icono: eyeOutline, to: { name: "AutomationsMapView" } },
     { label: "Guardias", icono: shieldOutline, href: "https://guardias.iesjandula.es/", external: true },
@@ -278,8 +277,6 @@ const seccionUtilidades = computed(() => ({
   items: [
     { label: "sabiasQue-utilidades", tipo: "tip", fuente: "utilidades" },
     { label: "Estadísticas", icono: barChartOutline, to: { name: "Statistics" } },
-    { label: "Avisa algo importante", icono: megaphoneOutline, to: { name: "ManageNotificationsPage" } },
-    { label: "Eventos próximos", icono: calendarNumberOutline, to: { name: "EventsSchoolPage" } },
     { label: "Alumnado en huelga", icono: peopleOutline, to: "/strikes/users" },
     // Solo visible con rol DEPARTAMENTO_INFORMATICA (mismo texto que MainLayout.vue).
     ...(mostrarDepartamentoInformatica.value

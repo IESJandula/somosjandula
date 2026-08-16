@@ -39,12 +39,10 @@ const B_HorarioPersonal = () => import('@/views/timetable_teachers/B_HorarioPers
 const C_HorarioGrupos = () => import('@/views/timetable_teachers/C_HorarioGrupos.vue');
 
 const LatestNewsPage = () => import('@/views/notifications/LatestNewsPage.vue');
-const ManageNotificationsPage = () => import('@/views/notifications/ManageNotificationsPage.vue');
 const IncidenciasTicPage = () => import('@/views/issues/IssuesView.vue');
 const AutomationsMapView = () => import('@/views/automations/AutomationsMapView.vue');
 const ClonezillaImagesAdminPage = () => import('@/views/clonezilla/ClonezillaImagesAdminPage.vue');
 const StatisticsView = () => import('@/views/statistics/StatisticsView.vue');
-const EventsSchoolPage = () => import('@/views/events/EventsSchoolPage.vue');
 const IAView = () => import('@/views/ia/IAView.vue');
 const StrikesSchoolPage = () => import('@/views/strikes/StrikesSchoolPage.vue');
 
@@ -171,14 +169,6 @@ const routes = [
         },
       },
       {
-        path: 'notifications/manager',
-        component: ManageNotificationsPage,
-        name: 'ManageNotificationsPage',
-        meta: {
-          role: 'PROFESOR',
-        },
-      },
-      {
         path: 'school_manager/asignaturaYBloque',
         component: C_AsignaturaYBloque,
         name: 'C_AsignaturaYBloque',
@@ -273,12 +263,6 @@ const routes = [
         meta: {
           role: 'ADMINISTRADOR'
         },
-      },
-      {
-        path: 'events/users',
-        component: EventsSchoolPage,
-        name: 'EventsSchoolPage',
-        meta: { role: 'PROFESOR' },
       },
       {
         path: 'issues',
