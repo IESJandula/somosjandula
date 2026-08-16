@@ -193,12 +193,13 @@ export const confirmarRecogidaImpresion = async (toastMessage, toastColor, isToa
 {
     const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
 
-    return await fetch(printersApiUrl + `/printers/web/print/confirmar-recogida?id=${id}`,
+    return await fetch(printersApiUrl + '/printers/web/print/confirmar-recogida',
     {
         method: 'POST',
         headers:
         {
             'Authorization': `Bearer ${tokenPropio}`,
+            'id': String(id),
         },
     });
 };
