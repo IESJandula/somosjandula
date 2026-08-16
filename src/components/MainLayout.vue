@@ -5,7 +5,7 @@
       <ion-header>
         <ion-toolbar>
           <ion-buttons slot="start">
-            <ion-button class="home-button" fill="solid" @click="irAInicio" aria-label="Ir al inicio">
+            <ion-button data-tour="home-button" class="home-button" fill="solid" @click="irAInicio" aria-label="Ir al inicio">
               <ion-icon :icon="homeOutline" aria-hidden="true"></ion-icon>
             </ion-button>
           </ion-buttons>
@@ -34,7 +34,7 @@
           <div class="end-section" slot="end">
             <div class="top-bar">
               <div class="button-container" @mouseenter="handleProfileEnter($event)" @mouseleave="showTooltip = false">
-                <ion-button class="profile-button" fill="solid" @click="toggleDropdown($event)"
+                <ion-button data-tour="profile-button" class="profile-button" fill="solid" @click="toggleDropdown($event)"
                   aria-haspopup="true" :aria-expanded="showDropdown ? 'true' : 'false'"
                   :aria-label="userName ? `Perfil (${userName})` : 'Perfil'">
                   <ion-icon :icon="personCircleOutline" aria-hidden="true"></ion-icon>
@@ -49,7 +49,7 @@
 
               <teleport to="body">
                 <div v-if="showDropdown" class="perfil-dropdown-backdrop" @click="closeDropdown"></div>
-                <div v-if="showDropdown" class="perfil-dropdown" :style="dropdownPosition" role="menu">
+                <div v-if="showDropdown" data-tour="profile-menu" class="perfil-dropdown" :style="dropdownPosition" role="menu">
                   <!-- Sección "Perfil": selector de rol. Se muestra siempre que haya al menos
                        un rol. Si solo hay uno, aparece marcado y bloqueado (no desmarcable). -->
                   <template v-if="puedeSeleccionarRol">
@@ -65,6 +65,7 @@
                       <span>{{ etiquetaRol(rol) }}</span>
                     </button>
                     <div class="perfil-dropdown-separator"></div>
+
                   </template>
 
                   <template v-if="esPerfilProfesor">
@@ -77,6 +78,24 @@
                       <span v-else-if="cargandoGastosImpresion">Cargando gastos de impresión…</span>
                       <span v-else>No se han podido consultar los gastos de impresión.</span>
                     </div>
+                    <div class="perfil-dropdown-separator"></div>
+
+                    <div class="perfil-dropdown-header">Tour</div>
+                    <button class="perfil-dropdown-item perfil-tour-item" type="button" role="menuitem"
+                      @click="iniciarTourProfesor('completo')">
+                      <ion-icon class="perfil-item-icon" :icon="mapOutline" aria-hidden="true"></ion-icon>
+                      <span>Completo</span>
+                    </button>
+                    <button class="perfil-dropdown-item perfil-tour-item" type="button" role="menuitem"
+                      @click="iniciarTourProfesor('menu')">
+                      <ion-icon class="perfil-item-icon" :icon="mapOutline" aria-hidden="true"></ion-icon>
+                      <span>Menú principal</span>
+                    </button>
+                    <button class="perfil-dropdown-item perfil-tour-item" type="button" role="menuitem"
+                      @click="iniciarTourProfesor('impresion')">
+                      <ion-icon class="perfil-item-icon" :icon="mapOutline" aria-hidden="true"></ion-icon>
+                      <span>Impresión</span>
+                    </button>
                     <div class="perfil-dropdown-separator"></div>
                   </template>
 
@@ -100,6 +119,7 @@
       >
         <router-view></router-view>
       </ion-content>
+      <GuidedTour ref="tourGuiadoRef" />
     </ion-page>
   </ion-app>
 </template>
@@ -115,8 +135,8 @@ import {
   IonIcon,
   IonApp,
 } from "@ionic/vue";
-import { defineComponent, ref, computed, onMounted, onBeforeUnmount } from "vue";
-import { homeOutline, personCircleOutline, checkmarkOutline, logOutOutline } from "ionicons/icons";
+import { defineComponent, ref, computed, nextTick, onMounted, onBeforeUnmount } from "vue";
+import { homeOutline, personCircleOutline, checkmarkOutline, logOutOutline, mapOutline } from "ionicons/icons";
 import { useRouter } from "vue-router";
 import { menuController } from "@ionic/vue";
 import { getAuth, signOut } from "firebase/auth";
@@ -132,6 +152,8 @@ import {
 } from "@/utils/roles";
 import { obtenerNotificacionesVigentesPorTipo } from "@/services/notifications";
 import { crearToast } from "@/utils/toast.js";
+import GuidedTour from "@/components/GuidedTour.vue";
+import { EVENTO_TOUR_ABRIR_PERFIL, EVENTO_TOUR_CERRAR_PERFIL } from "@/utils/guidedTour";
 
 export default defineComponent({
   name: "MainLayout",
@@ -144,6 +166,7 @@ export default defineComponent({
     IonButton,
     IonIcon,
     IonApp,
+    GuidedTour,
   },
   setup() {
     const router = useRouter();
@@ -155,6 +178,7 @@ export default defineComponent({
     const rolSeleccionado = ref("");
     const showDropdown = ref(false);
     const dropdownPosition = ref(null);
+    const tourGuiadoRef = ref(null);
 
     // El ítem "Perfil" (selector de rol) se muestra siempre que el usuario tenga al
     // menos un rol. Con un único rol, se muestra ese rol marcado y bloqueado.
@@ -211,13 +235,9 @@ export default defineComponent({
 
     // Abre/cierra el desplegable del botón de perfil. Se ancla a la derecha del botón
     // (posición fixed vía teleport) para que no se recorte dentro del toolbar.
-    const toggleDropdown = (event) => {
-      if (showDropdown.value) {
-        closeDropdown();
-        return;
-      }
+    const abrirDropdown = (elementoAncla) => {
       showTooltip.value = false;
-      const rect = event.currentTarget.getBoundingClientRect();
+      const rect = elementoAncla.getBoundingClientRect();
       dropdownPosition.value = {
         top: `${rect.bottom + 8}px`,
         right: `${Math.max(window.innerWidth - rect.right, 8)}px`,
@@ -226,8 +246,31 @@ export default defineComponent({
       showDropdown.value = true;
     };
 
+    const toggleDropdown = (event) => {
+      if (showDropdown.value) {
+        closeDropdown();
+        return;
+      }
+
+      abrirDropdown(event.currentTarget);
+    };
+
     const closeDropdown = () => {
       showDropdown.value = false;
+    };
+
+    const abrirPerfilDesdeTour = () => {
+      const botonPerfil = document.querySelector('[data-tour="profile-button"]');
+      if (botonPerfil) {
+        abrirDropdown(botonPerfil);
+      }
+    };
+
+    const iniciarTourProfesor = async (tipo) => {
+      closeDropdown();
+      await router.push({ name: "Home" });
+      await nextTick();
+      await tourGuiadoRef.value?.iniciar(tipo);
     };
 
     // Selecciona un rol (comportamiento tipo radio): siempre queda exactamente un rol
@@ -293,6 +336,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      window.addEventListener(EVENTO_TOUR_ABRIR_PERFIL, abrirPerfilDesdeTour);
+      window.addEventListener(EVENTO_TOUR_CERRAR_PERFIL, closeDropdown);
+
       // Obtener notificaciones solo texto.
       actualizarNotificacionesSoloTexto();
 
@@ -321,6 +367,8 @@ export default defineComponent({
 
     onBeforeUnmount(() => {
       clearInterval(notificacionesSoloTextoInterval);
+      window.removeEventListener(EVENTO_TOUR_ABRIR_PERFIL, abrirPerfilDesdeTour);
+      window.removeEventListener(EVENTO_TOUR_CERRAR_PERFIL, closeDropdown);
     });
 
     const desconectar = async () => {
@@ -372,6 +420,7 @@ export default defineComponent({
       personCircleOutline,
       checkmarkOutline,
       logOutOutline,
+      mapOutline,
       logoutTooltipPosition,
       handleProfileEnter,
       userName,
@@ -393,6 +442,8 @@ export default defineComponent({
       formatearEuros,
       toggleDropdown,
       closeDropdown,
+      tourGuiadoRef,
+      iniciarTourProfesor,
       seleccionarRolEnMenu,
       desconectarDesdeMenu,
       notificacionesSoloTexto,
@@ -693,6 +744,8 @@ ion-toolbar {
   position: fixed;
   min-width: 220px;
   max-width: 90vw;
+  max-height: calc(100dvh - 76px);
+  overflow-y: auto;
   background: #ffffff;
   color: #1f2937;
   border: 1px solid #e2e8f0;
@@ -779,6 +832,11 @@ ion-toolbar {
   background-color: #e2e8f0;
 }
 
+.perfil-tour-item,
+.perfil-tour-item .perfil-item-icon {
+  color: #2563eb;
+}
+
 .perfil-dropdown-gastos {
   padding: 6px 12px 10px 38px;
   color: #475569;
@@ -839,6 +897,11 @@ ion-toolbar {
 
   .perfil-dropdown-separator {
     background-color: #3a3f3b;
+  }
+
+  .perfil-tour-item,
+  .perfil-tour-item .perfil-item-icon {
+    color: #93c5fd;
   }
 
   .perfil-dropdown-gastos {

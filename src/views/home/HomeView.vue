@@ -6,7 +6,9 @@
       class="home-section-layout"
       :class="{ 'favorites-events-row': seccion.tipo === 'favoritos' }"
     >
-      <section class="panel-section">
+      <section
+        class="panel-section"
+        :data-tour="seccion.tipo === 'favoritos' ? 'favorites-section' : undefined">
         <div class="section-header">
           <span class="section-icon-wrap" aria-hidden="true">
             <ion-icon :icon="seccion.icono" class="section-icon" />
@@ -35,6 +37,7 @@
               class="shortcut-card"
               :class="{ 'is-disabled': item.disabled || (!item.to && !item.external) }"
               :aria-disabled="item.disabled || (!item.to && !item.external) ? 'true' : undefined"
+              :data-tour="item.label === 'Imprime' ? 'favorite-print' : undefined"
               :title="!item.disabled && (item.to || item.external) ? item.label : `${item.label} (próximamente)`"
             >
               <span class="card-icon-wrap">
@@ -583,6 +586,36 @@ const secciones = computed(() => {
     border: 0;
     border-radius: 0;
     box-shadow: none;
+  }
+
+  /* Durante el tour se recuperan los accesos de Favoritos para poder explicarlos incluso
+     en las pantallas que normalmente muestran solo los eventos semanales. */
+  :global(body.tour-activo) .page-home {
+    max-width: 1400px;
+    min-height: 0;
+    padding: 1rem 1rem 1.5rem;
+    overflow: visible;
+  }
+
+  :global(body.tour-activo) .home-section-layout {
+    display: block;
+  }
+
+  :global(body.tour-activo) .home-section-layout.favorites-events-row {
+    display: grid;
+    min-height: 0;
+    margin-bottom: 1rem;
+  }
+
+  :global(body.tour-activo) .favorites-events-row > .panel-section {
+    display: block;
+  }
+
+  :global(body.tour-activo) .favorites-events-row :deep(.weekly-events-card) {
+    min-height: 0;
+    border: 1px solid #cfd8e3;
+    border-radius: 12px;
+    box-shadow: rgba(0, 0, 0, 0.08) 0 6px 18px;
   }
 }
 </style>

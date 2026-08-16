@@ -3,17 +3,17 @@
          <!-- Fila superior: Formulario + PDF Preview O Tabla -->
      <div class="top-section">
        <!-- Columna izquierda: Formulario de Envío de PDF -->
-       <div class="form-container" ref="contenedorFormularioRef">
+       <div data-tour="print-form" class="form-container" ref="contenedorFormularioRef">
          <h1 class="title">Enviar PDF a Imprimir</h1>
          <form @submit.prevent="enviarPDFAImprimir" enctype="multipart/form-data">
            <div class="form-section">
              <!-- Usa el componente de carga de archivos -->
-            <div class="file-upload-wrapper">
+            <div data-tour="print-upload" class="file-upload-wrapper">
               <FileUpload @file-selected="manejarArchivoSeleccionado" />
             </div>
              
              <!-- Configuración de impresión -->
-             <ion-card class="printer-settings-card">
+             <ion-card data-tour="print-settings" class="printer-settings-card">
                <ion-grid>
                  <!-- Primera Fila: Selector de impresora -->
                  <ion-row>
@@ -137,7 +137,7 @@
                  <!-- Botón de Imprimir -->
                  <ion-row class="ion-justify-content-center ion-padding-top">
                    <ion-col size="auto">
-                     <ion-button type="submit" color="primary" expand="block" :disabled="botonImpresionDeshabilitado">
+                     <ion-button data-tour="print-submit" type="submit" color="primary" expand="block" :disabled="botonImpresionDeshabilitado">
                        {{ botonImpresionTexto }}
                      </ion-button>
                      <!-- Gasto acumulado en el curso actual; al pasar el ratón se ve el desglose por impresora -->
