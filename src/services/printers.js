@@ -186,6 +186,24 @@ export const cancelarImpresion = async (toastMessage, toastColor, isToastOpen, i
 };
 
 /**
+ * Confirma la entrega de una impresion pendiente de recogida. El servidor solo permite esta operacion a
+ * administracion y conserjeria.
+ */
+export const confirmarRecogidaImpresion = async (toastMessage, toastColor, isToastOpen, id) =>
+{
+    const tokenPropio = await obtenerTokenJWTValido(toastMessage, toastColor, isToastOpen);
+
+    return await fetch(printersApiUrl + `/printers/web/print/confirmar-recogida?id=${id}`,
+    {
+        method: 'POST',
+        headers:
+        {
+            'Authorization': `Bearer ${tokenPropio}`,
+        },
+    });
+};
+
+/**
  * Obtiene el gasto de impresión acumulado por el usuario autenticado en el curso académico actual,
  * con su desglose por impresora.
  */

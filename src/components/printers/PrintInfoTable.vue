@@ -23,8 +23,16 @@
           <td class="truncate text-center" :title="formatDate(print.date)">{{ formatDate(print.date) }}</td>
           <td v-if="adminRole" class="truncate text-center" :title="print.user">{{ print.user }}</td>
           <td class="truncate text-center" :title="print.fileName">{{ print.fileName }}</td>
-          <td :title="print.errorMessage" class="truncate text-center">
-            {{ print.status }}
+          <td :title="print.errorMessage" class="print-status-cell text-center">
+            <span>{{ print.status }}</span>
+            <button
+              v-if="adminRole && print.status === 'Pendiente de recogida'"
+              type="button"
+              class="recogida-button"
+              :disabled="recogidasEnProceso.includes(print.id)"
+              @click="confirmarRecogidaTabla(print.id)">
+              {{ recogidasEnProceso.includes(print.id) ? 'ACTUALIZANDO...' : 'RECOGIDO' }}
+            </button>
             <ion-icon v-if="print.status === 'Pendiente de imprimir'"
                       name="close-circle-outline"
                       style="font-size: 24px; cursor: pointer;"
@@ -48,7 +56,7 @@
 
 <script>
 import { computed, defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
-import { cancelarImpresion } from '@/services/printers';
+import { cancelarImpresion, confirmarRecogidaImpresion } from '@/services/printers';
 import { formatearEuros } from '@/utils/currency';
 import { EVENTO_ROL_CAMBIADO, ROL_SELECCIONADO_KEY } from '@/utils/roles';
 import { IonIcon } from '@ionic/vue';
@@ -70,6 +78,7 @@ export default defineComponent({
   },
   setup(props, { emit }) {
     const rolSeleccionado = ref(null);
+    const recogidasEnProceso = ref([]);
     const mostrarCoste = computed(() => rolSeleccionado.value !== 'CONSERJERIA');
 
     const actualizarRolSeleccionado = (event) => {
@@ -117,10 +126,36 @@ export default defineComponent({
       }
     };
 
+    const confirmarRecogidaTabla = async (id) => {
+      if (recogidasEnProceso.value.includes(id)) {
+        return;
+      }
+
+      recogidasEnProceso.value = [...recogidasEnProceso.value, id];
+
+      try {
+        const response = await confirmarRecogidaImpresion('', '', false, id);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'No se pudo confirmar la recogida de la impresion');
+        }
+
+        emit('actualizar-tabla');
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Ocurrio un error al confirmar la recogida de la impresion.');
+      } finally {
+        recogidasEnProceso.value = recogidasEnProceso.value.filter((printId) => printId !== id);
+      }
+    };
+
     return {
       formatDate,
       formatearEuros,
       cancelarImpresionTabla,
+      confirmarRecogidaTabla,
+      recogidasEnProceso,
       mostrarCoste,
     };
   }
@@ -173,6 +208,34 @@ export default defineComponent({
   border-radius: 10px;
   padding: 20px;
   overflow: auto;
+}
+
+.print-status-cell {
+  white-space: normal;
+}
+
+.recogida-button {
+  display: block;
+  width: 100%;
+  margin: 0.4rem 0 0.45rem;
+  padding: 0.35rem 0.55rem;
+  color: #ffffff;
+  background-color: #16803c;
+  border: 1px solid #0f5f2d;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.recogida-button:hover:not(:disabled) {
+  background-color: #0f5f2d;
+}
+
+.recogida-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
 }
 
 /* Modo oscuro */
