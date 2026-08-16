@@ -1,29 +1,29 @@
 <template>
   <div class="p-10 bg-gray-200 rounded-2xl shadow-md shadow-gray-500 overflow-auto overflow-x-auto">
-    <table class="table-auto w-full">
+    <table class="table-auto w-full text-center">
       <thead>
         <tr class="py-5">
-          <th class="w-[10%] text-left pb-3 text-lg">Fecha</th>
-          <th v-if="adminRole" class="w-[11%] text-left pb-3 text-lg">Usuario</th>
-          <th class="w-[11%] text-left pb-3 text-lg">Fichero</th>
-          <th class="w-[7%] text-left pb-3 text-lg">Estado</th>
-          <th class="w-[11%] text-left pb-3 text-lg">Impresora</th>
-          <th class="w-[5%] text-left pb-3 text-lg">Copias</th>
-          <th class="w-[6%] text-left pb-3 text-lg">Color</th>
-          <th class="w-[8%] text-left pb-3 text-lg">Orientación</th>
-          <th class="w-[5%] text-left pb-3 text-lg">Caras</th>
-          <th class="w-[8%] text-left pb-3 text-lg">Tamaño (KB)</th>
-          <th class="w-[6%] text-left pb-3 text-lg">Páginas PDF</th>
-          <th class="w-[6%] text-left pb-3 text-lg">Hojas totales</th>
-          <th class="w-[6%] text-left pb-3 text-lg">Coste</th>
+          <th class="w-[10%] text-center pb-3 text-lg">Fecha</th>
+          <th v-if="adminRole" class="w-[11%] text-center pb-3 text-lg">Usuario</th>
+          <th class="w-[11%] text-center pb-3 text-lg">Fichero</th>
+          <th class="w-[7%] text-center pb-3 text-lg">Estado</th>
+          <th class="w-[11%] text-center pb-3 text-lg">Impresora</th>
+          <th class="w-[5%] text-center pb-3 text-lg">Copias</th>
+          <th class="w-[6%] text-center pb-3 text-lg">Color</th>
+          <th class="w-[8%] text-center pb-3 text-lg">Orientación</th>
+          <th class="w-[5%] text-center pb-3 text-lg">Caras</th>
+          <th class="w-[8%] text-center pb-3 text-lg">Tamaño (KB)</th>
+          <th class="w-[6%] text-center pb-3 text-lg">Páginas PDF</th>
+          <th class="w-[6%] text-center pb-3 text-lg">Hojas totales</th>
+          <th v-if="mostrarCoste" class="w-[6%] text-center pb-3 text-lg">Coste</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(print, index) in info" :key="index">
-          <td class="truncate text-left pl-1" :title="formatDate(print.date)">{{ formatDate(print.date) }}</td>
-          <td v-if="adminRole" class="truncate text-left pl-1" :title="print.user">{{ print.user }}</td>
-          <td class="truncate text-left pl-1" :title="print.fileName">{{ print.fileName }}</td>
-          <td :title="print.errorMessage" class="truncate text-left pl-1">
+          <td class="truncate text-center" :title="formatDate(print.date)">{{ formatDate(print.date) }}</td>
+          <td v-if="adminRole" class="truncate text-center" :title="print.user">{{ print.user }}</td>
+          <td class="truncate text-center" :title="print.fileName">{{ print.fileName }}</td>
+          <td :title="print.errorMessage" class="truncate text-center">
             {{ print.status }}
             <ion-icon v-if="print.status === 'Pendiente de imprimir'"
                       name="close-circle-outline"
@@ -31,15 +31,15 @@
                       class="ml-2 text-red-500"
                       @click="cancelarImpresionTabla(print.id)"></ion-icon>
           </td>
-          <td class="truncate text-left pl-1">{{ print.printer }}</td>
-          <td class="truncate text-left pl-1">{{ print.copies }}</td>
-          <td class="truncate text-left pl-1">{{ print.color }}</td>
-          <td class="truncate text-left pl-1">{{ print.orientation }}</td>
-          <td class="truncate text-left pl-1">{{ print.sides }}</td>
-          <td class="truncate text-left pl-1">{{ print.fileSizeInKB }}</td>
-          <td class="truncate text-left pl-1">{{ print.numeroPaginasPdf }}</td>
-          <td class="truncate text-left pl-1">{{ print.hojasTotales }}</td>
-          <td class="truncate text-left pl-1">{{ formatearEuros(print.coste) }}</td>
+          <td class="truncate text-center">{{ print.printer }}</td>
+          <td class="truncate text-center">{{ print.copies }}</td>
+          <td class="truncate text-center">{{ print.color }}</td>
+          <td class="truncate text-center">{{ print.orientation }}</td>
+          <td class="truncate text-center">{{ print.sides }}</td>
+          <td class="truncate text-center">{{ print.fileSizeInKB }}</td>
+          <td class="truncate text-center">{{ print.numeroPaginasPdf }}</td>
+          <td class="truncate text-center">{{ print.hojasTotales }}</td>
+          <td v-if="mostrarCoste" class="truncate text-center">{{ formatearEuros(print.coste) }}</td>
         </tr>
       </tbody>
     </table>
@@ -47,9 +47,10 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 import { cancelarImpresion } from '@/services/printers';
 import { formatearEuros } from '@/utils/currency';
+import { EVENTO_ROL_CAMBIADO, ROL_SELECCIONADO_KEY } from '@/utils/roles';
 import { IonIcon } from '@ionic/vue';
 
 export default defineComponent({
@@ -68,6 +69,22 @@ export default defineComponent({
     IonIcon,
   },
   setup(props, { emit }) {
+    const rolSeleccionado = ref(null);
+    const mostrarCoste = computed(() => rolSeleccionado.value !== 'CONSERJERIA');
+
+    const actualizarRolSeleccionado = (event) => {
+      rolSeleccionado.value = event?.detail?.rol || localStorage.getItem(ROL_SELECCIONADO_KEY);
+    };
+
+    onMounted(() => {
+      actualizarRolSeleccionado();
+      window.addEventListener(EVENTO_ROL_CAMBIADO, actualizarRolSeleccionado);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener(EVENTO_ROL_CAMBIADO, actualizarRolSeleccionado);
+    });
+
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       return date.toLocaleString('es-ES', {
@@ -104,6 +121,7 @@ export default defineComponent({
       formatDate,
       formatearEuros,
       cancelarImpresionTabla,
+      mostrarCoste,
     };
   }
 });
