@@ -312,7 +312,10 @@ const secciones = computed(() => {
   }
   
   // Se muestra la sección de utilidades.
-  visibles.push(seccionUtilidades.value);
+  if (rolSeleccionado.value !== "CONSERJERIA")
+  {
+    visibles.push(seccionUtilidades.value);
+  }
   
   return visibles;
 });

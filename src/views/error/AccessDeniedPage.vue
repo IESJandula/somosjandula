@@ -16,7 +16,7 @@ const router = useRouter();
 
 const goBack = () =>
 {
-    router.push({ name: 'Login' }); // O redirige a cualquier página que prefieras
+    router.replace({ name: 'Home' });
 };
 </script>
 
