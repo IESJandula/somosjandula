@@ -309,7 +309,7 @@ const disablePaginated = ref(true);
 const gastoImpresion = ref(null);
 
 const textoGastoImpresion = computed(() =>
-  `Llevas ${formatearEuros(gastoImpresion.value?.total ?? 0, '0,00 €')} en gasto de impresión`
+  `Gastos de impresión: ${formatearEuros(gastoImpresion.value?.total ?? 0, '0,00 €')}`
 );
 
 const desgloseGastoImpresion = computed(() =>
