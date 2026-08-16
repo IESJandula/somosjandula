@@ -184,21 +184,21 @@
                       <span>Roles, estado y resolución</span>
                     </div>
                     <div class="user-form-grid">
-                      <div class="user-form-field">
-                        <span>Roles</span>
-                        <div class="user-resolvers-grid" role="group" aria-label="Roles del usuario">
-                          <label v-for="rol in ROLES_USUARIO_DISPONIBLES" :key="rol.valor" class="user-resolver-option">
-                            <input v-model="usuarioEditor.roles" type="checkbox" :value="rol.valor">
-                            <span>{{ rol.etiqueta }}</span>
-                          </label>
-                        </div>
-                      </div>
-                      <label class="user-form-field">
+                      <label class="user-form-field user-form-field-wide">
                         <span>Estado</span>
                         <select v-model="usuarioEditor.estado">
                           <option v-for="opcion in ESTADOS_USUARIO" :key="opcion.valor" :value="opcion.valor">{{ opcion.etiqueta }}</option>
                         </select>
                       </label>
+                    </div>
+                    <div class="user-resolvers-editor">
+                      <span class="user-resolvers-label">Roles asignados</span>
+                      <div class="user-resolvers-grid" role="group" aria-label="Roles del usuario">
+                        <label v-for="rol in ROLES_USUARIO_DISPONIBLES" :key="rol.valor" class="user-resolver-option">
+                          <input v-model="usuarioEditor.roles" type="checkbox" :value="rol.valor">
+                          <span>{{ rol.etiqueta }}</span>
+                        </label>
+                      </div>
                     </div>
                     <div class="user-resolvers-editor">
                       <span class="user-resolvers-label">Resolutores asignados</span>
@@ -908,7 +908,6 @@
   } from '@/services/schoolManager';
   import { crearToast } from '@/utils/toast.js';
   import { formatearEuros } from '@/utils/currency';
-  import { ORDEN_PRIORIDAD_ROLES, etiquetaRol } from '@/utils/roles';
 
   const toastMessage = ref('');
   const toastColor = ref('success');
@@ -983,13 +982,15 @@
     { valor: 'INACTIVO', etiqueta: 'Inactivo' },
   ];
 
-  // Roles de cuentas de usuario admitidos por el AdminServer. Se deriva del orden centralizado
-  // del selector de perfil, para que las opciones del editor y los roles utilizables por la app
-  // se mantengan sincronizados.
-  const ROLES_USUARIO_DISPONIBLES = ORDEN_PRIORIDAD_ROLES.map((valor) => ({
-    valor,
-    etiqueta: etiquetaRol(valor),
-  }));
+  // Roles de cuentas de usuario admitidos por el AdminServer. Las etiquetas son explícitas
+  // para que se muestren de forma estable junto a cada casilla del editor.
+  const ROLES_USUARIO_DISPONIBLES = [
+    { valor: 'ADMINISTRADOR', etiqueta: 'Administrador' },
+    { valor: 'DIRECCION', etiqueta: 'Dirección' },
+    { valor: 'DEPARTAMENTO_INFORMATICA', etiqueta: 'Departamento de Informática' },
+    { valor: 'PROFESOR', etiqueta: 'Profesor' },
+    { valor: 'CONSERJERIA', etiqueta: 'Conserjería' },
+  ];
 
   const TIPOS_NOTIFICACION = [
     { valor: 'Calendar', etiqueta: 'Calendar' },
